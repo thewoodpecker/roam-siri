@@ -80,7 +80,7 @@ function StatusBubble({ onEditChange }) {
         className={`status-bubble ${editing && !closing ? 'expanded' : ''} ${isPlaceholder && !closing ? 'placeholder' : ''}`}
         onClick={() => { if (!editing) startEdit(); }}
       >
-        <div className="status-bubble-inner">
+        <div className={`status-bubble-inner ${status && !editing ? 'has-text' : ''}`}>
           {editing ? (
             <input
               ref={inputRef}
@@ -106,7 +106,7 @@ function StatusBubble({ onEditChange }) {
 }
 
 const DEV_ACTIVITIES = [
-  'Deploying', 'Debugging', 'Refactoring', 'Testing',
+  'Brewing', 'Cascading', 'Deploying', 'Debugging', 'Refactoring', 'Testing',
   'Reviewing', 'Shipping', 'Fixing', 'Building',
   'Migrating', 'Optimizing', 'Pushing',
 ];
@@ -168,20 +168,20 @@ function SmallCard({ office, isActive, glowColor }) {
   return (
     <div className="office-card">
       <SiriGlow active={isActive} color={glowColor} borderRadius={12} />
+      {showLabel && (
+        <span className={`token-label ${fading ? 'fade-out' : ''}`} style={{ color: glowColor === CLAUDE ? 'rgba(235, 97, 57, 0.8)' : 'rgba(255, 255, 255, 0.5)' }}>
+          <span className={`activity-text ${activityFading ? 'activity-fade-out' : 'activity-fade-in'}`}>
+            {showTokens ? `${displayTokens.toLocaleString()} tk` : activity}
+          </span>
+          <img
+            className="ai-icon"
+            src={glowColor === CLAUDE ? '/claude-ai-icon.svg' : '/chatgpt-icon.svg'}
+            alt=""
+          />
+        </span>
+      )}
       <div className="card-header">
         <h3 className={`office-name ${showLabel ? 'name-hidden' : ''}`}>{office.name}</h3>
-        {showLabel && (
-          <span className={`token-label ${fading ? 'fade-out' : ''}`} style={{ color: glowColor === CLAUDE ? 'rgba(235, 97, 57, 0.8)' : 'rgba(255, 255, 255, 0.5)' }}>
-            <span className={`activity-text ${activityFading ? 'activity-fade-out' : 'activity-fade-in'}`}>
-              {showTokens ? `${displayTokens.toLocaleString()} tk` : activity}
-            </span>
-            <img
-              className="ai-icon"
-              src={glowColor === CLAUDE ? '/claude-ai-icon.svg' : '/chatgpt-icon.svg'}
-              alt=""
-            />
-          </span>
-        )}
         {!showLabel && office.icon === 'lock' && <span className="card-icon">🔒</span>}
         {!showLabel && office.icon === 'verified' && <span className="card-icon">✅</span>}
       </div>
@@ -212,18 +212,27 @@ export default function App() {
     const ids = small.map(o => o.id);
 
     const tick = () => {
-      const id = ids[Math.floor(Math.random() * ids.length)];
-      const color = Math.random() > 0.5 ? CLAUDE : CODEX;
-      setActiveMap(prev => ({ ...prev, [id]: color }));
+      setActiveMap(prev => {
+        // Pick an office that isn't already active
+        const available = ids.filter(id => !prev[id]);
+        if (available.length === 0) return prev;
+        const id = available[Math.floor(Math.random() * available.length)];
+        const color = Math.random() > 0.5 ? CLAUDE : CODEX;
 
-      const duration = 5000 + Math.random() * 15000;
-      setTimeout(() => {
-        setActiveMap(prev => {
-          const next = { ...prev };
-          delete next[id];
-          return next;
-        });
-      }, duration);
+        // Most are 5-20s, but ~20% run for 1-5 minutes (long agent sessions)
+        const duration = Math.random() < 0.2
+          ? 60000 + Math.random() * 240000
+          : 5000 + Math.random() * 15000;
+        setTimeout(() => {
+          setActiveMap(p => {
+            const next = { ...p };
+            delete next[id];
+            return next;
+          });
+        }, duration);
+
+        return { ...prev, [id]: color };
+      });
     };
 
     for (let i = 0; i < 2; i++) {

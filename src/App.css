@@ -26,6 +26,7 @@
   width: 160px;
   flex-shrink: 0;
   position: relative;
+  overflow: visible;
 }
 
 .grid-item.has-bubble {
@@ -52,6 +53,7 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 6px;
+  overflow: visible;
 }
 
 .office-name {
@@ -77,6 +79,9 @@
 }
 
 .token-label {
+  position: absolute;
+  right: 12px;
+  top: 10px;
   display: flex;
   align-items: center;
   gap: 4px;
@@ -86,7 +91,6 @@
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
-  flex-shrink: 0;
   animation: fadeIn 0.5s ease-in-out;
 }
 
@@ -178,13 +182,15 @@
 .status-bubble-inner {
   max-width: 60px;
   overflow: hidden;
-  transition: max-width 0.4s ease-in-out;
+  transition: max-width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   align-items: center;
   justify-content: center;
+  will-change: max-width;
 }
 
-.status-bubble.expanded .status-bubble-inner {
+.status-bubble.expanded .status-bubble-inner,
+.status-bubble-inner.has-text {
   max-width: 300px;
 }
 
@@ -235,10 +241,12 @@
   border: none;
   outline: none;
   color: rgba(255, 255, 255, 0.7);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   text-align: center;
+  padding: 0;
+  margin: 0;
   animation: fadeIn 0.3s ease-in-out 0.2s both;
 }
 
