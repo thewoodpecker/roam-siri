@@ -31,6 +31,7 @@ function useAnimatedNumber(target) {
 }
 
 const JOE_ID = 11;
+const CHELSEA_ID = 4;
 
 function StatusBubble({ onEditChange }) {
   const [status, setStatus] = useState('');
@@ -105,6 +106,122 @@ function StatusBubble({ onEditChange }) {
   );
 }
 
+function DraggableBubble({ text }) {
+  const [corner, setCorner] = useState('top-right');
+  const [dragging, setDragging] = useState(false);
+  const [dragPos, setDragPos] = useState(null);
+  const [avatarCenter, setAvatarCenter] = useState(null);
+  const wrapperRef = useRef(null);
+  const bubbleRef = useRef(null);
+  const didDrag = useRef(false);
+
+  const getAvatarCenter = () => {
+    if (!wrapperRef.current) return null;
+    const person = wrapperRef.current.closest('.person');
+    if (!person) return null;
+    const avatar = person.querySelector('.avatar');
+    if (!avatar) return null;
+    const rect = avatar.getBoundingClientRect();
+    return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+  };
+
+  const handlePointerDown = (e) => {
+    e.preventDefault();
+    didDrag.current = false;
+    const wrapper = wrapperRef.current;
+    const rect = wrapper.getBoundingClientRect();
+    const offsetX = e.clientX - rect.left;
+    const offsetY = e.clientY - rect.top;
+    const center = getAvatarCenter();
+
+    const handlePointerMove = (e) => {
+      if (!didDrag.current) {
+        didDrag.current = true;
+        setDragging(true);
+        setAvatarCenter(center);
+      }
+      setDragPos({ x: e.clientX - offsetX, y: e.clientY - offsetY });
+    };
+
+    const handlePointerUp = (e) => {
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('pointerup', handlePointerUp);
+      if (didDrag.current) {
+        const ac = getAvatarCenter();
+        if (ac) {
+          const dx = e.clientX - ac.x;
+          const dy = e.clientY - ac.y;
+          setCorner(`${dy <= 0 ? 'top' : 'bottom'}-${dx >= 0 ? 'right' : 'left'}`);
+        }
+      }
+      setDragging(false);
+      setDragPos(null);
+    };
+
+    window.addEventListener('pointermove', handlePointerMove);
+    window.addEventListener('pointerup', handlePointerUp);
+  };
+
+  // Dynamic tail positions while dragging — place between bubble edge and avatar
+  let tailStyle = null;
+  let tailSmallStyle = null;
+  if (dragging && dragPos && avatarCenter && bubbleRef.current) {
+    const bubbleRect = bubbleRef.current.getBoundingClientRect();
+    const bx = bubbleRect.left + bubbleRect.width / 2;
+    const by = bubbleRect.top + bubbleRect.height / 2;
+    const ax = avatarCenter.x;
+    const ay = avatarCenter.y;
+    // Find the closest point on the bubble edge (ellipse approximation)
+    const dx = ax - bx;
+    const dy = ay - by;
+    const angle = Math.atan2(dy, dx);
+    const hw = bubbleRect.width / 2;
+    const hh = bubbleRect.height / 2;
+    // Point on ellipse edge
+    const edgeX = bx + Math.cos(angle) * hw;
+    const edgeY = by + Math.sin(angle) * hh;
+    // Place tails between edge and avatar, 30% and 50% of the way
+    const gapX = ax - edgeX;
+    const gapY = ay - edgeY;
+    tailStyle = {
+      position: 'fixed',
+      left: edgeX + gapX * 0.2 - 5,
+      top: edgeY + gapY * 0.2 - 5,
+      transition: 'none',
+    };
+    tailSmallStyle = {
+      position: 'fixed',
+      left: edgeX + gapX * 0.4 - 3,
+      top: edgeY + gapY * 0.4 - 3,
+      transition: 'none',
+    };
+  }
+
+  const wrapperStyle = dragging && dragPos ? {
+    position: 'fixed',
+    top: dragPos.y,
+    left: dragPos.x,
+    transition: 'none',
+  } : undefined;
+
+  return (
+    <div
+      ref={wrapperRef}
+      className={`status-wrapper draggable ${dragging ? '' : `corner-${corner}`}`}
+      style={wrapperStyle}
+      onPointerDown={handlePointerDown}
+    >
+      <div className="status-tail-small" style={tailSmallStyle || undefined} />
+      <div className="status-tail" style={tailStyle || undefined} />
+      <div ref={bubbleRef} className="status-bubble">
+        <div className="status-bubble-inner has-text">
+          <span className="status-text">{text}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const DEV_ACTIVITIES = [
   'Brewing', 'Cascading', 'Deploying', 'Debugging', 'Refactoring', 'Testing',
   'Reviewing', 'Shipping', 'Fixing', 'Building',
@@ -122,6 +239,7 @@ function SmallCard({ office, isActive, glowColor }) {
   const intervalRef = useRef(null);
   const activityRef = useRef(null);
   const isJoe = office.id === JOE_ID;
+  const isChelsea = office.id === CHELSEA_ID;
 
   useEffect(() => {
     if (isActive) {
@@ -189,6 +307,7 @@ function SmallCard({ office, isActive, glowColor }) {
         {office.people.map((person, i) => (
           <div key={i} className="person">
             {isJoe && <StatusBubble onEditChange={setStatusEditing} />}
+            {isChelsea && <DraggableBubble text="In a meeting" />}
             <img
               className="avatar"
               src={person.avatar}
@@ -268,7 +387,7 @@ export default function App() {
         {rows.map((row, rowIdx) => (
           <div key={rowIdx} className={`brick-row ${rowIdx % 2 === 1 ? 'offset' : ''}`} style={row.some(o => o.id === JOE_ID) ? { zIndex: 99999, position: 'relative' } : undefined}>
             {row.map(o => (
-              <div key={o.id} className={`grid-item ${o.id === JOE_ID ? 'has-bubble' : ''}`}>
+              <div key={o.id} className={`grid-item ${(o.id === JOE_ID || o.id === CHELSEA_ID) ? 'has-bubble' : ''}`}>
                 <SmallCard
                   office={o}
                   isActive={!!activeMap[o.id]}
