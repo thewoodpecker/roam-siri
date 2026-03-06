@@ -30,8 +30,150 @@ function useAnimatedNumber(target) {
   return display;
 }
 
+function useRandomFloat() {
+  const [floating, setFloating] = useState(false);
+  const key = useRef(0);
+
+  useEffect(() => {
+    let timeout;
+    const schedule = () => {
+      const pause = 3000 + Math.random() * 5000;
+      timeout = setTimeout(() => {
+        key.current += 1;
+        setFloating(true);
+        timeout = setTimeout(() => {
+          setFloating(false);
+          schedule();
+        }, 2000);
+      }, pause);
+    };
+    schedule();
+    return () => clearTimeout(timeout);
+  }, []);
+
+  return { floating, key: key.current };
+}
+
+function DismissButton({ visible, className, ...props }) {
+  const [mounted, setMounted] = useState(false);
+  const [exiting, setExiting] = useState(false);
+
+  useEffect(() => {
+    if (visible) {
+      setMounted(true);
+      setExiting(false);
+    } else if (mounted) {
+      setExiting(true);
+      const t = setTimeout(() => { setMounted(false); setExiting(false); }, 200);
+      return () => clearTimeout(t);
+    }
+  }, [visible]);
+
+  if (!mounted) return null;
+  return <button className={`status-dismiss ${exiting ? 'dismiss-out' : ''} ${className || ''}`} {...props} />;
+}
+
 const JOE_ID = 11;
 const CHELSEA_ID = 4;
+const WILL_ID = 30;
+
+const BUBBLE_COLORS = [
+  { bg: null, text: null, placeholder: null, swatch: '#444' },
+  { bg: '#E8E8E8', text: '#1D1E20', placeholder: 'rgba(29, 30, 32, 0.4)', swatch: '#E8E8E8' },
+  { bg: '#5C2020', text: '#FF8A8A', placeholder: 'rgba(255, 138, 138, 0.4)', swatch: '#CC3333' },
+  { bg: '#3A3210', text: '#FFE03C', placeholder: 'rgba(255, 224, 60, 0.4)', swatch: '#DDBB00' },
+  { bg: '#103A3A', text: '#3CF5F5', placeholder: 'rgba(60, 245, 245, 0.4)', swatch: '#00CCCC' },
+  { bg: '#3A1028', text: '#FF3C8E', placeholder: 'rgba(255, 60, 142, 0.4)', swatch: '#FF2D78' },
+  { bg: '#103A20', text: '#46D08F', placeholder: 'rgba(70, 208, 143, 0.4)', swatch: '#2DB86E' },
+];
+
+function ColorStatusBubble({ onEditChange }) {
+  const [status, setStatus] = useState('');
+  const [editing, setEditing] = useState(false);
+  const [closing, setClosing] = useState(false);
+  const [hovering, setHovering] = useState(false);
+  const [colorIdx, setColorIdx] = useState(0);
+  const inputRef = useRef(null);
+  const wrapperRef = useRef(null);
+  const float = useRandomFloat();
+
+  const activeColor = BUBBLE_COLORS[colorIdx];
+
+  useEffect(() => {
+    if (editing && inputRef.current) inputRef.current.focus();
+  }, [editing]);
+
+  const startEdit = () => { setEditing(true); onEditChange?.(true); };
+
+  const stopEdit = () => {
+    setClosing(true);
+    onEditChange?.(false);
+    setTimeout(() => { setEditing(false); setClosing(false); }, 350);
+  };
+
+  const dismiss = (e) => {
+    e.stopPropagation();
+    setStatus('');
+    setColorIdx(0);
+    stopEdit();
+  };
+
+  const isPlaceholder = !status && !editing;
+  const bgStyle = activeColor.bg ? { background: activeColor.bg } : undefined;
+  const textColor = activeColor.text || undefined;
+
+  return (
+    <div
+      ref={wrapperRef}
+      className={`status-wrapper corner-top-right ${float.floating && !editing ? 'floating' : ''}`}
+      onMouseEnter={() => setHovering(true)}
+      onMouseLeave={() => setHovering(false)}
+    >
+      <div className="status-tail-small" style={bgStyle} />
+      <div className="status-tail" style={bgStyle} />
+      <div
+        className={`status-bubble ${isPlaceholder && !closing ? 'placeholder' : ''}`}
+        style={bgStyle}
+        onClick={() => { if (!editing) startEdit(); }}
+      >
+        <div className="status-bubble-inner">
+          {editing ? (
+            <input
+              ref={inputRef}
+              className="status-input"
+              style={{ opacity: closing ? 0 : 1, transition: 'opacity 0.2s ease-out, color 0.2s ease-out', width: (status ? Math.max(status.length * 8, 24) : 105) + 'px', color: textColor, '--placeholder-color': activeColor.placeholder || 'rgba(255, 255, 255, 0.35)' }}
+              value={status}
+              placeholder="What's the vibe?"
+              size={1}
+              onChange={(e) => setStatus(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === 'Escape') stopEdit(); }}
+              onBlur={(e) => {
+                if (wrapperRef.current?.contains(e.relatedTarget)) return;
+                stopEdit();
+              }}
+              maxLength={30}
+            />
+          ) : (
+            <span className={`${isPlaceholder ? 'status-text-placeholder' : 'status-text'} status-fade-in`} style={textColor ? { color: textColor } : undefined}>{isPlaceholder ? '…' : status}</span>
+          )}
+        </div>
+        <DismissButton visible={hovering && !editing && !!status} onClick={dismiss} />
+      </div>
+      {editing && !closing && (
+        <div className="color-swatches">
+          {BUBBLE_COLORS.map((c, i) => (
+            <button
+              key={i}
+              className={`color-swatch ${colorIdx === i ? 'swatch-active' : ''}`}
+              style={{ background: c.swatch }}
+              onMouseDown={(e) => { e.preventDefault(); setColorIdx(i); inputRef.current?.focus(); }}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function StatusBubble({ onEditChange }) {
   const [status, setStatus] = useState('');
@@ -39,17 +181,24 @@ function StatusBubble({ onEditChange }) {
   const [hovering, setHovering] = useState(false);
   const inputRef = useRef(null);
   const wrapperRef = useRef(null);
+  const float = useRandomFloat();
 
   useEffect(() => {
     if (editing && inputRef.current) inputRef.current.focus();
   }, [editing]);
 
+  const [closing, setClosing] = useState(false);
+  const [bouncing, setBouncing] = useState(false);
+
+  const triggerBounce = () => {
+    setBouncing(true);
+    setTimeout(() => setBouncing(false), 350);
+  };
+
   const startEdit = () => {
     setEditing(true);
     onEditChange?.(true);
   };
-
-  const [closing, setClosing] = useState(false);
 
   const stopEdit = () => {
     setClosing(true);
@@ -57,7 +206,7 @@ function StatusBubble({ onEditChange }) {
     setTimeout(() => {
       setEditing(false);
       setClosing(false);
-    }, 400);
+    }, 350);
   };
 
   const dismiss = (e) => {
@@ -71,44 +220,50 @@ function StatusBubble({ onEditChange }) {
   return (
     <div
       ref={wrapperRef}
-      className="status-wrapper corner-top-right"
+      className={`status-wrapper corner-top-right ${float.floating ? 'floating' : ''}`}
+
       onMouseEnter={() => setHovering(true)}
       onMouseLeave={() => setHovering(false)}
     >
       <div className="status-tail-small" />
       <div className="status-tail" />
       <div
-        className={`status-bubble ${editing && !closing ? 'expanded' : ''} ${isPlaceholder && !closing ? 'placeholder' : ''}`}
+        className={`status-bubble ${isPlaceholder && !closing ? 'placeholder' : ''}`}
         onClick={() => { if (!editing) startEdit(); }}
       >
-        <div className={`status-bubble-inner ${status && !editing ? 'has-text' : ''}`}>
+        <div className={`status-bubble-pop-wrap ${bouncing ? 'pop' : ''}`}>
+        <div className="status-bubble-inner">
           {editing ? (
             <input
               ref={inputRef}
               className="status-input"
-              style={{ width: Math.max(100, (status.length || 15) * 8.5) + 'px' }}
+              style={{ opacity: closing ? 0 : 1, transition: 'opacity 0.2s ease-out', width: (status ? Math.max(status.length * 8, 24) : 105) + 'px' }}
               value={status}
               placeholder="What's the vibe?"
-              onChange={(e) => setStatus(e.target.value)}
+              size={1}
+              onChange={(e) => { if (!status && e.target.value) triggerBounce(); setStatus(e.target.value); }}
               onKeyDown={(e) => { if (e.key === 'Enter') stopEdit(); if (e.key === 'Escape') stopEdit(); }}
               onBlur={stopEdit}
               maxLength={30}
             />
           ) : (
-            <span className={isPlaceholder ? 'status-text-placeholder' : 'status-text'}>{isPlaceholder ? '…' : status}</span>
+            <span className={`${isPlaceholder ? 'status-text-placeholder' : 'status-text'} status-fade-in`}>{isPlaceholder ? '…' : status}</span>
           )}
         </div>
-        {hovering && !editing && status && (
-          <button className="status-dismiss" onClick={dismiss}>×</button>
-        )}
+        </div>
+        <DismissButton visible={hovering && !editing && !!status} onClick={dismiss} />
       </div>
     </div>
   );
 }
 
-function DraggableBubble({ text }) {
+function DraggableBubble({ text, onDismiss }) {
   const [corner, setCorner] = useState('top-right');
+  const [hovering, setHovering] = useState(false);
+  const [dismissing, setDismissing] = useState(false);
   const [dragging, setDragging] = useState(false);
+  const float = useRandomFloat();
+  const [justDropped, setJustDropped] = useState(false);
   const [dragPos, setDragPos] = useState(null);
   const [avatarCenter, setAvatarCenter] = useState(null);
   const wrapperRef = useRef(null);
@@ -151,7 +306,40 @@ function DraggableBubble({ text }) {
         if (ac) {
           const dx = e.clientX - ac.x;
           const dy = e.clientY - ac.y;
-          setCorner(`${dy <= 0 ? 'top' : 'bottom'}-${dx >= 0 ? 'right' : 'left'}`);
+          const newCorner = `${dy <= 0 ? 'top' : 'bottom'}-${dx >= 0 ? 'right' : 'left'}`;
+
+          // FLIP: record current position before React re-renders
+          const firstRect = wrapperRef.current.getBoundingClientRect();
+
+          setCorner(newCorner);
+          setDragging(false);
+          setJustDropped(true);
+          setTimeout(() => setJustDropped(false), 400);
+          setDragPos(null);
+
+          // After React commits the new DOM, invert + play
+          requestAnimationFrame(() => {
+            const el = wrapperRef.current;
+            if (!el) return;
+            const lastRect = el.getBoundingClientRect();
+            const deltaX = firstRect.left - lastRect.left;
+            const deltaY = firstRect.top - lastRect.top;
+
+            el.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+            el.style.transition = 'none';
+
+            requestAnimationFrame(() => {
+              el.style.transition = 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)';
+              el.style.transform = 'translate(0, 0)';
+              const onEnd = () => {
+                el.style.transform = '';
+                el.style.transition = '';
+                el.removeEventListener('transitionend', onEnd);
+              };
+              el.addEventListener('transitionend', onEnd);
+            });
+          });
+          return;
         }
       }
       setDragging(false);
@@ -197,6 +385,8 @@ function DraggableBubble({ text }) {
     };
   }
 
+  const isLeft = corner.endsWith('-left');
+
   const wrapperStyle = dragging && dragPos ? {
     position: 'fixed',
     top: dragPos.y,
@@ -207,9 +397,12 @@ function DraggableBubble({ text }) {
   return (
     <div
       ref={wrapperRef}
-      className={`status-wrapper draggable ${dragging ? '' : `corner-${corner}`}`}
+      className={`status-wrapper draggable ${dragging ? '' : `corner-${corner}`} ${float.floating && !dragging ? 'floating' : ''}`}
+
       style={wrapperStyle}
       onPointerDown={handlePointerDown}
+      onMouseEnter={() => setHovering(true)}
+      onMouseLeave={() => setHovering(false)}
     >
       <div className="status-tail-small" style={tailSmallStyle || undefined} />
       <div className="status-tail" style={tailStyle || undefined} />
@@ -217,10 +410,36 @@ function DraggableBubble({ text }) {
         <div className="status-bubble-inner has-text">
           <span className="status-text">{text}</span>
         </div>
+        {onDismiss && <DismissButton
+          visible={(isLeft || (hovering && !justDropped) || dragging) && !dismissing}
+          className={isLeft ? 'dismiss-left' : ''}
+          onPointerDown={(e) => {
+            e.stopPropagation();
+            const ac = getAvatarCenter();
+            const wrapperRect = wrapperRef.current.getBoundingClientRect();
+            const wx = wrapperRect.left + wrapperRect.width / 2;
+            const wy = wrapperRect.top + wrapperRect.height / 2;
+            const dx = ac ? ac.x - wx : 0;
+            const dy = ac ? ac.y - wy : 0;
+            const el = wrapperRef.current;
+            el.style.transition = 'transform 0.2s ease-out, opacity 0.2s ease-out';
+            el.style.transform = `translate(${dx}px, ${dy}px) scale(0)`;
+            el.style.opacity = '0';
+            setDismissing(true);
+            setTimeout(() => onDismiss(), 200);
+          }}
+        />}
       </div>
     </div>
   );
 }
+
+const STATIC_STATUSES = {
+  1: 'Do not disturb',
+  6: 'On a call',
+  13: 'AFK',
+  15: 'Heads down',
+};
 
 const DEV_ACTIVITIES = [
   'Brewing', 'Cascading', 'Deploying', 'Debugging', 'Refactoring', 'Testing',
@@ -228,18 +447,24 @@ const DEV_ACTIVITIES = [
   'Migrating', 'Optimizing', 'Pushing',
 ];
 
-function SmallCard({ office, isActive, glowColor }) {
+function SmallCard({ office, isActive, glowColor, onStatusEdit }) {
   const [tokens, setTokens] = useState(0);
   const [showLabel, setShowLabel] = useState(false);
   const [fading, setFading] = useState(false);
   const [activity, setActivity] = useState('');
   const [activityFading, setActivityFading] = useState(false);
   const [showTokens, setShowTokens] = useState(true);
-  const [statusEditing, setStatusEditing] = useState(false);
+  const setStatusEditing = (v) => onStatusEdit?.(v);
   const intervalRef = useRef(null);
   const activityRef = useRef(null);
   const isJoe = office.id === JOE_ID;
+  const isJeff = office.id === 10;
   const isChelsea = office.id === CHELSEA_ID;
+  const isWill = office.id === WILL_ID;
+  const isMoffa = office.id === 14;
+  const hasColorBubble = isJoe || isWill || isJeff || isMoffa;
+  const [dismissed, setDismissed] = useState({});
+  const staticStatus = !dismissed[office.id] && STATIC_STATUSES[office.id];
 
   useEffect(() => {
     if (isActive) {
@@ -306,8 +531,9 @@ function SmallCard({ office, isActive, glowColor }) {
       <div className="people">
         {office.people.map((person, i) => (
           <div key={i} className="person">
-            {isJoe && <StatusBubble onEditChange={setStatusEditing} />}
-            {isChelsea && <DraggableBubble text="In a meeting" />}
+            {hasColorBubble && <ColorStatusBubble onEditChange={setStatusEditing} />}
+            {isChelsea && !dismissed[CHELSEA_ID] && <DraggableBubble text="In a meeting" onDismiss={() => setDismissed(d => ({ ...d, [CHELSEA_ID]: true }))} />}
+            {staticStatus && <DraggableBubble text={staticStatus} onDismiss={() => setDismissed(d => ({ ...d, [office.id]: true }))} />}
             <img
               className="avatar"
               src={person.avatar}
@@ -322,6 +548,7 @@ function SmallCard({ office, isActive, glowColor }) {
 
 export default function App() {
   const [activeMap, setActiveMap] = useState({});
+  const [editingId, setEditingId] = useState(null);
 
   const small = officeData.filter(o => o.size === 'small');
 
@@ -338,10 +565,10 @@ export default function App() {
         const id = available[Math.floor(Math.random() * available.length)];
         const color = Math.random() > 0.5 ? CLAUDE : CODEX;
 
-        // Most are 5-20s, but ~20% run for 1-5 minutes (long agent sessions)
-        const duration = Math.random() < 0.2
-          ? 60000 + Math.random() * 240000
-          : 5000 + Math.random() * 15000;
+        // Most are 5-15s, but ~10% run for 30s-2 minutes (long agent sessions)
+        const duration = Math.random() < 0.1
+          ? 30000 + Math.random() * 90000
+          : 5000 + Math.random() * 10000;
         setTimeout(() => {
           setActiveMap(p => {
             const next = { ...p };
@@ -354,11 +581,9 @@ export default function App() {
       });
     };
 
-    for (let i = 0; i < 2; i++) {
-      setTimeout(tick, i * 800);
-    }
+    setTimeout(tick, 800);
 
-    const interval = setInterval(tick, 2000 + Math.random() * 2000);
+    const interval = setInterval(tick, 5000 + Math.random() * 4000);
     return () => clearInterval(interval);
   }, [small.length]);
 
@@ -383,15 +608,16 @@ export default function App() {
 
   return (
     <div className="layout">
-      <div className="brick-grid">
+      <div className={`brick-grid ${editingId != null ? 'has-editing' : ''}`}>
         {rows.map((row, rowIdx) => (
-          <div key={rowIdx} className={`brick-row ${rowIdx % 2 === 1 ? 'offset' : ''}`} style={row.some(o => o.id === JOE_ID) ? { zIndex: 99999, position: 'relative' } : undefined}>
+          <div key={rowIdx} className={`brick-row ${rowIdx % 2 === 1 ? 'offset' : ''}`} style={{ zIndex: rows.length - rowIdx, position: 'relative' }}>
             {row.map(o => (
-              <div key={o.id} className={`grid-item ${(o.id === JOE_ID || o.id === CHELSEA_ID) ? 'has-bubble' : ''}`}>
+              <div key={o.id} className={`grid-item ${(o.id === JOE_ID || o.id === CHELSEA_ID || o.id === WILL_ID || o.id === 10 || o.id === 14 || STATIC_STATUSES[o.id]) ? 'has-bubble' : ''} ${editingId === o.id ? 'editing-bubble' : ''}`}>
                 <SmallCard
                   office={o}
                   isActive={!!activeMap[o.id]}
                   glowColor={activeMap[o.id] || CLAUDE}
+                  onStatusEdit={(v) => setEditingId(v ? o.id : null)}
                 />
               </div>
             ))}
