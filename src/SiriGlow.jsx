@@ -35,19 +35,19 @@ function getGlowShades(hex) {
 
 function lerp(a, b, t) { return a + (b - a) * t; }
 
-function buildGradientStops(elapsed, opacityMult, shades) {
+function buildGradientStops(elapsed, opacityMult, shades, intensity) {
   const settleDuration = 1.2;
   const settle = Math.min(elapsed / settleDuration, 1.0);
   const eased = settle * settle;
+  // Gentle fixed pulse regardless of intensity
   const basePulse = 0.7 + 0.3 * Math.sin(elapsed * 2.0);
   const pulse = lerp(1.0, basePulse, eased);
   const om = opacityMult * pulse;
   const topOp = lerp(0.85, 0.3, eased);
   const midHighOp = lerp(0.7, 0.4, eased);
   const midOp = lerp(0.55, 0.5, eased);
-  const angle = (90 + elapsed * 60 * eased) * Math.PI / 180;
 
-  return { om, topOp, midHighOp, midOp, angle, shades };
+  return { om, topOp, midHighOp, midOp, shades };
 }
 
 function drawRoundedRect(ctx, x, y, w, h, r) {
@@ -64,8 +64,8 @@ function drawRoundedRect(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
-function createConicGradient(ctx, cx, cy, params) {
-  const { om, topOp, midHighOp, midOp, angle, shades } = params;
+function createConicGradient(ctx, cx, cy, params, angle) {
+  const { om, topOp, midHighOp, midOp, shades } = params;
   const grad = ctx.createConicGradient(angle, cx, cy);
   const c = shades.core, m = shades.mid;
   grad.addColorStop(0.00, hsbToCSS(m.h, m.s, m.b, 0.7 * om));
@@ -80,13 +80,21 @@ function createConicGradient(ctx, cx, cy, params) {
   return grad;
 }
 
-export default function SiriGlow({ active, color = '#EB6139', width, height, borderRadius = 12 }) {
+export default function SiriGlow({ active, color = '#EB6139', intensity = 1, width, height, borderRadius = 12 }) {
   const canvasRef = useRef(null);
   const animRef = useRef(null);
   const startRef = useRef(0);
+  const lastTimeRef = useRef(0);
+  const angleRef = useRef(0);
   const shadesRef = useRef(getGlowShades(color));
   const opacityRef = useRef(0);
   const fadingRef = useRef(false);
+  const intensityTargetRef = useRef(intensity);
+  const intensityRef = useRef(intensity);
+
+  useEffect(() => {
+    intensityTargetRef.current = intensity;
+  }, [intensity]);
 
   useEffect(() => {
     shadesRef.current = getGlowShades(color);
@@ -96,8 +104,10 @@ export default function SiriGlow({ active, color = '#EB6139', width, height, bor
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    if (!startRef.current) startRef.current = time;
+    if (!startRef.current) { startRef.current = time; lastTimeRef.current = time; }
     const elapsed = (time - startRef.current) / 1000;
+    const dt = (time - lastTimeRef.current) / 1000;
+    lastTimeRef.current = time;
 
     // Fade in/out
     if (active && !fadingRef.current) {
@@ -123,10 +133,26 @@ export default function SiriGlow({ active, color = '#EB6139', width, height, bor
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, w, h);
 
+    // Smoothly animate intensity toward target
+    const target = intensityTargetRef.current;
+    const diff = target - intensityRef.current;
+    intensityRef.current += diff * 0.03;
+    if (Math.abs(diff) < 0.01) intensityRef.current = target;
+
+    // Intensity scaling: more people = bigger, stronger glow
+    const iRaw = Math.min(Math.max(intensityRef.current, 0), 8);
+    const iScale = 1 + (iRaw - 1) * 0.45;
+    const iOpacity = Math.min(1 + (iRaw - 1) * 0.22, 2.5);
+
+    // Accumulate rotation — speed increases with intensity, no jumps
+    const rotSpeed = (60 + Math.min(iRaw, 8) * 15) * Math.PI / 180;
+    angleRef.current += dt * rotSpeed;
+    const angle = angleRef.current;
+
     const globalAlpha = opacityRef.current;
     const shades = shadesRef.current;
     const cx = w / 2, cy = h / 2;
-    const pad = 20; // extra space for blur
+    const pad = 62;
     const cardX = pad, cardY = pad;
     const cardW = w - pad * 2, cardH = h - pad * 2;
     const r = borderRadius;
@@ -136,34 +162,34 @@ export default function SiriGlow({ active, color = '#EB6139', width, height, bor
     drawRoundedRect(ctx, cardX, cardY, cardW, cardH, r);
     ctx.clip();
 
-    // Layer 1: Halo — lineWidth 14, blur 16
+    // Layer 1: Halo — wide spread, heavy blur
     ctx.save();
-    ctx.globalAlpha = globalAlpha * 0.8;
-    ctx.filter = 'blur(16px)';
+    ctx.globalAlpha = Math.min(globalAlpha * 0.8 * iOpacity, 1);
+    ctx.filter = `blur(${Math.round(16 * iScale)}px)`;
     ctx.strokeStyle = createConicGradient(ctx, cx, cy,
-      buildGradientStops(elapsed, 0.8, shades));
-    ctx.lineWidth = 14;
+      buildGradientStops(elapsed, 0.8 * iOpacity, shades, iRaw), angle);
+    ctx.lineWidth = 14 * iScale;
     drawRoundedRect(ctx, cardX, cardY, cardW, cardH, r);
     ctx.stroke();
     ctx.restore();
 
-    // Layer 2: Main — lineWidth 6, blur 4
+    // Layer 2: Main glow
     ctx.save();
-    ctx.globalAlpha = globalAlpha;
-    ctx.filter = 'blur(4px)';
+    ctx.globalAlpha = Math.min(globalAlpha * iOpacity, 1);
+    ctx.filter = `blur(${Math.round(4 * iScale)}px)`;
     ctx.strokeStyle = createConicGradient(ctx, cx, cy,
-      buildGradientStops(elapsed, 1.0, shades));
-    ctx.lineWidth = 6;
+      buildGradientStops(elapsed, 1.0 * iOpacity, shades, iRaw), angle);
+    ctx.lineWidth = 6 * iScale;
     drawRoundedRect(ctx, cardX, cardY, cardW, cardH, r);
     ctx.stroke();
     ctx.restore();
 
-    // Layer 3: Core — lineWidth 3, no blur
+    // Layer 3: Core — sharp edge
     ctx.save();
-    ctx.globalAlpha = globalAlpha;
+    ctx.globalAlpha = Math.min(globalAlpha * iOpacity, 1);
     ctx.strokeStyle = createConicGradient(ctx, cx, cy,
-      buildGradientStops(elapsed, 1.0, shades));
-    ctx.lineWidth = 3;
+      buildGradientStops(elapsed, 1.0 * iOpacity, shades, iRaw), angle);
+    ctx.lineWidth = 3 * iScale;
     drawRoundedRect(ctx, cardX, cardY, cardW, cardH, r);
     ctx.stroke();
     ctx.restore();
@@ -198,9 +224,9 @@ export default function SiriGlow({ active, color = '#EB6139', width, height, bor
       ref={canvasRef}
       style={{
         position: 'absolute',
-        inset: '-20px',
-        width: 'calc(100% + 40px)',
-        height: 'calc(100% + 40px)',
+        inset: '-62px',
+        width: 'calc(100% + 124px)',
+        height: 'calc(100% + 124px)',
         pointerEvents: 'none',
         zIndex: 1,
       }}

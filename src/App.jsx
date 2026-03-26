@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import SiriGlow from './SiriGlow';
-import { offices as officeData } from './data';
+import { offices as officeData, meetingRooms } from './data';
 import './App.css';
 
 const CLAUDE = '#EB6139';
@@ -85,6 +85,8 @@ const BUBBLE_COLORS = [
   { bg: '#103A3A', text: '#3CF5F5', placeholder: 'rgba(60, 245, 245, 0.4)', swatch: '#00CCCC' },
   { bg: '#3A1028', text: '#FF3C8E', placeholder: 'rgba(255, 60, 142, 0.4)', swatch: '#FF2D78' },
   { bg: '#103A20', text: '#46D08F', placeholder: 'rgba(70, 208, 143, 0.4)', swatch: '#2DB86E' },
+  { bg: null, text: null, placeholder: null, swatch: 'shimmer', shimmer: true },
+  { bg: null, text: null, placeholder: null, swatch: 'gradient-green', gradient: 'linear-gradient(90deg, #D4FC79, #96E6A1, #D4FC79)' },
 ];
 
 function ColorStatusBubble({ onEditChange }) {
@@ -125,23 +127,35 @@ function ColorStatusBubble({ onEditChange }) {
   return (
     <div
       ref={wrapperRef}
-      className={`status-wrapper corner-top-right ${float.floating && !editing ? 'floating' : ''}`}
+      className={`status-wrapper corner-top-right ${float.floating && !editing ? 'floating' : ''} ${editing && !closing ? 'editing-active' : ''}`}
       onMouseEnter={() => setHovering(true)}
       onMouseLeave={() => setHovering(false)}
     >
+      {editing && !closing && (
+        <div className="color-swatches">
+          {BUBBLE_COLORS.map((c, i) => (
+            <button
+              key={i}
+              className={`color-swatch ${colorIdx === i ? 'swatch-active' : ''}`}
+              style={{ background: c.swatch === 'shimmer' ? 'linear-gradient(90deg, #888, #fff, #888)' : c.gradient ? c.gradient : c.swatch }}
+              onMouseDown={(e) => { e.preventDefault(); setColorIdx(i); inputRef.current?.focus(); }}
+            />
+          ))}
+        </div>
+      )}
       <div className="status-tail-small" style={bgStyle} />
       <div className="status-tail" style={bgStyle} />
       <div
         className={`status-bubble ${isPlaceholder && !closing ? 'placeholder' : ''}`}
-        style={bgStyle}
+        style={{ ...bgStyle, ...(editing ? { minWidth: '40px' } : {}) }}
         onClick={() => { if (!editing) startEdit(); }}
       >
         <div className="status-bubble-inner">
           {editing ? (
             <input
               ref={inputRef}
-              className="status-input"
-              style={{ opacity: closing ? 0 : 1, transition: 'opacity 0.2s ease-out, color 0.2s ease-out', width: (status ? Math.max(status.length * 8, 24) : 105) + 'px', color: textColor, '--placeholder-color': activeColor.placeholder || 'rgba(255, 255, 255, 0.35)' }}
+              className={`status-input ${activeColor.shimmer && status ? 'shimmer-text' : ''} ${activeColor.gradient && status ? 'gradient-text-green' : ''}`}
+              style={{ opacity: closing ? 0 : 1, transition: 'opacity 0.2s ease-out, color 0.2s ease-out, width 0.2s ease-out', width: Math.max(status.length * 8, 105) + 'px', color: activeColor.shimmer ? undefined : textColor, '--placeholder-color': activeColor.placeholder || 'rgba(255, 255, 255, 0.35)' }}
               value={status}
               placeholder="What's the vibe?"
               size={1}
@@ -154,23 +168,11 @@ function ColorStatusBubble({ onEditChange }) {
               maxLength={30}
             />
           ) : (
-            <span className={`${isPlaceholder ? 'status-text-placeholder' : 'status-text'} status-fade-in`} style={textColor ? { color: textColor } : undefined}>{isPlaceholder ? '…' : status}</span>
+            <span className={`${isPlaceholder ? 'status-text-placeholder' : 'status-text'} ${activeColor.shimmer ? 'shimmer-text' : ''} ${activeColor.gradient ? 'gradient-text-green' : ''} ${!activeColor.shimmer && !activeColor.gradient ? 'status-fade-in' : ''}`} style={textColor ? { color: textColor } : undefined}>{isPlaceholder ? '…' : status}</span>
           )}
         </div>
         <DismissButton visible={hovering && !editing && !!status} onClick={dismiss} />
       </div>
-      {editing && !closing && (
-        <div className="color-swatches">
-          {BUBBLE_COLORS.map((c, i) => (
-            <button
-              key={i}
-              className={`color-swatch ${colorIdx === i ? 'swatch-active' : ''}`}
-              style={{ background: c.swatch }}
-              onMouseDown={(e) => { e.preventDefault(); setColorIdx(i); inputRef.current?.focus(); }}
-            />
-          ))}
-        </div>
-      )}
     </div>
   );
 }
@@ -237,7 +239,7 @@ function StatusBubble({ onEditChange }) {
             <input
               ref={inputRef}
               className="status-input"
-              style={{ opacity: closing ? 0 : 1, transition: 'opacity 0.2s ease-out', width: (status ? Math.max(status.length * 8, 24) : 105) + 'px' }}
+              style={{ opacity: closing ? 0 : 1, transition: 'opacity 0.2s ease-out', width: Math.max(status.length * 8, 105) + 'px' }}
               value={status}
               placeholder="What's the vibe?"
               size={1}
@@ -435,10 +437,18 @@ function DraggableBubble({ text, onDismiss }) {
 }
 
 const STATIC_STATUSES = {
-  1: 'Do not disturb',
-  6: 'On a call',
+  1: 'Heads down',
+  4: 'On a call',
+  6: 'Do not disturb',
+  8: 'Customer call',
   13: 'AFK',
   15: 'Heads down',
+  17: 'Deep work',
+  19: 'Planning',
+  22: 'Interviewing',
+  25: 'On PTO',
+  28: 'Debugging',
+  30: 'Building',
 };
 
 const DEV_ACTIVITIES = [
@@ -458,11 +468,7 @@ function SmallCard({ office, isActive, glowColor, onStatusEdit }) {
   const intervalRef = useRef(null);
   const activityRef = useRef(null);
   const isJoe = office.id === JOE_ID;
-  const isJeff = office.id === 10;
-  const isChelsea = office.id === CHELSEA_ID;
-  const isWill = office.id === WILL_ID;
-  const isMoffa = office.id === 14;
-  const hasColorBubble = isJoe || isWill || isJeff || isMoffa;
+  const hasColorBubble = isJoe;
   const [dismissed, setDismissed] = useState({});
   const staticStatus = !dismissed[office.id] && STATIC_STATUSES[office.id];
 
@@ -518,7 +524,7 @@ function SmallCard({ office, isActive, glowColor, onStatusEdit }) {
           </span>
           <img
             className="ai-icon"
-            src={glowColor === CLAUDE ? '/claude-ai-icon.svg' : '/chatgpt-icon.svg'}
+            src="/claude-ai-icon.svg"
             alt=""
           />
         </span>
@@ -532,7 +538,6 @@ function SmallCard({ office, isActive, glowColor, onStatusEdit }) {
         {office.people.map((person, i) => (
           <div key={i} className="person">
             {hasColorBubble && <ColorStatusBubble onEditChange={setStatusEditing} />}
-            {isChelsea && !dismissed[CHELSEA_ID] && <DraggableBubble text="In a meeting" onDismiss={() => setDismissed(d => ({ ...d, [CHELSEA_ID]: true }))} />}
             {staticStatus && <DraggableBubble text={staticStatus} onDismiss={() => setDismissed(d => ({ ...d, [office.id]: true }))} />}
             <img
               className="avatar"
@@ -542,6 +547,123 @@ function SmallCard({ office, isActive, glowColor, onStatusEdit }) {
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+function MeetingRoomCard({ room }) {
+  const [activeUsers, setActiveUsers] = useState({});
+  const [tokens, setTokens] = useState(0);
+  const [showLabel, setShowLabel] = useState(false);
+  const [fading, setFading] = useState(false);
+  const [activity, setActivity] = useState('');
+  const [activityFading, setActivityFading] = useState(false);
+  const [showTokens, setShowTokens] = useState(true);
+
+  const activeCount = Object.keys(activeUsers).length;
+  const claudeCount = Object.values(activeUsers).filter(t => t === 'claude').length;
+  const codexCount = Object.values(activeUsers).filter(t => t === 'codex').length;
+  const isActive = activeCount > 0;
+  const activeCountRef = useRef(activeCount);
+  useEffect(() => { activeCountRef.current = activeCount; }, [activeCount]);
+
+  // Cycle people on/off with wide variation — can range from 0 to all 8
+  useEffect(() => {
+    const timers = [];
+    const activatePerson = (person) => {
+      setActiveUsers(prev => ({ ...prev, [person.name]: person.aiTool }));
+      // Active for 6s–35s
+      const duration = 6000 + Math.random() * 29000;
+      const t = setTimeout(() => {
+        setActiveUsers(prev => {
+          const next = { ...prev };
+          delete next[person.name];
+          return next;
+        });
+        // Off for 3s–18s — enough to drop to 0 sometimes
+        const pause = 3000 + Math.random() * 15000;
+        const t2 = setTimeout(() => activatePerson(person), pause);
+        timers.push(t2);
+      }, duration);
+      timers.push(t);
+    };
+    // Stagger initial joins over a wider window
+    room.people.forEach((person) => {
+      const delay = 1000 + Math.random() * 12000;
+      const t = setTimeout(() => activatePerson(person), delay);
+      timers.push(t);
+    });
+    return () => timers.forEach(t => clearTimeout(t));
+  }, []);
+
+  // Token counter — rate scales with active headcount
+  useEffect(() => {
+    if (!isActive) {
+      if (showLabel) {
+        setFading(true);
+        const t = setTimeout(() => { setShowLabel(false); setFading(false); }, 500);
+        return () => clearTimeout(t);
+      }
+      return;
+    }
+    setFading(false);
+    setShowLabel(true);
+    setTokens(0);
+    setShowTokens(true);
+    setActivity(DEV_ACTIVITIES[Math.floor(Math.random() * DEV_ACTIVITIES.length)]);
+    const tokenInterval = setInterval(() => {
+      setTokens(prev => prev + Math.floor(Math.random() * 40 * activeCountRef.current + 10));
+    }, 200);
+    const actInterval = setInterval(() => {
+      setActivityFading(true);
+      setTimeout(() => {
+        setShowTokens(prev => {
+          if (prev) setActivity(DEV_ACTIVITIES[Math.floor(Math.random() * DEV_ACTIVITIES.length)]);
+          return !prev;
+        });
+        setActivityFading(false);
+      }, 400);
+    }, 3000 + Math.random() * 2000);
+    return () => { clearInterval(tokenInterval); clearInterval(actInterval); };
+  }, [isActive]);
+
+  const displayTokens = useAnimatedNumber(tokens);
+  // Check if room has any codex people at all
+  const hasCodex = room.people.some(p => p.aiTool === 'codex');
+  const hasClaude = room.people.some(p => p.aiTool === 'claude');
+  // Shift color redder as more Claude users pile on
+  const claudeColor = claudeCount >= 4 ? '#CC1515' : claudeCount >= 3 ? '#D52520' : claudeCount >= 2 ? '#E04030' : CLAUDE;
+  const baseColor = hasClaude ? claudeColor : CODEX;
+  const intensity = activeCount;
+
+  return (
+    <div className="meeting-room-card">
+      <SiriGlow active={isActive} color={baseColor} intensity={intensity} borderRadius={12} />
+      {hasClaude && activeCount >= 2 && (
+        <SiriGlow active={true} color="#FF0A0A" intensity={Math.max(activeCount - 1, 0) * 0.9} borderRadius={12} />
+      )}
+      {hasCodex && hasClaude && codexCount > 0 && claudeCount > 0 && (
+        <SiriGlow active={true} color={CODEX} intensity={codexCount} borderRadius={12} />
+      )}
+      {showLabel && (
+        <span className={`token-label ${fading ? 'fade-out' : ''}`} style={{ color: claudeCount >= 2 ? 'rgba(213, 37, 32, 0.8)' : hasClaude ? 'rgba(235, 97, 57, 0.8)' : 'rgba(255, 255, 255, 0.5)' }}>
+          <span className="activity-text">{activeCount} Vibing</span>
+          {hasClaude && <img className="ai-icon" src="/claude-ai-icon.svg" alt="" />}
+          {hasCodex && codexCount > 0 && <img className="ai-icon" src="/chatgpt-icon.svg" alt="" />}
+        </span>
+      )}
+      <div className="card-header">
+        <h3 className={`office-name ${showLabel ? 'name-hidden' : ''}`}>{room.name}</h3>
+      </div>
+      <div className="meeting-room-people">
+        {room.people.map((person, i) => (
+          <div key={i} className="person meeting-room-person">
+            <img className="avatar" src={person.avatar} alt={person.name} />
+            <div className={`avatar-inner-glow ${activeUsers[person.name] ? (activeUsers[person.name] === 'claude' ? 'glow-claude' : 'glow-codex') : 'glow-off'}`} />
+          </div>
+        ))}
+      </div>
+      <div className="meeting-room-lines" />
     </div>
   );
 }
@@ -559,70 +681,68 @@ export default function App() {
 
     const tick = () => {
       setActiveMap(prev => {
-        // Pick an office that isn't already active
         const available = ids.filter(id => !prev[id]);
         if (available.length === 0) return prev;
-        const id = available[Math.floor(Math.random() * available.length)];
-        const color = Math.random() > 0.5 ? CLAUDE : CODEX;
+        const count = 1;
+        const next = { ...prev };
+        for (let i = 0; i < count; i++) {
+          const remaining = available.filter(id => !next[id]);
+          if (remaining.length === 0) break;
+          const id = remaining[Math.floor(Math.random() * remaining.length)];
 
-        // Most are 5-15s, but ~10% run for 30s-2 minutes (long agent sessions)
-        const duration = Math.random() < 0.1
-          ? 30000 + Math.random() * 90000
-          : 5000 + Math.random() * 10000;
-        setTimeout(() => {
-          setActiveMap(p => {
-            const next = { ...p };
-            delete next[id];
-            return next;
-          });
-        }, duration);
+          // Longer durations so more stay lit simultaneously
+          const duration = Math.random() < 0.1
+            ? 20000 + Math.random() * 40000
+            : 5000 + Math.random() * 10000;
+          setTimeout(() => {
+            setActiveMap(p => {
+              const n = { ...p };
+              delete n[id];
+              return n;
+            });
+          }, duration);
 
-        return { ...prev, [id]: color };
+          next[id] = CLAUDE;
+        }
+        return next;
       });
     };
 
-    setTimeout(tick, 800);
+    for (let i = 0; i < 3; i++) setTimeout(tick, 500 + i * 800);
 
-    const interval = setInterval(tick, 5000 + Math.random() * 4000);
+    const interval = setInterval(tick, 4000 + Math.random() * 3000);
     return () => clearInterval(interval);
   }, [small.length]);
 
-  const [cols, setCols] = useState(5);
-
-  useEffect(() => {
-    const update = () => {
-      const w = window.innerWidth;
-      if (w <= 600) setCols(2);
-      else if (w <= 900) setCols(3);
-      else setCols(5);
-    };
-    update();
-    window.addEventListener('resize', update);
-    return () => window.removeEventListener('resize', update);
-  }, []);
-
-  const rows = [];
-  for (let i = 0; i < small.length; i += cols) {
-    rows.push(small.slice(i, i + cols));
-  }
+  // Build combined items list with meeting rooms at their grid positions
+  const allItems = small.map(o => ({ ...o, type: 'office' }));
+  [...meetingRooms].sort((a, b) => a.gridIndex - b.gridIndex).forEach((room, i) => {
+    allItems.splice(room.gridIndex + i, 0, { ...room, type: 'meeting-room' });
+  });
 
   return (
     <div className="layout">
       <div className={`brick-grid ${editingId != null ? 'has-editing' : ''}`}>
-        {rows.map((row, rowIdx) => (
-          <div key={rowIdx} className={`brick-row ${rowIdx % 2 === 1 ? 'offset' : ''}`} style={{ zIndex: rows.length - rowIdx, position: 'relative' }}>
-            {row.map(o => (
-              <div key={o.id} className={`grid-item ${(o.id === JOE_ID || o.id === CHELSEA_ID || o.id === WILL_ID || o.id === 10 || o.id === 14 || STATIC_STATUSES[o.id]) ? 'has-bubble' : ''} ${editingId === o.id ? 'editing-bubble' : ''}`}>
-                <SmallCard
-                  office={o}
-                  isActive={!!activeMap[o.id]}
-                  glowColor={activeMap[o.id] || CLAUDE}
-                  onStatusEdit={(v) => setEditingId(v ? o.id : null)}
-                />
+        {allItems.map(item => {
+          if (item.type === 'meeting-room') {
+            return (
+              <div key={item.id} className="grid-item grid-item-large">
+                <MeetingRoomCard room={item} />
               </div>
-            ))}
-          </div>
-        ))}
+            );
+          }
+          const o = item;
+          return (
+            <div key={o.id} className={`grid-item ${(o.id === JOE_ID || o.id === CHELSEA_ID || o.id === WILL_ID || o.id === 10 || o.id === 14 || o.id === 20 || STATIC_STATUSES[o.id]) ? 'has-bubble' : ''} ${editingId === o.id ? 'editing-bubble' : ''}`}>
+              <SmallCard
+                office={o}
+                isActive={!!activeMap[o.id]}
+                glowColor={activeMap[o.id] || CLAUDE}
+                onStatusEdit={(v) => setEditingId(v ? o.id : null)}
+              />
+            </div>
+          );
+        })}
       </div>
     </div>
   );
