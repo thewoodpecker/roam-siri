@@ -141,8 +141,8 @@ export default function SiriGlow({ active, color = '#EB6139', intensity = 1, wid
 
     // Intensity scaling: more people = bigger, stronger glow
     const iRaw = Math.min(Math.max(intensityRef.current, 0), 8);
-    const iScale = 1 + (iRaw - 1) * 0.45;
-    const iOpacity = Math.min(1 + (iRaw - 1) * 0.22, 2.5);
+    const iScale = 1 + (iRaw - 1) * 0.18;
+    const iOpacity = Math.min(1 + (iRaw - 1) * 0.12, 1.8);
 
     // Accumulate rotation — speed increases with intensity, no jumps
     const rotSpeed = (60 + Math.min(iRaw, 8) * 15) * Math.PI / 180;

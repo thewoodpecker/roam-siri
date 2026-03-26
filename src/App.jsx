@@ -437,18 +437,9 @@ function DraggableBubble({ text, onDismiss }) {
 }
 
 const STATIC_STATUSES = {
-  1: 'Heads down',
   4: 'On a call',
-  6: 'Do not disturb',
-  8: 'Customer call',
-  13: 'AFK',
-  15: 'Heads down',
-  17: 'Deep work',
   19: 'Planning',
-  22: 'Interviewing',
-  25: 'On PTO',
-  28: 'Debugging',
-  30: 'Building',
+  15: 'Heads down',
 };
 
 const DEV_ACTIVITIES = [
@@ -632,15 +623,15 @@ function MeetingRoomCard({ room }) {
   const hasCodex = room.people.some(p => p.aiTool === 'codex');
   const hasClaude = room.people.some(p => p.aiTool === 'claude');
   // Shift color redder as more Claude users pile on
-  const claudeColor = claudeCount >= 4 ? '#CC1515' : claudeCount >= 3 ? '#D52520' : claudeCount >= 2 ? '#E04030' : CLAUDE;
+  const claudeColor = claudeCount >= 4 ? '#E05A3A' : claudeCount >= 3 ? '#E04E30' : claudeCount >= 2 ? '#E05535' : CLAUDE;
   const baseColor = hasClaude ? claudeColor : CODEX;
   const intensity = activeCount;
 
   return (
     <div className="meeting-room-card">
       <SiriGlow active={isActive} color={baseColor} intensity={intensity} borderRadius={12} />
-      {hasClaude && activeCount >= 2 && (
-        <SiriGlow active={true} color="#FF0A0A" intensity={Math.max(activeCount - 1, 0) * 0.9} borderRadius={12} />
+      {hasClaude && activeCount >= 3 && (
+        <SiriGlow active={true} color="#E8604A" intensity={Math.max(activeCount - 2, 0) * 0.5} borderRadius={12} />
       )}
       {hasCodex && hasClaude && codexCount > 0 && claudeCount > 0 && (
         <SiriGlow active={true} color={CODEX} intensity={codexCount} borderRadius={12} />
