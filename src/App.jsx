@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import SiriGlow from './SiriGlow';
 import { offices as officeData, meetingRooms } from './data';
 import './App.css';
@@ -1230,6 +1230,12 @@ function TabSwitcher({ activeTab, onTabChange }) {
       >
         Big Meetings
       </button>
+      <button
+        className={`tab-button ${activeTab === 'experimental' ? 'tab-active' : ''}`}
+        onClick={() => onTabChange('experimental')}
+      >
+        EPCOT
+      </button>
     </div>
   );
 }
@@ -1451,10 +1457,529 @@ function BigMeetingsView() {
   );
 }
 
+function CircularRoom({ peopleCount = 200, speakerCount = 4, spacing = 22, rotation = 0, glowColor = '#00D4FF' }) {
+  const [speakers, setSpeakers] = useState({});
+  const [leavingSpeakers, setLeavingSpeakers] = useState({});
+  const [dotSpeakers, setDotSpeakers] = useState({});
+  const [time, setTime] = useState(0);
+  const [joinedSeat, setJoinedSeat] = useState(null);
+
+  // Orbit animation
+  useEffect(() => {
+    if (rotation === 0) return;
+    const interval = setInterval(() => {
+      setTime(t => t + 0.02 * (rotation / 50));
+    }, 30);
+    return () => clearInterval(interval);
+  }, [rotation]);
+
+  // Generate ring layout
+  const rings = [];
+  let placed = 0;
+  let ringIdx = 0;
+  rings.push({ radius: 0, count: 1, startIdx: 0 });
+  placed = 1;
+  ringIdx = 1;
+  while (placed < peopleCount) {
+    const count = Math.floor(6 * ringIdx);
+    rings.push({ radius: ringIdx * spacing, count, startIdx: placed });
+    placed += count;
+    ringIdx++;
+  }
+  // Add extra empty rings so the room feels spacious
+  const extraRings = Math.max(3, Math.ceil(ringIdx * 0.5));
+  for (let e = 0; e < extraRings; e++) {
+    const count = Math.floor(6 * ringIdx);
+    rings.push({ radius: ringIdx * spacing, count, startIdx: placed });
+    placed += count;
+    ringIdx++;
+  }
+
+  const totalSlots = placed;
+  const totalRings = rings.length;
+  const outerRadius = (totalRings - 1) * spacing + 16;
+  const size = outerRadius * 2 + 20;
+
+  // Randomly distribute people across all slots (deterministic per peopleCount)
+  const occupiedSlots = useMemo(() => {
+    let s = (peopleCount * 2654435761) >>> 0;
+    const rand = () => { s = (Math.imul(s, 1103515245) + 12345) >>> 0; return (s >>> 16) / 0xffff; };
+    const all = Array.from({ length: totalSlots }, (_, i) => i);
+    for (let i = all.length - 1; i > 0; i--) {
+      const j = Math.floor(rand() * (i + 1));
+      [all[i], all[j]] = [all[j], all[i]];
+    }
+    return new Set(all.slice(0, Math.min(peopleCount, totalSlots)));
+  }, [peopleCount, totalSlots]);
+
+  // Occupied positions as array (for random speaker picking)
+  const occupiedArray = useMemo(() => [...occupiedSlots], [occupiedSlots]);
+
+  // Build stage positions — occupied slots in inner rings (radius < spacing*3)
+  const stageSlots = useMemo(() => {
+    // Ring 0: 1 slot. Ring k: floor(6*k) slots. Inner = rings with radius < spacing*3 (rings 0,1,2)
+    let innerEnd = 1;
+    for (let k = 1; k < 3; k++) innerEnd += Math.floor(6 * k);
+    const slots = [];
+    for (let idx = 1; idx < innerEnd; idx++) {
+      if (occupiedSlots.has(idx)) slots.push(idx);
+    }
+    return slots;
+  }, [occupiedSlots]);
+
+  // Cycle active speakers using stage slots
+  useEffect(() => {
+    if (stageSlots.length === 0) return;
+    const timers = [];
+    const promote = () => {
+      const slot = stageSlots[Math.floor(Math.random() * stageSlots.length)];
+      setSpeakers(prev => {
+        if (Object.keys(prev).length >= speakerCount) return prev;
+        if (prev[slot]) return prev;
+        return { ...prev, [slot]: true };
+      });
+      const duration = 4000 + Math.random() * 8000;
+      const t = setTimeout(() => {
+        setLeavingSpeakers(prev => ({ ...prev, [slot]: true }));
+        setTimeout(() => {
+          setSpeakers(prev => { const n = { ...prev }; delete n[slot]; return n; });
+          setLeavingSpeakers(prev => { const n = { ...prev }; delete n[slot]; return n; });
+        }, 400);
+      }, duration);
+      timers.push(t);
+    };
+    for (let i = 0; i < speakerCount; i++) {
+      const t = setTimeout(promote, 500 + i * 600);
+      timers.push(t);
+    }
+    const interval = setInterval(promote, 2000 + Math.random() * 2000);
+    return () => { clearInterval(interval); timers.forEach(t => clearTimeout(t)); };
+  }, [peopleCount, speakerCount, spacing, stageSlots]);
+
+  // Dot speaking indicators — only on occupied seats
+  useEffect(() => {
+    if (occupiedArray.length === 0) return;
+    const timers = [];
+    const startSpeaker = () => {
+      const idx = occupiedArray[Math.floor(Math.random() * occupiedArray.length)];
+      setDotSpeakers(prev => {
+        if (Object.keys(prev).length >= 2) return prev;
+        return { ...prev, [idx]: true };
+      });
+      const t = setTimeout(() => {
+        setDotSpeakers(prev => { const n = { ...prev }; delete n[idx]; return n; });
+      }, 1500 + Math.random() * 3000);
+      timers.push(t);
+    };
+    const interval = setInterval(startSpeaker, 2000 + Math.random() * 3000);
+    return () => { clearInterval(interval); timers.forEach(t => clearTimeout(t)); };
+  }, [occupiedArray]);
+
+  // Avatars for hover
+  const avatarList = [
+    'aaron-wadhwa', 'arnav-bansal', 'ava-lee', 'chelsea-turbin', 'derek-cicerone',
+    'garima-kewlani', 'grace-sutherland', 'howard-lerman', 'jeff-grossman', 'joe-woodward',
+    'john-beutner', 'john-huffsmith', 'john-moffa', 'jon-brod', 'keegan-lanzillotta',
+    'lexi-bohonnon', 'mattias-leino', 'klas-leino', 'michael-miller', 'michael-walrath',
+    'peter-lerman', 'rob-figueiredo', 'sean-macisaac', 'thomas-grapperon', 'tom-dixon',
+  ];
+
+  const cx = size / 2;
+  const cy = size / 2;
+
+  return (
+    <div className="circular-room" style={{ width: size, height: size }}>
+      {/* EPCOT-inspired architectural guides */}
+      <svg className="circular-guides" width={size} height={size}>
+        {/* Radial fade gradient for wedge sectors */}
+        <defs>
+          <radialGradient id="wedgeFade" cx="50%" cy="50%" r="50%">
+            <stop offset="20%" stopColor="rgba(255,255,255,0.025)" />
+            <stop offset="100%" stopColor="rgba(255,255,255,0)" />
+          </radialGradient>
+        </defs>
+
+        {/* Zone fills — wedge sectors between spokes, extending to edge */}
+        {Array.from({ length: 16 }).map((_, i) => {
+          const a1 = (i / 16) * Math.PI * 2;
+          const a2 = ((i + 1) / 16) * Math.PI * 2;
+          const innerR = spacing * 3;
+          if (i % 2 === 0) {
+            const d = `M ${cx + Math.cos(a1) * innerR} ${cy + Math.sin(a1) * innerR} A ${innerR} ${innerR} 0 0 1 ${cx + Math.cos(a2) * innerR} ${cy + Math.sin(a2) * innerR} L ${cx + Math.cos(a2) * outerRadius} ${cy + Math.sin(a2) * outerRadius} A ${outerRadius} ${outerRadius} 0 0 0 ${cx + Math.cos(a1) * outerRadius} ${cy + Math.sin(a1) * outerRadius} Z`;
+            return <path key={`w${i}`} d={d} fill="url(#wedgeFade)" />;
+          }
+          return null;
+        })}
+
+        {/* Concentric ring guides — zone boundaries */}
+        {rings.map((ring, ri) => ri > 0 && (
+          <circle key={ri} cx={cx} cy={cy} r={ring.radius} fill="none" stroke="rgba(255,255,255,0.025)" strokeWidth="1.5" />
+        ))}
+
+        {/* Central stage */}
+        <circle cx={cx} cy={cy} r={spacing * 3} fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.08)" strokeWidth="1.5" style={{ cursor: 'pointer', pointerEvents: 'all' }} onClick={() => setJoinedSeat('stage')} />
+
+
+        {/* Radial avenues — 16 spokes, starting outside stage */}
+        {Array.from({ length: 16 }).map((_, i) => {
+          const angle = (i / 16) * Math.PI * 2;
+          const isMajor = i % 4 === 0;
+          const innerR = spacing * 3;
+          return (
+            <line key={`r${i}`} x1={cx + Math.cos(angle) * innerR} y1={cy + Math.sin(angle) * innerR} x2={cx + Math.cos(angle) * outerRadius} y2={cy + Math.sin(angle) * outerRadius} stroke={isMajor ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.02)'} strokeWidth={isMajor ? 1.5 : 0.5} />
+          );
+        })}
+
+        {/* Transit cross-lines (horizontal + vertical, outside stage) */}
+        <line x1={cx - outerRadius} y1={cy} x2={cx - spacing * 3} y2={cy} stroke="rgba(255,255,255,0.03)" strokeWidth="2" />
+        <line x1={cx + spacing * 3} y1={cy} x2={cx + outerRadius} y2={cy} stroke="rgba(255,255,255,0.03)" strokeWidth="2" />
+        <line x1={cx} y1={cy - outerRadius} x2={cx} y2={cy - spacing * 3} stroke="rgba(255,255,255,0.025)" strokeWidth="1.5" />
+        <line x1={cx} y1={cy + spacing * 3} x2={cx} y2={cy + outerRadius} stroke="rgba(255,255,255,0.025)" strokeWidth="1.5" />
+
+      </svg>
+
+      {/* People dots arranged in rings */}
+      {rings.map((ring) =>
+        Array.from({ length: ring.count }).map((_, dotIdx) => {
+          const globalIdx = ring.startIdx + dotIdx;
+          // Each ring orbits at a different speed, alternating direction
+          const orbitOffset = rotation > 0 ? time * (ringIdx % 2 === 0 ? 1 : -0.7) * (1 + ringIdx * 0.1) : 0;
+          const angle = ring.count === 1 ? 0 : (dotIdx / ring.count) * Math.PI * 2 - Math.PI / 2 + orbitOffset;
+          const x = cx + Math.cos(angle) * ring.radius;
+          const y = cy + Math.sin(angle) * ring.radius;
+          const isJoined = joinedSeat === globalIdx;
+          const isOccupied = occupiedSlots.has(globalIdx);
+          const isEmpty = !isOccupied && !isJoined;
+          const isSpeaker = isOccupied && speakers[globalIdx];
+          const isDotSpeaking = isOccupied && dotSpeakers[globalIdx];
+          const isInner = ring.radius < spacing * 3;
+          const dotSize = isInner ? 10 : 6;
+          const avatarFile = avatarList[globalIdx % avatarList.length];
+          const personName = avatarFile.split('-').map(w => w[0].toUpperCase() + w.slice(1)).join(' ');
+
+          return (
+            isInner && isEmpty ? null :
+            isInner && isSpeaker ? (
+              <div
+                key={globalIdx}
+                className={`circular-avatar-speaker ${leavingSpeakers[globalIdx] ? 'circular-avatar-leaving' : ''}`}
+                style={{
+                  left: x - 20,
+                  top: y - 20,
+                }}
+              >
+                <img className="avatar" src={`/headshots/${avatarFile}.jpg`} alt={personName} style={{ width: 40, height: 40, display: 'block' }} />
+                <div className="circular-speak-pulse" style={{ animationDelay: `${(globalIdx * 0.4) % 1.2}s` }} />
+                <div className="avatar-hover-name">
+                  <span className="dot-hover-name">{personName}</span>
+                </div>
+              </div>
+            ) : isJoined ? (
+              <div
+                key={globalIdx}
+                className="circular-dot circular-dot-joined"
+                style={{
+                  left: x - dotSize / 2,
+                  top: y - dotSize / 2,
+                  width: dotSize,
+                  height: dotSize,
+                }}
+              >
+                <div className="dot-hover-avatar" style={{ bottom: y > cy ? 'auto' : 'calc(100% + 6px)', top: y > cy ? 'calc(100% + 6px)' : 'auto', transformOrigin: y > cy ? 'top center' : 'bottom center' }}>
+                  <img src="/headshots/joe-woodward.jpg" alt="" />
+                  <span className="dot-hover-name">Joe Woodward</span>
+                </div>
+              </div>
+            ) : (
+              <div
+                key={globalIdx}
+                className={`circular-dot ${isEmpty ? 'circular-dot-empty' : ''} ${isSpeaker ? 'circular-dot-speaker' : ''} ${isDotSpeaking ? 'circular-dot-talking' : ''}`}
+                style={{
+                  left: x - dotSize / 2,
+                  top: y - dotSize / 2,
+                  width: dotSize,
+                  height: dotSize,
+                  ...(isSpeaker ? { background: glowColor, boxShadow: `0 0 8px ${glowColor}60` } : {}),
+                  ...(isDotSpeaking ? { background: `${glowColor}AA` } : {}),
+                }}
+                {...(isEmpty ? { onClick: () => setJoinedSeat(globalIdx) } : {})}
+              >
+                {!isEmpty && (
+                  <div className="dot-hover-avatar" style={{ bottom: y > cy ? 'auto' : 'calc(100% + 6px)', top: y > cy ? 'calc(100% + 6px)' : 'auto', transformOrigin: y > cy ? 'top center' : 'bottom center' }}>
+                    <img src={`/headshots/${avatarFile}.jpg`} alt="" />
+                    <span className="dot-hover-name">{personName}</span>
+                  </div>
+                )}
+              </div>
+            )
+          );
+        })
+      )}
+
+      {/* User avatar on stage */}
+      {joinedSeat === 'stage' && (
+        <div
+          className="circular-avatar-speaker"
+          style={{ left: cx - 20, top: cy - 20 }}
+        >
+          <img className="avatar" src="/headshots/joe-woodward.jpg" alt="Joe Woodward" style={{ width: 40, height: 40, display: 'block' }} />
+          <div className="avatar-hover-name">
+            <span className="dot-hover-name">Joe Woodward</span>
+          </div>
+        </div>
+      )}
+
+    </div>
+  );
+}
+
+function EpcotControls({ people, onPeople, speakers, onSpeakers, spacing, onSpacing, rotation, onRotation, glowColor, onGlowColor, zoom, onZoom }) {
+  const stops = [1, 5, 10, 25, 50, 100, 200, 500, 1000];
+  const idx = stops.findIndex(s => s >= people);
+  const sliderIdx = idx === -1 ? stops.length - 1 : idx;
+  return (
+    <div className="dev-controls epcot-controls">
+      <div className="dev-controls-header">epcot controls</div>
+      <div className="dev-controls-row">
+        <span className="dev-label">people</span>
+        <input type="range" min={0} max={stops.length - 1} value={sliderIdx} onChange={(e) => onPeople(stops[Number(e.target.value)])} className="dev-slider" />
+        <span className="dev-value">{people}</span>
+      </div>
+      <div className="dev-controls-row">
+        <span className="dev-label">speakers</span>
+        <input type="range" min={1} max={10} value={speakers} onChange={(e) => onSpeakers(Number(e.target.value))} className="dev-slider" />
+        <span className="dev-value">{speakers}</span>
+      </div>
+      <div className="dev-controls-row">
+        <span className="dev-label">density</span>
+        <input type="range" min={12} max={40} value={spacing} onChange={(e) => onSpacing(Number(e.target.value))} className="dev-slider" />
+        <span className="dev-value">{spacing}px</span>
+      </div>
+      <div className="dev-controls-row">
+        <span className="dev-label">orbit</span>
+        <input type="range" min={0} max={100} value={rotation} onChange={(e) => onRotation(Number(e.target.value))} className="dev-slider" />
+        <span className="dev-value">{rotation === 0 ? 'off' : `${rotation}%`}</span>
+      </div>
+      <div className="dev-controls-row">
+        <span className="dev-label">glow</span>
+        <div className="dev-swatches">
+          {GLOW_COLORS.map(c => (
+            <button key={c.color} className={`dev-swatch ${glowColor === c.color ? 'dev-swatch-active' : ''}`} style={{ background: c.color }} onClick={() => onGlowColor(c.color)} title={c.name} />
+          ))}
+        </div>
+      </div>
+      <div className="dev-controls-row">
+        <span className="dev-label">zoom</span>
+        <input type="range" min={15} max={300} value={Math.round(zoom * 100)} onChange={(e) => onZoom(Number(e.target.value) / 100)} className="dev-slider" />
+        <span className="dev-value">{Math.round(zoom * 100)}%</span>
+      </div>
+    </div>
+  );
+}
+
+function SatelliteOffice({ name, people }) {
+  const count = people.length;
+  const size = count <= 1 ? 90 : count <= 3 ? 130 : count <= 5 ? 170 : 210;
+  const avatarSize = count <= 1 ? 44 : count <= 3 ? 36 : 30;
+  const [speakingIdx, setSpeakingIdx] = useState(-1);
+
+  useEffect(() => {
+    if (count <= 1) return;
+    const cycle = () => {
+      setSpeakingIdx(Math.floor(Math.random() * count));
+      const t = setTimeout(() => {
+        setSpeakingIdx(-1);
+        timerId = setTimeout(cycle, 1500 + Math.random() * 3000);
+      }, 2000 + Math.random() * 4000);
+      timerId = t;
+    };
+    let timerId = setTimeout(cycle, Math.random() * 3000);
+    return () => clearTimeout(timerId);
+  }, [count]);
+
+  return (
+    <div className="satellite-office" style={{ width: size, height: size }}>
+      {people.map((p, i) => {
+        const radius = count === 1 ? 0 : size * 0.28;
+        const angle = (i / count) * Math.PI * 2 - Math.PI / 2;
+        const x = count === 1 ? (size - avatarSize) / 2 : size / 2 + Math.cos(angle) * radius - avatarSize / 2;
+        const y = count === 1 ? (size - avatarSize) / 2 : size / 2 + Math.sin(angle) * radius - avatarSize / 2;
+        const isSpeaking = i === speakingIdx;
+        return (
+          <div key={i} className={`satellite-avatar-wrap ${isSpeaking ? 'satellite-speaking' : ''}`}
+            style={{ position: 'absolute', left: x, top: y, width: avatarSize, height: avatarSize }}>
+            <img
+              className="avatar"
+              src={p.avatar}
+              alt={p.name}
+              style={{ width: avatarSize, height: avatarSize, display: 'block' }}
+            />
+          </div>
+        );
+      })}
+      <span className="satellite-office-label">{name}</span>
+    </div>
+  );
+}
+
+function ExperimentalView() {
+  const [peopleCount, setPeopleCount] = useState(200);
+  const [speakerCount, setSpeakerCount] = useState(4);
+  const [spacing, setSpacing] = useState(22);
+  const [rotation, setRotation] = useState(0);
+  const [glowColor, setGlowColor] = useState('#00D4FF');
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(0.7);
+  const isPanning = useRef(false);
+  const panStart = useRef({ x: 0, y: 0 });
+  const panOrigin = useRef({ x: 0, y: 0 });
+  const viewportRef = useRef(null);
+
+  // Center canvas on mount
+  useEffect(() => {
+    if (viewportRef.current) {
+      const rect = viewportRef.current.getBoundingClientRect();
+      setPan({ x: rect.width / 2, y: rect.height / 2 });
+    }
+  }, []);
+
+  // Zoom with wheel (non-passive so we can preventDefault)
+  useEffect(() => {
+    const el = viewportRef.current;
+    if (!el) return;
+    const handler = (e) => {
+      e.preventDefault();
+      if (e.ctrlKey || e.metaKey) {
+        // Pinch-to-zoom (trackpad) or ctrl+scroll (mouse)
+        const factor = Math.exp(-e.deltaY * 0.01);
+        setZoom(prev => {
+          const next = Math.max(0.15, Math.min(3, prev * factor));
+          if (next === prev) return prev;
+          const rect = el.getBoundingClientRect();
+          const cx = e.clientX - rect.left;
+          const cy = e.clientY - rect.top;
+          const scale = next / prev;
+          setPan(p => ({
+            x: cx - scale * (cx - p.x),
+            y: cy - scale * (cy - p.y),
+          }));
+          return next;
+        });
+      } else {
+        // Two-finger scroll — pan
+        setPan(p => ({
+          x: p.x - e.deltaX,
+          y: p.y - e.deltaY,
+        }));
+      }
+    };
+    el.addEventListener('wheel', handler, { passive: false });
+    return () => el.removeEventListener('wheel', handler);
+  }, []);
+
+  const handleMouseDown = (e) => {
+    // Don't pan when clicking interactive room elements
+    if (e.target.closest('.circular-dot, .circular-avatar-speaker, .satellite-office, .dev-controls')) return;
+    if (e.target.tagName === 'circle' && e.target.style.cursor === 'pointer') return;
+    isPanning.current = true;
+    panStart.current = { x: e.clientX, y: e.clientY };
+    panOrigin.current = { x: pan.x, y: pan.y };
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isPanning.current) return;
+    setPan({
+      x: panOrigin.current.x + (e.clientX - panStart.current.x),
+      y: panOrigin.current.y + (e.clientY - panStart.current.y),
+    });
+  };
+
+  const handleMouseUp = () => { isPanning.current = false; };
+
+  // Compute approximate main room size for layout
+  let approxPlaced = 1, approxRing = 1;
+  while (approxPlaced < peopleCount) {
+    approxPlaced += Math.floor(6 * approxRing);
+    approxRing++;
+  }
+  approxRing += Math.max(3, Math.ceil(approxRing * 0.5));
+  const approxRadius = (approxRing - 1) * spacing + 16;
+  const mainSize = approxRadius * 2 + 20;
+
+  // Satellite rooms — mix of team rooms and individual offices
+  const satelliteRooms = useMemo(() => [
+    { id: 'eng-1', name: 'Tomorrowland', people: officeData.slice(0, 4).flatMap(o => o.people) },
+    { id: 'product', name: 'Horizons', people: officeData.slice(4, 7).flatMap(o => o.people) },
+    { id: 'design', name: 'Spaceship Earth', people: officeData.slice(7, 10).flatMap(o => o.people) },
+    { id: 'ops', name: 'The Living Seas', people: officeData.slice(10, 13).flatMap(o => o.people) },
+    { id: 'growth', name: 'Imagination', people: officeData.slice(13, 16).flatMap(o => o.people) },
+    { id: 'leadership', name: 'Mission Control', people: officeData.slice(16, 19).flatMap(o => o.people) },
+    { id: 'eng-2', name: 'Cosmic Ray', people: officeData.slice(19, 22).flatMap(o => o.people) },
+    { id: 'data', name: 'Moonliner', people: officeData.slice(22, 25).flatMap(o => o.people) },
+    ...officeData.map(o => ({ id: `solo-${o.id}`, name: o.name, people: o.people })),
+  ], []);
+
+  // Lay out satellites in multiple rings so they don't overlap
+  const satelliteLayout = useMemo(() => {
+    // Team rooms (multi-person) on inner ring, solo offices on outer ring
+    const teams = satelliteRooms.filter(r => r.people.length > 1);
+    const solos = satelliteRooms.filter(r => r.people.length <= 1);
+    const layout = [];
+    const innerOrbit = mainSize / 2 + 140;
+    teams.forEach((room, i) => {
+      const angle = (i / teams.length) * Math.PI * 2 - Math.PI / 2;
+      layout.push({ ...room, angle, orbit: innerOrbit });
+    });
+    const outerOrbit = innerOrbit + 200;
+    solos.forEach((room, i) => {
+      const angle = (i / solos.length) * Math.PI * 2 - Math.PI / 2;
+      layout.push({ ...room, angle, orbit: outerOrbit });
+    });
+    return layout;
+  }, [satelliteRooms, mainSize]);
+
+  return (
+    <div
+      ref={viewportRef}
+      className="canvas-viewport"
+      onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseUp}
+    >
+      <div className="canvas-content" style={{
+        transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+      }}>
+        {/* Main EPCOT room centered at origin */}
+        <div style={{ position: 'absolute', left: -mainSize / 2, top: -mainSize / 2 }}>
+          <CircularRoom peopleCount={peopleCount} speakerCount={speakerCount} spacing={spacing} rotation={rotation} glowColor={glowColor} />
+        </div>
+
+        {/* Satellite offices in rings */}
+        {satelliteLayout.map((room) => {
+          const count = room.people.length;
+          const roomSize = count <= 1 ? 90 : count <= 3 ? 130 : count <= 5 ? 170 : 210;
+          return (
+            <div key={room.id} style={{
+              position: 'absolute',
+              left: Math.cos(room.angle) * room.orbit - roomSize / 2,
+              top: Math.sin(room.angle) * room.orbit - roomSize / 2,
+            }}>
+              <SatelliteOffice name={room.name} people={room.people} />
+            </div>
+          );
+        })}
+      </div>
+
+      <EpcotControls people={peopleCount} onPeople={setPeopleCount} speakers={speakerCount} onSpeakers={setSpeakerCount} spacing={spacing} onSpacing={setSpacing} rotation={rotation} onRotation={setRotation} glowColor={glowColor} onGlowColor={setGlowColor} zoom={zoom} onZoom={setZoom} />
+    </div>
+  );
+}
+
 function useHashTab() {
   const getTab = () => {
     const hash = window.location.hash.replace('#', '');
-    const valid = ['big-meetings', 'war-room'];
+    const valid = ['big-meetings', 'war-room', 'experimental'];
     return valid.includes(hash) ? hash : 'claude-max';
   };
   const [tab, setTab] = useState(getTab);
@@ -1484,6 +2009,7 @@ export default function App() {
       {activeTab === 'claude-max' && <ClaudeMaxView />}
       {activeTab === 'war-room' && <WarRoomView />}
       {activeTab === 'big-meetings' && <BigMeetingsView />}
+      {activeTab === 'experimental' && <ExperimentalView />}
     </div>
   );
 }
