@@ -901,7 +901,7 @@ function MeetingRoomCard({ room }) {
         </span>
       )}
       <div className="card-header">
-        <h3 className="office-name">{room.name} <span className="room-count">{arrivedCount} here</span></h3>
+        <h3 className="office-name">{room.name} {arrivedCount > 20 && <span className="room-count">{arrivedCount} here</span>}</h3>
       </div>
       {room.crowd ? (
         <CrowdScrollWrap scrollEnabled={arrivedCount > SIZE_SMALL}>
