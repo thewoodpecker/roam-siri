@@ -590,6 +590,15 @@ function TheaterGrid({ room, arrivedCount }) {
   const basePeople = useRef(room.people.slice());
   const sizeMode = arrivedCount <= SIZE_FULL ? 'full' : arrivedCount <= SIZE_SMALL ? 'small' : 'dots';
   const isTheaterMode = sizeMode === 'dots';
+  const maxArrivedRef = useRef(0);
+  if (arrivedCount > maxArrivedRef.current) maxArrivedRef.current = arrivedCount;
+  useEffect(() => {
+    if (arrivedCount < maxArrivedRef.current) {
+      const t = setTimeout(() => { maxArrivedRef.current = arrivedCount; }, 350);
+      return () => clearTimeout(t);
+    }
+  }, [arrivedCount]);
+  const renderCount = Math.max(arrivedCount, maxArrivedRef.current);
 
   // Grow people array
   useEffect(() => {
@@ -682,8 +691,8 @@ function TheaterGrid({ room, arrivedCount }) {
     // Full / small avatar mode — same as CrowdGrid
     return (
       <div className={`crowd-container crowd-${sizeMode}`} style={{ padding: '4px 16px' }}>
-        {people.slice(0, arrivedCount).map((person, i) => (
-          <div key={i} className="crowd-item">
+        {people.slice(0, renderCount).map((person, i) => (
+          <div key={i} className={`crowd-item ${i >= arrivedCount ? 'crowd-item-leaving' : ''}`}>
             <img className="avatar crowd-avatar" src={person.avatar} alt={person.displayName || person.name} />
             <div className={`crowd-speak ${speakers[i] ? 'speaking' : ''}`} />
             <div className="avatar-hover-name">
