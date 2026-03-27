@@ -24,9 +24,7 @@ export const offices = [
   { id: 25, name: 'Sean M.', size: 'small', people: [{ name: 'Sean MacIsaac', avatar: '/headshots/sean-macisaac.jpg' }] },
   { id: 27, name: 'Thomas G.', size: 'small', people: [{ name: 'Thomas Grapperon', avatar: '/headshots/thomas-grapperon.jpg' }] },
   { id: 28, name: 'Tom D.', size: 'small', people: [{ name: 'Tom Dixon', avatar: '/headshots/tom-dixon.jpg' }] },
-  { id: 29, name: 'Vincent L.', size: 'small', people: [{ name: 'Vincent Le', avatar: '/headshots/vincent-le.jpg' }] },
   { id: 30, name: 'Will H.', size: 'small', people: [{ name: 'Will Hou', avatar: '/headshots/will-hou.jpg' }] },
-  { id: 31, name: 'Apu N.', size: 'small', people: [{ name: 'Apu Nahasapeemapetilon', avatar: '/headshots/apu-nahasapeemapetilon.png' }] },
 ];
 
 export const meetingRooms = [
@@ -44,5 +42,47 @@ export const meetingRooms = [
       { name: 'Will Hou', avatar: '/headshots/will-hou.jpg', aiTool: 'claude' },
       { name: 'Jeff Grossman', avatar: '/headshots/jeff-grossman.jpg', aiTool: 'claude' },
     ]
+  },
+  {
+    id: 'walt-disney',
+    name: 'Walt Disney',
+    size: 'large',
+    crowd: true,
+    people: (() => {
+      const people = [
+        { name: 'Aaron Wadhwa', avatar: '/headshots/aaron-wadhwa.jpg' },
+        { name: 'Arnav Bansal', avatar: '/headshots/arnav-bansal.jpg' },
+        { name: 'Ava Lee', avatar: '/headshots/ava-lee.jpg' },
+        { name: 'Chelsea Turbin', avatar: '/headshots/chelsea-turbin.jpg' },
+        { name: 'Derek Cicerone', avatar: '/headshots/derek-cicerone.jpg' },
+        { name: 'Garima Kewlani', avatar: '/headshots/garima-kewlani.jpg' },
+        { name: 'Grace Sutherland', avatar: '/headshots/grace-sutherland.jpg' },
+        { name: 'Howard Lerman', avatar: '/headshots/howard-lerman.jpg' },
+        { name: 'Jeff Grossman', avatar: '/headshots/jeff-grossman.jpg' },
+        { name: 'Joe Woodward', avatar: '/headshots/joe-woodward.jpg' },
+        { name: 'John Beutner', avatar: '/headshots/john-beutner.jpg' },
+        { name: 'John Huffsmith', avatar: '/headshots/john-huffsmith.jpg' },
+        { name: 'John Moffa', avatar: '/headshots/john-moffa.jpg' },
+        { name: 'Jon Brod', avatar: '/headshots/jon-brod.jpg' },
+        { name: 'Keegan Lanzillotta', avatar: '/headshots/keegan-lanzillotta.jpg' },
+        { name: 'Lexi Bohonnon', avatar: '/headshots/lexi-bohonnon.jpg' },
+        { name: 'Mattias Leino', avatar: '/headshots/mattias-leino.jpg' },
+        { name: 'Klas Leino', avatar: '/headshots/klas-leino.jpg' },
+        { name: 'Michael Miller', avatar: '/headshots/michael-miller.jpg' },
+        { name: 'Michael Walrath', avatar: '/headshots/michael-walrath.jpg' },
+        { name: 'Peter Lerman', avatar: '/headshots/peter-lerman.jpg' },
+        { name: 'Rob Figueiredo', avatar: '/headshots/rob-figueiredo.jpg' },
+        { name: 'Sean MacIsaac', avatar: '/headshots/sean-macisaac.jpg' },
+        { name: 'Thomas Grapperon', avatar: '/headshots/thomas-grapperon.jpg' },
+        { name: 'Tom Dixon', avatar: '/headshots/tom-dixon.jpg' },
+        { name: 'Will Hou', avatar: '/headshots/will-hou.jpg' },
+      ];
+      return Array.from({ length: 200 }, (_, i) => ({
+        ...people[i % people.length],
+        displayName: people[i % people.length].name,
+        name: `${people[i % people.length].name}_${i}`,
+        aiTool: null,
+      }));
+    })(),
   }
 ];

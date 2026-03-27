@@ -8,17 +8,47 @@
   gap: 30px;
 }
 
+.floor-plan {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
 .brick-grid {
-  display: grid;
-  grid-template-columns: repeat(5, 160px);
-  grid-auto-flow: dense;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.brick-row {
+  display: flex;
   gap: 8px;
   justify-content: center;
+  overflow: visible;
+}
+
+.brick-row.offset {
+  padding-left: 85px;
 }
 
 .grid-item {
+  width: 160px;
+  flex-shrink: 0;
   position: relative;
   overflow: visible;
+}
+
+.meeting-room-sidebar {
+  flex-shrink: 0;
+  width: 260px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-self: start;
+}
+
+.meeting-room-sidebar .meeting-room-crowd {
+  height: 250px;
 }
 
 .grid-item.has-bubble {
@@ -85,6 +115,13 @@
 .card-icon {
   font-size: 11px;
   opacity: 0.6;
+}
+
+.room-count {
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.35);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 .token-label {
@@ -470,27 +507,26 @@
 
 
 /* Meeting room card */
-.grid-item-large {
-  grid-column: span 2;
-  grid-row: span 2;
-  position: relative;
-  overflow: visible;
-}
-
 .meeting-room-card {
   background-color: #1D1E20;
   border-radius: 12px;
-  padding: 10px 12px;
-  height: 100%;
+  padding: 10px 0;
   box-sizing: border-box;
   cursor: pointer;
   position: relative;
   overflow: visible;
 }
 
+.meeting-room-card > .card-header,
+.meeting-room-card > .token-label,
+.meeting-room-card > .meeting-room-people {
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
 .meeting-room-people {
   display: grid;
-  grid-template-columns: repeat(4, auto);
+  grid-template-columns: repeat(3, auto);
   gap: 8px;
   padding: 4px 0;
   position: relative;
@@ -531,6 +567,307 @@
   opacity: 0;
 }
 
+.meeting-room-crowd {
+  display: flex;
+  flex-direction: column;
+}
+
+.crowd-scroll-wrap {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+.crowd-scroll {
+  overflow-y: auto;
+  overflow-x: hidden;
+  height: 100%;
+  padding: 0 12px;
+}
+
+.no-scroll .crowd-scroll {
+  overflow: visible;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.crowd-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.crowd-scroll-wrap::before,
+.crowd-scroll-wrap::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 24px;
+  pointer-events: none;
+  z-index: 5;
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.crowd-scroll-wrap::before {
+  top: -1px;
+  background: linear-gradient(to bottom, #1D1E20 20%, transparent);
+}
+
+.crowd-scroll-wrap::after {
+  bottom: 0;
+  background: linear-gradient(to top, #1D1E20, transparent);
+}
+
+.crowd-scroll-wrap.mask-top::before {
+  opacity: 1;
+}
+
+.crowd-scroll-wrap.mask-bottom::after {
+  opacity: 1;
+}
+
+/* Crowd layout — 3 size modes */
+.crowd-container {
+  display: flex;
+  flex-wrap: wrap;
+  position: relative;
+  z-index: 2;
+  padding: 4px 0;
+  transition: gap 1s ease-in-out;
+}
+
+.crowd-full {
+  gap: 8px;
+}
+
+.crowd-small {
+  gap: 5px;
+}
+
+.crowd-dots {
+  gap: 3px;
+}
+
+.crowd-item {
+  position: relative;
+  isolation: isolate;
+  transition: all 1s ease-in-out;
+  animation: dotArrive 0.3s ease-out both;
+}
+
+.crowd-full .crowd-item {
+  width: 48px;
+  height: 48px;
+}
+
+.crowd-small .crowd-item {
+  width: 24px;
+  height: 24px;
+}
+
+.crowd-dots .crowd-item {
+  width: 6px;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.crowd-dots .crowd-item::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+}
+
+.crowd-item-leaving {
+  animation: dotLeave 0.3s ease-in forwards !important;
+}
+
+@keyframes dotLeave {
+  0% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(0); opacity: 0; }
+}
+
+/* Avatar fills parent, fades out at dot size */
+.crowd-avatar {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transition: opacity 1s ease-in-out;
+}
+
+.crowd-dots .crowd-avatar {
+  opacity: 0;
+}
+
+/* Speaking indicator for avatar modes */
+.crowd-item {
+  position: relative;
+  isolation: isolate;
+  width: fit-content;
+  height: fit-content;
+}
+
+.crowd-item .crowd-avatar {
+  position: relative;
+  z-index: 1;
+}
+
+.crowd-speak {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  pointer-events: none;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: opacity 0.4s ease-in-out, transform 0.4s ease-in-out;
+  z-index: 0;
+}
+
+.crowd-speak.speaking {
+  opacity: 1;
+  transform: scale(1);
+  animation: dotSpeak 0.6s ease-in-out infinite alternate;
+}
+
+/* Crowd dot grid for large rooms */
+.crowd-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  padding: 6px 0;
+  position: relative;
+  z-index: 2;
+}
+
+.crowd-dots .crowd-item {
+  cursor: pointer;
+}
+
+@keyframes dotArrive {
+  from { opacity: 0; transform: scale(0); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.crowd-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  transition: background-color 0.6s ease-in-out, box-shadow 0.6s ease-in-out;
+}
+
+.dot-idle {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.dot-claude {
+  background: rgba(235, 97, 57, 0.9);
+  box-shadow: 0 0 4px rgba(235, 97, 57, 0.5);
+}
+
+.dot-codex {
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 0 4px rgba(255, 255, 255, 0.4);
+}
+
+.dot-speaking-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  margin-top: -5px;
+  margin-left: -5px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+  pointer-events: none;
+  opacity: 0;
+  transform: scale(0.5);
+  transition: opacity 0.4s ease-in-out, transform 0.4s ease-in-out;
+}
+
+.dot-speaking-ring.speaking {
+  opacity: 1;
+  transform: scale(1);
+  animation: dotSpeak 0.6s ease-in-out infinite alternate;
+}
+
+@keyframes dotSpeak {
+  0% { transform: scale(0.9); }
+  100% { transform: scale(1.1); }
+}
+
+.dot-hover-avatar {
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%) scale(0.5);
+  transform-origin: bottom center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.dot-hover-below .dot-hover-avatar {
+  bottom: auto;
+  top: calc(100% + 4px);
+  transform-origin: top center;
+}
+
+.avatar-hover-name {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%) scale(0.8);
+  transform-origin: top center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+  z-index: 999999;
+  margin-top: -2px;
+}
+
+.crowd-item:hover {
+  z-index: 999999;
+}
+
+.crowd-item:hover .avatar-hover-name {
+  opacity: 1;
+  transform: translateX(-50%) scale(1);
+}
+
+.crowd-item:hover .dot-hover-avatar {
+  opacity: 1;
+  transform: translateX(-50%) scale(1);
+}
+
+.dot-hover-avatar img {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: center top;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+}
+
+.dot-hover-name {
+  font-size: 9px;
+  font-weight: 500;
+  color: #fff;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+  margin-top: -6px;
+}
+
 .meeting-room-lines {
   position: absolute;
   bottom: 0;
@@ -551,19 +888,27 @@
   z-index: 1;
 }
 
-/* Mobile: 2 columns */
+/* Mobile */
 @media (max-width: 600px) {
   .layout {
     padding: 20px 10px;
     overflow-x: hidden;
   }
 
-  .brick-grid {
-    grid-template-columns: repeat(2, 1fr);
+  .floor-plan {
+    flex-direction: column;
   }
 
-  .grid-item-large {
-    grid-column: span 2;
+  .brick-row.offset {
+    padding-left: calc(25vw - 5px);
+  }
+
+  .grid-item {
+    width: calc(50vw - 18px);
+  }
+
+  .meeting-room-sidebar {
+    width: 100%;
   }
 
   .office-card {
@@ -582,10 +927,14 @@
   }
 }
 
-/* Tablet: 3 columns */
+/* Tablet */
 @media (min-width: 601px) and (max-width: 900px) {
-  .brick-grid {
-    grid-template-columns: repeat(3, 140px);
+  .brick-row.offset {
+    padding-left: 55px;
+  }
+
+  .grid-item {
+    width: 140px;
   }
 
   .avatar {
