@@ -534,7 +534,7 @@ function SmallCard({ office, isActive, glowColor, onStatusEdit }) {
   );
 }
 
-function CrowdScrollWrap({ children, scrollEnabled }) {
+function CrowdScrollWrap({ children, scrollEnabled, disableAutoScroll }) {
   const scrollRef = useRef(null);
   const wrapRef = useRef(null);
 
@@ -569,7 +569,7 @@ function CrowdScrollWrap({ children, scrollEnabled }) {
   }, []);
 
   useEffect(() => {
-    if (userScrolledRef.current) return;
+    if (disableAutoScroll || userScrolledRef.current) return;
     const el = scrollRef.current;
     if (!el) return;
     el.scrollTop = el.scrollHeight;
@@ -584,7 +584,7 @@ function CrowdScrollWrap({ children, scrollEnabled }) {
   );
 }
 
-function TheaterGrid({ room, arrivedCount }) {
+function TheaterGrid({ room, arrivedCount, speakerOverride, showSeats, joinedSeat, onJoinSeat }) {
   const [activeSpeakers, setActiveSpeakers] = useState([]);
   const [people, setPeople] = useState(room.people);
   const basePeople = useRef(room.people.slice());
@@ -621,8 +621,9 @@ function TheaterGrid({ room, arrivedCount }) {
       const idx = Math.floor(Math.random() * Math.min(arrivedCount, people.length));
       const person = people[idx];
       if (!person) return;
+      const maxSpeakers = speakerOverride || 6;
       setActiveSpeakers(prev => {
-        if (prev.length >= 6 || prev.some(s => s.idx === idx)) return prev;
+        if (prev.length >= maxSpeakers || prev.some(s => s.idx === idx)) return prev;
         return [...prev, { idx, person }];
       });
       const duration = 5000 + Math.random() * 10000;
@@ -637,7 +638,14 @@ function TheaterGrid({ room, arrivedCount }) {
     }
     const interval = setInterval(promote, 2000 + Math.random() * 3000);
     return () => { clearInterval(interval); timers.forEach(t => clearTimeout(t)); };
-  }, [isTheaterMode]);
+  }, [isTheaterMode, speakerOverride]);
+
+  // Trim speakers if override reduces
+  useEffect(() => {
+    if (speakerOverride) {
+      setActiveSpeakers(prev => prev.slice(0, speakerOverride));
+    }
+  }, [speakerOverride]);
 
   // Speaking indicator for dots
   const [dotSpeakers, setDotSpeakers] = useState({});
@@ -687,19 +695,59 @@ function TheaterGrid({ room, arrivedCount }) {
     return () => { clearInterval(interval); timers.forEach(t => clearTimeout(t)); };
   }, [isTheaterMode, arrivedCount]);
 
+  // Calculate seat count to fill the card
+  const cardW = 320 - 32;
+  const cardH = 340 - 40;
+  const itemSize = isTheaterMode ? 6 : sizeMode === 'full' ? 48 : sizeMode === 'small' ? 24 : 6;
+  const gapSize = isTheaterMode ? 3 : sizeMode === 'full' ? 8 : sizeMode === 'small' ? 5 : 3;
+  const cols = Math.floor((cardW + gapSize) / (itemSize + gapSize));
+  const rowsFit = Math.floor((cardH + gapSize) / (itemSize + gapSize));
+  const totalSeats = cols * rowsFit;
+
   if (!isTheaterMode) {
-    // Full / small avatar mode — same as CrowdGrid
+    // Full / small avatar mode
+    const visibleCount = Math.max(renderCount, showSeats ? totalSeats : 0);
     return (
       <div className={`crowd-container crowd-${sizeMode}`} style={{ padding: '4px 16px' }}>
-        {people.slice(0, renderCount).map((person, i) => (
-          <div key={i} className={`crowd-item ${i >= arrivedCount ? 'crowd-item-leaving' : ''}`}>
-            <img className="avatar crowd-avatar" src={person.avatar} alt={person.displayName || person.name} />
-            <div className={`crowd-speak ${speakers[i] ? 'speaking' : ''}`} />
-            <div className="avatar-hover-name">
-              <span className="dot-hover-name">{person.displayName || person.name}</span>
+        {Array.from({ length: visibleCount }).map((_, i) => {
+          const person = people[i];
+          const isOccupied = i < arrivedCount;
+          const isJoined = joinedSeat === i;
+          const isLeaving = i >= arrivedCount && i < renderCount;
+          const isEmpty = !isOccupied && !isJoined;
+
+          if (isJoined) {
+            return (
+              <div key={i} className="crowd-item">
+                <img className="avatar crowd-avatar" src="/headshots/joe-woodward.jpg" alt="Joe Woodward" />
+                <div className="avatar-hover-name">
+                  <span className="dot-hover-name">Joe Woodward</span>
+                </div>
+              </div>
+            );
+          }
+
+          if (isEmpty && showSeats) {
+            return (
+              <div key={i} className="crowd-item seat-empty" onClick={() => onJoinSeat?.(i)}>
+                <div className="seat-circle" />
+                <img className="seat-preview-avatar" src="/headshots/joe-woodward.jpg" alt="" />
+              </div>
+            );
+          }
+
+          if (!person || isEmpty) return null;
+
+          return (
+            <div key={i} className={`crowd-item ${isLeaving ? 'crowd-item-leaving' : ''}`}>
+              <img className="avatar crowd-avatar" src={person.avatar} alt={person.displayName || person.name} />
+              <div className={`crowd-speak ${speakers[i] ? 'speaking' : ''}`} />
+              <div className="avatar-hover-name">
+                <span className="dot-hover-name">{person.displayName || person.name}</span>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     );
   }
@@ -715,19 +763,33 @@ function TheaterGrid({ room, arrivedCount }) {
             <div key={idx} className="theater-speaker">
               <div className="theater-avatar-wrap">
                 <img className="avatar theater-avatar" src={person.avatar} alt={person.displayName || person.name} />
-                <div className="theater-speak-ring" />
+                <div className="theater-speak-ring" style={{ animationDelay: `${(idx * 0.37) % 1.2}s` }} />
               </div>
               <div className="theater-name"><span className="dot-hover-name">{person.displayName || person.name}</span></div>
             </div>
           ))}
         </div>
       )}
-      {passivePeople.length > 0 && (
-        <CrowdScrollWrap scrollEnabled={true}>
-          <div className="theater-audience">
-            {passivePeople.map((person, i) => (
-              <div key={person.name} className="crowd-item crowd-dots-item">
-                <div className="theater-dot" />
+      <CrowdScrollWrap scrollEnabled={true} disableAutoScroll={showSeats}>
+        <div className="theater-audience">
+          {Array.from({ length: showSeats ? totalSeats : passivePeople.length }).map((_, i) => {
+            const person = passivePeople[i];
+            const isOccupied = i < passivePeople.length && person;
+            const isEmpty = !isOccupied;
+
+            if (isEmpty && showSeats) {
+              return (
+                <div key={i} className="crowd-item crowd-dots-item seat-empty" onClick={() => onJoinSeat?.(`dot-${i}`)}>
+                  <div className="seat-circle seat-dot" />
+                </div>
+              );
+            }
+
+            if (!isOccupied) return null;
+
+            return (
+              <div key={person.name} className={`crowd-item crowd-dots-item ${i < cols * 3 ? 'dot-hover-below' : ''}`}>
+                <div className="theater-dot theater-dot-occupied" />
                 <div className={`dot-speaking-ring ${dotSpeakers[i] ? 'speaking' : ''}`} />
                 {person.avatar && (
                   <div className="dot-hover-avatar">
@@ -736,10 +798,15 @@ function TheaterGrid({ room, arrivedCount }) {
                   </div>
                 )}
               </div>
-            ))}
-          </div>
-        </CrowdScrollWrap>
-      )}
+            );
+          })}
+          {joinedSeat && joinedSeat.startsWith('dot-') && (
+            <div className="crowd-item crowd-dots-item">
+              <div className="theater-dot theater-dot-joined" />
+            </div>
+          )}
+        </div>
+      </CrowdScrollWrap>
     </div>
   );
 }
@@ -874,7 +941,7 @@ function CrowdGrid({ room, activeUsers, arrivedCount }) {
   );
 }
 
-function MeetingRoomCard({ room }) {
+function MeetingRoomCard({ room, vibeOverride, peopleOverride, speakerOverride, glowColorOverride }) {
   const [activeUsers, setActiveUsers] = useState({});
   const [tokens, setTokens] = useState(0);
   const [showLabel, setShowLabel] = useState(false);
@@ -888,12 +955,34 @@ function MeetingRoomCard({ room }) {
   const drainingRef = useRef(false);
   useEffect(() => { arrivedCountRef.current = arrivedCount; }, [arrivedCount]);
 
+  // peopleOverride: animate toward target count
+  const peopleTargetRef = useRef(peopleOverride);
+  useEffect(() => {
+    if (peopleOverride === undefined || peopleOverride === null) return;
+    peopleTargetRef.current = peopleOverride;
+    const interval = setInterval(() => {
+      setArrivedCount(prev => {
+        const target = peopleTargetRef.current;
+        if (prev === target) { clearInterval(interval); return prev; }
+        if (prev < target) {
+          const step = Math.max(1, Math.ceil((target - prev) * 0.15));
+          return Math.min(prev + step, target);
+        }
+        const step = Math.max(1, Math.ceil((prev - target) * 0.15));
+        return Math.max(prev - step, target);
+      });
+    }, 30);
+    return () => clearInterval(interval);
+  }, [peopleOverride]);
+
   // Gradually fill the room for crowd rooms
   useEffect(() => {
     if (!room.crowd) return;
+    if (peopleOverride !== undefined && peopleOverride !== null) return;
     const total = room.people.length;
     const timers = [];
 
+    const cap = total;
     // Continuous flow — people arrive and leave at random intervals
     const tick = () => {
       setArrivedCount(prev => {
@@ -903,8 +992,8 @@ function MeetingRoomCard({ room }) {
           return prev;
         }
         // Filling phase
-        if (prev >= 600) {
-          // Hit 600 — pause then start draining
+        if (prev >= cap) {
+          // Hit cap — pause then start draining
           if (!pauseStartedRef.current) {
             pauseStartedRef.current = true;
             setTimeout(() => { drainingRef.current = true; }, 10000);
@@ -912,7 +1001,7 @@ function MeetingRoomCard({ room }) {
           return prev;
         }
         if (prev >= SIZE_SMALL) {
-          if (Math.random() < 0.95) return Math.min(600, prev + 2 + Math.floor(Math.random() * 4));
+          if (Math.random() < 0.95) return Math.min(cap, prev + 2 + Math.floor(Math.random() * 4));
           return Math.max(SIZE_SMALL, prev - 1);
         }
         if (Math.random() < 0.9) return prev + 1 + Math.floor(Math.random() * 2);
@@ -1004,6 +1093,16 @@ function MeetingRoomCard({ room }) {
     return () => timers.forEach(t => clearTimeout(t));
   }, []);
 
+  // Dev override: force exact number of vibers
+  useEffect(() => {
+    if (vibeOverride === null || vibeOverride === undefined) return;
+    const target = Math.min(vibeOverride, room.people.length);
+    const activePeople = room.people.filter(p => p.aiTool).slice(0, target);
+    const next = {};
+    activePeople.forEach(p => { next[p.name] = p.aiTool; });
+    setActiveUsers(next);
+  }, [vibeOverride]);
+
   // Token counter — rate scales with active headcount
   useEffect(() => {
     if (!isActive) {
@@ -1042,29 +1141,39 @@ function MeetingRoomCard({ room }) {
   const hasClaude = room.people.some(p => p.aiTool === 'claude');
   // Shift color redder as more Claude users pile on
   const claudeColor = claudeCount >= 4 ? '#E05A3A' : claudeCount >= 3 ? '#E04E30' : claudeCount >= 2 ? '#E05535' : CLAUDE;
-  const baseColor = hasClaude ? claudeColor : CODEX;
-  const intensity = Math.min(activeCount, 8);
+  const baseColor = glowColorOverride || (hasClaude ? claudeColor : CODEX);
+  const intensity = vibeOverride !== null && vibeOverride !== undefined ? vibeOverride : activeCount;
+
+  const [hovered, setHovered] = useState(false);
+  const [joinedSeat, setJoinedSeat] = useState(null);
 
   return (
-    <div className={`meeting-room-card ${room.crowd ? 'meeting-room-crowd' : ''}`}>
+    <div
+      className={`meeting-room-card ${room.crowd ? 'meeting-room-crowd' : ''}`}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
       {hasAnyTool && <SiriGlow active={isActive} color={baseColor} intensity={intensity} borderRadius={12} />}
-      {hasClaude && activeCount >= 3 && (
+      {!glowColorOverride && hasClaude && activeCount >= 3 && (
         <SiriGlow active={true} color="#E8604A" intensity={Math.max(activeCount - 2, 0) * 0.5} borderRadius={12} />
       )}
-      {hasCodex && hasClaude && codexCount > 0 && claudeCount > 0 && (
+      {!glowColorOverride && hasCodex && hasClaude && codexCount > 0 && claudeCount > 0 && (
         <SiriGlow active={true} color={CODEX} intensity={codexCount} borderRadius={12} />
       )}
       {hasAnyTool && showLabel && (
-        <span className={`token-label ${fading ? 'fade-out' : ''}`} style={{ color: claudeCount >= 2 ? 'rgba(213, 37, 32, 0.8)' : hasClaude ? 'rgba(235, 97, 57, 0.8)' : 'rgba(255, 255, 255, 0.5)' }}>
+        <span className={`token-label ${fading ? 'fade-out' : ''}`} style={{ color: glowColorOverride ? `${glowColorOverride}CC` : claudeCount >= 2 ? 'rgba(213, 37, 32, 0.8)' : hasClaude ? 'rgba(235, 97, 57, 0.8)' : 'rgba(255, 255, 255, 0.5)' }}>
           <span className="activity-text">{activeCount} Vibing</span>
-          <img className="ai-icon" src="/claude-ai-icon.svg" alt="" />
+          <svg className="ai-icon" viewBox="0 0 512 509.64" xmlns="http://www.w3.org/2000/svg">
+            <path fill={baseColor} d="M115.612 0h280.775C459.974 0 512 52.026 512 115.612v278.415c0 63.587-52.026 115.612-115.613 115.612H115.612C52.026 509.639 0 457.614 0 394.027V115.612C0 52.026 52.026 0 115.612 0z"/>
+            <path fill={['#FFFFFF', '#00FF88', '#22D3EE', '#00D4FF'].includes(baseColor) ? '#1D1E20' : '#FCF2EE'} fillRule="nonzero" d="M142.27 316.619l73.655-41.326 1.238-3.589-1.238-1.996-3.589-.001-12.31-.759-42.084-1.138-36.498-1.516-35.361-1.896-8.897-1.895-8.34-10.995.859-5.484 7.482-5.03 10.717.935 23.683 1.617 35.537 2.452 25.782 1.517 38.193 3.968h6.064l.86-2.451-2.073-1.517-1.618-1.517-36.776-24.922-39.81-26.338-20.852-15.166-11.273-7.683-5.687-7.204-2.451-15.721 10.237-11.273 13.75.935 3.513.936 13.928 10.716 29.749 23.027 38.848 28.612 5.687 4.727 2.275-1.617.278-1.138-2.553-4.271-21.13-38.193-22.546-38.848-10.035-16.101-2.654-9.655c-.935-3.968-1.617-7.304-1.617-11.374l11.652-15.823 6.445-2.073 15.545 2.073 6.547 5.687 9.655 22.092 15.646 34.78 24.265 47.291 7.103 14.028 3.791 12.992 1.416 3.968 2.449-.001v-2.275l1.997-26.641 3.69-32.707 3.589-42.084 1.239-11.854 5.863-14.206 11.652-7.683 9.099 4.348 7.482 10.716-1.036 6.926-4.449 28.915-8.72 45.294-5.687 30.331h3.313l3.792-3.791 15.342-20.372 25.782-32.227 11.374-12.789 13.27-14.129 8.517-6.724 16.1-.001 11.854 17.617-5.307 18.199-16.581 21.029-13.75 17.819-19.716 26.54-12.309 21.231 1.138 1.694 2.932-.278 44.536-9.479 24.062-4.347 28.714-4.928 12.992 6.066 1.416 6.167-5.106 12.613-30.71 7.583-36.018 7.204-53.636 12.689-.657.48.758.935 24.164 2.275 10.337.556h25.301l47.114 3.514 12.309 8.139 7.381 9.959-1.238 7.583-18.957 9.655-25.579-6.066-59.702-14.205-20.474-5.106-2.83-.001v1.694l17.061 16.682 31.266 28.233 39.152 36.397 1.997 8.999-5.03 7.102-5.307-.758-34.401-25.883-13.27-11.651-30.053-25.302-1.996-.001v2.654l6.926 10.136 36.574 54.975 1.895 16.859-2.653 5.485-9.479 3.311-10.414-1.895-21.408-30.054-22.092-33.844-17.819-30.331-2.173 1.238-10.515 113.261-4.929 5.788-11.374 4.348-9.478-7.204-5.03-11.652 5.03-23.027 6.066-30.052 4.928-23.886 4.449-29.674 2.654-9.858-.177-.657-2.173.278-22.37 30.71-34.021 45.977-26.919 28.815-6.445 2.553-11.173-5.789 1.037-10.337 6.243-9.2 37.257-47.392 22.47-29.371 14.508-16.961-.101-2.451h-.859l-98.954 64.251-17.618 2.275-7.583-7.103.936-11.652 3.589-3.791 29.749-20.474-.101.102.024.101z"/>
+          </svg>
         </span>
       )}
       <div className="card-header">
         <h3 className="office-name">{room.name} {arrivedCount > 20 && <span className="room-count">{arrivedCount} here</span>}</h3>
       </div>
       {room.theater ? (
-        <TheaterGrid room={room} arrivedCount={arrivedCount} />
+        <TheaterGrid room={room} arrivedCount={arrivedCount} speakerOverride={speakerOverride} showSeats={hovered} joinedSeat={joinedSeat} onJoinSeat={setJoinedSeat} />
       ) : room.crowd ? (
         <CrowdScrollWrap scrollEnabled={arrivedCount > SIZE_SMALL}>
           <CrowdGrid room={room} activeUsers={activeUsers} arrivedCount={arrivedCount} />
@@ -1074,7 +1183,10 @@ function MeetingRoomCard({ room }) {
           {room.people.map((person, i) => (
             <div key={i} className="person meeting-room-person">
               <img className="avatar" src={person.avatar} alt={person.name} />
-              <div className={`avatar-inner-glow ${activeUsers[person.name] ? (activeUsers[person.name] === 'claude' ? 'glow-claude' : 'glow-codex') : 'glow-off'}`} />
+              <div
+                className={`avatar-inner-glow ${activeUsers[person.name] ? 'glow-active' : 'glow-off'}`}
+                style={activeUsers[person.name] && glowColorOverride ? { borderColor: `${glowColorOverride}80` } : undefined}
+              />
             </div>
           ))}
         </div>
@@ -1084,13 +1196,79 @@ function MeetingRoomCard({ room }) {
   );
 }
 
-export default function App() {
+function TabSwitcher({ activeTab, onTabChange }) {
+  return (
+    <div className="tab-switcher">
+      <button
+        className={`tab-button ${activeTab === 'claude-max' ? 'tab-active' : ''}`}
+        onClick={() => onTabChange('claude-max')}
+      >
+        Claude Max
+      </button>
+      <button
+        className={`tab-button ${activeTab === 'big-meetings' ? 'tab-active' : ''}`}
+        onClick={() => onTabChange('big-meetings')}
+      >
+        Big Meetings
+      </button>
+    </div>
+  );
+}
+
+const GLOW_COLORS = [
+  { name: 'Claude', color: '#EB6139' },
+  { name: 'Red', color: '#FF2D55' },
+  { name: 'Blue', color: '#00D4FF' },
+  { name: 'Purple', color: '#A855F7' },
+  { name: 'Green', color: '#00FF88' },
+  { name: 'Pink', color: '#FF3CAC' },
+  { name: 'Cyan', color: '#22D3EE' },
+  { name: 'White', color: '#FFFFFF' },
+];
+
+function DevControls({ room, vibeCount, onVibeCountChange, glowColor, onGlowColorChange }) {
+  return (
+    <div className="dev-controls">
+      <div className="dev-controls-header">dev controls</div>
+      <div className="dev-controls-row">
+        <span className="dev-label">vibers</span>
+        <input
+          type="range"
+          min={0}
+          max={50}
+          value={vibeCount}
+          onChange={(e) => onVibeCountChange(Number(e.target.value))}
+          className="dev-slider"
+        />
+        <span className="dev-value">{vibeCount}</span>
+      </div>
+      <div className="dev-controls-row">
+        <span className="dev-label">glow</span>
+        <div className="dev-swatches">
+          {GLOW_COLORS.map(c => (
+            <button
+              key={c.color}
+              className={`dev-swatch ${glowColor === c.color ? 'dev-swatch-active' : ''}`}
+              style={{ background: c.color }}
+              onClick={() => onGlowColorChange(c.color)}
+              title={c.name}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ClaudeMaxView() {
   const [activeMap, setActiveMap] = useState({});
   const [editingId, setEditingId] = useState(null);
+  const [warRoomVibeCount, setWarRoomVibeCount] = useState(null);
+  const [warRoomGlowColor, setWarRoomGlowColor] = useState('#EB6139');
 
   const small = officeData.filter(o => o.size === 'small');
+  const sidebarRooms = meetingRooms.filter(r => r.id !== 'walt-disney' && r.id !== 'alan-kay');
 
-  // Randomly activate offices with random Claude/Codex
   useEffect(() => {
     if (small.length === 0) return;
     const ids = small.map(o => o.id);
@@ -1106,7 +1284,6 @@ export default function App() {
           if (remaining.length === 0) break;
           const id = remaining[Math.floor(Math.random() * remaining.length)];
 
-          // Long durations so many stay lit simultaneously
           const duration = Math.random() < 0.2
             ? 25000 + Math.random() * 50000
             : 8000 + Math.random() * 15000;
@@ -1137,30 +1314,121 @@ export default function App() {
   }
 
   return (
-    <div className="layout">
-      <div className="floor-plan">
-        <div className="meeting-room-sidebar">
-          {meetingRooms.map(room => (
-            <MeetingRoomCard key={room.id} room={room} />
-          ))}
-        </div>
-        <div className={`brick-grid ${editingId != null ? 'has-editing' : ''}`}>
-          {rows.map((row, rowIdx) => (
-            <div key={rowIdx} className={`brick-row ${rowIdx % 2 === 1 ? 'offset' : ''}`} style={{ zIndex: rows.length - rowIdx, position: 'relative' }}>
-              {row.map(o => (
-                <div key={o.id} className={`grid-item ${(o.id === JOE_ID || o.id === CHELSEA_ID || o.id === WILL_ID || o.id === 10 || o.id === 14 || o.id === 20 || STATIC_STATUSES[o.id]) ? 'has-bubble' : ''} ${editingId === o.id ? 'editing-bubble' : ''}`}>
-                  <SmallCard
-                    office={o}
-                    isActive={!!activeMap[o.id]}
-                    glowColor={activeMap[o.id] || CLAUDE}
-                    onStatusEdit={(v) => setEditingId(v ? o.id : null)}
-                  />
-                </div>
-              ))}
-            </div>
-          ))}
-        </div>
+    <div className="floor-plan">
+      <div className="meeting-room-sidebar">
+        {sidebarRooms.map(room => (
+          <React.Fragment key={room.id}>
+            <MeetingRoomCard room={room} vibeOverride={room.id === 'war-room' ? warRoomVibeCount : null} glowColorOverride={room.id === 'war-room' ? warRoomGlowColor : null} />
+            {room.id === 'war-room' && (
+              <DevControls room={room} vibeCount={warRoomVibeCount ?? 0} onVibeCountChange={setWarRoomVibeCount} glowColor={warRoomGlowColor} onGlowColorChange={setWarRoomGlowColor} />
+            )}
+          </React.Fragment>
+        ))}
       </div>
+      <div className={`brick-grid ${editingId != null ? 'has-editing' : ''}`}>
+        {rows.map((row, rowIdx) => (
+          <div key={rowIdx} className={`brick-row ${rowIdx % 2 === 1 ? 'offset' : ''}`} style={{ zIndex: rows.length - rowIdx, position: 'relative' }}>
+            {row.map(o => (
+              <div key={o.id} className={`grid-item ${(o.id === JOE_ID || o.id === CHELSEA_ID || o.id === WILL_ID || o.id === 10 || o.id === 14 || o.id === 20 || STATIC_STATUSES[o.id]) ? 'has-bubble' : ''} ${editingId === o.id ? 'editing-bubble' : ''}`}>
+                <SmallCard
+                  office={o}
+                  isActive={!!activeMap[o.id]}
+                  glowColor={warRoomGlowColor}
+                  onStatusEdit={(v) => setEditingId(v ? o.id : null)}
+                />
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function PeopleCountControls({ value, onChange, speakers, onSpeakersChange }) {
+  const stops = [1, 5, 10, 25, 50, 100, 200, 500, 1000];
+  const idx = stops.findIndex(s => s >= value);
+  const sliderIdx = idx === -1 ? stops.length - 1 : idx;
+  return (
+    <div className="dev-controls" style={{ width: 320 }}>
+      <div className="dev-controls-header">dev controls</div>
+      <div className="dev-controls-row">
+        <span className="dev-label">people</span>
+        <input
+          type="range"
+          min={0}
+          max={stops.length - 1}
+          value={sliderIdx}
+          onChange={(e) => onChange(stops[Number(e.target.value)])}
+          className="dev-slider"
+        />
+        <span className="dev-value">{value}</span>
+      </div>
+      <div className="dev-controls-row">
+        <span className="dev-label">speaking</span>
+        <input
+          type="range"
+          min={1}
+          max={10}
+          value={speakers}
+          onChange={(e) => onSpeakersChange(Number(e.target.value))}
+          className="dev-slider"
+        />
+        <span className="dev-value">{speakers}</span>
+      </div>
+    </div>
+  );
+}
+
+function BigMeetingsView() {
+  const baseRoom = meetingRooms.find(r => r.id === 'alan-kay');
+  const [peopleCount, setPeopleCount] = useState(500);
+  const [speakerCount, setSpeakerCount] = useState(3);
+  if (!baseRoom) return null;
+
+  return (
+    <div className="big-meetings-view">
+      <div className="big-meetings-center">
+        <div className="big-meeting-card">
+          <MeetingRoomCard room={baseRoom} peopleOverride={peopleCount} speakerOverride={speakerCount} />
+        </div>
+        <PeopleCountControls value={peopleCount} onChange={setPeopleCount} speakers={speakerCount} onSpeakersChange={setSpeakerCount} />
+      </div>
+    </div>
+  );
+}
+
+function useHashTab() {
+  const getTab = () => {
+    const hash = window.location.hash.replace('#', '');
+    return hash === 'big-meetings' ? 'big-meetings' : 'claude-max';
+  };
+  const [tab, setTab] = useState(getTab);
+
+  useEffect(() => {
+    const onHash = () => setTab(getTab());
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, []);
+
+  const setActiveTab = (t) => {
+    window.location.hash = t;
+    setTab(t);
+  };
+
+  return [tab, setActiveTab];
+}
+
+export default function App() {
+  const [activeTab, setActiveTab] = useHashTab();
+
+  return (
+    <div className="layout">
+      <div className="toolbar">
+        <TabSwitcher activeTab={activeTab} onTabChange={setActiveTab} />
+      </div>
+      {activeTab === 'claude-max' && <ClaudeMaxView />}
+      {activeTab === 'big-meetings' && <BigMeetingsView />}
     </div>
   );
 }

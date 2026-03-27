@@ -87,10 +87,11 @@ export const meetingRooms = [
   },
   {
     id: 'alan-kay',
-    name: 'Alan Kay',
+    name: 'Computer Department',
     size: 'large',
     crowd: true,
     theater: true,
+    capacity: 1000,
     people: (() => {
       const people = [
         { name: 'Aaron Wadhwa', avatar: '/headshots/aaron-wadhwa.jpg' },
