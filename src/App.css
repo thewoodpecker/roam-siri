@@ -67,6 +67,21 @@
   height: 340px;
 }
 
+.claude-max-layout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.floor-dev-controls {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 280px;
+  z-index: 99999;
+}
+
 .floor-plan {
   display: flex;
   gap: 8px;
@@ -233,6 +248,17 @@
   width: 14px;
   height: 14px;
   border-radius: 3px;
+}
+
+.codex-icon-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.codex-icon-wrap img {
+  display: block;
 }
 
 .people {
@@ -1085,7 +1111,7 @@
   font-size: 12px;
   font-family: 'Menlo', monospace;
   color: rgba(255, 255, 255, 0.5);
-  margin-bottom: 6px;
+  margin-bottom: 12px;
 }
 
 .dev-controls-row {
@@ -1093,6 +1119,7 @@
   align-items: center;
   gap: 8px;
   margin-bottom: 6px;
+  justify-content: space-between;
 }
 
 .dev-controls-row:last-child {
@@ -1110,8 +1137,9 @@
   font-size: 12px;
   font-family: 'Menlo', monospace;
   color: rgba(255, 255, 255, 0.5);
-  min-width: 32px;
+  min-width: 24px;
   text-align: right;
+  margin-left: -4px;
 }
 
 .dev-slider {
@@ -1201,6 +1229,44 @@
 
 .seat-empty:hover .seat-preview-avatar {
   opacity: 0.5;
+}
+
+.war-room-standalone {
+  width: 320px;
+}
+
+.war-room-standalone + .dev-controls {
+  width: 320px;
+  box-sizing: border-box;
+}
+
+.dev-provider-toggle {
+  display: flex;
+  gap: 0;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+  padding: 2px;
+}
+
+.dev-provider-btn {
+  font-size: 11px;
+  font-family: 'Menlo', monospace;
+  color: rgba(255, 255, 255, 0.4);
+  background: none;
+  border: none;
+  padding: 3px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: color 0.2s, background 0.2s;
+}
+
+.dev-provider-btn:hover {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.dev-provider-btn.dev-provider-active {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .big-meetings-center {

@@ -24,7 +24,6 @@ export const offices = [
   { id: 25, name: 'Sean M.', size: 'small', people: [{ name: 'Sean MacIsaac', avatar: '/headshots/sean-macisaac.jpg' }] },
   { id: 27, name: 'Thomas G.', size: 'small', people: [{ name: 'Thomas Grapperon', avatar: '/headshots/thomas-grapperon.jpg' }] },
   { id: 28, name: 'Tom D.', size: 'small', people: [{ name: 'Tom Dixon', avatar: '/headshots/tom-dixon.jpg' }] },
-  { id: 30, name: 'Will H.', size: 'small', people: [{ name: 'Will Hou', avatar: '/headshots/will-hou.jpg' }] },
 ];
 
 export const meetingRooms = [
