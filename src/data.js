@@ -84,5 +84,48 @@ export const meetingRooms = [
         aiTool: null,
       }));
     })(),
+  },
+  {
+    id: 'alan-kay',
+    name: 'Alan Kay',
+    size: 'large',
+    crowd: true,
+    theater: true,
+    people: (() => {
+      const people = [
+        { name: 'Aaron Wadhwa', avatar: '/headshots/aaron-wadhwa.jpg' },
+        { name: 'Arnav Bansal', avatar: '/headshots/arnav-bansal.jpg' },
+        { name: 'Ava Lee', avatar: '/headshots/ava-lee.jpg' },
+        { name: 'Chelsea Turbin', avatar: '/headshots/chelsea-turbin.jpg' },
+        { name: 'Derek Cicerone', avatar: '/headshots/derek-cicerone.jpg' },
+        { name: 'Garima Kewlani', avatar: '/headshots/garima-kewlani.jpg' },
+        { name: 'Grace Sutherland', avatar: '/headshots/grace-sutherland.jpg' },
+        { name: 'Howard Lerman', avatar: '/headshots/howard-lerman.jpg' },
+        { name: 'Jeff Grossman', avatar: '/headshots/jeff-grossman.jpg' },
+        { name: 'Joe Woodward', avatar: '/headshots/joe-woodward.jpg' },
+        { name: 'John Beutner', avatar: '/headshots/john-beutner.jpg' },
+        { name: 'John Huffsmith', avatar: '/headshots/john-huffsmith.jpg' },
+        { name: 'John Moffa', avatar: '/headshots/john-moffa.jpg' },
+        { name: 'Jon Brod', avatar: '/headshots/jon-brod.jpg' },
+        { name: 'Keegan Lanzillotta', avatar: '/headshots/keegan-lanzillotta.jpg' },
+        { name: 'Lexi Bohonnon', avatar: '/headshots/lexi-bohonnon.jpg' },
+        { name: 'Mattias Leino', avatar: '/headshots/mattias-leino.jpg' },
+        { name: 'Klas Leino', avatar: '/headshots/klas-leino.jpg' },
+        { name: 'Michael Miller', avatar: '/headshots/michael-miller.jpg' },
+        { name: 'Michael Walrath', avatar: '/headshots/michael-walrath.jpg' },
+        { name: 'Peter Lerman', avatar: '/headshots/peter-lerman.jpg' },
+        { name: 'Rob Figueiredo', avatar: '/headshots/rob-figueiredo.jpg' },
+        { name: 'Sean MacIsaac', avatar: '/headshots/sean-macisaac.jpg' },
+        { name: 'Thomas Grapperon', avatar: '/headshots/thomas-grapperon.jpg' },
+        { name: 'Tom Dixon', avatar: '/headshots/tom-dixon.jpg' },
+        { name: 'Will Hou', avatar: '/headshots/will-hou.jpg' },
+      ];
+      return Array.from({ length: 500 }, (_, i) => ({
+        ...people[i % people.length],
+        displayName: people[i % people.length].name,
+        name: `ak_${people[i % people.length].name}_${i}`,
+        aiTool: null,
+      }));
+    })(),
   }
 ];

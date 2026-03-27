@@ -888,6 +888,106 @@
   z-index: 1;
 }
 
+/* Theater layout — active speakers + passive audience */
+.theater-container {
+  position: relative;
+  z-index: 2;
+  padding: 4px 0;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.theater-stage {
+  display: grid;
+  grid-template-columns: repeat(3, auto);
+  gap: 8px;
+  padding: 0 12px 8px;
+  width: 100%;
+  box-sizing: border-box;
+  justify-content: start;
+  flex-shrink: 0;
+}
+
+.theater-speaker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  position: relative;
+  animation: dotArrive 0.4s ease-out both;
+}
+
+.theater-avatar {
+  width: 40px;
+  height: 40px;
+  display: block;
+}
+
+.theater-avatar-wrap {
+  position: relative;
+  width: 40px;
+  height: 40px;
+}
+
+.theater-speak-ring {
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  animation: dotSpeak 0.6s ease-in-out infinite alternate;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.theater-name {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%) scale(0.8);
+  transform-origin: top center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+  z-index: 999999;
+  margin-top: -2px;
+}
+
+.theater-name .dot-hover-name {
+  display: block;
+}
+
+.theater-speaker:hover .theater-name {
+  opacity: 1;
+  transform: translateX(-50%) scale(1);
+}
+
+.theater-audience {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  padding-top: 4px;
+}
+
+.theater-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.crowd-dots-item {
+  position: relative;
+  cursor: pointer;
+}
+
+.crowd-dots-item::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+}
+
 /* Mobile */
 @media (max-width: 600px) {
   .layout {

@@ -584,6 +584,157 @@ function CrowdScrollWrap({ children, scrollEnabled }) {
   );
 }
 
+function TheaterGrid({ room, arrivedCount }) {
+  const [activeSpeakers, setActiveSpeakers] = useState([]);
+  const [people, setPeople] = useState(room.people);
+  const basePeople = useRef(room.people.slice());
+  const sizeMode = arrivedCount <= SIZE_FULL ? 'full' : arrivedCount <= SIZE_SMALL ? 'small' : 'dots';
+  const isTheaterMode = sizeMode === 'dots';
+
+  // Grow people array
+  useEffect(() => {
+    if (arrivedCount > people.length) {
+      const base = basePeople.current;
+      const newPeople = [...people];
+      while (newPeople.length < arrivedCount) {
+        const src = base[newPeople.length % base.length];
+        newPeople.push({ ...src, name: `${src.displayName || src.name}_${newPeople.length}` });
+      }
+      setPeople(newPeople);
+    }
+  }, [arrivedCount]);
+
+  // Rotate active speakers once in theater mode
+  useEffect(() => {
+    if (!isTheaterMode) return;
+    const timers = [];
+    const promote = () => {
+      const idx = Math.floor(Math.random() * Math.min(arrivedCount, people.length));
+      const person = people[idx];
+      if (!person) return;
+      setActiveSpeakers(prev => {
+        if (prev.length >= 6 || prev.some(s => s.idx === idx)) return prev;
+        return [...prev, { idx, person }];
+      });
+      const duration = 5000 + Math.random() * 10000;
+      const t = setTimeout(() => {
+        setActiveSpeakers(prev => prev.filter(s => s.idx !== idx));
+      }, duration);
+      timers.push(t);
+    };
+    for (let i = 0; i < 3; i++) {
+      const t = setTimeout(promote, 500 + i * 800);
+      timers.push(t);
+    }
+    const interval = setInterval(promote, 2000 + Math.random() * 3000);
+    return () => { clearInterval(interval); timers.forEach(t => clearTimeout(t)); };
+  }, [isTheaterMode]);
+
+  // Speaking indicator for dots
+  const [dotSpeakers, setDotSpeakers] = useState({});
+  useEffect(() => {
+    if (!isTheaterMode) return;
+    const timers = [];
+    const startSpeaker = () => {
+      setDotSpeakers(prev => {
+        if (Object.keys(prev).length >= 2) return prev;
+        const idx = Math.floor(Math.random() * Math.min(arrivedCount, people.length));
+        if (prev[idx] || activeSpeakers.some(s => s.idx === idx)) return prev;
+        return { ...prev, [idx]: true };
+      });
+      const idx = Math.floor(Math.random() * Math.min(arrivedCount, people.length));
+      const t = setTimeout(() => {
+        setDotSpeakers(prev => { const n = { ...prev }; delete n[idx]; return n; });
+      }, 1500 + Math.random() * 3000);
+      timers.push(t);
+    };
+    const interval = setInterval(startSpeaker, 2000 + Math.random() * 3000);
+    return () => { clearInterval(interval); timers.forEach(t => clearTimeout(t)); };
+  }, [isTheaterMode, arrivedCount, activeSpeakers.length]);
+
+  // Speaking indicator for avatar mode
+  const [speakers, setSpeakers] = useState({});
+  useEffect(() => {
+    if (isTheaterMode) return;
+    const timers = [];
+    const startSpeaker = () => {
+      setSpeakers(prev => {
+        if (Object.keys(prev).length >= 2) return prev;
+        const idx = Math.floor(Math.random() * Math.min(arrivedCount, people.length));
+        if (prev[idx]) return prev;
+        return { ...prev, [idx]: true };
+      });
+      const idx = Math.floor(Math.random() * Math.min(arrivedCount, people.length));
+      const t = setTimeout(() => {
+        setSpeakers(prev => { const n = { ...prev }; delete n[idx]; return n; });
+      }, 1500 + Math.random() * 4000);
+      timers.push(t);
+    };
+    if (arrivedCount > 0) {
+      const t = setTimeout(startSpeaker, Math.random() * 1000);
+      timers.push(t);
+    }
+    const interval = setInterval(() => { if (arrivedCount > 0) startSpeaker(); }, 2000 + Math.random() * 3000);
+    return () => { clearInterval(interval); timers.forEach(t => clearTimeout(t)); };
+  }, [isTheaterMode, arrivedCount]);
+
+  if (!isTheaterMode) {
+    // Full / small avatar mode — same as CrowdGrid
+    return (
+      <div className={`crowd-container crowd-${sizeMode}`} style={{ padding: '4px 16px' }}>
+        {people.slice(0, arrivedCount).map((person, i) => (
+          <div key={i} className="crowd-item">
+            <img className="avatar crowd-avatar" src={person.avatar} alt={person.displayName || person.name} />
+            <div className={`crowd-speak ${speakers[i] ? 'speaking' : ''}`} />
+            <div className="avatar-hover-name">
+              <span className="dot-hover-name">{person.displayName || person.name}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  const activeSpeakerIdxs = new Set(activeSpeakers.map(s => s.idx));
+  const passivePeople = people.slice(0, arrivedCount).filter((_, i) => !activeSpeakerIdxs.has(i));
+
+  return (
+    <div className="theater-container">
+      {activeSpeakers.length > 0 && (
+        <div className="theater-stage">
+          {activeSpeakers.map(({ idx, person }) => (
+            <div key={idx} className="theater-speaker">
+              <div className="theater-avatar-wrap">
+                <img className="avatar theater-avatar" src={person.avatar} alt={person.displayName || person.name} />
+                <div className="theater-speak-ring" />
+              </div>
+              <div className="theater-name"><span className="dot-hover-name">{person.displayName || person.name}</span></div>
+            </div>
+          ))}
+        </div>
+      )}
+      {passivePeople.length > 0 && (
+        <CrowdScrollWrap scrollEnabled={true}>
+          <div className="theater-audience">
+            {passivePeople.map((person, i) => (
+              <div key={person.name} className="crowd-item crowd-dots-item">
+                <div className="theater-dot" />
+                <div className={`dot-speaking-ring ${dotSpeakers[i] ? 'speaking' : ''}`} />
+                {person.avatar && (
+                  <div className="dot-hover-avatar">
+                    <img src={person.avatar} alt="" />
+                    <span className="dot-hover-name">{person.displayName || person.name}</span>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </CrowdScrollWrap>
+      )}
+    </div>
+  );
+}
+
 // Thresholds: full avatars → small avatars → dots
 const SIZE_FULL = 12;   // up to 12: 48px avatars
 const SIZE_SMALL = 40;  // up to 40: 24px avatars
@@ -903,7 +1054,9 @@ function MeetingRoomCard({ room }) {
       <div className="card-header">
         <h3 className="office-name">{room.name} {arrivedCount > 20 && <span className="room-count">{arrivedCount} here</span>}</h3>
       </div>
-      {room.crowd ? (
+      {room.theater ? (
+        <TheaterGrid room={room} arrivedCount={arrivedCount} />
+      ) : room.crowd ? (
         <CrowdScrollWrap scrollEnabled={arrivedCount > SIZE_SMALL}>
           <CrowdGrid room={room} activeUsers={activeUsers} arrivedCount={arrivedCount} />
         </CrowdScrollWrap>
