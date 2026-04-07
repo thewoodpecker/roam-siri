@@ -594,8 +594,44 @@ function TheaterGrid({ room, arrivedCount, speakerOverride, showSeats, joinedSea
   const [activeSpeakers, setActiveSpeakers] = useState([]);
   const [people, setPeople] = useState(room.people);
   const basePeople = useRef(room.people.slice());
-  const sizeMode = arrivedCount <= SIZE_FULL ? 'full' : arrivedCount <= SIZE_SMALL ? 'small' : 'dots';
-  const isTheaterMode = sizeMode === 'dots';
+  const theaterRef = useRef(null);
+  const roRef = useRef(null);
+  const [containerDims, setContainerDims] = useState({ w: 0, h: 0 });
+
+  // Callback ref to attach ResizeObserver whenever the rendered element changes
+  const measureRef = useCallback((el) => {
+    // Clean up previous observer
+    if (roRef.current) { roRef.current.disconnect(); roRef.current = null; }
+    theaterRef.current = el;
+    if (!el) return;
+    const boundary = el.closest('.big-meeting-card-inner') || el.parentElement;
+    if (!boundary) return;
+    const measure = () => {
+      const bRect = boundary.getBoundingClientRect();
+      const style = getComputedStyle(el);
+      const px = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
+      const py = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
+      const w = Math.floor(bRect.width) - px;
+      const h = Math.floor(bRect.height) - 40 - py;
+      setContainerDims(prev => (prev.w === w && prev.h === h) ? prev : { w, h });
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(boundary);
+    roRef.current = ro;
+  }, []);
+
+  const cardW = containerDims.w;
+  const cardH = containerDims.h;
+  const compactMode = cardW > 0 && cardW < 200;
+  const dynFullSize = compactMode ? 32 : AVATAR_SIZES.full.size;
+  const dynFullGap = compactMode ? 6 : AVATAR_SIZES.full.gap;
+  const fullCapacity = avatarCapacity(cardW, cardH, dynFullSize, dynFullGap);
+  const smallCapacity = avatarCapacity(cardW, cardH, AVATAR_SIZES.small.size, AVATAR_SIZES.small.gap);
+  const rawSizeMode = arrivedCount <= fullCapacity ? 'full' : arrivedCount <= smallCapacity ? 'small' : 'dots';
+  // Cap at 'small' on the map — never show dots; use maximize dialog for overflow
+  const sizeMode = rawSizeMode === 'dots' ? 'small' : rawSizeMode;
+  const isTheaterMode = false;
   const maxArrivedRef = useRef(0);
   if (arrivedCount > maxArrivedRef.current) maxArrivedRef.current = arrivedCount;
   useEffect(() => {
@@ -701,11 +737,12 @@ function TheaterGrid({ room, arrivedCount, speakerOverride, showSeats, joinedSea
     return () => { clearInterval(interval); timers.forEach(t => clearTimeout(t)); };
   }, [isTheaterMode, arrivedCount]);
 
-  // Calculate seat count to fill the card
-  const cardW = 320 - 32;
-  const cardH = 340 - 40;
-  const itemSize = isTheaterMode ? 6 : sizeMode === 'full' ? 48 : sizeMode === 'small' ? 24 : 6;
-  const gapSize = isTheaterMode ? 3 : sizeMode === 'full' ? 8 : sizeMode === 'small' ? 5 : 3;
+  // Calculate seat count to fill the card — shrink avatars for narrow containers
+  const compactFull = cardW > 0 && cardW < 200;
+  const fullSize = compactFull ? 32 : 48;
+  const fullGap = compactFull ? 6 : 8;
+  const itemSize = isTheaterMode ? 6 : sizeMode === 'full' ? fullSize : sizeMode === 'small' ? 24 : 6;
+  const gapSize = isTheaterMode ? 3 : sizeMode === 'full' ? fullGap : sizeMode === 'small' ? 5 : 3;
   const cols = Math.floor((cardW + gapSize) / (itemSize + gapSize));
   const rowsFit = Math.floor((cardH + gapSize) / (itemSize + gapSize));
   const totalSeats = cols * rowsFit;
@@ -714,7 +751,7 @@ function TheaterGrid({ room, arrivedCount, speakerOverride, showSeats, joinedSea
     // Full / small avatar mode
     const visibleCount = Math.max(renderCount, showSeats ? totalSeats : 0);
     return (
-      <div className={`crowd-container crowd-${sizeMode}`} style={{ padding: '4px 16px' }}>
+      <div ref={measureRef} className={`crowd-container crowd-${sizeMode} ${compactFull ? 'crowd-compact' : ''}`} style={{ padding: '4px 16px' }}>
         {Array.from({ length: visibleCount }).map((_, i) => {
           const person = people[i];
           const isOccupied = i < arrivedCount;
@@ -762,7 +799,7 @@ function TheaterGrid({ room, arrivedCount, speakerOverride, showSeats, joinedSea
   const passivePeople = people.slice(0, arrivedCount).filter((_, i) => !activeSpeakerIdxs.has(i));
 
   return (
-    <div className="theater-container">
+    <div ref={measureRef} className="theater-container">
       {activeSpeakers.length > 0 && (
         <div className="theater-stage">
           {activeSpeakers.map(({ idx, person }) => (
@@ -817,22 +854,73 @@ function TheaterGrid({ room, arrivedCount, speakerOverride, showSeats, joinedSea
   );
 }
 
-// Thresholds: full avatars → small avatars → dots
-const SIZE_FULL = 12;   // up to 12: 48px avatars
-const SIZE_SMALL = 40;  // up to 40: 24px avatars
-                        // 40+: 6px dots
+// Avatar size configs for each mode
+const AVATAR_SIZES = {
+  full:  { size: 48, gap: 8 },
+  small: { size: 24, gap: 5 },
+  dots:  { size: 6,  gap: 3 },
+};
+
+// Compute how many avatars fit in a container at a given size
+function avatarCapacity(containerWidth, containerHeight, avatarSize, gap) {
+  if (containerWidth <= 0 || containerHeight <= 0) return 0;
+  const cols = Math.max(1, Math.floor((containerWidth + gap) / (avatarSize + gap)));
+  const rows = Math.max(1, Math.floor((containerHeight + gap) / (avatarSize + gap)));
+  return cols * rows;
+}
+
+// Backward compat defaults when container hasn't been measured yet
+const SIZE_FULL = 12;
+const SIZE_SMALL = 40;
 
 function CrowdGrid({ room, activeUsers, arrivedCount }) {
   const [speakers, setSpeakers] = useState({});
   const containerRef = useRef(null);
   const itemRectsRef = useRef(new Map());
   const prevModeRef = useRef(null);
+  const [containerSize, setContainerSize] = useState({ w: 0, h: 0 });
+
+  // Measure the scroll-wrap ancestor which represents actual available space
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    // Walk up to crowd-scroll-wrap (grandparent) which has the real available size
+    const scrollWrap = container.closest('.crowd-scroll-wrap') || container.parentElement;
+    if (!scrollWrap) return;
+    const measure = () => {
+      const rect = scrollWrap.getBoundingClientRect();
+      // Account for padding inside crowd-scroll (12px each side)
+      const w = Math.floor(rect.width) - 24;
+      const h = Math.floor(rect.height);
+      setContainerSize(prev => {
+        if (prev.w === w && prev.h === h) return prev;
+        return { w, h };
+      });
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(scrollWrap);
+    return () => ro.disconnect();
+  }, []);
+
+  // Compute capacity-based thresholds from container size
+  const fullCapacity = containerSize.w > 0
+    ? avatarCapacity(containerSize.w, containerSize.h, AVATAR_SIZES.full.size, AVATAR_SIZES.full.gap)
+    : SIZE_FULL;
+  const smallCapacity = containerSize.w > 0
+    ? avatarCapacity(containerSize.w, containerSize.h, AVATAR_SIZES.small.size, AVATAR_SIZES.small.gap)
+    : SIZE_SMALL;
+
+  const computeSizeMode = (count) => {
+    if (count <= fullCapacity) return 'full';
+    return 'small';
+  };
 
   // FLIP: capture positions before mode change
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
-    const sizeMode = arrivedCount <= SIZE_FULL ? 'full' : arrivedCount <= SIZE_SMALL ? 'small' : 'dots';
+    const sizeMode = computeSizeMode(arrivedCount);
     if (prevModeRef.current && prevModeRef.current !== sizeMode) {
       // Capture current positions
       const rects = new Map();
@@ -891,7 +979,7 @@ function CrowdGrid({ room, activeUsers, arrivedCount }) {
     }
   }, [arrivedCount]);
 
-  const sizeMode = arrivedCount <= SIZE_FULL ? 'full' : arrivedCount <= SIZE_SMALL ? 'small' : 'dots';
+  const sizeMode = computeSizeMode(arrivedCount);
   const maxArrivedRef = useRef(0);
   if (arrivedCount > maxArrivedRef.current) maxArrivedRef.current = arrivedCount;
   // Shrink max after exit animations complete
@@ -1150,6 +1238,7 @@ function MeetingRoomCard({ room, vibeOverride, peopleOverride, speakerOverride, 
   const baseColor = glowColorOverride || (hasClaude ? claudeColor : CODEX);
   const intensity = vibeOverride !== null && vibeOverride !== undefined ? vibeOverride : activeCount;
 
+  const vibingVisible = (hasAnyTool && showLabel) || (vibeOverride !== null && vibeOverride > 0);
   const [hovered, setHovered] = useState(false);
   const [joinedSeat, setJoinedSeat] = useState(null);
 
@@ -1166,9 +1255,10 @@ function MeetingRoomCard({ room, vibeOverride, peopleOverride, speakerOverride, 
       {!glowColorOverride && hasCodex && hasClaude && codexCount > 0 && claudeCount > 0 && (
         <SiriGlow active={true} color={CODEX} intensity={codexCount} borderRadius={12} />
       )}
-      {(hasAnyTool && showLabel || (vibeOverride !== null && vibeOverride > 0)) && (
+      {vibingVisible && (
         <span className={`token-label ${fading ? 'fade-out' : ''}`} style={{ color: glowColorOverride ? `${glowColorOverride}CC` : claudeCount >= 2 ? 'rgba(213, 37, 32, 0.8)' : hasClaude ? 'rgba(235, 97, 57, 0.8)' : 'rgba(255, 255, 255, 0.5)' }}>
-          <span className="activity-text">{vibeOverride !== null && vibeOverride !== undefined ? vibeOverride : activeCount} Vibing</span>
+          {arrivedCount > 0 && <span className="room-count" style={{ color: 'rgba(255, 255, 255, 0.35)' }}>{arrivedCount} here</span>}
+          <span className="activity-text">{activeCount} Vibing</span>
           {providerOverride === 'codex' ? (
             <svg className="ai-icon" viewBox="0 0 512 509.639" xmlns="http://www.w3.org/2000/svg">
               <path fill={baseColor} d="M115.612 0h280.775C459.974 0 512 52.026 512 115.612v278.415c0 63.587-52.026 115.613-115.613 115.613H115.612C52.026 509.64 0 457.614 0 394.027V115.612C0 52.026 52.026 0 115.612 0z"/>
@@ -1183,7 +1273,14 @@ function MeetingRoomCard({ room, vibeOverride, peopleOverride, speakerOverride, 
         </span>
       )}
       <div className="card-header">
-        <h3 className="office-name">{room.name} {arrivedCount > 20 && <span className="room-count">{arrivedCount} here</span>}</h3>
+        <h3 className="office-name">{room.name}</h3>
+        {room.conference != null && room.conference !== '' && (
+          <span className="conference-badge">
+            <svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M8 1C11.866 1 14.9999 4.13406 15 8L14.9863 8.38965C14.8501 10.298 13.714 11.5624 12.25 11.5625C11.3864 11.5625 10.6381 11.1216 10.1406 10.3691C9.55702 11.0563 8.71786 11.5 7.75 11.5C5.88941 11.5 4.5 9.86413 4.5 8C4.5 6.13587 5.88941 4.5 7.75 4.5C8.41614 4.5 9.02121 4.71065 9.52441 5.06543C9.60601 4.73954 9.89882 4.49805 10.25 4.49805C10.6642 4.49805 11 4.83383 11 5.24805V8C11.0001 9.62539 11.8119 10.0625 12.25 10.0625C12.6607 10.0624 13.4003 9.67807 13.4912 8.29102L13.5 8C13.4999 4.96249 11.0375 2.5 8 2.5C4.96247 2.5 2.50007 4.96249 2.5 8C2.50007 11.0375 4.96247 13.5 8 13.5C8.63922 13.5 9.2528 13.3895 9.82324 13.1885C10.1328 13.0795 10.4837 13.1363 10.7158 13.3682C11.0805 13.7329 10.9957 14.3463 10.5146 14.5322C9.73428 14.8338 8.88678 15 8 15C4.13405 15 1.00007 11.8659 1 8C1.00007 4.13406 4.13405 1 8 1ZM7.75 6C6.84917 6 6 6.82656 6 8C6 9.17344 6.84917 10 7.75 10C8.65083 10 9.5 9.17344 9.5 8C9.5 6.82656 8.65083 6 7.75 6Z" fill="currentColor"/></svg>
+            <span>{room.conference}</span>
+          </span>
+        )}
+        {arrivedCount > 0 && !vibingVisible && <span className="room-count">{arrivedCount} here</span>}
       </div>
       {room.theater ? (
         <TheaterGrid room={room} arrivedCount={arrivedCount} speakerOverride={speakerOverride} showSeats={hovered} joinedSeat={joinedSeat} onJoinSeat={setJoinedSeat} />
@@ -1213,10 +1310,16 @@ function TabSwitcher({ activeTab, onTabChange }) {
   return (
     <div className="tab-switcher">
       <button
+        className={`tab-button ${activeTab === 'map-v3' ? 'tab-active' : ''}`}
+        onClick={() => onTabChange('map-v3')}
+      >
+        Map <span style={{ opacity: 0.5 }}>V3</span>
+      </button>
+      <button
         className={`tab-button ${activeTab === 'claude-max' ? 'tab-active' : ''}`}
         onClick={() => onTabChange('claude-max')}
       >
-        Claude Max
+        Claude
       </button>
       <button
         className={`tab-button ${activeTab === 'war-room' ? 'tab-active' : ''}`}
@@ -1260,7 +1363,7 @@ function DevControls({ room, vibeCount, onVibeCountChange, glowColor, onGlowColo
         <input
           type="range"
           min={0}
-          max={20}
+          max={room.people.length}
           value={vibeCount}
           onChange={(e) => onVibeCountChange(Number(e.target.value))}
           className="dev-slider"
@@ -1385,8 +1488,8 @@ function ClaudeMaxView() {
   );
 }
 
-function PeopleCountControls({ value, onChange, speakers, onSpeakersChange }) {
-  const stops = [1, 5, 10, 25, 50, 100, 200, 500, 1000];
+function PeopleCountControls({ value, onChange, speakers, onSpeakersChange, editMode, onEditModeChange }) {
+  const stops = [1, 5, 10, 25, 50, 100, 200, 500, 1000, 1600];
   const idx = stops.findIndex(s => s >= value);
   const sliderIdx = idx === -1 ? stops.length - 1 : idx;
   return (
@@ -1416,6 +1519,11 @@ function PeopleCountControls({ value, onChange, speakers, onSpeakersChange }) {
         />
         <span className="dev-value">{speakers}</span>
       </div>
+      <div className="dev-controls-row">
+        <button className={`dev-provider-btn ${editMode ? 'dev-provider-active' : ''}`} onClick={() => onEditModeChange(!editMode)} style={{ flex: 1 }}>
+          Edit Map
+        </button>
+      </div>
     </div>
   );
 }
@@ -1428,30 +1536,711 @@ function WarRoomView() {
   if (!room) return null;
 
   return (
-    <div className="big-meetings-view">
-      <div className="big-meetings-center">
-        <div className="war-room-standalone">
-          <MeetingRoomCard room={room} vibeOverride={vibeCount} glowColorOverride={glowColor} providerOverride={provider} />
-        </div>
+    <div className="war-room-view">
+      <div className="war-room-standalone">
+        <MeetingRoomCard room={room} vibeOverride={vibeCount} glowColorOverride={glowColor} providerOverride={provider} />
+      </div>
+      <div className="floor-dev-controls">
         <DevControls room={room} vibeCount={vibeCount} onVibeCountChange={setVibeCount} glowColor={glowColor} onGlowColorChange={setGlowColor} provider={provider} onProviderChange={setProvider} />
       </div>
     </div>
   );
 }
 
+function EditMapView() {
+  return <BigMeetingsView />;
+}
+
 function BigMeetingsView() {
   const baseRoom = meetingRooms.find(r => r.id === 'alan-kay');
-  const [peopleCount, setPeopleCount] = useState(500);
+  const [peopleCount, setPeopleCount] = useState(10);
   const [speakerCount, setSpeakerCount] = useState(3);
+  const [bgColor, setBgColor] = useState('black');
+  const [rooms, setRooms] = useState(() => {
+    const allPeople = baseRoom ? baseRoom.people : [];
+    const uniquePeople = [...new Map(allPeople.map(p => [p.displayName || p.name, p])).values()];
+    const shuffle = () => [...uniquePeople].sort(() => Math.random() - 0.5);
+    const take = (n) => shuffle().slice(0, n);
+    const g = 10;
+    // Helper: compute room size to exactly fit a grid of avatars
+    const pad = 32; // horizontal padding (16px each side)
+    const headerH = 44;
+    const avatarSize = 48, avatarGap = 8;
+    const gridSize = (cols, rows) => ({
+      w: cols * avatarSize + (cols - 1) * avatarGap + pad,
+      h: rows * avatarSize + (rows - 1) * avatarGap + headerH + 16,
+    });
+    const main = gridSize(7, 5); // 7 columns, 5 rows
+    return [
+      // Computer Department — centered
+      { id: 'main', roomData: null, size: main, pos: { x: -main.w / 2, y: -main.h / 2 } },
+      // Top-left: meeting room
+      { id: 'meeting-standup', roomData: { ...baseRoom, id: 'meeting-standup', name: 'Daily Standup', type: 'meeting', people: take(6), crowd: true }, size: gridSize(3, 3), pos: { x: -main.w / 2 - gridSize(3, 3).w - g, y: -main.h / 2 } },
+      // Top-right: private office
+      { id: 'office-joe', roomData: { ...baseRoom, id: 'office-joe', name: "Joe's Office", type: 'private', people: take(1), assignees: [{ name: 'Joe Woodward', avatar: '/headshots/joe-woodward.jpg' }] }, size: { w: 180, h: 150 }, pos: { x: main.w / 2 + g, y: -main.h / 2 } },
+      // Bottom-left: team room
+      { id: 'team-design', roomData: { ...baseRoom, id: 'team-design', name: 'Design Team', type: 'team', people: take(4), crowd: false }, size: gridSize(3, 3), pos: { x: -main.w / 2 - gridSize(3, 3).w - g, y: -main.h / 2 + gridSize(3, 3).h + g } },
+      // Bottom-right: command center
+      { id: 'command', roomData: { ...baseRoom, id: 'command', name: 'Mission Control', type: 'command', people: take(8) }, size: { w: 180, h: 190 }, pos: { x: main.w / 2 + g, y: -main.h / 2 + 150 + g } },
+    ];
+  });
+  const [hoveredRoom, setHoveredRoom] = useState(null);
+  const [selectedRoom, setSelectedRoom] = useState(null);
+  const [maximizedRoom, setMaximizedRoom] = useState(null);
+  const [dialogClosing, setDialogClosing] = useState(false);
+  const [dialogScrolled, setDialogScrolled] = useState(false);
+  const closeDialog = () => {
+    setDialogClosing(true);
+    setTimeout(() => { setMaximizedRoom(null); setDialogClosing(false); }, 200);
+  };
+  const [interacting, setInteracting] = useState(false);
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0, scale: 1 });
+  const panningRef = useRef(false);
+  const [drawingRoom, setDrawingRoom] = useState(null);
+  const [editingNameId, setEditingNameId] = useState(null);
+
+  useEffect(() => {
+    if (!selectedRoom) return;
+    const onKey = (e) => {
+      if (e.key === 'Backspace' && !editingNameId) {
+        e.preventDefault();
+        setRooms(prev => prev.filter(r => r.id !== selectedRoom));
+        setSelectedRoom(null);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [selectedRoom, editingNameId]);
+  const [seatMenuRoom, setSeatMenuRoom] = useState(null);
+  const [seatMenuIndex, setSeatMenuIndex] = useState(null); // null = adding new, number = replacing that index
+  const [seatSearch, setSeatSearch] = useState('');
+  const cardRefs = useRef({});
+  const gridRef = useRef(null);
+  const viewRef = useRef(null);
+  const resizingRef = useRef(null);
+  const draggingRef = useRef(false);
+  const drawingRef = useRef(false);
+  const startRef = useRef({ x: 0, y: 0, w: 0, h: 0, px: 0, py: 0 });
   if (!baseRoom) return null;
 
+  const snap = 10;
+
+  const startInteraction = (roomId) => {
+    const el = cardRefs.current[roomId];
+    const grid = gridRef.current;
+    if (el && grid) {
+      const rect = el.getBoundingClientRect();
+      grid.style.backgroundPosition = `${rect.left % 10}px ${rect.top % 10}px`;
+    }
+    setInteracting(true);
+  };
+
+  const comfortableW = 280;
+  const comfortableH = 320;
+
+  const updateRoom = (id, updates) => {
+    setRooms(prev => prev.map(r => r.id === id ? { ...r, ...updates } : r));
+  };
+
+  const roomsRef = useRef(rooms);
+  roomsRef.current = rooms;
+
+  // Helper to get clientX/Y from mouse or touch event
+  const getPointer = (e) => {
+    if (e.touches && e.touches[0]) return { clientX: e.touches[0].clientX, clientY: e.touches[0].clientY };
+    if (e.changedTouches && e.changedTouches[0]) return { clientX: e.changedTouches[0].clientX, clientY: e.changedTouches[0].clientY };
+    return { clientX: e.clientX || 0, clientY: e.clientY || 0 };
+  };
+
+  const rectsOverlap = (a, b) => {
+    return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+  };
+
+  const overlapsAny = (rect, excludeId) => {
+    return roomsRef.current.some(r => r.id !== excludeId && rectsOverlap(rect, { x: r.pos.x, y: r.pos.y, w: r.size.w, h: r.size.h }));
+  };
+
+  // dir: combination of 'n','s','e','w' e.g. 'se', 'n', 'nw'
+  const onResizeStart = (e, room, dir) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const roomId = room.id;
+    resizingRef.current = roomId;
+    startInteraction(room.id);
+    const ptr = getPointer(e);
+    startRef.current = { x: ptr.clientX, y: ptr.clientY, w: room.size.w, h: room.size.h, px: room.pos.x, py: room.pos.y };
+    const onMove = (e) => {
+      if (!resizingRef.current) return;
+      const ptr = getPointer(e);
+      if (!ptr.clientX && !ptr.clientY) return;
+      const dx = ptr.clientX - startRef.current.x;
+      const dy = ptr.clientY - startRef.current.y;
+      let newW = startRef.current.w;
+      let newH = startRef.current.h;
+      let newX = startRef.current.px;
+      let newY = startRef.current.py;
+      if (dir.includes('e')) newW = Math.max(60, Math.round((startRef.current.w + dx) / snap) * snap);
+      if (dir.includes('w')) { newW = Math.max(60, Math.round((startRef.current.w - dx) / snap) * snap); newX = startRef.current.px + (startRef.current.w - newW); }
+      if (dir.includes('s')) newH = Math.max(60, Math.round((startRef.current.h + dy) / snap) * snap);
+      if (dir.includes('n')) { newH = Math.max(60, Math.round((startRef.current.h - dy) / snap) * snap); newY = startRef.current.py + (startRef.current.h - newH); }
+      updateRoom(roomId, { size: { w: newW, h: newH }, pos: { x: newX, y: newY } });
+    };
+    const onUp = () => {
+      resizingRef.current = null;
+      setInteracting(false);
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+      window.removeEventListener('touchmove', onMove);
+      window.removeEventListener('touchend', onUp);
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    window.addEventListener('touchmove', onMove, { passive: false });
+    window.addEventListener('touchend', onUp);
+  };
+
+  const onDragStart = (e, room) => {
+    e.preventDefault();
+    draggingRef.current = true;
+    startInteraction(room.id);
+    const ptr = getPointer(e);
+    startRef.current = { ...startRef.current, x: ptr.clientX, y: ptr.clientY, px: room.pos.x, py: room.pos.y };
+    let dragRoomId = room.id;
+    let duplicated = false;
+
+    // If alt/option held, duplicate the room
+    if (e.altKey) {
+      const newId = `room-${Date.now()}`;
+      const roomData = room.roomData || baseRoom;
+      const roomNames = ['Lobby', 'Fireside', 'The Den', 'Starlight', 'Horizon', 'Basecamp', 'The Loft', 'Greenhouse', 'Moonrise', 'Solar', 'Coral Reef', 'North Star', 'Summit', 'Treehouse', 'Oasis', 'Nebula', 'Canopy', 'Tidepool'];
+      const name = roomNames[Math.floor(Math.random() * roomNames.length)];
+      setRooms(prev => [...prev, {
+        id: newId,
+        roomData: { ...roomData, id: newId, name },
+        size: { ...room.size },
+        pos: { ...room.pos },
+      }]);
+      dragRoomId = newId;
+      duplicated = true;
+    }
+
+    const origPos = { x: room.pos.x, y: room.pos.y };
+    const onMove = (e) => {
+      if (!draggingRef.current) return;
+      const ptr = getPointer(e);
+      const dx = ptr.clientX - startRef.current.x;
+      const dy = ptr.clientY - startRef.current.y;
+      const newX = Math.round((startRef.current.px + dx) / snap) * snap;
+      const newY = Math.round((startRef.current.py + dy) / snap) * snap;
+      updateRoom(dragRoomId, { pos: { x: newX, y: newY } });
+    };
+    const onUp = () => {
+      draggingRef.current = false;
+      setInteracting(false);
+      // Snap back if overlapping another room
+      const currentRoom = roomsRef.current.find(r => r.id === dragRoomId);
+      const size = currentRoom?.size || room.size;
+      const pos = currentRoom?.pos || origPos;
+      if (overlapsAny({ x: pos.x, y: pos.y, w: size.w, h: size.h }, dragRoomId)) {
+        updateRoom(dragRoomId, { pos: origPos });
+      }
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+      window.removeEventListener('touchmove', onMove);
+      window.removeEventListener('touchend', onUp);
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    window.addEventListener('touchmove', onMove, { passive: false });
+    window.addEventListener('touchend', onUp);
+  };
+
+  // Use a ref to capture drawingRoom for the mouseup handler
+  const drawingRoomRef = useRef(drawingRoom);
+  drawingRoomRef.current = drawingRoom;
+
+  const onBgMouseDownWrapped = (e) => {
+    // Don't draw if clicking on a room card, toolbar, or dev controls
+    if (e.target.closest('.big-meeting-card') || e.target.closest('.map-toolbar') || e.target.closest('.room-info-pill') || e.target.closest('.big-meetings-dev-controls')) return;
+    // Deselect room and stop editing when clicking background
+    setSelectedRoom(null);
+    setEditingNameId(null);
+    setSeatMenuRoom(null);
+    e.preventDefault();
+    drawingRef.current = true;
+    const viewRect = viewRef.current.getBoundingClientRect();
+    const centerX = viewRect.width / 2;
+    const centerY = viewRect.height / 2;
+    const startX = Math.round((e.clientX - viewRect.left - centerX) / snap) * snap;
+    const startY = Math.round((e.clientY - viewRect.top - centerY) / snap) * snap;
+    const mouseStartX = e.clientX;
+    const mouseStartY = e.clientY;
+
+    const grid = gridRef.current;
+    if (grid) {
+      grid.style.backgroundPosition = `${(viewRect.left + centerX) % 10}px ${(viewRect.top + centerY) % 10}px`;
+    }
+    setInteracting(true);
+    setDrawingRoom({ x: startX, y: startY, w: 0, h: 0 });
+
+    const onMove = (e) => {
+      if (!drawingRef.current) return;
+      const dx = e.clientX - mouseStartX;
+      const dy = e.clientY - mouseStartY;
+      const w = Math.max(snap, Math.round(Math.abs(dx) / snap) * snap);
+      const h = Math.max(snap, Math.round(Math.abs(dy) / snap) * snap);
+      const x = dx < 0 ? startX - w : startX;
+      const y = dy < 0 ? startY - h : startY;
+      setDrawingRoom({ x, y, w, h });
+    };
+    const onUp = () => {
+      drawingRef.current = false;
+      setInteracting(false);
+      const dr = drawingRoomRef.current;
+      setDrawingRoom(null);
+      const didDrag = dr && (dr.w > snap || dr.h > snap);
+      if (didDrag && dr.w >= 60 && dr.h >= 60 && !overlapsAny({ x: dr.x, y: dr.y, w: dr.w, h: dr.h }, null)) {
+        const newId = `room-${Date.now()}`;
+        const area = dr.w * dr.h;
+        const type = area < 40000 ? 'private' : area >= 120000 ? 'theater' : 'meeting';
+        const roomNames = { private: 'Private Office', meeting: ['Lobby', 'Fireside', 'The Den', 'Starlight', 'Horizon', 'Basecamp', 'The Loft', 'Greenhouse', 'Moonrise', 'Solar', 'Coral Reef', 'North Star', 'Summit', 'Treehouse', 'Oasis', 'Nebula', 'Canopy', 'Tidepool'], theater: 'Theater' };
+        const name = type === 'meeting' ? roomNames.meeting[Math.floor(Math.random() * roomNames.meeting.length)] : roomNames[type];
+        const unique = [...new Map(baseRoom.people.map(p => [p.displayName || p.name, p])).values()];
+        const shuffled = unique.sort(() => Math.random() - 0.5);
+        const count = type === 'private' ? 1 : type === 'theater' ? 20 : 20;
+        setRooms(prev => [...prev, {
+          id: newId,
+          roomData: { ...baseRoom, id: newId, name, type, people: shuffled.slice(0, count) },
+          size: { w: dr.w, h: dr.h },
+          pos: { x: dr.x, y: dr.y },
+        }]);
+        setSelectedRoom(newId);
+      }
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+  };
+
+  const panOffsetRef = useRef(panOffset);
+  panOffsetRef.current = panOffset;
+
+  const onPanStart = (e) => {
+    if (!e.touches || e.target.closest('.big-meeting-card') || e.target.closest('.map-toolbar') || e.target.closest('.room-info-pill')) return;
+
+    const startPan = { ...panOffsetRef.current };
+    const startScale = startPan.scale || 1;
+
+    if (e.touches.length === 1) {
+      // Single finger pan
+      panningRef.current = true;
+      const startX = e.touches[0].clientX;
+      const startY = e.touches[0].clientY;
+      const onMove = (e) => {
+        if (!panningRef.current || !e.touches[0]) return;
+        e.preventDefault();
+        if (e.touches.length === 2) return; // Let pinch handle it
+        const dx = e.touches[0].clientX - startX;
+        const dy = e.touches[0].clientY - startY;
+        setPanOffset(prev => ({ ...prev, x: startPan.x + dx, y: startPan.y + dy }));
+      };
+      const onEnd = () => {
+        panningRef.current = false;
+        window.removeEventListener('touchmove', onMove);
+        window.removeEventListener('touchend', onEnd);
+      };
+      window.addEventListener('touchmove', onMove, { passive: false });
+      window.addEventListener('touchend', onEnd);
+    }
+
+    if (e.touches.length === 2) {
+      // Pinch zoom
+      e.preventDefault();
+      const getDist = (t) => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+      const startDist = getDist(e.touches);
+      const onMove = (e) => {
+        if (e.touches.length < 2) return;
+        e.preventDefault();
+        const dist = getDist(e.touches);
+        const newScale = Math.min(3, Math.max(0.3, startScale * (dist / startDist)));
+        setPanOffset(prev => ({ ...prev, scale: newScale }));
+      };
+      const onEnd = () => {
+        window.removeEventListener('touchmove', onMove);
+        window.removeEventListener('touchend', onEnd);
+      };
+      window.addEventListener('touchmove', onMove, { passive: false });
+      window.addEventListener('touchend', onEnd);
+    }
+  };
+
   return (
-    <div className="big-meetings-view">
-      <div className="big-meetings-center">
-        <div className="big-meeting-card">
-          <MeetingRoomCard room={baseRoom} peopleOverride={peopleCount} speakerOverride={speakerCount} />
+    <div ref={viewRef} className="big-meetings-view edit-mode" style={{ backgroundColor: BG_COLORS.find(c => c.id === bgColor)?.color }} onMouseDown={onBgMouseDownWrapped} onTouchStart={onPanStart}>
+      <div ref={gridRef} className="grid-bg grid-bg-visible" />
+      <div className="big-meetings-center" style={{ transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${panOffset.scale || 1})` }}>
+        {rooms.map(room => {
+          const isHovered = hoveredRoom === room.id;
+          const isSmall = room.size.w < comfortableW || room.size.h < comfortableH;
+          const expandOnHover = false;
+          const roomData = room.roomData || baseRoom;
+          const themeColors = BG_COLORS.find(c => c.id === bgColor) || BG_COLORS[0];
+          const roomSurfaceColor = themeColors.room;
+          const isCircle = roomData.shape === 'circle';
+          let displayW = expandOnHover ? Math.max(room.size.w, comfortableW) : room.size.w;
+          let displayH = expandOnHover ? Math.max(room.size.h, comfortableH) : room.size.h;
+          if (isCircle) { const s = Math.max(displayW, displayH); displayW = s; displayH = s; }
+
+          return (
+            <div
+              key={room.id}
+              className="big-meeting-card-wrap"
+              onMouseEnter={() => setHoveredRoom(room.id)}
+              onMouseLeave={() => { if (!resizingRef.current && !draggingRef.current) setHoveredRoom(null); }}
+              style={{
+                position: 'absolute',
+                left: '50%',
+                top: '50%',
+                width: displayW,
+                zIndex: seatMenuRoom === room.id ? 200 : (isHovered || selectedRoom === room.id) ? 100 : 1,
+                transform: `translate(${room.pos.x}px, ${room.pos.y}px)`,
+              }}
+            >
+            <div
+              ref={el => { cardRefs.current[room.id] = el; }}
+              className={`big-meeting-card ${expandOnHover ? 'big-meeting-card-expanded' : ''} ${roomData.shape ? `big-meeting-card-${roomData.shape}` : ''}`}
+              style={{ width: displayW, height: displayH }}
+              onMouseDown={(e) => { if (!e.target.closest('.widget-resize-handle')) { setSelectedRoom(room.id); onDragStart(e, room); } }}
+              onTouchStart={(e) => { if (!e.target.closest('.widget-resize-handle')) { setSelectedRoom(room.id); onDragStart(e, room); } }}
+            >
+              <div style={{ height: displayH, '--room-surface': roomSurfaceColor }} className="big-meeting-card-inner">
+                {roomData.type === 'theater' ? (
+                  <div className="meeting-room-card" style={{ height: '100%', backgroundColor: roomSurfaceColor, display: 'flex', flexDirection: 'column' }}>
+                    <div className="card-header" style={{ padding: '0 12px' }}>
+                      <h3 className="office-name">{roomData.name}</h3>
+                      <span className="room-count">{roomData.people?.length || 0} here</span>
+                    </div>
+                    <div className="theater-preview">
+                      <div className="theater-preview-stage" />
+                      <div className="theater-preview-audience">
+                        {Array.from({ length: 4 }).map((_, row) => (
+                          <div key={row} className="theater-preview-row">
+                            {Array.from({ length: 5 }).map((_, col) => (
+                              <div key={col} className="theater-preview-bench" />
+                            ))}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ) : roomData.type === 'game' ? (
+                  <div className="meeting-room-card" style={{ height: '100%', backgroundColor: roomSurfaceColor, display: 'flex', flexDirection: 'column' }}>
+                    <div className="game-room-lines"><div className="game-room-zigzag" /></div>
+                    <div className="card-header" style={{ padding: '0 12px' }}>
+                      <h3 className="office-name">{roomData.name}</h3>
+                    </div>
+                  </div>
+                ) : roomData.type === 'command' ? (
+                  <div className="meeting-room-card" style={{ height: '100%', backgroundColor: roomSurfaceColor, display: 'flex', flexDirection: 'column' }}>
+                    <div className="card-header" style={{ padding: '0 12px' }}>
+                      <h3 className="office-name">{roomData.name}</h3>
+                      <span className="room-count">{roomData.people?.length || 0} here</span>
+                    </div>
+                    <div className="command-center-preview">
+                      <div className="command-screen" />
+                      <div className="command-screen" />
+                      <div className="command-screen" />
+                    </div>
+                  </div>
+                ) : roomData.type === 'private' ? (
+                  <div className="meeting-room-card" style={{ height: '100%', backgroundColor: roomSurfaceColor, display: 'flex', flexDirection: 'column' }}>
+                    <div className="card-header" style={{ padding: '0 12px' }}>
+                      <h3 className="office-name">{roomData.name}</h3>
+                    </div>
+                    {(roomData.assignees || []).length > 0 && (
+                      <div className="private-office-seat">
+                        <div className="seat-row seat-row-hovered">
+                          {roomData.assignees.map((person, i) => (
+                            <div key={i} className="seat-assigned">
+                              <img className="seat-avatar" src={person.avatar} alt={person.name} />
+                              <span className="seat-nametag">{person.name}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <MeetingRoomCard room={roomData} peopleOverride={room.id === 'main' ? peopleCount : undefined} speakerOverride={room.id === 'main' ? speakerCount : undefined} />
+                )}
+              </div>
+              {(() => {
+                const pCount = room.id === 'main' ? peopleCount : (roomData.people?.length || 0);
+                const innerW = room.size.w - 32;
+                const innerH = room.size.h - 52;
+                const cols = Math.max(1, Math.floor((innerW + 5) / (24 + 5)));
+                const rows = Math.max(1, Math.floor((innerH + 5) / (24 + 5)));
+                const overflowing = pCount > cols * rows;
+                return (
+                  <div className="room-action-btns">
+                    <button
+                      className="room-action-btn"
+                      onMouseDown={(e) => { e.stopPropagation(); }}
+                      onClick={(e) => { e.stopPropagation(); }}
+                      title="Join Room"
+                    >
+                      <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><path d="M9.64645 7.64645L8.5 8.7929L8.5 2.5C8.5 2.22386 8.27614 2 8 2C7.72386 2 7.5 2.22386 7.5 2.5L7.5 8.79289L6.35355 7.64645C6.15829 7.45118 5.84171 7.45118 5.64645 7.64645C5.45118 7.84171 5.45118 8.15829 5.64645 8.35355L7.64645 10.3536C7.84171 10.5488 8.15829 10.5488 8.35355 10.3536L10.3536 8.35355C10.5488 8.15829 10.5488 7.84171 10.3536 7.64645C10.1583 7.45119 9.84171 7.45119 9.64645 7.64645Z" fill="currentColor"/><path d="M4.11088 11.2891C3.91561 11.0938 3.59903 11.0938 3.40377 11.2891C3.20851 11.4843 3.20851 11.8009 3.40377 11.9962C5.94218 14.5346 10.0577 14.5346 12.5962 11.9962C12.7914 11.8009 12.7914 11.4843 12.5962 11.2891C12.4009 11.0938 12.0843 11.0938 11.889 11.2891C9.74117 13.437 6.25876 13.437 4.11088 11.2891Z" fill="currentColor"/></svg>
+                    </button>
+                    {overflowing && (
+                      <button
+                        className="room-action-btn"
+                        onMouseDown={(e) => { e.stopPropagation(); }}
+                        onClick={(e) => { e.stopPropagation(); setMaximizedRoom(room.id); setHoveredRoom(null); setDialogScrolled(false); }}
+                        title="Expand"
+                      >
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 9.5V13H6.5M13 6.5V3H9.5M3 13L7 9M13 3L9 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      </button>
+                    )}
+                  </div>
+                );
+              })()}
+              {(isHovered || resizingRef.current === room.id) && (
+                <div
+                  className="widget-resize-handle"
+                  onMouseDown={(e) => onResizeStart(e, room, 'se')}
+                  onTouchStart={(e) => onResizeStart(e, room, 'se')}
+                />
+              )}
+            </div>
+            </div>
+          );
+        })}
+        {drawingRoom && drawingRoom.w > 0 && drawingRoom.h > 0 && (
+          <div
+            className="drawing-room-preview"
+            style={{
+              position: 'absolute',
+              left: '50%',
+              top: '50%',
+              width: drawingRoom.w,
+              height: drawingRoom.h,
+              transform: `translate(${drawingRoom.x}px, ${drawingRoom.y}px)`,
+            }}
+          />
+        )}
+      </div>
+      {maximizedRoom && (() => {
+        const room = rooms.find(r => r.id === maximizedRoom);
+        if (!room) return null;
+        const roomData = room.roomData || baseRoom;
+        const themeColors = BG_COLORS.find(c => c.id === bgColor) || BG_COLORS[0];
+        const roomSurfaceColor = themeColors.room;
+        return (
+          <div className={`room-dialog-overlay ${dialogClosing ? 'room-dialog-overlay-closing' : ''}`} onClick={closeDialog}>
+            <div className={`room-dialog ${dialogClosing ? 'room-dialog-closing' : ''}`} onClick={(e) => e.stopPropagation()}>
+              <div className={`room-dialog-header ${dialogScrolled ? 'room-dialog-header-scrolled' : ''}`} style={{ background: roomSurfaceColor }}>
+                <h3 className="office-name">{roomData.name}</h3>
+                <button className="room-join-btn"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" style={{ marginRight: 4 }}><path d="M9.64645 7.64645L8.5 8.7929L8.5 2.5C8.5 2.22386 8.27614 2 8 2C7.72386 2 7.5 2.22386 7.5 2.5L7.5 8.79289L6.35355 7.64645C6.15829 7.45118 5.84171 7.45118 5.64645 7.64645C5.45118 7.84171 5.45118 8.15829 5.64645 8.35355L7.64645 10.3536C7.84171 10.5488 8.15829 10.5488 8.35355 10.3536L10.3536 8.35355C10.5488 8.15829 10.5488 7.84171 10.3536 7.64645C10.1583 7.45119 9.84171 7.45119 9.64645 7.64645Z" fill="currentColor"/><path d="M4.11088 11.2891C3.91561 11.0938 3.59903 11.0938 3.40377 11.2891C3.20851 11.4843 3.20851 11.8009 3.40377 11.9962C5.94218 14.5346 10.0577 14.5346 12.5962 11.9962C12.7914 11.8009 12.7914 11.4843 12.5962 11.2891C12.4009 11.0938 12.0843 11.0938 11.889 11.2891C9.74117 13.437 6.25876 13.437 4.11088 11.2891Z" fill="currentColor"/></svg>Join {room.id === 'main' ? peopleCount : (roomData.people?.length || 0)} People</button>
+              </div>
+              <div className="room-dialog-inner" style={{ '--room-surface': roomSurfaceColor }} onScrollCapture={(e) => setDialogScrolled(e.target.scrollTop > 0)}>
+                {roomData.type === 'theater' ? (
+                  <div className="meeting-room-card" style={{ height: '100%', backgroundColor: roomSurfaceColor, display: 'flex', flexDirection: 'column' }}>
+                    <div className="card-header" style={{ padding: '0 12px' }}>
+                      <h3 className="office-name">{roomData.name}</h3>
+                      <span className="room-count">{roomData.people?.length || 0} here</span>
+                    </div>
+                    <div className="theater-preview" style={{ flex: 1 }}>
+                      <div className="theater-preview-stage" />
+                      <div className="theater-preview-audience">
+                        {Array.from({ length: 4 }).map((_, row) => (
+                          <div key={row} className="theater-preview-row">
+                            {Array.from({ length: 5 }).map((_, col) => (
+                              <div key={col} className="theater-preview-bench" />
+                            ))}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ) : roomData.type === 'game' ? (
+                  <div className="meeting-room-card" style={{ height: '100%', backgroundColor: roomSurfaceColor, display: 'flex', flexDirection: 'column' }}>
+                    <div className="game-room-lines"><div className="game-room-zigzag" /></div>
+                    <div className="card-header" style={{ padding: '0 12px' }}>
+                      <h3 className="office-name">{roomData.name}</h3>
+                    </div>
+                  </div>
+                ) : roomData.type === 'command' ? (
+                  <div className="meeting-room-card" style={{ height: '100%', backgroundColor: roomSurfaceColor, display: 'flex', flexDirection: 'column' }}>
+                    <div className="card-header" style={{ padding: '0 12px' }}>
+                      <h3 className="office-name">{roomData.name}</h3>
+                      <span className="room-count">{roomData.people?.length || 0} here</span>
+                    </div>
+                    <div className="command-center-preview" style={{ flex: 1 }}>
+                      <div className="command-screen" />
+                      <div className="command-screen" />
+                      <div className="command-screen" />
+                    </div>
+                  </div>
+                ) : roomData.type === 'private' ? (
+                  <div className="meeting-room-card" style={{ height: '100%', backgroundColor: roomSurfaceColor, display: 'flex', flexDirection: 'column' }}>
+                    <div className="card-header" style={{ padding: '0 12px' }}>
+                      <h3 className="office-name">{roomData.name}</h3>
+                    </div>
+                    {(roomData.assignees || []).length > 0 && (
+                      <div className="private-office-seat" style={{ flex: 1 }}>
+                        <div className="seat-row seat-row-hovered">
+                          {roomData.assignees.map((person, i) => (
+                            <div key={i} className="seat-assigned">
+                              <img className="seat-avatar" src={person.avatar} alt={person.name} />
+                              <span className="seat-nametag">{person.name}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <MeetingRoomCard room={{ ...roomData, crowd: false, people: roomData.people.slice(0, room.id === 'main' ? peopleCount : roomData.people.length) }} />
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+      <div className="big-meetings-dev-controls">
+        <div className="dev-controls" style={{ width: 280 }}>
+          <div className="dev-controls-header">dev controls</div>
+          <div className="dev-controls-row">
+            <span className="dev-label">people</span>
+            <input
+              type="range"
+              min={0}
+              max={9}
+              value={[1, 5, 10, 25, 50, 100, 200, 500, 1000, 1200].findIndex(s => s >= peopleCount)}
+              onChange={(e) => setPeopleCount([1, 5, 10, 25, 50, 100, 200, 500, 1000, 1200][Number(e.target.value)])}
+              className="dev-slider"
+            />
+            <span className="dev-value">{peopleCount}</span>
+          </div>
+          <div className="dev-controls-row">
+            <span className="dev-label">speaking</span>
+            <input
+              type="range"
+              min={1}
+              max={10}
+              value={speakerCount}
+              onChange={(e) => setSpeakerCount(Number(e.target.value))}
+              className="dev-slider"
+            />
+            <span className="dev-value">{speakerCount}</span>
+          </div>
         </div>
-        <PeopleCountControls value={peopleCount} onChange={setPeopleCount} speakers={speakerCount} onSpeakersChange={setSpeakerCount} />
+      </div>
+    </div>
+  );
+}
+
+// Tint700: hue from accent, saturation 25%, lightness 10%. Room surface ~15% lightness.
+const BG_COLORS = [
+  { id: 'black', color: '#0C0C0E', room: '#1D1E20', swatch: '#0C0C0E', label: 'Default' },
+  { id: 'red', color: '#201318', room: '#2E1E24', swatch: '#E53935', label: 'Red' },
+  { id: 'orange', color: '#201613', room: '#2E221C', swatch: '#FF6F00', label: 'Orange' },
+  { id: 'yellow', color: '#201D13', room: '#2E2B1C', swatch: '#FFC107', label: 'Yellow' },
+  { id: 'green', color: '#132017', room: '#1C2E22', swatch: '#46D08F', label: 'Green' },
+  { id: 'cyan', color: '#131F20', room: '#1C2D2E', swatch: '#4DD0E1', label: 'Cyan' },
+  { id: 'blue', color: '#131620', room: '#1C222E', swatch: '#0059DC', label: 'Blue' },
+  { id: 'purple', color: '#181320', room: '#241E2E', swatch: '#835CE9', label: 'Purple' },
+  { id: 'pink', color: '#201318', room: '#2E1E24', swatch: '#C2185B', label: 'Pink' },
+];
+
+function MapToolbar({ onAddRoom, bgColor, onBgColorChange, selectedRoom, onUpdateSelectedRoom, onDeleteRoom }) {
+  const [showAddMenu, setShowAddMenu] = useState(false);
+  const menuRef = useRef(null);
+
+  useEffect(() => {
+    if (!showAddMenu) return;
+    const onClick = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) setShowAddMenu(false);
+    };
+    document.addEventListener('mousedown', onClick);
+    return () => document.removeEventListener('mousedown', onClick);
+  }, [showAddMenu]);
+
+  const roomTypes = [
+    { id: 'private', name: 'Private Office', desc: 'Audio only room for each member of your team' },
+    { id: 'team', name: 'Team Room', desc: 'Audio only conference room' },
+    { id: 'meeting', name: 'Meeting Room', desc: 'Video conference room' },
+    { id: 'theater', name: 'Theater', desc: 'Perfect for your company all-hands' },
+    { id: 'game', name: 'Game Room', desc: 'Teams that play together, win together' },
+    { id: 'command', name: 'Command Center', desc: 'Mission control for your team' },
+  ];
+
+  const themeColors = BG_COLORS.find(c => c.id === bgColor) || BG_COLORS[0];
+
+  return (
+    <div className="map-toolbar">
+      <div className="map-toolbar-inner" style={{ backgroundColor: themeColors.room }}>
+        <button
+          className={`toolbar-btn ${selectedRoom && selectedRoom.roomData?.conference != null ? 'toolbar-btn-active' : ''} ${!selectedRoom || (selectedRoom.roomData?.type && selectedRoom.roomData.type !== 'meeting') ? 'toolbar-disabled-btn' : ''}`}
+          onClick={() => {
+            if (!selectedRoom) return;
+            const type = selectedRoom.roomData?.type;
+            if (type && type !== 'meeting') return;
+            if (selectedRoom.roomData?.conference !== undefined && selectedRoom.roomData?.conference !== null) {
+              onUpdateSelectedRoom({ roomData: { ...selectedRoom.roomData, conference: null } });
+            } else {
+              onUpdateSelectedRoom({ roomData: { ...selectedRoom.roomData, conference: '' } });
+            }
+          }}
+          title="Conference"
+        >
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M8 1C11.866 1 14.9999 4.13406 15 8L14.9863 8.38965C14.8501 10.298 13.714 11.5624 12.25 11.5625C11.3864 11.5625 10.6381 11.1216 10.1406 10.3691C9.55702 11.0563 8.71786 11.5 7.75 11.5C5.88941 11.5 4.5 9.86413 4.5 8C4.5 6.13587 5.88941 4.5 7.75 4.5C8.41614 4.5 9.02121 4.71065 9.52441 5.06543C9.60601 4.73954 9.89882 4.49805 10.25 4.49805C10.6642 4.49805 11 4.83383 11 5.24805V8C11.0001 9.62539 11.8119 10.0625 12.25 10.0625C12.6607 10.0624 13.4003 9.67807 13.4912 8.29102L13.5 8C13.4999 4.96249 11.0375 2.5 8 2.5C4.96247 2.5 2.50007 4.96249 2.5 8C2.50007 11.0375 4.96247 13.5 8 13.5C8.63922 13.5 9.2528 13.3895 9.82324 13.1885C10.1328 13.0795 10.4837 13.1363 10.7158 13.3682C11.0805 13.7329 10.9957 14.3463 10.5146 14.5322C9.73428 14.8338 8.88678 15 8 15C4.13405 15 1.00007 11.8659 1 8C1.00007 4.13406 4.13405 1 8 1ZM7.75 6C6.84917 6 6 6.82656 6 8C6 9.17344 6.84917 10 7.75 10C8.65083 10 9.5 9.17344 9.5 8C9.5 6.82656 8.65083 6 7.75 6Z" fill="currentColor"/>
+          </svg>
+        </button>
+
+        <button
+          className={`toolbar-btn ${!selectedRoom ? 'toolbar-disabled-btn' : ''}`}
+          onClick={() => {
+            if (!selectedRoom) return;
+            const id = selectedRoom.id;
+            onUpdateSelectedRoom(null);
+            onDeleteRoom(id);
+          }}
+          title="Delete Room"
+        >
+          <svg width="14" height="14" viewBox="0 0 12 12" fill="none">
+            <path d="M5 3H7C7 2.44772 6.55228 2 6 2C5.44772 2 5 2.44772 5 3ZM4 3C4 1.89543 4.89543 1 6 1C7.10457 1 8 1.89543 8 3L10.5 3C10.7761 3 11 3.22386 11 3.5C11 3.77614 10.7761 4 10.5 4H10.059L9.61576 9.1708C9.52709 10.2054 8.66143 11 7.62307 11H4.37693C3.33857 11 2.47291 10.2054 2.38424 9.1708L1.94102 4H1.5C1.22386 4 1 3.77614 1 3.5C1 3.22386 1.22386 3 1.5 3L4 3ZM7.5 6C7.5 5.72386 7.27614 5.5 7 5.5C6.72386 5.5 6.5 5.72386 6.5 6V8C6.5 8.27614 6.72386 8.5 7 8.5C7.27614 8.5 7.5 8.27614 7.5 8V6ZM5 5.5C4.72386 5.5 4.5 5.72386 4.5 6V8C4.5 8.27614 4.72386 8.5 5 8.5C5.27614 8.5 5.5 8.27614 5.5 8V6C5.5 5.72386 5.27614 5.5 5 5.5Z" fill="currentColor"/>
+          </svg>
+        </button>
+
+        <div ref={menuRef} className="toolbar-add-wrap">
+          <button className="toolbar-btn" onClick={() => setShowAddMenu(!showAddMenu)} title="Add Room">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 3V13M3 8H13" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>
+          </button>
+          {showAddMenu && (
+            <div className="add-room-menu" style={{ backgroundColor: themeColors.room }}>
+              {roomTypes.map(t => (
+                <button key={t.id} className="add-room-option" onClick={() => { onAddRoom(t.id); setShowAddMenu(false); }}>
+                  <span className="add-room-name">{t.name}</span>
+                  <span className="add-room-desc">{t.desc}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="toolbar-bg-swatches">
+          {BG_COLORS.map(c => (
+            <button
+              key={c.id}
+              className={`toolbar-swatch ${bgColor === c.id ? 'toolbar-swatch-active' : ''}`}
+              style={{ background: c.swatch, border: c.id === 'black' ? '1px solid rgba(255,255,255,0.2)' : 'none' }}
+              onClick={() => onBgColorChange(c.id)}
+              title={c.label}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -1979,8 +2768,8 @@ function ExperimentalView() {
 function useHashTab() {
   const getTab = () => {
     const hash = window.location.hash.replace('#', '');
-    const valid = ['big-meetings', 'war-room', 'experimental'];
-    return valid.includes(hash) ? hash : 'claude-max';
+    const valid = ['map-v3', 'claude-max', 'big-meetings', 'war-room', 'experimental'];
+    return valid.includes(hash) ? hash : 'map-v3';
   };
   const [tab, setTab] = useState(getTab);
 
@@ -2006,6 +2795,7 @@ export default function App() {
       <div className="toolbar">
         <TabSwitcher activeTab={activeTab} onTabChange={setActiveTab} />
       </div>
+      {activeTab === 'map-v3' && <EditMapView />}
       {activeTab === 'claude-max' && <ClaudeMaxView />}
       {activeTab === 'war-room' && <WarRoomView />}
       {activeTab === 'big-meetings' && <BigMeetingsView />}
