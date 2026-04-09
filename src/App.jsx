@@ -502,10 +502,23 @@ function SmallCard({ office, isActive, glowColor, onStatusEdit, provider }) {
 
   return (
     <div className="office-card">
-      <SiriGlow active={isActive} color={glowColor} borderRadius={12} />
+      {provider === 'both' ? (
+        <>
+          <SiriGlow active={isActive} color={CLAUDE} intensity={4} borderRadius={12} />
+          <SiriGlow active={isActive} color={CODEX} intensity={3} borderRadius={12} />
+        </>
+      ) : (
+        <SiriGlow active={isActive} color={glowColor} borderRadius={12} />
+      )}
       {showLabel && (
         <span className={`token-label ${fading ? 'fade-out' : ''}`}>
-          {provider === 'codex' ? (
+          {provider === 'both' ? (
+            <svg className="ai-icon ai-icon-combo" viewBox="0 0 26 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M10.2002 1C10.6366 1 11.0163 1.00013 11.3506 1.00586C10.9771 1.33633 10.6647 1.73398 10.4355 2.18359C10.3193 2.41182 10.2344 2.65931 10.1719 2.94141C9.99744 2.94821 9.82278 2.96843 9.65039 3.00488C9.28981 2.60933 8.83009 2.31432 8.31738 2.14941C7.8045 1.98448 7.25631 1.95541 6.72852 2.06543C6.20079 2.17547 5.71189 2.4209 5.31055 2.77637C4.90922 3.13183 4.6099 3.58509 4.44238 4.09082C4.01966 4.17632 3.61984 4.34974 3.27051 4.59961C2.92108 4.84965 2.62973 5.17104 2.41602 5.54102C2.08909 6.09538 1.94893 6.73813 2.0166 7.37598C2.08432 8.01361 2.35598 8.6134 2.79199 9.08887C2.65547 9.49273 2.60767 9.92129 2.65234 10.3447C2.69704 10.7681 2.83293 11.1775 3.05078 11.5449C3.3746 12.1003 3.86949 12.5402 4.46289 12.8008C5.05625 13.0612 5.71849 13.1285 6.35352 12.9941C6.63997 13.3123 6.99176 13.5669 7.38574 13.7402C7.77984 13.9136 8.20716 14.0024 8.63867 14C9.23137 14.0005 9.80878 13.8294 10.3047 13.5137C10.3435 13.6186 10.3862 13.7195 10.4355 13.8164C10.6646 14.2658 10.9773 14.6628 11.3506 14.9932C11.0163 14.9989 10.6366 15 10.2002 15H5.7998C4.11978 15 3.27941 14.9998 2.6377 14.6729C2.07347 14.3853 1.61472 13.9265 1.32715 13.3623C1.00018 12.7206 1 11.8802 1 10.2002V5.7998C1 4.11978 1.00018 3.27941 1.32715 2.6377C1.61472 2.07347 2.07347 1.61472 2.6377 1.32715C3.27941 1.00018 4.11978 1 5.7998 1H10.2002ZM10 7.63672V9.59961C10 10.9908 10.0001 11.9504 10.1045 12.6826C9.69556 13.0228 9.17772 13.2137 8.63867 13.2148C8.10584 13.2157 7.5896 13.0313 7.18066 12.6943L7.25293 12.6543L9.6748 11.2744C9.73492 11.2396 9.78548 11.1905 9.82031 11.1309C9.85515 11.0712 9.87358 11.0034 9.87402 10.9346V7.56543L10 7.63672ZM9.32422 10.5488C9.32392 10.5548 9.32222 10.5611 9.31934 10.5664C9.31646 10.5715 9.31238 10.5757 9.30762 10.5791L6.85449 11.9746C6.33094 12.2721 5.7086 12.3526 5.125 12.1982C4.54183 12.0439 4.04458 11.6679 3.74219 11.1523C3.47494 10.6972 3.37849 10.1626 3.4707 9.64453L3.54297 9.6875L5.9668 11.0664C6.02679 11.1011 6.09548 11.1201 6.16504 11.1201C6.23459 11.1201 6.3033 11.1011 6.36328 11.0664L9.32422 9.38281V10.5488ZM4.30273 7.7998C4.30182 7.86838 4.31991 7.9366 4.35449 7.99609C4.38907 8.0554 4.43968 8.10489 4.5 8.13867L7.44727 9.81543L6.42285 10.3994C6.41744 10.4022 6.4114 10.4042 6.40527 10.4043C6.399 10.4043 6.39226 10.4023 6.38672 10.3994L3.93848 9.00684C3.416 8.7081 3.0344 8.21695 2.87793 7.6416C2.72151 7.06612 2.80257 6.45213 3.10352 5.93555V5.94824C3.37261 5.49014 3.79755 5.1398 4.30273 4.96094V7.7998ZM9.32422 7.24902V8.74805L8.00781 9.49805L6.68652 8.74805L6.68457 7.24902L8.00293 6.49902L9.32422 7.24902ZM6.39844 3.00293C6.79053 2.82187 7.22685 2.75414 7.65625 2.80859C8.08563 2.86308 8.49035 3.03752 8.82324 3.31055L8.75098 3.35059L6.3291 4.72949C6.26889 4.76436 6.21846 4.81435 6.18359 4.87402C6.14883 4.93366 6.13026 5.00152 6.12988 5.07031L6.12793 8.43164L5.10352 7.84961C5.09856 7.84661 5.09408 7.84264 5.09082 7.83789C5.08751 7.83302 5.08588 7.82708 5.08496 7.82129V5.03711C5.08552 4.61016 5.20898 4.19219 5.44141 3.83203C5.674 3.47177 6.0063 3.18405 6.39844 3.00293ZM9.61719 5.59961L10.002 5.81934C10.0016 6.00416 10 6.19789 10 6.40039V7.00684L8.55957 6.18164L9.58105 5.59961C9.58643 5.59682 9.59256 5.59577 9.59863 5.5957C9.60488 5.5957 9.61166 5.59673 9.61719 5.59961ZM10.0586 3.73535C10.0293 4.07769 10.0139 4.46591 10.0068 4.91504C9.95574 4.89205 9.9012 4.87695 9.84473 4.87695C9.77479 4.87698 9.70582 4.89575 9.64551 4.93066L6.68652 6.61523V5.44824C6.686 5.44256 6.68708 5.43684 6.68945 5.43164C6.69199 5.42623 6.69619 5.42134 6.70117 5.41797L9.14941 4.02441C9.42945 3.86529 9.7395 3.76716 10.0586 3.73535Z" fill="white"/>
+              <rect x="11" y="1" width="14" height="14" rx="3" fill="#DE7356"/>
+              <path d="M14.8902 9.6977L16.9042 8.56246L16.9381 8.46387L16.9042 8.40904L16.8061 8.40901L16.4695 8.38816L15.3187 8.3569L14.3207 8.31526L13.3538 8.26317L13.1106 8.21112L12.8825 7.90908L12.906 7.75843L13.1106 7.62026L13.4036 7.64594L14.0512 7.69036L15.0229 7.75772L15.7279 7.79939L16.7722 7.90839H16.9381L16.9616 7.84106L16.9049 7.79939L16.8606 7.75772L15.855 7.0731L14.7665 6.34959L14.1963 5.93297L13.8881 5.72192L13.7326 5.52402L13.6656 5.09216L13.9455 4.78248L14.3214 4.80817L14.4175 4.83388L14.7983 5.12825L15.6118 5.76081L16.674 6.5468L16.8296 6.67665L16.8918 6.63223L16.8994 6.60097L16.8296 6.48364L16.2518 5.43447L15.6353 4.3673L15.3609 3.925L15.2883 3.65977C15.2628 3.55077 15.2441 3.45913 15.2441 3.34732L15.5627 2.91266L15.7389 2.85571L16.164 2.91266L16.343 3.06888L16.607 3.67576L17.0348 4.63118L17.6983 5.93028L17.8926 6.31563L17.9962 6.67253L18.0349 6.78153L18.1019 6.7815V6.71901L18.1565 5.98717L18.2574 5.0887L18.3556 3.93263L18.3894 3.607L18.5497 3.21676L18.8684 3.0057L19.1172 3.12514L19.3217 3.41951L19.2934 3.60977L19.1718 4.40408L18.9333 5.64832L18.7778 6.48153H18.8684L18.9721 6.37739L19.3916 5.81776L20.0966 4.93247L20.4076 4.58115L20.7704 4.19303L21.0033 4.00831L21.4436 4.00829L21.7677 4.49223L21.6226 4.99217L21.1692 5.56984L20.7932 6.05934L20.2541 6.7884L19.9175 7.37162L19.9487 7.41816L20.0288 7.41052L21.2466 7.15013L21.9046 7.03071L22.6897 6.89534L23.0449 7.06198L23.0837 7.23139L22.944 7.57787L22.1043 7.78618L21.1195 7.98407L19.6528 8.33265L19.6349 8.34583L19.6556 8.37152L20.3163 8.43401L20.599 8.44929H21.2908L22.5791 8.54582L22.9157 8.7694L23.1175 9.04297L23.0836 9.25128L22.5653 9.51651L21.8659 9.34987L20.2334 8.95966L19.6735 8.81939L19.5962 8.81937V8.8659L20.0627 9.32416L20.9176 10.0997L21.9882 11.0996L22.0428 11.3468L21.9052 11.5419L21.7601 11.521L20.8195 10.81L20.4566 10.49L19.6349 9.79492L19.5803 9.79489V9.8678L19.7697 10.1462L20.7697 11.6564L20.8215 12.1195L20.749 12.2702L20.4898 12.3612L20.2051 12.3091L19.6197 11.4835L19.0156 10.5538L18.5284 9.72061L18.4689 9.75462L18.1814 12.8659L18.0466 13.0249L17.7356 13.1444L17.4765 12.9465L17.3389 12.6264L17.4765 11.9938L17.6423 11.1683L17.7771 10.5121L17.8987 9.69699L17.9713 9.42619L17.9665 9.40814L17.9071 9.41578L17.2954 10.2594L16.3651 11.5224L15.6291 12.314L15.4528 12.3841L15.1473 12.2251L15.1757 11.9411L15.3464 11.6884L16.3651 10.3865L16.9795 9.57966L17.3762 9.11374L17.3735 9.04641H17.35L14.6442 10.8114L14.1625 10.8739L13.9551 10.6788L13.9807 10.3587L14.0789 10.2546L14.8923 9.69213L14.8895 9.69493L14.8902 9.6977Z" fill="#FCF2EE"/>
+            </svg>
+          ) : provider === 'codex' ? (
             <svg className="ai-icon" viewBox="0 0 512 509.639" xmlns="http://www.w3.org/2000/svg">
               <path fill={glowColor} d="M115.612 0h280.775C459.974 0 512 52.026 512 115.612v278.415c0 63.587-52.026 115.613-115.613 115.613H115.612C52.026 509.64 0 457.614 0 394.027V115.612C0 52.026 52.026 0 115.612 0z"/>
               <path fill={['#FFFFFF', '#00FF88', '#22D3EE', '#00D4FF'].includes(glowColor) ? '#1D1E20' : '#FCF2EE'} fillRule="nonzero" d="M412.037 221.764a90.834 90.834 0 004.648-28.67 90.79 90.79 0 00-12.443-45.87c-16.37-28.496-46.738-46.089-79.605-46.089-6.466 0-12.943.683-19.264 2.04a90.765 90.765 0 00-67.881-30.515h-.576c-.059.002-.149.002-.216.002-39.807 0-75.108 25.686-87.346 63.554-25.626 5.239-47.748 21.31-60.682 44.03a91.873 91.873 0 00-12.407 46.077 91.833 91.833 0 0023.694 61.553 90.802 90.802 0 00-4.649 28.67 90.804 90.804 0 0012.442 45.87c16.369 28.504 46.74 46.087 79.61 46.087a91.81 91.81 0 0019.253-2.04 90.783 90.783 0 0067.887 30.516h.576l.234-.001c39.829 0 75.119-25.686 87.357-63.588 25.626-5.242 47.748-21.312 60.682-44.033a91.718 91.718 0 0012.383-46.035 91.83 91.83 0 00-23.693-61.553l-.004-.005zM275.102 413.161h-.094a68.146 68.146 0 01-43.611-15.8 56.936 56.936 0 002.155-1.221l72.54-41.901a11.799 11.799 0 005.962-10.251V241.651l30.661 17.704c.326.163.55.479.596.84v84.693c-.042 37.653-30.554 68.198-68.21 68.273h.001zm-146.689-62.649a68.128 68.128 0 01-9.152-34.085c0-3.904.341-7.817 1.005-11.663.539.323 1.48.897 2.155 1.285l72.54 41.901a11.832 11.832 0 0011.918-.002l88.563-51.137v35.408a1.1 1.1 0 01-.438.94l-73.33 42.339a68.43 68.43 0 01-34.11 9.12 68.359 68.359 0 01-59.15-34.11l-.001.004zm-19.083-158.36a68.044 68.044 0 0135.538-29.934c0 .625-.036 1.731-.036 2.5v83.801l-.001.07a11.79 11.79 0 005.954 10.242l88.564 51.13-30.661 17.704a1.096 1.096 0 01-1.034.093l-73.337-42.375a68.36 68.36 0 01-34.095-59.143 68.412 68.412 0 019.112-34.085l-.004-.003zm251.907 58.621l-88.563-51.137 30.661-17.697a1.097 1.097 0 011.034-.094l73.337 42.339c21.109 12.195 34.132 34.746 34.132 59.132 0 28.604-17.849 54.199-44.686 64.078v-86.308c.004-.032.004-.065.004-.096 0-4.219-2.261-8.119-5.919-10.217zm30.518-45.93c-.539-.331-1.48-.898-2.155-1.286l-72.54-41.901a11.842 11.842 0 00-5.958-1.611c-2.092 0-4.15.558-5.957 1.611l-88.564 51.137v-35.408l-.001-.061a1.1 1.1 0 01.44-.88l73.33-42.303a68.301 68.301 0 0134.108-9.129c37.704 0 68.281 30.577 68.281 68.281a68.69 68.69 0 01-.984 11.545v.005zm-191.843 63.109l-30.668-17.704a1.09 1.09 0 01-.596-.84v-84.692c.016-37.685 30.593-68.236 68.281-68.236a68.332 68.332 0 0143.689 15.804 63.09 63.09 0 00-2.155 1.222l-72.54 41.9a11.794 11.794 0 00-5.961 10.248v.068l-.05 102.23zm16.655-35.91l39.445-22.782 39.444 22.767v45.55l-39.444 22.767-39.445-22.767v-45.535z"/>
@@ -712,13 +725,14 @@ function TheaterGrid({ room, arrivedCount, speakerOverride, showSeats, joinedSea
   }, [isTheaterMode, arrivedCount, activeSpeakers.length]);
 
   // Speaking indicator for avatar mode
+  const maxSpeakers = speakerOverride || 3;
   const [speakers, setSpeakers] = useState({});
   useEffect(() => {
     if (isTheaterMode) return;
     const timers = [];
     const startSpeaker = () => {
       setSpeakers(prev => {
-        if (Object.keys(prev).length >= 2) return prev;
+        if (Object.keys(prev).length >= maxSpeakers) return prev;
         const idx = Math.floor(Math.random() * Math.min(arrivedCount, people.length));
         if (prev[idx]) return prev;
         return { ...prev, [idx]: true };
@@ -1259,7 +1273,13 @@ function MeetingRoomCard({ room, vibeOverride, peopleOverride, speakerOverride, 
         <span className={`token-label ${fading ? 'fade-out' : ''}`} style={{ color: glowColorOverride ? `${glowColorOverride}CC` : claudeCount >= 2 ? 'rgba(213, 37, 32, 0.8)' : hasClaude ? 'rgba(235, 97, 57, 0.8)' : 'rgba(255, 255, 255, 0.5)' }}>
           {arrivedCount > 0 && <span className="room-count" style={{ color: 'rgba(255, 255, 255, 0.35)' }}>{arrivedCount} here</span>}
           <span className="activity-text">{activeCount} Vibing</span>
-          {providerOverride === 'codex' ? (
+          {providerOverride === 'both' ? (
+            <svg className="ai-icon ai-icon-combo" viewBox="0 0 26 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M10.2002 1C10.6366 1 11.0163 1.00013 11.3506 1.00586C10.9771 1.33633 10.6647 1.73398 10.4355 2.18359C10.3193 2.41182 10.2344 2.65931 10.1719 2.94141C9.99744 2.94821 9.82278 2.96843 9.65039 3.00488C9.28981 2.60933 8.83009 2.31432 8.31738 2.14941C7.8045 1.98448 7.25631 1.95541 6.72852 2.06543C6.20079 2.17547 5.71189 2.4209 5.31055 2.77637C4.90922 3.13183 4.6099 3.58509 4.44238 4.09082C4.01966 4.17632 3.61984 4.34974 3.27051 4.59961C2.92108 4.84965 2.62973 5.17104 2.41602 5.54102C2.08909 6.09538 1.94893 6.73813 2.0166 7.37598C2.08432 8.01361 2.35598 8.6134 2.79199 9.08887C2.65547 9.49273 2.60767 9.92129 2.65234 10.3447C2.69704 10.7681 2.83293 11.1775 3.05078 11.5449C3.3746 12.1003 3.86949 12.5402 4.46289 12.8008C5.05625 13.0612 5.71849 13.1285 6.35352 12.9941C6.63997 13.3123 6.99176 13.5669 7.38574 13.7402C7.77984 13.9136 8.20716 14.0024 8.63867 14C9.23137 14.0005 9.80878 13.8294 10.3047 13.5137C10.3435 13.6186 10.3862 13.7195 10.4355 13.8164C10.6646 14.2658 10.9773 14.6628 11.3506 14.9932C11.0163 14.9989 10.6366 15 10.2002 15H5.7998C4.11978 15 3.27941 14.9998 2.6377 14.6729C2.07347 14.3853 1.61472 13.9265 1.32715 13.3623C1.00018 12.7206 1 11.8802 1 10.2002V5.7998C1 4.11978 1.00018 3.27941 1.32715 2.6377C1.61472 2.07347 2.07347 1.61472 2.6377 1.32715C3.27941 1.00018 4.11978 1 5.7998 1H10.2002ZM10 7.63672V9.59961C10 10.9908 10.0001 11.9504 10.1045 12.6826C9.69556 13.0228 9.17772 13.2137 8.63867 13.2148C8.10584 13.2157 7.5896 13.0313 7.18066 12.6943L7.25293 12.6543L9.6748 11.2744C9.73492 11.2396 9.78548 11.1905 9.82031 11.1309C9.85515 11.0712 9.87358 11.0034 9.87402 10.9346V7.56543L10 7.63672ZM9.32422 10.5488C9.32392 10.5548 9.32222 10.5611 9.31934 10.5664C9.31646 10.5715 9.31238 10.5757 9.30762 10.5791L6.85449 11.9746C6.33094 12.2721 5.7086 12.3526 5.125 12.1982C4.54183 12.0439 4.04458 11.6679 3.74219 11.1523C3.47494 10.6972 3.37849 10.1626 3.4707 9.64453L3.54297 9.6875L5.9668 11.0664C6.02679 11.1011 6.09548 11.1201 6.16504 11.1201C6.23459 11.1201 6.3033 11.1011 6.36328 11.0664L9.32422 9.38281V10.5488ZM4.30273 7.7998C4.30182 7.86838 4.31991 7.9366 4.35449 7.99609C4.38907 8.0554 4.43968 8.10489 4.5 8.13867L7.44727 9.81543L6.42285 10.3994C6.41744 10.4022 6.4114 10.4042 6.40527 10.4043C6.399 10.4043 6.39226 10.4023 6.38672 10.3994L3.93848 9.00684C3.416 8.7081 3.0344 8.21695 2.87793 7.6416C2.72151 7.06612 2.80257 6.45213 3.10352 5.93555V5.94824C3.37261 5.49014 3.79755 5.1398 4.30273 4.96094V7.7998ZM9.32422 7.24902V8.74805L8.00781 9.49805L6.68652 8.74805L6.68457 7.24902L8.00293 6.49902L9.32422 7.24902ZM6.39844 3.00293C6.79053 2.82187 7.22685 2.75414 7.65625 2.80859C8.08563 2.86308 8.49035 3.03752 8.82324 3.31055L8.75098 3.35059L6.3291 4.72949C6.26889 4.76436 6.21846 4.81435 6.18359 4.87402C6.14883 4.93366 6.13026 5.00152 6.12988 5.07031L6.12793 8.43164L5.10352 7.84961C5.09856 7.84661 5.09408 7.84264 5.09082 7.83789C5.08751 7.83302 5.08588 7.82708 5.08496 7.82129V5.03711C5.08552 4.61016 5.20898 4.19219 5.44141 3.83203C5.674 3.47177 6.0063 3.18405 6.39844 3.00293ZM9.61719 5.59961L10.002 5.81934C10.0016 6.00416 10 6.19789 10 6.40039V7.00684L8.55957 6.18164L9.58105 5.59961C9.58643 5.59682 9.59256 5.59577 9.59863 5.5957C9.60488 5.5957 9.61166 5.59673 9.61719 5.59961ZM10.0586 3.73535C10.0293 4.07769 10.0139 4.46591 10.0068 4.91504C9.95574 4.89205 9.9012 4.87695 9.84473 4.87695C9.77479 4.87698 9.70582 4.89575 9.64551 4.93066L6.68652 6.61523V5.44824C6.686 5.44256 6.68708 5.43684 6.68945 5.43164C6.69199 5.42623 6.69619 5.42134 6.70117 5.41797L9.14941 4.02441C9.42945 3.86529 9.7395 3.76716 10.0586 3.73535Z" fill="white"/>
+              <rect x="11" y="1" width="14" height="14" rx="3" fill="#DE7356"/>
+              <path d="M14.8902 9.6977L16.9042 8.56246L16.9381 8.46387L16.9042 8.40904L16.8061 8.40901L16.4695 8.38816L15.3187 8.3569L14.3207 8.31526L13.3538 8.26317L13.1106 8.21112L12.8825 7.90908L12.906 7.75843L13.1106 7.62026L13.4036 7.64594L14.0512 7.69036L15.0229 7.75772L15.7279 7.79939L16.7722 7.90839H16.9381L16.9616 7.84106L16.9049 7.79939L16.8606 7.75772L15.855 7.0731L14.7665 6.34959L14.1963 5.93297L13.8881 5.72192L13.7326 5.52402L13.6656 5.09216L13.9455 4.78248L14.3214 4.80817L14.4175 4.83388L14.7983 5.12825L15.6118 5.76081L16.674 6.5468L16.8296 6.67665L16.8918 6.63223L16.8994 6.60097L16.8296 6.48364L16.2518 5.43447L15.6353 4.3673L15.3609 3.925L15.2883 3.65977C15.2628 3.55077 15.2441 3.45913 15.2441 3.34732L15.5627 2.91266L15.7389 2.85571L16.164 2.91266L16.343 3.06888L16.607 3.67576L17.0348 4.63118L17.6983 5.93028L17.8926 6.31563L17.9962 6.67253L18.0349 6.78153L18.1019 6.7815V6.71901L18.1565 5.98717L18.2574 5.0887L18.3556 3.93263L18.3894 3.607L18.5497 3.21676L18.8684 3.0057L19.1172 3.12514L19.3217 3.41951L19.2934 3.60977L19.1718 4.40408L18.9333 5.64832L18.7778 6.48153H18.8684L18.9721 6.37739L19.3916 5.81776L20.0966 4.93247L20.4076 4.58115L20.7704 4.19303L21.0033 4.00831L21.4436 4.00829L21.7677 4.49223L21.6226 4.99217L21.1692 5.56984L20.7932 6.05934L20.2541 6.7884L19.9175 7.37162L19.9487 7.41816L20.0288 7.41052L21.2466 7.15013L21.9046 7.03071L22.6897 6.89534L23.0449 7.06198L23.0837 7.23139L22.944 7.57787L22.1043 7.78618L21.1195 7.98407L19.6528 8.33265L19.6349 8.34583L19.6556 8.37152L20.3163 8.43401L20.599 8.44929H21.2908L22.5791 8.54582L22.9157 8.7694L23.1175 9.04297L23.0836 9.25128L22.5653 9.51651L21.8659 9.34987L20.2334 8.95966L19.6735 8.81939L19.5962 8.81937V8.8659L20.0627 9.32416L20.9176 10.0997L21.9882 11.0996L22.0428 11.3468L21.9052 11.5419L21.7601 11.521L20.8195 10.81L20.4566 10.49L19.6349 9.79492L19.5803 9.79489V9.8678L19.7697 10.1462L20.7697 11.6564L20.8215 12.1195L20.749 12.2702L20.4898 12.3612L20.2051 12.3091L19.6197 11.4835L19.0156 10.5538L18.5284 9.72061L18.4689 9.75462L18.1814 12.8659L18.0466 13.0249L17.7356 13.1444L17.4765 12.9465L17.3389 12.6264L17.4765 11.9938L17.6423 11.1683L17.7771 10.5121L17.8987 9.69699L17.9713 9.42619L17.9665 9.40814L17.9071 9.41578L17.2954 10.2594L16.3651 11.5224L15.6291 12.314L15.4528 12.3841L15.1473 12.2251L15.1757 11.9411L15.3464 11.6884L16.3651 10.3865L16.9795 9.57966L17.3762 9.11374L17.3735 9.04641H17.35L14.6442 10.8114L14.1625 10.8739L13.9551 10.6788L13.9807 10.3587L14.0789 10.2546L14.8923 9.69213L14.8895 9.69493L14.8902 9.6977Z" fill="#FCF2EE"/>
+            </svg>
+          ) : providerOverride === 'codex' ? (
             <svg className="ai-icon" viewBox="0 0 512 509.639" xmlns="http://www.w3.org/2000/svg">
               <path fill={baseColor} d="M115.612 0h280.775C459.974 0 512 52.026 512 115.612v278.415c0 63.587-52.026 115.613-115.613 115.613H115.612C52.026 509.64 0 457.614 0 394.027V115.612C0 52.026 52.026 0 115.612 0z"/>
               <path fill={['#FFFFFF', '#00FF88', '#22D3EE', '#00D4FF'].includes(baseColor) ? '#1D1E20' : '#FCF2EE'} fillRule="nonzero" d="M412.037 221.764a90.834 90.834 0 004.648-28.67 90.79 90.79 0 00-12.443-45.87c-16.37-28.496-46.738-46.089-79.605-46.089-6.466 0-12.943.683-19.264 2.04a90.765 90.765 0 00-67.881-30.515h-.576c-.059.002-.149.002-.216.002-39.807 0-75.108 25.686-87.346 63.554-25.626 5.239-47.748 21.31-60.682 44.03a91.873 91.873 0 00-12.407 46.077 91.833 91.833 0 0023.694 61.553 90.802 90.802 0 00-4.649 28.67 90.804 90.804 0 0012.442 45.87c16.369 28.504 46.74 46.087 79.61 46.087a91.81 91.81 0 0019.253-2.04 90.783 90.783 0 0067.887 30.516h.576l.234-.001c39.829 0 75.119-25.686 87.357-63.588 25.626-5.242 47.748-21.312 60.682-44.033a91.718 91.718 0 0012.383-46.035 91.83 91.83 0 00-23.693-61.553l-.004-.005zM275.102 413.161h-.094a68.146 68.146 0 01-43.611-15.8 56.936 56.936 0 002.155-1.221l72.54-41.901a11.799 11.799 0 005.962-10.251V241.651l30.661 17.704c.326.163.55.479.596.84v84.693c-.042 37.653-30.554 68.198-68.21 68.273h.001zm-146.689-62.649a68.128 68.128 0 01-9.152-34.085c0-3.904.341-7.817 1.005-11.663.539.323 1.48.897 2.155 1.285l72.54 41.901a11.832 11.832 0 0011.918-.002l88.563-51.137v35.408a1.1 1.1 0 01-.438.94l-73.33 42.339a68.43 68.43 0 01-34.11 9.12 68.359 68.359 0 01-59.15-34.11l-.001.004zm-19.083-158.36a68.044 68.044 0 0135.538-29.934c0 .625-.036 1.731-.036 2.5v83.801l-.001.07a11.79 11.79 0 005.954 10.242l88.564 51.13-30.661 17.704a1.096 1.096 0 01-1.034.093l-73.337-42.375a68.36 68.36 0 01-34.095-59.143 68.412 68.412 0 019.112-34.085l-.004-.003zm251.907 58.621l-88.563-51.137 30.661-17.697a1.097 1.097 0 011.034-.094l73.337 42.339c21.109 12.195 34.132 34.746 34.132 59.132 0 28.604-17.849 54.199-44.686 64.078v-86.308c.004-.032.004-.065.004-.096 0-4.219-2.261-8.119-5.919-10.217zm30.518-45.93c-.539-.331-1.48-.898-2.155-1.286l-72.54-41.901a11.842 11.842 0 00-5.958-1.611c-2.092 0-4.15.558-5.957 1.611l-88.564 51.137v-35.408l-.001-.061a1.1 1.1 0 01.44-.88l73.33-42.303a68.301 68.301 0 0134.108-9.129c37.704 0 68.281 30.577 68.281 68.281a68.69 68.69 0 01-.984 11.545v.005zm-191.843 63.109l-30.668-17.704a1.09 1.09 0 01-.596-.84v-84.692c.016-37.685 30.593-68.236 68.281-68.236a68.332 68.332 0 0143.689 15.804 63.09 63.09 0 00-2.155 1.222l-72.54 41.9a11.794 11.794 0 00-5.961 10.248v.068l-.05 102.23zm16.655-35.91l39.445-22.782 39.444 22.767v45.55l-39.444 22.767-39.445-22.767v-45.535z"/>
@@ -1319,7 +1339,7 @@ function TabSwitcher({ activeTab, onTabChange }) {
         className={`tab-button ${activeTab === 'claude-max' ? 'tab-active' : ''}`}
         onClick={() => onTabChange('claude-max')}
       >
-        Claude
+        Vibe Code
       </button>
       <button
         className={`tab-button ${activeTab === 'war-room' ? 'tab-active' : ''}`}
@@ -1376,6 +1396,7 @@ function DevControls({ room, vibeCount, onVibeCountChange, glowColor, onGlowColo
           <div className="dev-provider-toggle">
             <button className={`dev-provider-btn ${provider === 'claude' ? 'dev-provider-active' : ''}`} onClick={() => onProviderChange('claude')}>Claude</button>
             <button className={`dev-provider-btn ${provider === 'codex' ? 'dev-provider-active' : ''}`} onClick={() => onProviderChange('codex')}>Codex</button>
+            <button className={`dev-provider-btn ${provider === 'both' ? 'dev-provider-active' : ''}`} onClick={() => onProviderChange('both')}>Both</button>
           </div>
         </div>
       )}
@@ -1418,6 +1439,7 @@ function FloorDevControls({ vibePercent, onVibePercentChange, glowColor, onGlowC
         <div className="dev-provider-toggle">
           <button className={`dev-provider-btn ${provider === 'claude' ? 'dev-provider-active' : ''}`} onClick={() => onProviderChange('claude')}>Claude</button>
           <button className={`dev-provider-btn ${provider === 'codex' ? 'dev-provider-active' : ''}`} onClick={() => onProviderChange('codex')}>Codex</button>
+          <button className={`dev-provider-btn ${provider === 'both' ? 'dev-provider-active' : ''}`} onClick={() => onProviderChange('both')}>Both</button>
         </div>
       </div>
       <div className="dev-controls-row">
@@ -1547,8 +1569,393 @@ function WarRoomView() {
   );
 }
 
+const EDIT_BG_COLORS = [
+  { id: 'black', color: '#0C0C0E', room: '#1D1E20', swatch: '#0C0C0E', label: 'Default' },
+  { id: 'red', color: '#201318', room: '#2E1E24', swatch: '#E53935', label: 'Red' },
+  { id: 'orange', color: '#201613', room: '#2E221C', swatch: '#FF6F00', label: 'Orange' },
+  { id: 'yellow', color: '#201D13', room: '#2E2B1C', swatch: '#FFC107', label: 'Yellow' },
+  { id: 'green', color: '#132017', room: '#1C2E22', swatch: '#46D08F', label: 'Green' },
+  { id: 'cyan', color: '#131F20', room: '#1C2D2E', swatch: '#4DD0E1', label: 'Cyan' },
+  { id: 'blue', color: '#131620', room: '#1C222E', swatch: '#0059DC', label: 'Blue' },
+  { id: 'purple', color: '#181320', room: '#241E2E', swatch: '#835CE9', label: 'Purple' },
+  { id: 'pink', color: '#201318', room: '#2E1E24', swatch: '#C2185B', label: 'Pink' },
+];
+
 function EditMapView() {
-  return <BigMeetingsView />;
+  const baseRoom = meetingRooms.find(r => r.id === 'alan-kay');
+  const [peopleCount, setPeopleCount] = useState(500);
+  const [speakerCount, setSpeakerCount] = useState(3);
+  const [bgColor, setBgColor] = useState('black');
+  const [rooms, setRooms] = useState([
+    { id: 'main', roomData: null, size: { w: 320, h: 400 }, pos: { x: -160, y: -200 } },
+  ]);
+  const [hoveredRoom, setHoveredRoom] = useState(null);
+  const [selectedRoom, setSelectedRoom] = useState(null);
+  const [interacting, setInteracting] = useState(false);
+  const [drawingRoom, setDrawingRoom] = useState(null);
+  const [editingNameId, setEditingNameId] = useState(null);
+  const [seatMenuRoom, setSeatMenuRoom] = useState(null);
+  const [seatMenuIndex, setSeatMenuIndex] = useState(null);
+  const [seatSearch, setSeatSearch] = useState('');
+  const cardRefs = useRef({});
+  const gridRef = useRef(null);
+  const viewRef = useRef(null);
+  const resizingRef = useRef(false);
+  const draggingRef = useRef(false);
+  const drawingRef = useRef(false);
+  const startRef = useRef({ x: 0, y: 0, w: 0, h: 0, px: 0, py: 0 });
+  const roomsRef = useRef(rooms);
+  roomsRef.current = rooms;
+  if (!baseRoom) return null;
+  const snap = 10;
+
+  const getPointer = (e) => {
+    if (e.touches && e.touches[0]) return { clientX: e.touches[0].clientX, clientY: e.touches[0].clientY };
+    return { clientX: e.clientX || 0, clientY: e.clientY || 0 };
+  };
+
+  const updateRoom = (id, updates) => {
+    setRooms(prev => prev.map(r => r.id === id ? { ...r, ...updates } : r));
+  };
+
+  const rectsOverlap = (a, b) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+
+  const startInteraction = (roomId) => {
+    const el = cardRefs.current[roomId];
+    const grid = gridRef.current;
+    if (el && grid) {
+      const rect = el.getBoundingClientRect();
+      grid.style.backgroundPosition = `${rect.left % 10}px ${rect.top % 10}px`;
+    }
+    setInteracting(true);
+  };
+
+  const onResizeStart = (e, room, dir) => {
+    e.preventDefault(); e.stopPropagation();
+    resizingRef.current = true;
+    startInteraction(room.id);
+    const ptr = getPointer(e);
+    const roomId = room.id;
+    startRef.current = { x: ptr.clientX, y: ptr.clientY, w: room.size.w, h: room.size.h, px: room.pos.x, py: room.pos.y };
+    const onMove = (e) => {
+      if (!resizingRef.current) return;
+      const ptr = getPointer(e);
+      const dx = ptr.clientX - startRef.current.x, dy = ptr.clientY - startRef.current.y;
+      let newW = startRef.current.w, newH = startRef.current.h, newX = startRef.current.px, newY = startRef.current.py;
+      if (dir.includes('e')) newW = Math.max(60, Math.round((startRef.current.w + dx) / snap) * snap);
+      if (dir.includes('w')) { newW = Math.max(60, Math.round((startRef.current.w - dx) / snap) * snap); newX = startRef.current.px + (startRef.current.w - newW); }
+      if (dir.includes('s')) newH = Math.max(60, Math.round((startRef.current.h + dy) / snap) * snap);
+      if (dir.includes('n')) { newH = Math.max(60, Math.round((startRef.current.h - dy) / snap) * snap); newY = startRef.current.py + (startRef.current.h - newH); }
+      updateRoom(roomId, { size: { w: newW, h: newH }, pos: { x: newX, y: newY } });
+    };
+    const onUp = () => {
+      resizingRef.current = false; setInteracting(false);
+      window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp);
+      window.removeEventListener('touchmove', onMove); window.removeEventListener('touchend', onUp);
+    };
+    window.addEventListener('mousemove', onMove); window.addEventListener('mouseup', onUp);
+    window.addEventListener('touchmove', onMove, { passive: false }); window.addEventListener('touchend', onUp);
+  };
+
+  const onDragStart = (e, room) => {
+    e.preventDefault(); draggingRef.current = true; startInteraction(room.id);
+    const ptr = getPointer(e);
+    startRef.current = { ...startRef.current, x: ptr.clientX, y: ptr.clientY, px: room.pos.x, py: room.pos.y };
+    const dragRoomId = room.id;
+    const origPos = { x: room.pos.x, y: room.pos.y };
+    const onMove = (e) => {
+      if (!draggingRef.current) return;
+      const ptr = getPointer(e);
+      updateRoom(dragRoomId, { pos: { x: Math.round((startRef.current.px + ptr.clientX - startRef.current.x) / snap) * snap, y: Math.round((startRef.current.py + ptr.clientY - startRef.current.y) / snap) * snap } });
+    };
+    const onUp = () => {
+      draggingRef.current = false; setInteracting(false);
+      window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp);
+      window.removeEventListener('touchmove', onMove); window.removeEventListener('touchend', onUp);
+    };
+    window.addEventListener('mousemove', onMove); window.addEventListener('mouseup', onUp);
+    window.addEventListener('touchmove', onMove, { passive: false }); window.addEventListener('touchend', onUp);
+  };
+
+  const drawingRoomRef = useRef(drawingRoom);
+  drawingRoomRef.current = drawingRoom;
+
+  const onBgMouseDown = (e) => {
+    if (e.target.closest('.big-meeting-card') || e.target.closest('.map-toolbar')) return;
+    setSelectedRoom(null); setEditingNameId(null); setSeatMenuRoom(null);
+    e.preventDefault(); drawingRef.current = true;
+    const viewRect = viewRef.current.getBoundingClientRect();
+    const cx = viewRect.width / 2, cy = viewRect.height / 2;
+    const startX = Math.round((e.clientX - viewRect.left - cx) / snap) * snap;
+    const startY = Math.round((e.clientY - viewRect.top - cy) / snap) * snap;
+    const mouseStartX = e.clientX, mouseStartY = e.clientY;
+    setInteracting(true); setDrawingRoom({ x: startX, y: startY, w: 0, h: 0 });
+    const onMove = (e) => {
+      if (!drawingRef.current) return;
+      const dx = e.clientX - mouseStartX, dy = e.clientY - mouseStartY;
+      const w = Math.max(snap, Math.round(Math.abs(dx) / snap) * snap);
+      const h = Math.max(snap, Math.round(Math.abs(dy) / snap) * snap);
+      setDrawingRoom({ x: dx < 0 ? startX - w : startX, y: dy < 0 ? startY - h : startY, w, h });
+    };
+    const onUp = () => {
+      drawingRef.current = false; setInteracting(false);
+      const dr = drawingRoomRef.current; setDrawingRoom(null);
+      if (dr && dr.w >= 60 && dr.h >= 60) {
+        const newId = `room-${Date.now()}`;
+        const area = dr.w * dr.h;
+        const type = area < 40000 ? 'private' : area >= 120000 ? 'theater' : 'meeting';
+        const unique = [...new Map(baseRoom.people.map(p => [p.displayName || p.name, p])).values()].map(p => ({ ...p, name: p.displayName || p.name })).sort(() => Math.random() - 0.5);
+        const count = type === 'private' ? 1 : type === 'theater' ? 20 : 20;
+        const assignees = type === 'private' ? [unique[0]] : undefined;
+        const roomNames = { private: `${unique[0]?.name?.split(' ')[0] || 'Private'}'s Office`, meeting: ['Lobby', 'Fireside', 'The Den', 'Starlight', 'Horizon', 'Basecamp', 'The Loft', 'Greenhouse'][Math.floor(Math.random() * 8)], theater: 'Theater' };
+        const name = type === 'meeting' ? roomNames.meeting : roomNames[type];
+        setRooms(prev => [...prev, { id: newId, roomData: { ...baseRoom, id: newId, name, type, people: unique.slice(0, count), assignees }, size: { w: dr.w, h: dr.h }, pos: { x: dr.x, y: dr.y } }]);
+        setSelectedRoom(newId);
+      }
+      window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp);
+    };
+    window.addEventListener('mousemove', onMove); window.addEventListener('mouseup', onUp);
+  };
+
+  useEffect(() => {
+    if (!selectedRoom) return;
+    const onKey = (e) => { if (e.key === 'Backspace' && !editingNameId) { e.preventDefault(); setRooms(prev => prev.filter(r => r.id !== selectedRoom)); setSelectedRoom(null); } };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [selectedRoom, editingNameId]);
+
+  const themeColors = EDIT_BG_COLORS.find(c => c.id === bgColor) || EDIT_BG_COLORS[0];
+
+  const addRoom = (type) => {
+    const roomNames = { 'private': 'Private Office', 'team': 'Team Room', 'meeting': 'Meeting Room', 'theater': 'Theater', 'game': 'Game Room', 'command': 'Command Center' };
+    const newId = `room-${Date.now()}`;
+    const w = type === 'private' ? 200 : type === 'theater' ? 280 : 220;
+    const h = type === 'private' ? 150 : type === 'theater' ? 400 : 220;
+    const unique = [...new Map(baseRoom.people.map(p => [p.displayName || p.name, p])).values()].map(p => ({ ...p, name: p.displayName || p.name })).sort(() => Math.random() - 0.5);
+    const count = type === 'private' ? 1 : type === 'team' ? 3 : type === 'game' ? 0 : 20;
+    const assignees = type === 'private' ? [unique[0]] : undefined;
+    const name = type === 'private' && unique[0] ? `${unique[0].name.split(' ')[0]}'s Office` : (roomNames[type] || type);
+    setRooms(prev => [...prev, { id: newId, roomData: { ...baseRoom, id: newId, name, type, people: unique.slice(0, count), assignees }, size: { w, h }, pos: { x: 0, y: 0 } }]);
+  };
+
+  const roomTypes = [
+    { id: 'private', name: 'Private Office' }, { id: 'team', name: 'Team Room' }, { id: 'meeting', name: 'Meeting Room' },
+    { id: 'theater', name: 'Theater' }, { id: 'game', name: 'Game Room' }, { id: 'command', name: 'Command Center' },
+  ];
+  const [showAddMenu, setShowAddMenu] = useState(false);
+
+  return (
+    <div ref={viewRef} className="big-meetings-view edit-mode" style={{ backgroundColor: themeColors.color }} onMouseDown={onBgMouseDown}>
+      <div ref={gridRef} className="grid-bg grid-bg-visible" />
+      <div className="big-meetings-center">
+        {rooms.map(room => {
+          const isHovered = hoveredRoom === room.id;
+          const roomData = room.roomData || baseRoom;
+          const roomSurfaceColor = themeColors.room;
+
+          return (
+            <div key={room.id} className="big-meeting-card-wrap"
+              style={{ position: 'absolute', left: '50%', top: '50%', width: room.size.w, zIndex: (isHovered || selectedRoom === room.id) ? 100 : 1, transform: `translate(${room.pos.x}px, ${room.pos.y}px)` }}
+              onMouseEnter={() => setHoveredRoom(room.id)}
+              onMouseLeave={() => { if (!resizingRef.current && !draggingRef.current) setHoveredRoom(null); }}
+            >
+              <div ref={el => { cardRefs.current[room.id] = el; }}
+                className="big-meeting-card"
+                style={{ width: room.size.w, height: room.size.h }}
+                onMouseDown={(e) => { if (!e.target.closest('.sel-edge') && !e.target.closest('.sel-corner')) { setSelectedRoom(room.id); onDragStart(e, room); } }}
+              >
+                <div style={{ height: room.size.h, '--room-surface': roomSurfaceColor }} className="big-meeting-card-inner">
+                  <div className="meeting-room-card" style={{ height: '100%', backgroundColor: roomSurfaceColor, display: 'flex', flexDirection: 'column' }}>
+                    {(roomData.type === 'meeting' || (!roomData.type && roomData.crowd)) && <div className="meeting-room-lines" />}
+                    <div className="card-header" style={{ padding: '0 12px' }}>
+                      {editingNameId === room.id ? (
+                        <input className="room-name-input" defaultValue={roomData.name} autoFocus
+                          onBlur={(e) => { const val = e.target.value.trim(); if (val) updateRoom(room.id, { roomData: { ...roomData, name: val } }); setEditingNameId(null); }}
+                          onKeyDown={(e) => { if (e.key === 'Enter') e.target.blur(); if (e.key === 'Escape') setEditingNameId(null); }}
+                          onMouseDown={(e) => e.stopPropagation()} />
+                      ) : (
+                        <h3 className="office-name room-name-editable" onClick={(e) => { e.stopPropagation(); setEditingNameId(room.id); }}>{roomData.name}</h3>
+                      )}
+                    </div>
+                    {roomData.type === 'private' && (
+                      <div className="private-office-seat">
+                        <div className={`seat-row ${isHovered ? 'seat-row-hovered' : ''}`}>
+                          {(roomData.assignees || []).map((person, i) => (
+                            <div key={i} className="seat-assigned" onClick={(e) => { e.stopPropagation(); setSeatMenuRoom(room.id); setSeatMenuIndex(i); setSeatSearch(''); }}>
+                              <img className="seat-avatar" src={person.avatar} alt={person.name} />
+                              <span className="seat-nametag">{person.name}</span>
+                            </div>
+                          ))}
+                          {isHovered && ((roomData.assignees || []).length + 1) * 48 < room.size.w - 24 && (
+                            <button className="seat-empty-btn" onClick={(e) => { e.stopPropagation(); setSeatMenuRoom(seatMenuRoom === room.id && seatMenuIndex === null ? null : room.id); setSeatMenuIndex(null); setSeatSearch(''); }} onMouseDown={(e) => e.stopPropagation()}>
+                              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 3V13M3 8H13" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>
+                            </button>
+                          )}
+                        </div>
+                        {seatMenuRoom === room.id && (
+                          <div className="seat-menu" onMouseDown={(e) => e.stopPropagation()}>
+                            <input className="seat-search" placeholder="Search people..." value={seatSearch} onChange={(e) => setSeatSearch(e.target.value)} autoFocus />
+                            <div className="seat-list">
+                              {officeData.filter(o => o.people[0]?.name.toLowerCase().includes(seatSearch.toLowerCase())).map(o => (
+                                <button key={o.id} className="seat-option" onClick={() => {
+                                  const person = o.people[0];
+                                  let assignees;
+                                  if (seatMenuIndex !== null) { assignees = [...(roomData.assignees || [])]; assignees[seatMenuIndex] = person; }
+                                  else { assignees = [...(roomData.assignees || []), person]; }
+                                  const name = assignees.length === 1 ? `${person.name.split(' ')[0]}'s Office` : roomData.name;
+                                  updateRoom(room.id, { roomData: { ...roomData, assignees, name } });
+                                  setSeatMenuRoom(null); setSeatMenuIndex(null);
+                                }}>
+                                  <img className="seat-option-avatar" src={o.people[0]?.avatar} alt="" />
+                                  <span>{o.people[0]?.name}</span>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {roomData.type === 'theater' && (
+                      <div className="theater-preview"><div className="theater-preview-stage" /><div className="theater-preview-audience">{Array.from({ length: 4 }).map((_, row) => (<div key={row} className="theater-preview-row">{Array.from({ length: 5 }).map((_, col) => (<div key={col} className="theater-preview-bench" />))}</div>))}</div></div>
+                    )}
+                    {roomData.type === 'game' && <div className="game-room-lines"><div className="game-room-zigzag" /></div>}
+                    {roomData.type === 'command' && <div className="command-center-preview"><div className="command-screen" /><div className="command-screen" /><div className="command-screen" /></div>}
+                  </div>
+                </div>
+                {(isHovered || selectedRoom === room.id) && (
+                  <div className="selection-frame">
+                    {['n','s','e','w'].map(d => <div key={d} className={`sel-edge sel-${d}`} onMouseDown={(e) => onResizeStart(e, room, d)} />)}
+                    {['nw','ne','sw','se'].map(d => <div key={d} className={`sel-corner sel-${d}`} onMouseDown={(e) => onResizeStart(e, room, d)} />)}
+                  </div>
+                )}
+              </div>
+              {(isHovered || selectedRoom === room.id) && (
+                <div className="room-info-pill" onMouseDown={(e) => e.stopPropagation()}>
+                  <select className="room-type-select" value={room.roomData?.type || 'meeting'}
+                    onChange={(e) => { const type = e.target.value; const names = { private: 'Private Office', team: 'Team Room', meeting: 'Meeting Room', theater: 'Theater', game: 'Game Room', command: 'Command Center' }; updateRoom(room.id, { roomData: { ...roomData, type, name: names[type] || type } }); }}>
+                    {roomTypes.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                  </select>
+                </div>
+              )}
+            </div>
+          );
+        })}
+        {drawingRoom && drawingRoom.w > 0 && drawingRoom.h > 0 && (
+          <div className="drawing-room-preview" style={{ position: 'absolute', left: '50%', top: '50%', width: drawingRoom.w, height: drawingRoom.h, transform: `translate(${drawingRoom.x}px, ${drawingRoom.y}px)` }} />
+        )}
+      </div>
+      <div className="map-toolbar">
+        <div className="map-toolbar-inner" style={{ backgroundColor: themeColors.room }}>
+          <button className={`toolbar-btn ${!selectedRoom ? 'toolbar-disabled-btn' : ''}`}
+            onClick={() => { if (selectedRoom) { setRooms(prev => prev.filter(r => r.id !== selectedRoom)); setSelectedRoom(null); } }} title="Delete Room">
+            <svg width="14" height="14" viewBox="0 0 12 12" fill="none"><path d="M5 3H7C7 2.44772 6.55228 2 6 2C5.44772 2 5 2.44772 5 3ZM4 3C4 1.89543 4.89543 1 6 1C7.10457 1 8 1.89543 8 3L10.5 3C10.7761 3 11 3.22386 11 3.5C11 3.77614 10.7761 4 10.5 4H10.059L9.61576 9.1708C9.52709 10.2054 8.66143 11 7.62307 11H4.37693C3.33857 11 2.47291 10.2054 2.38424 9.1708L1.94102 4H1.5C1.22386 4 1 3.77614 1 3.5C1 3.22386 1.22386 3 1.5 3L4 3ZM7.5 6C7.5 5.72386 7.27614 5.5 7 5.5C6.72386 5.5 6.5 5.72386 6.5 6V8C6.5 8.27614 6.72386 8.5 7 8.5C7.27614 8.5 7.5 8.27614 7.5 8V6ZM5 5.5C4.72386 5.5 4.5 5.72386 4.5 6V8C4.5 8.27614 4.72386 8.5 5 8.5C5.27614 8.5 5.5 8.27614 5.5 8V6C5.5 5.72386 5.27614 5.5 5 5.5Z" fill="currentColor"/></svg>
+          </button>
+          <div className="toolbar-add-wrap" style={{ position: 'relative' }}>
+            <button className="toolbar-btn" onClick={() => setShowAddMenu(!showAddMenu)} title="Add Room">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 3V13M3 8H13" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>
+            </button>
+            {showAddMenu && (
+              <div className="add-room-menu" style={{ backgroundColor: themeColors.room }}>
+                {roomTypes.map(t => (<button key={t.id} className="add-room-option" onClick={() => { addRoom(t.id); setShowAddMenu(false); }}><span className="add-room-name">{t.name}</span></button>))}
+              </div>
+            )}
+          </div>
+          <div className="toolbar-bg-swatches">
+            {EDIT_BG_COLORS.map(c => (
+              <button key={c.id} className={`toolbar-swatch ${bgColor === c.id ? 'toolbar-swatch-active' : ''}`}
+                style={{ background: c.swatch, border: c.id === 'black' ? '1px solid rgba(255,255,255,0.2)' : 'none' }}
+                onClick={() => setBgColor(c.id)} title={c.label} />
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DialogRoomBody({ people, speakerCount, surfaceColor }) {
+  const n = Math.min(speakerCount, people.length);
+  const [speakerIdxs, setSpeakerIdxs] = useState(() => {
+    const idxs = Array.from({ length: people.length }, (_, i) => i).sort(() => Math.random() - 0.5);
+    return idxs.slice(0, n);
+  });
+  const [talking, setTalking] = useState({});
+  const [fadingSlots, setFadingSlots] = useState({});
+
+  // Swap one speaker at a time: fade out slot → pause → swap → fade in
+  useEffect(() => {
+    if (people.length <= n) return;
+    const tick = () => {
+      const slot = Math.floor(Math.random() * n);
+      // Fade out
+      setFadingSlots(prev => ({ ...prev, [slot]: true }));
+      // Wait for fade out, then pause, then swap and fade in
+      setTimeout(() => {
+        setSpeakerIdxs(prev => {
+          const allIdxs = Array.from({ length: people.length }, (_, i) => i);
+          const nonSpeakers = allIdxs.filter(i => !prev.includes(i));
+          if (nonSpeakers.length === 0) return prev;
+          const next = [...prev];
+          next[slot] = nonSpeakers[Math.floor(Math.random() * nonSpeakers.length)];
+          return next;
+        });
+        // Fade in after another short delay
+        setTimeout(() => {
+          setFadingSlots(prev => { const next = { ...prev }; delete next[slot]; return next; });
+        }, 150);
+      }, 400);
+    };
+    const schedule = () => setTimeout(() => { tick(); timerId = schedule(); }, 4000 + Math.random() * 4000);
+    let timerId = schedule();
+    return () => clearTimeout(timerId);
+  }, [people.length, n]);
+
+  // Random talking indicators
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTalking(() => {
+        const next = {};
+        speakerIdxs.forEach(idx => { if (Math.random() < 0.45) next[idx] = true; });
+        return next;
+      });
+    }, 500);
+    return () => clearInterval(interval);
+  }, [speakerIdxs]);
+
+  const audience = people.filter((_, i) => !speakerIdxs.includes(i));
+
+  return (
+    <div className="dialog-room-body" style={{ backgroundColor: surfaceColor, overflowY: 'auto' }}>
+      {n > 0 && (
+        <div className="dialog-speakers">
+          {speakerIdxs.map((idx, slot) => {
+            const p = people[idx];
+            if (!p) return null;
+            return (
+              <div key={slot} className={`dialog-speaker ${fadingSlots[slot] ? 'dialog-speaker-fading' : ''}`} style={{ position: 'relative' }}>
+                <img key={idx} className="avatar dialog-speaker-avatar" src={p.avatar} alt={p.displayName || p.name} style={{ width: 80, height: 80, borderRadius: '50%', objectFit: 'cover' }} />
+                <div className={`avatar-inner-glow ${talking[idx] ? 'glow-active' : 'glow-off'}`} style={{ width: 80, height: 80 }} />
+                <div className="avatar-hover-name"><span className="dot-hover-name">{p.displayName || p.name}</span></div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+      {n > 0 && audience.length > 0 && (
+        <div className="dialog-divider" />
+      )}
+      {audience.length > 0 && (
+        <div className="dialog-audience">
+          {audience.map((p, i) => (
+            <div key={i} className="dialog-audience-item">
+              <img className="avatar" src={p.avatar} alt={p.displayName || p.name} style={{ width: 48, height: 48, borderRadius: '50%', objectFit: 'cover' }} />
+              <div className="avatar-hover-name"><span className="dot-hover-name">{p.displayName || p.name}</span></div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 function BigMeetingsView() {
@@ -1558,30 +1965,33 @@ function BigMeetingsView() {
   const [bgColor, setBgColor] = useState('black');
   const [rooms, setRooms] = useState(() => {
     const allPeople = baseRoom ? baseRoom.people : [];
-    const uniquePeople = [...new Map(allPeople.map(p => [p.displayName || p.name, p])).values()];
+    const uniquePeople = [...new Map(allPeople.map(p => [p.displayName || p.name, p])).values()].map(p => ({ ...p, name: p.displayName || p.name }));
     const shuffle = () => [...uniquePeople].sort(() => Math.random() - 0.5);
     const take = (n) => shuffle().slice(0, n);
-    const g = 10;
-    // Helper: compute room size to exactly fit a grid of avatars
-    const pad = 32; // horizontal padding (16px each side)
+    const snap = 10;
+    const g = snap;
+    const s = (v) => Math.round(v / snap) * snap; // snap to grid
+    // Helper: compute room size snapped to grid
+    const pad = 32;
     const headerH = 44;
     const avatarSize = 48, avatarGap = 8;
     const gridSize = (cols, rows) => ({
-      w: cols * avatarSize + (cols - 1) * avatarGap + pad,
-      h: rows * avatarSize + (rows - 1) * avatarGap + headerH + 16,
+      w: s(cols * avatarSize + (cols - 1) * avatarGap + pad),
+      h: s(rows * avatarSize + (rows - 1) * avatarGap + headerH + 16),
     });
-    const main = gridSize(7, 5); // 7 columns, 5 rows
+    const main = gridSize(7, 5);
+    const side = gridSize(4, 3);
     return [
       // Computer Department — centered
-      { id: 'main', roomData: null, size: main, pos: { x: -main.w / 2, y: -main.h / 2 } },
+      { id: 'main', roomData: null, size: main, pos: { x: s(-main.w / 2), y: s(-main.h / 2) } },
       // Top-left: meeting room
-      { id: 'meeting-standup', roomData: { ...baseRoom, id: 'meeting-standup', name: 'Daily Standup', type: 'meeting', people: take(6), crowd: true }, size: gridSize(3, 3), pos: { x: -main.w / 2 - gridSize(3, 3).w - g, y: -main.h / 2 } },
+      { id: 'meeting-standup', roomData: { ...baseRoom, id: 'meeting-standup', name: 'Daily Standup', type: 'meeting', people: take(6), crowd: false }, size: side, pos: { x: s(-main.w / 2 - side.w - g), y: s(-main.h / 2) } },
       // Top-right: private office
-      { id: 'office-joe', roomData: { ...baseRoom, id: 'office-joe', name: "Joe's Office", type: 'private', people: take(1), assignees: [{ name: 'Joe Woodward', avatar: '/headshots/joe-woodward.jpg' }] }, size: { w: 180, h: 150 }, pos: { x: main.w / 2 + g, y: -main.h / 2 } },
+      { id: 'office-joe', roomData: { ...baseRoom, id: 'office-joe', name: "Joe's Office", type: 'private', people: take(1), assignees: [{ name: 'Joe Woodward', avatar: '/headshots/joe-woodward.jpg' }] }, size: { w: 180, h: 150 }, pos: { x: s(main.w / 2 + g), y: s(-main.h / 2) } },
       // Bottom-left: team room
-      { id: 'team-design', roomData: { ...baseRoom, id: 'team-design', name: 'Design Team', type: 'team', people: take(4), crowd: false }, size: gridSize(3, 3), pos: { x: -main.w / 2 - gridSize(3, 3).w - g, y: -main.h / 2 + gridSize(3, 3).h + g } },
+      { id: 'team-design', roomData: { ...baseRoom, id: 'team-design', name: 'Design Team', type: 'team', people: take(4), crowd: false }, size: side, pos: { x: s(-main.w / 2 - side.w - g), y: s(-main.h / 2 + side.h + g) } },
       // Bottom-right: command center
-      { id: 'command', roomData: { ...baseRoom, id: 'command', name: 'Mission Control', type: 'command', people: take(8) }, size: { w: 180, h: 190 }, pos: { x: main.w / 2 + g, y: -main.h / 2 + 150 + g } },
+      { id: 'command', roomData: { ...baseRoom, id: 'command', name: 'Mission Control', type: 'command', people: take(8) }, size: { w: 180, h: 190 }, pos: { x: s(main.w / 2 + g), y: s(-main.h / 2 + 150 + g) } },
     ];
   });
   const [hoveredRoom, setHoveredRoom] = useState(null);
@@ -1805,7 +2215,7 @@ function BigMeetingsView() {
         const type = area < 40000 ? 'private' : area >= 120000 ? 'theater' : 'meeting';
         const roomNames = { private: 'Private Office', meeting: ['Lobby', 'Fireside', 'The Den', 'Starlight', 'Horizon', 'Basecamp', 'The Loft', 'Greenhouse', 'Moonrise', 'Solar', 'Coral Reef', 'North Star', 'Summit', 'Treehouse', 'Oasis', 'Nebula', 'Canopy', 'Tidepool'], theater: 'Theater' };
         const name = type === 'meeting' ? roomNames.meeting[Math.floor(Math.random() * roomNames.meeting.length)] : roomNames[type];
-        const unique = [...new Map(baseRoom.people.map(p => [p.displayName || p.name, p])).values()];
+        const unique = [...new Map(baseRoom.people.map(p => [p.displayName || p.name, p])).values()].map(p => ({ ...p, name: p.displayName || p.name }));
         const shuffled = unique.sort(() => Math.random() - 0.5);
         const count = type === 'private' ? 1 : type === 'theater' ? 20 : 20;
         setRooms(prev => [...prev, {
@@ -2100,7 +2510,7 @@ function BigMeetingsView() {
                     )}
                   </div>
                 ) : (
-                  <MeetingRoomCard room={{ ...roomData, crowd: false, people: roomData.people.slice(0, room.id === 'main' ? peopleCount : roomData.people.length) }} />
+                  <DialogRoomBody people={roomData.people.slice(0, room.id === 'main' ? peopleCount : roomData.people.length)} speakerCount={speakerCount} surfaceColor={roomSurfaceColor} />
                 )}
               </div>
             </div>
