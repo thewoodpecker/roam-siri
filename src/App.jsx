@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import SiriGlow from './SiriGlow';
 import { offices as officeData, meetingRooms } from './data';
+import ShowcaseMap from './ShowcaseMap';
 import './App.css';
 
 const CLAUDE = '#EB6139';
@@ -1327,38 +1328,45 @@ function MeetingRoomCard({ room, vibeOverride, peopleOverride, speakerOverride, 
 }
 
 function TabSwitcher({ activeTab, onTabChange }) {
+  const [open, setOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onClick = (e) => { if (menuRef.current && !menuRef.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', onClick);
+    return () => document.removeEventListener('mousedown', onClick);
+  }, [open]);
+
+  const tabs = [
+    { id: 'map-v3', label: 'Map V3' },
+    { id: 'claude-max', label: 'Vibe Code' },
+    { id: 'war-room', label: 'War Room' },
+    { id: 'big-meetings', label: 'Big Meetings' },
+    { id: 'experimental', label: 'EPCOT' },
+    { id: 'showcase', label: 'Showcase' },
+  ];
+
   return (
-    <div className="tab-switcher">
-      <button
-        className={`tab-button ${activeTab === 'map-v3' ? 'tab-active' : ''}`}
-        onClick={() => onTabChange('map-v3')}
-      >
-        Map <span style={{ opacity: 0.5 }}>V3</span>
+    <div className="tab-hamburger-wrap" ref={menuRef}>
+      <button className="tab-hamburger-btn" onClick={() => setOpen(!open)}>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M2 4H14M2 8H14M2 12H14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        </svg>
       </button>
-      <button
-        className={`tab-button ${activeTab === 'claude-max' ? 'tab-active' : ''}`}
-        onClick={() => onTabChange('claude-max')}
-      >
-        Vibe Code
-      </button>
-      <button
-        className={`tab-button ${activeTab === 'war-room' ? 'tab-active' : ''}`}
-        onClick={() => onTabChange('war-room')}
-      >
-        War Room
-      </button>
-      <button
-        className={`tab-button ${activeTab === 'big-meetings' ? 'tab-active' : ''}`}
-        onClick={() => onTabChange('big-meetings')}
-      >
-        Big Meetings
-      </button>
-      <button
-        className={`tab-button ${activeTab === 'experimental' ? 'tab-active' : ''}`}
-        onClick={() => onTabChange('experimental')}
-      >
-        EPCOT
-      </button>
+      {open && (
+        <div className="tab-hamburger-menu">
+          {tabs.map(t => (
+            <button
+              key={t.id}
+              className={`tab-hamburger-item ${activeTab === t.id ? 'tab-hamburger-active' : ''}`}
+              onClick={() => { onTabChange(t.id); setOpen(false); }}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -3178,8 +3186,8 @@ function ExperimentalView() {
 function useHashTab() {
   const getTab = () => {
     const hash = window.location.hash.replace('#', '');
-    const valid = ['map-v3', 'claude-max', 'big-meetings', 'war-room', 'experimental'];
-    return valid.includes(hash) ? hash : 'map-v3';
+    const valid = ['map-v3', 'claude-max', 'big-meetings', 'war-room', 'experimental', 'showcase'];
+    return valid.includes(hash) ? hash : 'showcase';
   };
   const [tab, setTab] = useState(getTab);
 
@@ -3210,6 +3218,7 @@ export default function App() {
       {activeTab === 'war-room' && <WarRoomView />}
       {activeTab === 'big-meetings' && <BigMeetingsView />}
       {activeTab === 'experimental' && <ExperimentalView />}
+      {activeTab === 'showcase' && <ShowcaseMap />}
     </div>
   );
 }

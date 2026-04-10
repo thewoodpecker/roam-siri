@@ -1,0 +1,93 @@
+/* Woodward UI — Design Tokens
+   Dark-mode-first semantic color system.
+   Source of truth: Theme.swift + Figma (Woodward UI) */
+
+:root {
+  color-scheme: dark;
+
+  /* ——— Background ——— */
+  --bg-primary: #000000;
+  --background-primary: rgba(255,255,255,0.05);
+  --bg-secondary: rgba(255,255,255,0.08);
+  --bg-overlay-primary: rgba(0,0,0,0.7);
+  --bg-overlay-secondary: rgba(0,0,0,0.1);
+  --bg-accented-primary: #6e31e7;
+  --bg-accented-secondary: #006cf4;
+
+  /* ——— Background / Surface ——— */
+  --bg-surface-primary: #000000;
+  --bg-surface-secondary: #0c0c0e;
+  --bg-surface-elevated-primary: #131415;
+  --bg-surface-elevated-secondary: #131415;
+  --bg-surface-elevated-tertiary: #131415;
+  --bg-surface-primary-subdued: #000000;
+  --bg-surface-elevated-primary-subdued: #000000;
+  --fills-vibrant-tertiary: #121212;
+
+  /* ——— Semantic Backgrounds ——— */
+  --bg-winner: rgba(70,208,143,0.2);
+  --bg-loser: rgba(239,83,80,0.2);
+
+  /* ——— Text & Icon ——— */
+  --text-primary: #F2F2F3;
+  --text-secondary: rgba(255,255,255,0.5);
+  --text-disabled: rgba(255,255,255,0.3);
+  --text-accent: #835ce9;
+  --text-accent-secondary: #006cf4;
+  --text-positive: #4ade80;
+  --text-warning: #ffc107;
+  --text-error: #f87171;
+  --text-on-accented: #000000;
+  --text-primary-on-light: #ffffff;
+  --text-secondary-on-light: rgba(255,255,255,0.5);
+
+  /* ——— Labels ——— */
+  --label-primary: #FFFFFF;
+  --label-controls: #bfbfbf;
+
+  /* ——— Border ——— */
+  --border: rgba(255,255,255,0.1);
+  --border-secondary: rgba(255,255,255,0.15);
+  --border-tertiary: rgba(255,255,255,0.3);
+  --border-opaque: #131415;
+  --border-accent: #835ce9;
+  --border-accent-secondary: #4ade80;
+  --border-focus: #ffffff;
+  --border-error: #ef4444;
+  --border-positive: #4ade80;
+
+  /* ——— Accent ——— */
+  --accent: #4ADE80;
+  --accent-glow: rgba(74,222,128,0.06);
+
+  /* ——— Static Palette ——— */
+  --green-300: #4ade80;
+  --green-500: #22c55e;
+  --green-900: #064e3b;
+  --red-300: #fca5a5;
+  --red-500: #ef4444;
+  --indigo-300: #b2a0f0;
+  --blue-accent: #0091ff;
+
+  /* ——— Graphite Scale ——— */
+  --graphite-50: #f2f2f3;
+  --graphite-100: #e5e5e7;
+  --graphite-500: #303236;
+  --graphite-800: #131415;
+
+  /* ——— Shadow ——— */
+  --shadow-1: rgba(0,0,0,0.3);
+  --shadow-2: rgba(0,0,0,0.2);
+
+  /* ——— Spacing (8px grid) ——— */
+  --space-xxxs: 4px;
+  --space-xxs: 8px;
+  --space-xs: 12px;
+  --space-sm: 16px;
+  --space-md: 20px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-xxl: 40px;
+  --space-xxxl: 48px;
+  --space-xxxxl: 64px;
+}

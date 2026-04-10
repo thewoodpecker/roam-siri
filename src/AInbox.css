@@ -1,0 +1,372 @@
+/* Window */
+.ainbox-window {
+  position: absolute;
+  width: 720px;
+  height: 520px;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 0.5px solid var(--border);
+  border-radius: 32px;
+  corner-shape: superellipse;
+  corner-shape: superellipse(1.6);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: ainbox-window-in 0.25s ease-out;
+  box-shadow:
+    0 0 0 0.5px var(--border),
+    0 25px 80px var(--sc-window-shadow-1, rgba(0,0,0,0.5)),
+    0 10px 30px var(--sc-window-shadow-2, rgba(0,0,0,0.3)),
+    0 4px 12px var(--sc-window-shadow-3, rgba(0,0,0,0.2));
+}
+
+@keyframes ainbox-window-in {
+  from { opacity: 0; transform: scale(0.95) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Header */
+.ainbox-header {
+  height: 36px;
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  position: relative;
+  cursor: grab;
+  background: transparent;
+  flex-shrink: 0;
+}
+
+.ainbox-traffic-lights {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.ainbox-light {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.ainbox-light-close { background: #FF5F57; cursor: pointer; }
+.ainbox-light-minimize { background: #FEBC2E; }
+.ainbox-light-maximize { background: #28C840; }
+
+/* Unfocused: grey out traffic lights */
+.ainbox-unfocused .ainbox-light-close,
+.ainbox-unfocused .ainbox-light-minimize,
+.ainbox-unfocused .ainbox-light-maximize {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.ainbox-search {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 484px;
+  max-width: 60%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: var(--background-primary);
+  border-radius: 8px;
+}
+
+.ainbox-search span {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 12px;
+  color: var(--text-disabled);
+}
+
+/* Body */
+.ainbox-body {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+  background: var(--bg-surface-elevated-primary);
+  border: 0.5px solid var(--border);
+  border-radius: 12px 12px 0 0;
+  overflow: hidden;
+}
+
+/* Sidebar */
+.ainbox-sidebar {
+  width: 240px;
+  border-right: 0.5px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.ainbox-sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px 10px 16px;
+  border-bottom: 0.5px solid var(--border);
+}
+
+.ainbox-sidebar-title {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  letter-spacing: -0.15px;
+}
+
+.ainbox-chat-list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.ainbox-chat-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  position: relative;
+}
+
+.ainbox-chat-item:hover {
+  background: var(--background-primary);
+}
+
+.ainbox-chat-active {
+  background: var(--bg-secondary);
+}
+
+.ainbox-chat-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.ainbox-chat-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.ainbox-chat-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
+.ainbox-chat-name {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ainbox-chat-time {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 11px;
+  color: var(--text-disabled);
+  flex-shrink: 0;
+}
+
+.ainbox-chat-preview {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 12px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 16px;
+}
+
+.ainbox-chat-badge {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #2C80FF;
+  color: var(--text-primary);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Messages panel */
+.ainbox-messages {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.ainbox-messages-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-bottom: 0.5px solid var(--border);
+}
+
+.ainbox-msg-header-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.ainbox-msg-header-name {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  display: block;
+  letter-spacing: -0.15px;
+}
+
+.ainbox-msg-header-members {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.ainbox-messages-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ainbox-msg {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.ainbox-msg-self {
+  flex-direction: row-reverse;
+}
+
+.ainbox-msg-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.ainbox-msg-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-width: 70%;
+}
+
+.ainbox-msg-self .ainbox-msg-content {
+  align-items: flex-end;
+}
+
+.ainbox-msg-sender {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.ainbox-msg-bubble {
+  background: var(--bg-secondary);
+  border-radius: 12px 12px 12px 4px;
+  padding: 8px 12px;
+}
+
+.ainbox-msg-bubble-self {
+  background: #2C80FF;
+  border-radius: 12px 12px 4px 12px;
+}
+
+.ainbox-msg-bubble p {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 13px;
+  color: var(--text-primary);
+  line-height: 18px;
+  letter-spacing: -0.1px;
+}
+
+.ainbox-msg-time {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 10px;
+  color: var(--text-disabled);
+}
+
+/* Composer */
+.ainbox-composer {
+  padding: 10px 16px;
+  border-top: 0.5px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ainbox-composer-input {
+  flex: 1;
+  background: var(--background-primary);
+  border: 0.5px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 13px;
+  color: var(--text-primary);
+  outline: none;
+}
+
+.ainbox-composer-input::placeholder {
+  color: var(--text-disabled);
+}
+
+.ainbox-composer-input:focus {
+  border-color: var(--border-secondary);
+}
+
+.ainbox-send-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: #2C80FF;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: opacity 0.15s;
+}
+
+.ainbox-send-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.ainbox-send-btn:not(:disabled):hover {
+  opacity: 0.85;
+}
