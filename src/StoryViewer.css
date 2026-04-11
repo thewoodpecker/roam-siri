@@ -26,6 +26,11 @@
   transition: opacity 300ms ease-out;
 }
 
+.sv-closing {
+  opacity: 0 !important;
+  transition: opacity 250ms ease-in !important;
+}
+
 .sv-loaded .sv-container {
 }
 

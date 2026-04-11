@@ -81,7 +81,7 @@
   top: 0;
   left: 0;
   right: 0;
-  z-index: 100;
+  z-index: 999;
   background: transparent;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
@@ -723,7 +723,7 @@
     0 4px 12px var(--sc-window-shadow-3, rgba(0,0,0,0.2));
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: visible;
   position: relative;
 }
 
@@ -955,8 +955,9 @@
 /* Map grid area */
 .sc-map {
   flex: 1;
-  padding: 16px 24px;
-  overflow: hidden;
+  padding: 16px;
+  overflow: visible;
+  border-radius: 20px 0 0 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -993,6 +994,7 @@
 
 .sc-room-card .meeting-room-card {
   background-color: var(--bg-surface-elevated-primary) !important;
+  overflow: visible !important;
 }
 
 .sc-room-card .big-meeting-card-inner {
@@ -1029,7 +1031,17 @@
 }
 
 /* Story bubble — above avatar, matches Figma */
+.sc-story-cell {
+  position: relative;
+  pointer-events: none;
+}
+
 .sc-story-bubble {
+  position: absolute;
+  bottom: calc(100% - 1px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1040,8 +1052,8 @@
 }
 
 @keyframes sc-story-appear {
-  from { transform: scale(0.9); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
+  from { transform: translateX(-50%) scale(0.9); opacity: 0; }
+  to { transform: translateX(-50%) scale(1); opacity: 1; }
 }
 
 .sc-story-rings {
@@ -1360,6 +1372,7 @@
   overflow: hidden;
   flex-shrink: 0;
   background: var(--bg-surface-secondary);
+  border-radius: 0 20px 0 0;
 }
 
 /* Lobby card */
@@ -1545,7 +1558,9 @@
   align-items: center;
   justify-content: space-between;
   padding: 0 8px;
-  border-radius: 0 0 12px 12px;
+  border-radius: 0 0 36px 36px;
+  corner-shape: superellipse;
+  corner-shape: superellipse(1.6);
   border-top: 0.5px solid var(--border);
   background: var(--bg-surface-secondary);
   flex-shrink: 0;

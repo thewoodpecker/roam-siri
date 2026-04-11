@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import './StoryViewer.css';
 
 export default function StoryViewer({ stories, initialIndex = 0, onClose }) {
@@ -7,6 +7,12 @@ export default function StoryViewer({ stories, initialIndex = 0, onClose }) {
   const containerRef = useRef(null);
   const [offset, setOffset] = useState(0);
   const [loaded, setLoaded] = useState(false);
+  const [closing, setClosing] = useState(false);
+
+  const handleClose = () => {
+    setClosing(true);
+    setTimeout(onClose, 250);
+  };
 
   // Preload all story images before showing
   useEffect(() => {
@@ -61,7 +67,7 @@ export default function StoryViewer({ stories, initialIndex = 0, onClose }) {
         if (currentIndex < stories.length - 1) {
           setCurrentIndex(i => i + 1);
         } else {
-          onClose();
+          handleClose();
         }
       }
     };
@@ -71,7 +77,7 @@ export default function StoryViewer({ stories, initialIndex = 0, onClose }) {
 
   const goNext = () => {
     if (currentIndex < stories.length - 1) setCurrentIndex(i => i + 1);
-    else onClose();
+    else handleClose();
   };
 
   const goPrev = () => {
@@ -79,7 +85,7 @@ export default function StoryViewer({ stories, initialIndex = 0, onClose }) {
   };
 
   return (
-    <div className={`sv-overlay ${loaded ? 'sv-loaded' : 'sv-loading'}`} onClick={onClose}>
+    <div className={`sv-overlay ${loaded ? 'sv-loaded' : 'sv-loading'} ${closing ? 'sv-closing' : ''}`} onClick={handleClose}>
       <div className="sv-container" ref={containerRef} onClick={e => e.stopPropagation()} style={{ transform: `translate(${offset}px, -50%)` }}>
         {stories.map((story, i) => {
           const isCurrent = i === currentIndex;
@@ -109,7 +115,7 @@ export default function StoryViewer({ stories, initialIndex = 0, onClose }) {
                       <span className="sv-name">{current.name}</span>
                       <span className="sv-time">Just now</span>
                     </div>
-                    <button className="sv-close" onClick={onClose}>
+                    <button className="sv-close" onClick={handleClose}>
                       <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                         <path d="M4 4L12 12M12 4L4 12" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
                       </svg>

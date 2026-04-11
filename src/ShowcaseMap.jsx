@@ -157,37 +157,19 @@ const FLOOR_NAMES = Object.keys(FLOORS);
 
 
 // Story bubble — appears above avatar, matches Wonder's MapStory
-function StoryBubble({ avatar, delay = 0, targetRef, containerRef, onClick }) {
+// Simple story bubble — positioned via CSS inside grid cell
+function SimpleStoryBubble({ image, delay = 0, onClick }) {
   const [visible, setVisible] = useState(false);
-  const [pos, setPos] = useState(null);
 
   useEffect(() => {
     const timer = setTimeout(() => setVisible(true), delay);
     return () => clearTimeout(timer);
   }, [delay]);
 
-  useEffect(() => {
-    if (!visible || !targetRef?.current || !containerRef?.current) return;
-    const update = () => {
-      const target = targetRef.current;
-      const container = containerRef.current;
-      if (!target || !container) return;
-      const tRect = target.getBoundingClientRect();
-      const cRect = container.getBoundingClientRect();
-      setPos({
-        left: tRect.left - cRect.left + tRect.width / 2 - 22,
-        top: tRect.top - cRect.top - 56,
-      });
-    };
-    update();
-    window.addEventListener('resize', update);
-    return () => window.removeEventListener('resize', update);
-  }, [visible, targetRef, containerRef]);
-
-  if (!visible || !pos) return null;
+  if (!visible) return null;
 
   return (
-    <div style={{ position: 'absolute', left: pos.left, top: pos.top, zIndex: 20 }} onClick={onClick}>
+    <div className="sc-story-bubble" onClick={onClick}>
     <div className="sc-story-bubble">
       <div className="sc-story-rings">
         <div className="sc-story-ring" style={{ animationDelay: '0.4s' }} />
@@ -197,7 +179,7 @@ function StoryBubble({ avatar, delay = 0, targetRef, containerRef, onClick }) {
       </div>
       <div className="sc-story-circle">
         <div className="sc-story-photo">
-          <img className="sc-story-thumb" src={avatar} alt="" />
+          <img className="sc-story-thumb" src={image} alt="" />
           <div className="sc-story-overlay">
             <img src="/icons/story.svg" width="20" height="20" alt="" />
           </div>
@@ -215,7 +197,7 @@ function StoryBubble({ avatar, delay = 0, targetRef, containerRef, onClick }) {
 }
 
 // Private office room card — uses the same markup as mapv3
-function PrivateRoomCard({ room, avatarRef }) {
+function PrivateRoomCard({ room, storyBubble }) {
   const [talking, setTalking] = useState({});
   const hasTalk = room.people.length > 1;
 
@@ -279,9 +261,10 @@ function PrivateRoomCard({ room, avatarRef }) {
               <div className="seat-row seat-row-hovered">
                 {room.people.map((person, i) => (
                   <div key={person.name + i} className="seat-assigned sc-private-person">
-                    <img className="seat-avatar" ref={i === 0 ? avatarRef : undefined} src={person.avatar} alt={person.name} />
+                    <img className="seat-avatar" src={person.avatar} alt={person.name} />
                     <span className="seat-nametag">{person.name}</span>
                     {hasTalk && <div className={`sc-private-talk-ring ${talking[person.name] ? 'sc-talking' : ''}`} />}
+                    {i === 0 && storyBubble}
                   </div>
                 ))}
               </div>
@@ -459,7 +442,6 @@ function ShowcaseMapInner() {
   const miniRoamRef = useRef(null);
   const [storyViewer, setStoryViewer] = useState(null); // { stories, initialIndex }
   const [viewedStories, setViewedStories] = useState({});
-  const storyRefs = useRef({});
   // People movement — occasionally move someone between offices and meeting rooms
   const [movements, setMovements] = useState({ removed: {}, added: {} }); // { removed: { roomId: [personIndex] }, added: { roomId: [person] } }
 
@@ -637,7 +619,23 @@ function ShowcaseMapInner() {
                     ) : room.type === 'command' ? (
                       <CommandCenterCard room={room} />
                     ) : (
-                      <PrivateRoomCard room={{ ...room, vibe: activeVibes[room.id] || null }} avatarRef={room.story ? (el => { storyRefs.current[room.id] = { current: el }; }) : undefined} />
+                      <PrivateRoomCard
+                        room={{ ...room, vibe: activeVibes[room.id] || null }}
+                        storyBubble={room.story && room.people[0] && !viewedStories[room.story] ? (
+                          <SimpleStoryBubble
+                            image={room.story}
+                            delay={currentFloorRooms.filter(r => r.story).indexOf(room) * 3000 + 3000}
+                            onClick={() => {
+                              const clickedIndex = allStoriesData.findIndex(s => s.image === room.story);
+                              const reordered = [...allStoriesData.slice(clickedIndex), ...allStoriesData.slice(0, clickedIndex)];
+                              const viewed = {};
+                              allStoryRooms.forEach(r => { viewed[r.story] = true; });
+                              setViewedStories(prev => ({ ...prev, ...viewed }));
+                              setStoryViewer({ stories: reordered, initialIndex: 0 });
+                            }}
+                          />
+                        ) : null}
+                      />
                     )}
                   </div>
                 );
@@ -715,24 +713,6 @@ function ShowcaseMapInner() {
         {storyViewer && <StoryViewer stories={storyViewer.stories} initialIndex={storyViewer.initialIndex} onClose={() => setStoryViewer(null)} />}
       </div>
       {ainboxWin.isOpen && <AInbox win={ainboxWin} onDrag={makeDragHandler(ainboxWin)} />}
-      {FLOORS[activeFloor].filter(r => r.story && r.people[0] && !viewedStories[r.story]).map((room, i, arr) => (
-        <StoryBubble
-          key={room.id}
-          avatar={room.story}
-          delay={3000 + i * 3000}
-          targetRef={storyRefs.current[room.id]}
-          containerRef={miniRoamRef}
-          onClick={() => {
-            // Find this story's index in all stories
-            const clickedIndex = allStoriesData.findIndex(s => s.image === room.story);
-            const reordered = [...allStoriesData.slice(clickedIndex), ...allStoriesData.slice(0, clickedIndex)];
-            const viewed = {};
-            allStoryRooms.forEach(r => { viewed[r.story] = true; });
-            setViewedStories(prev => ({ ...prev, ...viewed }));
-            setStoryViewer({ stories: reordered, initialIndex: 0 });
-          }}
-        />
-      ))}
       {/* Product features bar */}
       <div className="sc-products-bar">
         {['Virtual Office', 'Drop-In Meetings', 'Theater', 'AInbox', 'Lobby', 'Magicast', 'Magic Minutes', 'On-It', 'On-Air', 'Mobile'].map((item, i) => (
