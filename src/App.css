@@ -84,6 +84,18 @@
   color: #fff;
 }
 
+.tab-hamburger-section {
+  font-size: 10px;
+  font-weight: 600;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  color: rgba(255, 255, 255, 0.3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 8px 12px 4px;
+  margin-top: 4px;
+  border-top: 0.5px solid rgba(255, 255, 255, 0.08);
+}
+
 .tab-hamburger-active {
   color: #fff;
   background: rgba(255, 255, 255, 0.06);

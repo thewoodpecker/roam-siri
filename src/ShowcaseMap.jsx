@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react';
-import { offices as officeData, meetingRooms } from './data';
+// data.js imports removed — floor data is self-contained
 import SiriGlow from './SiriGlow';
 import Navbar from './Navbar';
 import AInbox from './AInbox';
 import { WindowManagerProvider, useWindow } from './WindowManager';
+import StoryViewer from './StoryViewer';
 import './ShowcaseMap.css';
 
 const CLAUDE = '#EB6139';
@@ -19,13 +20,13 @@ const SHOWCASE_PEOPLE = [
   { name: 'Grace S.', avatar: '/headshots/grace-sutherland.jpg' },
   { name: 'Michael W.', avatar: '/headshots/michael-walrath.jpg' },
   { name: 'Rob F.', avatar: '/headshots/rob-figueiredo.jpg' },
-  { name: 'Chelsea T.', avatar: '/headshots/chelsea-turbin.jpg' },
+  { name: 'Chelsea T.', fullName: 'Chelsea Turbin', avatar: '/headshots/chelsea-turbin.jpg' },
   { name: 'Lexi B.', avatar: '/headshots/lexi-bohonnon.jpg' },
   { name: 'Will H.', avatar: '/headshots/will-hou.jpg' },
-  { name: 'Howard L.', avatar: '/headshots/howard-lerman.jpg' },
+  { name: 'Howard L.', fullName: 'Howard Lerman', avatar: '/headshots/howard-lerman.jpg' },
   { name: 'Jeff G.', avatar: '/headshots/jeff-grossman.jpg' },
-  { name: 'Peter L.', avatar: '/headshots/peter-lerman.jpg' },
-  { name: 'Sean M.', avatar: '/headshots/sean-macisaac.jpg' },
+  { name: 'Peter L.', fullName: 'Peter Lerman', avatar: '/headshots/peter-lerman.jpg' },
+  { name: 'Sean M.', fullName: 'Sean MacIsaac', avatar: '/headshots/sean-macisaac.jpg' },
   { name: 'Arnav B.', avatar: '/headshots/arnav-bansal.jpg' },
   { name: 'Aaron W.', avatar: '/headshots/aaron-wadhwa.jpg' },
   { name: 'Thomas G.', avatar: '/headshots/thomas-grapperon.jpg' },
@@ -41,108 +42,180 @@ const SHOWCASE_PEOPLE = [
 
 const p = (name) => SHOWCASE_PEOPLE.find(p => p.name === name) || SHOWCASE_PEOPLE[0];
 
-// Room layout
-const SHOWCASE_ROOMS = [
-  // Row 1
-  { id: 'r1', type: 'private', name: 'Ava L.', people: [p('Ava L.')], pos: { col: 0, row: 0 }, span: 1 },
-  { id: 'r2', type: 'private', name: 'Derek C.', people: [p('Derek C.'), p('Michael M.')], pos: { col: 1, row: 0 }, span: 1 },
-  { id: 'r3', type: 'private', name: 'John M.', people: [p('John M.')], pos: { col: 2, row: 0 }, span: 1 },
-  { id: 'r4', type: 'private', name: 'Howard L.', people: [p('Howard L.')], pos: { col: 3, row: 0 }, span: 1 },
-  { id: 'r5', type: 'private', name: 'Keegan L.', people: [p('Keegan L.')], pos: { col: 4, row: 0 }, span: 1 },
-  { id: 'r5b', type: 'private', name: 'Jon B.', people: [p('Jon B.')], pos: { col: 5, row: 0 }, span: 1 },
+// Floor layouts — each floor has its own rooms
+const FLOORS = {
+  'R&D': [
+    { id: 'r1', type: 'private', name: 'Ava L.', people: [p('Ava L.')], pos: { col: 0, row: 0 }, span: 1 },
+    { id: 'r2', type: 'private', name: 'Derek C.', people: [p('Derek C.'), p('Michael M.')], pos: { col: 1, row: 0 }, span: 1 },
+    { id: 'r3', type: 'private', name: 'John M.', people: [p('John M.')], pos: { col: 2, row: 0 }, span: 1 },
+    { id: 'r4', type: 'private', name: 'Howard L.', people: [p('Howard L.')], pos: { col: 3, row: 0 }, span: 1, story: '/story-1.png' },
+    { id: 'r5', type: 'private', name: 'Keegan L.', people: [p('Keegan L.')], pos: { col: 4, row: 0 }, span: 1 },
+    { id: 'r5b', type: 'private', name: 'Jon B.', people: [p('Jon B.')], pos: { col: 5, row: 0 }, span: 1 },
+    { id: 'r6', type: 'private', name: 'Grace S.', people: [p('Grace S.')], pos: { col: 0, row: 1 }, span: 1 },
+    { id: 'r7', type: 'private', name: 'Michael W.', people: [p('Michael W.')], pos: { col: 1, row: 1 }, span: 1 },
+    { id: 'theater', type: 'theater', name: 'Theater', people: [], pos: { col: 2, row: 1 }, colSpan: 2, rowSpan: 2 },
+    { id: 'r8', type: 'private', name: 'Rob F.', people: [p('Rob F.')], pos: { col: 4, row: 1 }, span: 1 },
+    { id: 'r8b', type: 'private', name: 'Chelsea T.', people: [p('Chelsea T.')], pos: { col: 5, row: 1 }, span: 1, story: '/story-2.png' },
+    { id: 'r12', type: 'private', name: 'Jeff G.', people: [p('Jeff G.')], pos: { col: 0, row: 2 }, span: 1 },
+    { id: 'r13', type: 'private', name: 'Peter L.', people: [p('Peter L.')], pos: { col: 1, row: 2 }, span: 1 },
+    { id: 'r14', type: 'private', name: 'Sean M.', people: [p('Sean M.')], pos: { col: 4, row: 2 }, span: 1 },
+    { id: 'r14b', type: 'private', name: 'Klas L.', people: [p('Klas L.')], pos: { col: 5, row: 2 }, span: 1 },
+    { id: 'r15', type: 'private', name: 'Aaron W.', people: [p('Aaron W.')], pos: { col: 0, row: 3 }, span: 1 },
+    { id: 'r16', type: 'game', name: 'Game Room', people: [], pos: { col: 1, row: 3 }, span: 1 },
+    { id: 'alan-kay', type: 'meeting', name: 'Meeting Room', people: [p('Thomas G.'), p('Tom D.'), p('John H.'), p('Garima K.'), p('Joe W.'), p('John B.')], pos: { col: 2, row: 3 }, colSpan: 2, rowSpan: 2 },
+    { id: 'standup', type: 'meeting', name: 'Daily Standup', people: [p('Lexi B.'), p('Will H.'), p('Arnav B.'), p('Mattias L.')], pos: { col: 4, row: 3 }, colSpan: 2, rowSpan: 2 },
+  ],
+  'Commercial': [
+    // Large lobby spanning top-left
+    { id: 'c-lobby', type: 'meeting', name: 'Sales Floor', people: [p('Lexi B.'), p('Will H.'), p('Peter L.'), p('Sean M.'), p('Chelsea T.'), p('Garima K.'), p('Joe W.')], pos: { col: 0, row: 0 }, colSpan: 3, rowSpan: 2 },
+    { id: 'c1', type: 'private', name: 'Arnav B.', people: [p('Arnav B.')], pos: { col: 3, row: 0 }, span: 1, story: '/story-3.jpg' },
+    { id: 'c2', type: 'private', name: 'Aaron W.', people: [p('Aaron W.')], pos: { col: 4, row: 0 }, span: 1 },
+    { id: 'c3', type: 'private', name: 'Tom D.', people: [p('Tom D.')], pos: { col: 5, row: 0 }, span: 1 },
+    // Row 2 — right side offices
+    { id: 'c4', type: 'private', name: 'Klas L.', people: [p('Klas L.')], pos: { col: 3, row: 1 }, span: 1 },
+    { id: 'c5', type: 'private', name: 'John B.', people: [p('John B.'), p('Thomas G.')], pos: { col: 4, row: 1 }, span: 1 },
+    { id: 'c6', type: 'private', name: 'Mattias L.', people: [p('Mattias L.')], pos: { col: 5, row: 1 }, span: 1 },
+    // Row 3 — sparse with gap
+    { id: 'c7', type: 'private', name: 'Jeff G.', people: [p('Jeff G.')], pos: { col: 0, row: 2 }, span: 1 },
+    { id: 'c8', type: 'private', name: 'Howard L.', people: [p('Howard L.')], pos: { col: 1, row: 2 }, span: 1 },
+    { id: 'c9', type: 'game', name: 'Game Room', people: [], pos: { col: 4, row: 2 }, colSpan: 2, rowSpan: 1 },
+    // Row 4 — theater and offices
+    { id: 'c10', type: 'private', name: 'Rob F.', people: [p('Rob F.')], pos: { col: 0, row: 3 }, span: 1 },
+    { id: 'c11', type: 'theater', name: 'Theater', people: [], pos: { col: 1, row: 3 }, colSpan: 3, rowSpan: 2 },
+    { id: 'c12', type: 'private', name: 'Derek C.', people: [p('Derek C.')], pos: { col: 4, row: 3 }, span: 1 },
+    { id: 'c13', type: 'private', name: 'Michael M.', people: [p('Michael M.')], pos: { col: 5, row: 3 }, span: 1 },
+  ],
+  'Marketing': [
+    // Row 1 — offices with a gap in the middle
+    { id: 'm1', type: 'private', name: 'Grace S.', people: [p('Grace S.')], pos: { col: 0, row: 0 }, span: 1 },
+    { id: 'm2', type: 'private', name: 'Chelsea T.', people: [p('Chelsea T.')], pos: { col: 1, row: 0 }, span: 1 },
+    { id: 'm3', type: 'private', name: 'Keegan L.', people: [p('Keegan L.')], pos: { col: 4, row: 0 }, span: 1 },
+    { id: 'm4', type: 'private', name: 'John M.', people: [p('John M.')], pos: { col: 5, row: 0 }, span: 1 },
+    // Row 2 — meeting room in the center
+    { id: 'm5', type: 'private', name: 'Lexi B.', people: [p('Lexi B.')], pos: { col: 0, row: 1 }, span: 1, story: '/story-4.jpg' },
+    { id: 'm-brand', type: 'meeting', name: 'Brand Review', people: [p('Ava L.'), p('Derek C.'), p('Arnav B.'), p('Aaron W.')], pos: { col: 1, row: 1 }, colSpan: 2, rowSpan: 2 },
+    { id: 'm-content', type: 'meeting', name: 'Content Sync', people: [p('Howard L.'), p('Rob F.'), p('Joe W.')], pos: { col: 3, row: 1 }, colSpan: 2, rowSpan: 2 },
+    { id: 'm6', type: 'private', name: 'Mattias L.', people: [p('Mattias L.')], pos: { col: 5, row: 1 }, span: 1 },
+    // Row 3 — sparse
+    { id: 'm7', type: 'private', name: 'Will H.', people: [p('Will H.')], pos: { col: 0, row: 2 }, span: 1 },
+    { id: 'm8', type: 'private', name: 'Klas L.', people: [p('Klas L.')], pos: { col: 5, row: 2 }, span: 1 },
+    // Row 4 — theater + game + offices
+    { id: 'm9', type: 'theater', name: 'Theater', people: [], pos: { col: 0, row: 3 }, colSpan: 2, rowSpan: 2 },
+    { id: 'm10', type: 'private', name: 'Peter L.', people: [p('Peter L.')], pos: { col: 2, row: 3 }, span: 1 },
+    { id: 'm11', type: 'private', name: 'Tom D.', people: [p('Tom D.')], pos: { col: 3, row: 3 }, span: 1 },
+    { id: 'm12', type: 'game', name: 'Game Room', people: [], pos: { col: 4, row: 3 }, span: 1 },
+    { id: 'm13', type: 'private', name: 'Sean M.', people: [p('Sean M.')], pos: { col: 5, row: 3 }, span: 1 },
+    // Row 5
+    { id: 'm14', type: 'private', name: 'Michael M.', people: [p('Michael M.')], pos: { col: 2, row: 4 }, span: 1 },
+    { id: 'm15', type: 'private', name: 'Thomas G.', people: [p('Thomas G.')], pos: { col: 3, row: 4 }, span: 1 },
+    { id: 'm16', type: 'private', name: 'Jon B.', people: [p('Jon B.')], pos: { col: 4, row: 4 }, span: 1 },
+    { id: 'm17', type: 'private', name: 'John H.', people: [p('John H.')], pos: { col: 5, row: 4 }, span: 1 },
+  ],
+  'Executive': [
+    // Large boardroom center
+    { id: 'e-board', type: 'meeting', name: 'Boardroom', people: [p('Howard L.'), p('Joe W.'), p('Peter L.'), p('Derek C.'), p('Rob F.')], pos: { col: 1, row: 0 }, colSpan: 4, rowSpan: 2 },
+    { id: 'e1', type: 'private', name: 'Howard L.', people: [p('Howard L.')], pos: { col: 0, row: 0 }, span: 1 },
+    { id: 'e2', type: 'private', name: 'Joe W.', people: [p('Joe W.')], pos: { col: 5, row: 0 }, span: 1 },
+    { id: 'e3', type: 'private', name: 'Peter L.', people: [p('Peter L.')], pos: { col: 0, row: 1 }, span: 1 },
+    { id: 'e4', type: 'private', name: 'Jon B.', people: [p('Jon B.')], pos: { col: 5, row: 1 }, span: 1 },
+    // Row 3 — sparse executive offices
+    { id: 'e5', type: 'private', name: 'Derek C.', people: [p('Derek C.')], pos: { col: 0, row: 2 }, span: 1 },
+    { id: 'e6', type: 'private', name: 'Rob F.', people: [p('Rob F.')], pos: { col: 2, row: 2 }, span: 1 },
+    { id: 'e7', type: 'private', name: 'Jeff G.', people: [p('Jeff G.')], pos: { col: 4, row: 2 }, span: 1 },
+    // Row 4 — lounge
+    { id: 'e-lounge', type: 'game', name: 'Executive Lounge', people: [], pos: { col: 0, row: 3 }, colSpan: 3, rowSpan: 2 },
+    { id: 'e8', type: 'private', name: 'Grace S.', people: [p('Grace S.')], pos: { col: 3, row: 3 }, span: 1 },
+    { id: 'e9', type: 'private', name: 'Chelsea T.', people: [p('Chelsea T.')], pos: { col: 4, row: 3 }, span: 1 },
+    { id: 'e10', type: 'theater', name: 'Theater', people: [], pos: { col: 5, row: 3 }, rowSpan: 2 },
+  ],
+  'Support': [
+    // Row 1 — help desk spanning top
+    { id: 's-help', type: 'meeting', name: 'Help Desk', people: [p('Garima K.'), p('Lexi B.'), p('Will H.')], pos: { col: 0, row: 0 }, colSpan: 2, rowSpan: 1 },
+    { id: 's1', type: 'private', name: 'Arnav B.', people: [p('Arnav B.')], pos: { col: 3, row: 0 }, span: 1 },
+    { id: 's2', type: 'private', name: 'Mattias L.', people: [p('Mattias L.')], pos: { col: 4, row: 0 }, span: 1 },
+    { id: 's3', type: 'private', name: 'Klas L.', people: [p('Klas L.')], pos: { col: 5, row: 0 }, span: 1 },
+    // Row 2
+    { id: 's4', type: 'private', name: 'Tom D.', people: [p('Tom D.')], pos: { col: 0, row: 1 }, span: 1 },
+    { id: 's5', type: 'private', name: 'Thomas G.', people: [p('Thomas G.')], pos: { col: 1, row: 1 }, span: 1 },
+    { id: 's-triage', type: 'meeting', name: 'Triage Room', people: [p('John H.'), p('John M.'), p('Sean M.')], pos: { col: 3, row: 1 }, colSpan: 2, rowSpan: 2 },
+    { id: 's6', type: 'private', name: 'Michael W.', people: [p('Michael W.')], pos: { col: 5, row: 1 }, span: 1 },
+    // Row 3 — training area
+    { id: 's-train', type: 'theater', name: 'Training', people: [], pos: { col: 0, row: 2 }, colSpan: 2, rowSpan: 3 },
+    { id: 's7', type: 'private', name: 'John B.', people: [p('John B.')], pos: { col: 5, row: 2 }, span: 1 },
+    // Row 4
+    { id: 's8', type: 'private', name: 'Aaron W.', people: [p('Aaron W.')], pos: { col: 2, row: 3 }, span: 1 },
+    { id: 's9', type: 'private', name: 'Michael M.', people: [p('Michael M.')], pos: { col: 3, row: 3 }, span: 1 },
+    { id: 's10', type: 'game', name: 'Break Room', people: [], pos: { col: 4, row: 3 }, colSpan: 2, rowSpan: 2 },
+    { id: 's11', type: 'private', name: 'Keegan L.', people: [p('Keegan L.')], pos: { col: 2, row: 4 }, span: 1 },
+    { id: 's12', type: 'private', name: 'Ava L.', people: [p('Ava L.')], pos: { col: 3, row: 4 }, span: 1 },
+  ],
+};
 
-  // Row 2
-  { id: 'r6', type: 'private', name: 'Grace S.', people: [p('Grace S.')], pos: { col: 0, row: 1 }, span: 1 },
-  { id: 'r7', type: 'private', name: 'Michael W.', people: [p('Michael W.')], pos: { col: 1, row: 1 }, span: 1 },
-  // Theater — spans 2 cols, 2 rows
-  { id: 'theater', type: 'theater', name: 'Theater', people: [], pos: { col: 2, row: 1 }, colSpan: 2, rowSpan: 2 },
-  { id: 'r8', type: 'private', name: 'Rob F.', people: [p('Rob F.')], pos: { col: 4, row: 1 }, span: 1 },
-  { id: 'r8b', type: 'private', name: 'Chelsea T.', people: [p('Chelsea T.')], pos: { col: 5, row: 1 }, span: 1 },
-
-  // Row 3
-  { id: 'r12', type: 'private', name: 'Jeff G.', people: [p('Jeff G.')], pos: { col: 0, row: 2 }, span: 1 },
-  { id: 'r13', type: 'private', name: 'Peter L.', people: [p('Peter L.')], pos: { col: 1, row: 2 }, span: 1 },
-  { id: 'r14', type: 'private', name: 'Sean M.', people: [p('Sean M.')], pos: { col: 4, row: 2 }, span: 1 },
-  { id: 'r14b', type: 'private', name: 'Klas L.', people: [p('Klas L.')], pos: { col: 5, row: 2 }, span: 1 },
-
-  // Row 4-5
-  { id: 'r15', type: 'private', name: 'Aaron W.', people: [p('Aaron W.')], pos: { col: 0, row: 3 }, span: 1 },
-  { id: 'r16', type: 'game', name: 'Game Room', people: [], pos: { col: 1, row: 3 }, span: 1 },
-  // Meeting Room — spans 2 cols, 2 rows
-  { id: 'alan-kay', type: 'meeting', name: 'Meeting Room', people: [
-    p('Thomas G.'), p('Tom D.'), p('John H.'),
-    p('Garima K.'), p('Joe W.'), p('John B.'),
-  ], pos: { col: 2, row: 3 }, colSpan: 2, rowSpan: 2 },
-  { id: 'standup', type: 'meeting', name: 'Daily Standup', people: [
-    p('Lexi B.'), p('Will H.'), p('Arnav B.'), p('Mattias L.'),
-  ], pos: { col: 4, row: 3 }, colSpan: 2, rowSpan: 2 },
-];
+const FLOOR_NAMES = Object.keys(FLOORS);
 
 // Sidebar rooms
-const SIDEBAR_ROOMS = [
-  { id: 'jacks-lobby', name: "Joe's Lobby", count: 20, status: 'OPEN', people: [p('Joe W.'), p('Derek C.'), p('Michael M.'), p('Garima K.'), p('John B.')], color: '#46D08F' },
-  { id: 'reception', name: 'Reception', count: 8, people: [p('Ava L.'), p('John M.'), p('Grace S.')], color: '#4DD0E1' },
-  { id: 'rnd', name: 'R&D', count: 12, people: [p('Thomas G.'), p('Tom D.'), p('John H.'), p('Peter L.')], color: '#835CE9' },
-  { id: 'commercial', name: 'Commercial', count: 6, people: [p('Rob F.'), p('Chelsea T.'), p('Michael W.')], color: '#FF6F00' },
-];
 
-// Chat bubble component
-function ChatBubble() {
+
+// Story bubble — appears above avatar, matches Wonder's MapStory
+function StoryBubble({ avatar, delay = 0, targetRef, containerRef, onClick }) {
   const [visible, setVisible] = useState(false);
-  const [typing, setTyping] = useState(false);
-  const [text, setText] = useState('');
-  const fullText = 'Hey, is the code ready for th...';
+  const [pos, setPos] = useState(null);
 
   useEffect(() => {
-    const showTimer = setTimeout(() => {
-      setVisible(true);
-      setTyping(true);
-      let i = 0;
-      const typeInterval = setInterval(() => {
-        i++;
-        setText(fullText.slice(0, i));
-        if (i >= fullText.length) {
-          clearInterval(typeInterval);
-          setTyping(false);
-          // Hide and restart after a delay
-          setTimeout(() => {
-            setVisible(false);
-            setText('');
-            setTimeout(() => {
-              setVisible(true);
-              setTyping(true);
-              let j = 0;
-              const typeInterval2 = setInterval(() => {
-                j++;
-                setText(fullText.slice(0, j));
-                if (j >= fullText.length) {
-                  clearInterval(typeInterval2);
-                  setTyping(false);
-                }
-              }, 50);
-            }, 3000);
-          }, 6000);
-        }
-      }, 50);
-    }, 2000);
-    return () => clearTimeout(showTimer);
-  }, []);
+    const timer = setTimeout(() => setVisible(true), delay);
+    return () => clearTimeout(timer);
+  }, [delay]);
 
-  if (!visible) return null;
+  useEffect(() => {
+    if (!visible || !targetRef?.current || !containerRef?.current) return;
+    const update = () => {
+      const target = targetRef.current;
+      const container = containerRef.current;
+      if (!target || !container) return;
+      const tRect = target.getBoundingClientRect();
+      const cRect = container.getBoundingClientRect();
+      setPos({
+        left: tRect.left - cRect.left + tRect.width / 2 - 22,
+        top: tRect.top - cRect.top - 56,
+      });
+    };
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, [visible, targetRef, containerRef]);
+
+  if (!visible || !pos) return null;
+
   return (
-    <div className="sc-chat-bubble">
-      <img className="sc-chat-avatar" src={p('Alan Kay').avatar} alt="" />
-      <div className="sc-chat-content">
-        <span className="sc-chat-text">{text}</span>
-        {typing && <span className="sc-chat-cursor" />}
+    <div style={{ position: 'absolute', left: pos.left, top: pos.top, zIndex: 20 }} onClick={onClick}>
+    <div className="sc-story-bubble">
+      <div className="sc-story-rings">
+        <div className="sc-story-ring" style={{ animationDelay: '0.4s' }} />
+        <div className="sc-story-ring" style={{ animationDelay: '0.7s' }} />
+        <div className="sc-story-ring" style={{ animationDelay: '1.4s' }} />
+        <div className="sc-story-ring" style={{ animationDelay: '1.7s' }} />
       </div>
+      <div className="sc-story-circle">
+        <div className="sc-story-photo">
+          <img className="sc-story-thumb" src={avatar} alt="" />
+          <div className="sc-story-overlay">
+            <img src="/icons/story.svg" width="20" height="20" alt="" />
+          </div>
+        </div>
+      </div>
+      {/* Tip arrow */}
+      <div className="sc-story-tip">
+        <svg width="14" height="7" viewBox="0 0 14 7" fill="none">
+          <path d="M5.586 5.586L0 0H14L8.414 5.586a2 2 0 01-2.828 0z" fill="#2C80FF" />
+        </svg>
+      </div>
+    </div>
     </div>
   );
 }
 
-
 // Private office room card — uses the same markup as mapv3
-function PrivateRoomCard({ room }) {
+function PrivateRoomCard({ room, avatarRef }) {
   const [talking, setTalking] = useState({});
   const hasTalk = room.people.length > 1;
 
@@ -206,7 +279,7 @@ function PrivateRoomCard({ room }) {
               <div className="seat-row seat-row-hovered">
                 {room.people.map((person, i) => (
                   <div key={person.name + i} className="seat-assigned sc-private-person">
-                    <img className="seat-avatar" src={person.avatar} alt={person.name} />
+                    <img className="seat-avatar" ref={i === 0 ? avatarRef : undefined} src={person.avatar} alt={person.name} />
                     <span className="seat-nametag">{person.name}</span>
                     {hasTalk && <div className={`sc-private-talk-ring ${talking[person.name] ? 'sc-talking' : ''}`} />}
                   </div>
@@ -222,7 +295,6 @@ function PrivateRoomCard({ room }) {
 
 // Theater room card — same markup as mapv3
 function TheaterRoomCard({ room }) {
-  const roomSurfaceColor = '#1D1E20';
   return (
     <div className="sc-room-card">
       <div className="big-meeting-card-inner" style={{ height: '100%' }}>
@@ -234,7 +306,7 @@ function TheaterRoomCard({ room }) {
           <div className="theater-preview">
             <div className="theater-preview-stage" />
             <div className="theater-preview-audience">
-              {Array.from({ length: 4 }).map((_, row) => (
+              {Array.from({ length: 3 }).map((_, row) => (
                 <div key={row} className="theater-preview-row">
                   {Array.from({ length: 5 }).map((_, col) => (
                     <div key={col} className="theater-preview-bench" />
@@ -276,7 +348,7 @@ function MeetingRoomCardShowcase({ room }) {
           <div className="meeting-room-people">
             {room.people.map((person, i) => (
               <div key={person.name + i} className="person meeting-room-person">
-                <img className="avatar" src={person.avatar} alt={person.name} style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover' }} />
+                <img className="avatar" src={person.avatar} alt={person.name} />
                 <div className={`avatar-inner-glow ${talking[person.name] ? 'sc-talking' : 'glow-off'}`} />
               </div>
             ))}
@@ -290,7 +362,6 @@ function MeetingRoomCardShowcase({ room }) {
 
 // Game room card — same markup as mapv3
 function GameRoomCard({ room }) {
-  const roomSurfaceColor = '#1D1E20';
   return (
     <div className="sc-room-card">
       <div className="big-meeting-card-inner" style={{ height: '100%' }}>
@@ -307,7 +378,6 @@ function GameRoomCard({ room }) {
 
 // Command center card — same markup as mapv3
 function CommandCenterCard({ room }) {
-  const roomSurfaceColor = '#1D1E20';
   return (
     <div className="sc-room-card">
       <div className="big-meeting-card-inner" style={{ height: '100%' }}>
@@ -327,109 +397,33 @@ function CommandCenterCard({ room }) {
   );
 }
 
-// Lobby card at top of sidebar
-function LobbyCard() {
-  return (
-    <div className="sc-lobby-card">
-      <div className="sc-lobby-bg" />
-      <div className="sc-lobby-info">
-        <div className="sc-lobby-title-row">
-          <span className="sc-lobby-name">Joe's Lobby</span>
-          <img src="/icons/calendar.svg" width="12" height="12" alt="" style={{ opacity: 0.5 }} />
-        </div>
-        <div className="sc-lobby-meta">
-          <span>ro.am/joe</span>
-        </div>
-        <div className="sc-lobby-meta">
-          <span>15 mins · One-on-One</span>
-        </div>
-        <div className="sc-lobby-meta">
-          <span>Drop-ins</span>
-          <span className="sc-lobby-open-badge"><span className="sc-lobby-dot" />OPEN</span>
-        </div>
-      </div>
-    </div>
-  );
-}
 
-// Mini office cell for floor maps
-function MiniOffice({ people = [], width, height, highlight }) {
-  const style = { width: width || '100%', height: height || 'auto' };
+// Floor card — auto-generates mini map from room data
+function FloorCard({ name, rooms, active, onClick }) {
   return (
-    <div className={`sc-mini-office ${highlight ? 'sc-mini-office-highlight' : ''}`} style={style}>
-      {people.map((person, i) => (
-        <img key={person.name + i} className="sc-mini-avatar" src={person.avatar} alt="" />
-      ))}
-    </div>
-  );
-}
-
-// Theater mini preview
-function MiniTheater() {
-  return (
-    <div className="sc-mini-theater">
-      <div className="sc-mini-theater-stage" />
-      <div className="sc-mini-theater-rows">
-        {Array.from({ length: 4 }).map((_, r) => (
-          <div key={r} className="sc-mini-theater-row">
-            {Array.from({ length: 4 }).map((_, c) => (
-              <div key={c} className="sc-mini-theater-seat" />
-            ))}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// Floor card with mini map grid
-function FloorCard({ name, layout }) {
-  return (
-    <div className="sc-floor-card">
+    <div className={`sc-floor-card ${active ? 'sc-floor-active' : ''}`} onClick={onClick}>
       <span className="sc-floor-name">{name}</span>
-      <div className="sc-floor-grid">
-        {layout.map((col, ci) => (
-          <div key={ci} className="sc-floor-col">
-            {col.map((cell, ri) => {
-              if (cell.type === 'empty') return <div key={ri} className="sc-mini-office sc-mini-empty" style={{ height: cell.h || 22 }} />;
-              if (cell.type === 'theater') return <MiniTheater key={ri} />;
-              return <MiniOffice key={ri} people={cell.people || []} height={cell.h} highlight={cell.highlight} />;
-            })}
-          </div>
-        ))}
+      <div className="sc-floor-mini-grid">
+        {rooms.map(room => {
+          const gridColumn = room.colSpan ? `${room.pos.col + 1} / span ${room.colSpan}` : `${room.pos.col + 1}`;
+          const gridRow = room.rowSpan ? `${room.pos.row + 1} / span ${room.rowSpan}` : `${room.pos.row + 1}`;
+          return (
+            <div key={room.id} className="sc-mini-office" style={{ gridColumn, gridRow }}>
+              {room.people.slice(0, 4).map((person, i) => (
+                <img key={person.name + i} className="sc-mini-avatar" src={person.avatar} alt="" />
+              ))}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
 }
 
-// Floor layouts using real people
-const FLOOR_RND = [
-  [ { people: [p('Ava L.')] }, { type: 'empty' }, { people: [p('Derek C.')], highlight: true }, { type: 'empty' }, { people: [p('John M.')] }, { people: [p('Jon B.')] } ],
-  [ { type: 'empty' }, { people: [p('Keegan L.'), p('Howard L.')] }, { type: 'empty' }, { type: 'empty' }, { type: 'empty' }, { type: 'empty' } ],
-  [ { type: 'empty' }, { type: 'empty', h: 80 }, { people: [p('Grace S.')] }, { type: 'empty' }, { people: [p('Michael W.')] }, { people: [p('Rob F.')] } ],
-  [ { people: [p('Chelsea T.')] }, { type: 'empty' }, { type: 'theater' }, { type: 'empty' } ],
-  [ { type: 'empty' }, { type: 'empty' }, { type: 'empty' }, { people: [p('Lexi B.')] }, { people: [p('Will H.')] } ],
-];
-
-const FLOOR_COMMERCIAL = [
-  [ { people: [p('Arnav B.'), p('Aaron W.')] }, { people: [p('Mattias L.')] }, { people: [p('Klas L.')] }, { people: [p('John B.')] } ],
-  [ { type: 'empty' }, { type: 'empty', h: 60 } ],
-  [ { people: [p('Tom D.')] }, { people: [p('Thomas G.'), p('Peter L.')] }, { type: 'empty' }, { people: [p('Sean M.')] } ],
-  [ { people: [p('Michael M.')] }, { type: 'empty' }, { people: [p('Garima K.')] }, { type: 'empty' }, { type: 'empty' }, { people: [p('Joe W.')] } ],
-  [ { people: [p('Jeff G.'), p('Howard L.')] }, { people: [p('Ava L.')] }, { type: 'empty' }, { people: [p('Rob F.')] }, { type: 'empty' } ],
-];
-
-const FLOOR_MARKETING = [
-  [ { people: [p('Grace S.')] }, { people: [p('Chelsea T.')] }, { type: 'empty', h: 57 }, { type: 'empty' }, { type: 'empty' } ],
-  [ { type: 'empty' }, { type: 'empty' }, { people: [p('Will H.')] }, { people: [p('Lexi B.')] } ],
-  [ { people: [p('Michael W.')] }, { people: [p('Jon B.')] }, { type: 'empty', h: 75 }, { people: [p('Keegan L.')] } ],
-  [ { people: [p('Ava L.')] }, { type: 'empty' }, { people: [p('Derek C.')] }, { type: 'empty' }, { type: 'empty' }, { people: [p('John M.')] }, { people: [p('Arnav B.')] } ],
-  [ { people: [p('Klas L.'), p('Mattias L.')] }, { people: [p('Aaron W.'), p('Tom D.')] }, { people: [p('Chelsea T.')] }, { people: [p('Peter L.')] } ],
-];
 
 const INITIAL_WINDOWS = [
-  { id: 'map', isOpen: true, position: { x: 0, y: 0 }, zIndex: 2 },
-  { id: 'ainbox', isOpen: false, position: { x: 40, y: 100 }, zIndex: 1 },
+  { id: 'map', isOpen: true, position: { x: 0, y: 0 }, zIndex: 25 },
+  { id: 'ainbox', isOpen: false, position: { x: 60, y: 300 }, zIndex: 30 },
 ];
 
 // Main showcase component
@@ -442,10 +436,100 @@ export default function ShowcaseMap() {
 }
 
 function ShowcaseMapInner() {
-  const [hovered, setHovered] = useState(null);
   const [theme, setTheme] = useState('dark');
+  const [activeFloor, setActiveFloor] = useState('R&D');
+  const [floorTransition, setFloorTransition] = useState('visible'); // 'visible' | 'out' | 'in'
+
+  const switchFloor = (floorName) => {
+    if (floorName === activeFloor || floorTransition !== 'visible') return;
+    setFloorTransition('out');
+    setTimeout(() => {
+      setActiveFloor(floorName);
+      setFloorTransition('in');
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setFloorTransition('visible');
+        });
+      });
+    }, 200);
+  };
   const [navLogoVisible, setNavLogoVisible] = useState(false);
+  const [showGrid, setShowGrid] = useState(false);
   const [activeVibes, setActiveVibes] = useState({});
+  const miniRoamRef = useRef(null);
+  const [storyViewer, setStoryViewer] = useState(null); // { stories, initialIndex }
+  const [viewedStories, setViewedStories] = useState({});
+  const storyRefs = useRef({});
+  // People movement — occasionally move someone between offices and meeting rooms
+  const [movements, setMovements] = useState({ removed: {}, added: {} }); // { removed: { roomId: [personIndex] }, added: { roomId: [person] } }
+
+  useEffect(() => {
+    const floor = FLOORS[activeFloor];
+    const privateRooms = floor.filter(r => r.type === 'private' && r.people.length === 1 && !r.story);
+    const meetingRooms = floor.filter(r => r.type === 'meeting' && r.people.length > 0);
+    if (privateRooms.length === 0 || meetingRooms.length === 0) return;
+
+    const tick = () => {
+      // Pick a random private office person to move
+      const srcRoom = privateRooms[Math.floor(Math.random() * privateRooms.length)];
+      const dstRoom = meetingRooms[Math.floor(Math.random() * meetingRooms.length)];
+      const person = srcRoom.people[0];
+
+      // Move person: remove from office, add to meeting
+      setMovements({ removed: { [srcRoom.id]: true }, added: { [dstRoom.id]: person } });
+
+      // After 8-15 seconds, move them back
+      const returnTimer = setTimeout(() => {
+        setMovements({ removed: {}, added: {} });
+      }, 8000 + Math.random() * 7000);
+
+      return returnTimer;
+    };
+
+    // Start after 5 seconds, then repeat
+    let returnTimer;
+    const interval = setInterval(() => {
+      returnTimer = tick();
+    }, 15000 + Math.random() * 10000);
+
+    const initialTimer = setTimeout(() => {
+      returnTimer = tick();
+    }, 5000);
+
+    return () => {
+      clearInterval(interval);
+      clearTimeout(initialTimer);
+      if (returnTimer) clearTimeout(returnTimer);
+    };
+  }, [activeFloor]);
+
+  // Apply movements to get the current floor rooms
+  const currentFloorRooms = useMemo(() => {
+    return FLOORS[activeFloor].map(room => {
+      if (movements.removed[room.id]) {
+        return { ...room, people: [] }; // Person left
+      }
+      if (movements.added[room.id]) {
+        return { ...room, people: [...room.people, movements.added[room.id]] };
+      }
+      return room;
+    });
+  }, [activeFloor, movements]);
+
+  const allStoryRooms = useMemo(() => {
+    const rooms = [];
+    FLOOR_NAMES.forEach(floor => {
+      FLOORS[floor].forEach(r => {
+        if (r.story && r.people[0]) rooms.push(r);
+      });
+    });
+    return rooms;
+  }, []);
+
+  const allStoriesData = useMemo(() =>
+    allStoryRooms.map(r => ({ image: r.story, avatar: r.people[0].avatar, name: r.people[0].fullName || r.people[0].name })),
+  [allStoryRooms]);
+
   const mapWin = useWindow('map');
   const ainboxWin = useWindow('ainbox');
 
@@ -468,7 +552,7 @@ function ShowcaseMapInner() {
 
   // Randomly cycle vibe coding across private offices
   useEffect(() => {
-    const privateRooms = SHOWCASE_ROOMS.filter(r => r.type === 'private' && r.people.length === 1);
+    const privateRooms = currentFloorRooms.filter(r => r.type === 'private' && r.people.length === 1);
     const pickVibes = () => {
       const shuffled = [...privateRooms].sort(() => Math.random() - 0.5);
       const next = {};
@@ -480,7 +564,7 @@ function ShowcaseMapInner() {
     pickVibes();
     const interval = setInterval(pickVibes, 6000 + Math.random() * 4000);
     return () => clearInterval(interval);
-  }, []);
+  }, [activeFloor]);
   const windowRef = useRef(null);
   const viewportRef = useRef(null);
 
@@ -493,10 +577,7 @@ function ShowcaseMapInner() {
     const viewport = viewportRef.current;
     if (!viewport) return;
     const onScroll = () => {
-      const windowEl = windowRef.current;
-      if (!windowEl) return;
-      const rect = windowEl.getBoundingClientRect();
-      setNavLogoVisible(rect.top <= 80);
+      setNavLogoVisible(viewport.scrollTop >= 200);
     };
     viewport.addEventListener('scroll', onScroll);
     return () => viewport.removeEventListener('scroll', onScroll);
@@ -504,40 +585,19 @@ function ShowcaseMapInner() {
 
   return (
     <div className="sc-viewport" data-theme={theme} ref={viewportRef}>
+      {/* Debug grid overlay */}
+      {showGrid && <div className="sc-grid-debug">
+        {Array.from({ length: 12 }).map((_, i) => <div key={i} className="sc-grid-debug-col" />)}
+      </div>}
       {/* Website navbar */}
       <div className="sc-navbar-wrap" data-logo-visible={navLogoVisible}>
         <Navbar />
       </div>
 
-      {/* Promo section */}
-      <div className="sc-promo">
-        <div className="sc-promo-top">
-          <div className="sc-promo-text">
-            <h2 className="sc-promo-title">THE OFFICE THAT THINKS</h2>
-            <p className="sc-promo-subtitle">Virtual Office Platform with company visualization, presence, drop-ins, AI agents and more</p>
-          </div>
-          <div className="sc-promo-stats">
-            <div className="sc-promo-stat">
-              <span className="sc-promo-stat-value">8.3</span>
-              <span className="sc-promo-stat-label">Minute Meetings</span>
-              <span className="sc-promo-stat-category">Productivity</span>
-            </div>
-            <div className="sc-promo-stat">
-              <span className="sc-promo-stat-value">88%</span>
-              <span className="sc-promo-stat-label">More Connected</span>
-              <span className="sc-promo-stat-category">Culture</span>
-            </div>
-          </div>
-        </div>
-        <div className="sc-promo-field">
-          <span className="sc-promo-placeholder">What's your work email?</span>
-          <button className="sc-promo-cta">Get Started for Free</button>
-        </div>
-      </div>
-
-      <div className="sc-wallpaper-container">
-        <div className="sc-wallpaper" style={{ backgroundImage: `url(/wallpaper-${theme}.png)` }} />
-      <div className={`sc-window ${!mapWin.isFocused ? 'sc-window-unfocused' : ''}`} data-theme={theme} ref={windowRef} style={{ transform: `translate(${mapWin.position.x}px, ${mapWin.position.y}px)`, zIndex: mapWin.zIndex }} onMouseDown={() => mapWin.focus()}>
+      <div className="miniRoamOS" ref={miniRoamRef}>
+        <div className="sc-wallpaper sc-wallpaper-dark" style={{ opacity: theme === 'dark' ? 1 : 0 }} />
+        <div className="sc-wallpaper sc-wallpaper-light" style={{ opacity: theme === 'light' ? 1 : 0 }} />
+      <div className={`sc-window ${!mapWin.isFocused ? 'sc-window-unfocused' : ''}`} ref={windowRef} style={{ transform: `translate(${mapWin.position.x}px, ${mapWin.position.y}px)`, zIndex: mapWin.zIndex }} onMouseDown={() => mapWin.focus()}>
         {/* Mac window title bar */}
         <div className="sc-titlebar" onMouseDown={makeDragHandler(mapWin)}>
           <div className="sc-traffic-lights">
@@ -553,8 +613,8 @@ function ShowcaseMapInner() {
         <div className="sc-content">
           {/* Map grid */}
           <div className="sc-map">
-            <div className="sc-grid">
-              {SHOWCASE_ROOMS.map(room => {
+            <div className={`sc-grid sc-floor-${floorTransition}`}>
+              {currentFloorRooms.map(room => {
                 const gridColumn = room.colSpan
                   ? `${room.pos.col + 1} / span ${room.colSpan}`
                   : `${room.pos.col + 1}`;
@@ -567,8 +627,6 @@ function ShowcaseMapInner() {
                     key={room.id}
                     className="sc-grid-cell"
                     style={{ gridColumn, gridRow }}
-                    onMouseEnter={() => setHovered(room.id)}
-                    onMouseLeave={() => setHovered(null)}
                   >
                     {room.type === 'theater' ? (
                       <TheaterRoomCard room={room} />
@@ -579,7 +637,7 @@ function ShowcaseMapInner() {
                     ) : room.type === 'command' ? (
                       <CommandCenterCard room={room} />
                     ) : (
-                      <PrivateRoomCard room={{ ...room, vibe: activeVibes[room.id] || null }} />
+                      <PrivateRoomCard room={{ ...room, vibe: activeVibes[room.id] || null }} avatarRef={room.story ? (el => { storyRefs.current[room.id] = { current: el }; }) : undefined} />
                     )}
                   </div>
                 );
@@ -587,11 +645,17 @@ function ShowcaseMapInner() {
             </div>
           </div>
 
-          {/* Right sidebar */}
+          {/* Right sidebar — elevator */}
           <div className="sc-sidebar">
-            <FloorCard name="R&D" layout={FLOOR_RND} />
-            <FloorCard name="Commercial" layout={FLOOR_COMMERCIAL} />
-            <FloorCard name="Marketing" layout={FLOOR_MARKETING} />
+            {FLOOR_NAMES.map(floorName => (
+              <FloorCard
+                key={floorName}
+                name={floorName}
+                rooms={FLOORS[floorName]}
+                active={activeFloor === floorName}
+                onClick={() => switchFloor(floorName)}
+              />
+            ))}
           </div>
         </div>
 
@@ -623,7 +687,14 @@ function ShowcaseMapInner() {
           {/* Right group */}
           <div className="sc-toolbar-group">
             <div className="sc-toolbar-pill-group">
-              <div className="sc-toolbar-pill" data-tooltip="Story">
+              <div className="sc-toolbar-pill" data-tooltip="Story" onClick={() => {
+                if (allStoriesData.length > 0) {
+                  const viewed = {};
+                  allStoryRooms.forEach(r => { viewed[r.story] = true; });
+                  setViewedStories(prev => ({ ...prev, ...viewed }));
+                  setStoryViewer({ stories: allStoriesData, initialIndex: 0 });
+                }
+              }}>
                 <img src="/icons/story.svg" width="16" height="16" alt="" />
               </div>
               <div className="sc-toolbar-pill" data-tooltip="Magicast">
@@ -641,23 +712,64 @@ function ShowcaseMapInner() {
             </div>
           </div>
         </div>
+        {storyViewer && <StoryViewer stories={storyViewer.stories} initialIndex={storyViewer.initialIndex} onClose={() => setStoryViewer(null)} />}
       </div>
       {ainboxWin.isOpen && <AInbox win={ainboxWin} onDrag={makeDragHandler(ainboxWin)} />}
+      {FLOORS[activeFloor].filter(r => r.story && r.people[0] && !viewedStories[r.story]).map((room, i, arr) => (
+        <StoryBubble
+          key={room.id}
+          avatar={room.story}
+          delay={3000 + i * 3000}
+          targetRef={storyRefs.current[room.id]}
+          containerRef={miniRoamRef}
+          onClick={() => {
+            // Find this story's index in all stories
+            const clickedIndex = allStoriesData.findIndex(s => s.image === room.story);
+            const reordered = [...allStoriesData.slice(clickedIndex), ...allStoriesData.slice(0, clickedIndex)];
+            const viewed = {};
+            allStoryRooms.forEach(r => { viewed[r.story] = true; });
+            setViewedStories(prev => ({ ...prev, ...viewed }));
+            setStoryViewer({ stories: reordered, initialIndex: 0 });
+          }}
+        />
+      ))}
+      {/* Product features bar */}
+      <div className="sc-products-bar">
+        {['Virtual Office', 'Drop-In Meetings', 'Theater', 'AInbox', 'Lobby', 'Magicast', 'Magic Minutes', 'On-It', 'On-Air', 'Mobile'].map((item, i) => (
+          <React.Fragment key={item}>
+            {i > 0 && <div className="sc-products-dot" />}
+            <span className="sc-products-item" onClick={item === 'AInbox' ? () => ainboxWin.open() : undefined}>{item}</span>
+          </React.Fragment>
+        ))}
+      </div>
       </div>
 
-      {/* Mock content blocks for scrolling */}
-      <div className="sc-mock-sections">
-        <div className="sc-mock-section">
-          <h2 className="sc-mock-heading">Drop into any room, instantly</h2>
-          <p className="sc-mock-text">No links. No scheduling. Just click a room and you're there. Roam recreates the spontaneity of a real office — walk up to someone's desk, pop into a meeting, or hang out in the lounge.</p>
+      {/* Promo section */}
+      <div className="sc-section">
+        <div className="sc-section-grid">
+          <div className="sc-promo-content">
+            <h2 className="sc-promo-title">THE OFFICE THAT THINKS</h2>
+            <p className="sc-promo-subtitle">Roam is a Virtual Office Platform where remote work happens in the open and every action makes your company smarter.</p>
+            <div className="sc-promo-buttons">
+              <button className="sc-promo-btn">Book Demo</button>
+              <button className="sc-promo-btn">Free Trial</button>
+            </div>
+          </div>
         </div>
-        <div className="sc-mock-section">
-          <h2 className="sc-mock-heading">See your whole company, at a glance</h2>
-          <p className="sc-mock-text">The map gives you a bird's-eye view of who's where, who's talking, and who's available. No more wondering if someone is free — just look at the map.</p>
+      </div>
+
+      {/* Feature section — AInbox */}
+      <div className="sc-feature-section">
+        <div className="sc-section-grid">
+        <div className="sc-feature-text">
+          <h2 className="sc-feature-title">GROUP CHAT</h2>
+          <p className="sc-feature-desc">Send Direct Messages, Group Chats, or Confidential Chats with AInbox. Set up your own custom groups. Tailor for your own bespoke workflow with custom folders, pinned chats, bookmarks, scheduled messages, and drag-and-drop reordering. Search your entire history. Give out guest badges to chat with people outside your organization, free!</p>
         </div>
-        <div className="sc-mock-section">
-          <h2 className="sc-mock-heading">AI that works alongside you</h2>
-          <p className="sc-mock-text">On-It, your AI assistant, lives right in your office. It joins meetings, takes notes, answers questions, and helps your team move faster — without leaving Roam.</p>
+        <div className="sc-feature-visual">
+          <div className="sc-feature-wallpaper" style={{ backgroundImage: `url(/wallpaper-${theme}.png)` }}>
+            <AInbox win={{ position: { x: 0, y: 0 }, zIndex: 1, isFocused: true, focus: () => {}, close: () => {}, open: () => {} }} onDrag={() => {}} />
+          </div>
+        </div>
         </div>
       </div>
 
@@ -668,6 +780,14 @@ function ShowcaseMapInner() {
         ) : (
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M14 8.5C13.3 12.1 10 14.5 6.5 13.5C3 12.5 1 9.5 2 6C2.8 3.2 5.5 1.5 8.5 2C7 3.5 6.5 6 8 8.5C9 10 11 11 14 8.5Z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
         )}
+      </button>
+      <button className="sc-grid-toggle-fixed" onClick={() => setShowGrid(g => !g)} style={{ opacity: showGrid ? 1 : undefined }}>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <rect x="1" y="1" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.2" />
+          <rect x="10" y="1" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.2" />
+          <rect x="1" y="10" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.2" />
+          <rect x="10" y="10" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.2" />
+        </svg>
       </button>
 
     </div>

@@ -1339,12 +1339,13 @@ function TabSwitcher({ activeTab, onTabChange }) {
   }, [open]);
 
   const tabs = [
+    { id: 'showcase', label: 'Showcase' },
+    { section: 'WIP' },
     { id: 'map-v3', label: 'Map V3' },
     { id: 'claude-max', label: 'Vibe Code' },
     { id: 'war-room', label: 'War Room' },
     { id: 'big-meetings', label: 'Big Meetings' },
     { id: 'experimental', label: 'EPCOT' },
-    { id: 'showcase', label: 'Showcase' },
   ];
 
   return (
@@ -1356,14 +1357,18 @@ function TabSwitcher({ activeTab, onTabChange }) {
       </button>
       {open && (
         <div className="tab-hamburger-menu">
-          {tabs.map(t => (
-            <button
-              key={t.id}
-              className={`tab-hamburger-item ${activeTab === t.id ? 'tab-hamburger-active' : ''}`}
-              onClick={() => { onTabChange(t.id); setOpen(false); }}
-            >
-              {t.label}
-            </button>
+          {tabs.map((t, i) => (
+            t.section ? (
+              <div key={`section-${i}`} className="tab-hamburger-section">{t.section}</div>
+            ) : (
+              <button
+                key={t.id}
+                className={`tab-hamburger-item ${activeTab === t.id ? 'tab-hamburger-active' : ''}`}
+                onClick={() => { onTabChange(t.id); setOpen(false); }}
+              >
+                {t.label}
+              </button>
+            )
           ))}
         </div>
       )}

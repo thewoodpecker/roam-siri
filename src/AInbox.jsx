@@ -82,14 +82,18 @@ export default function AInbox({ win, onDrag }) {
   const [selectedChat, setSelectedChat] = useState(0);
   const [messages, setMessages] = useState(CONVERSATIONS);
   const [inputText, setInputText] = useState('');
-  const messagesEndRef = useRef(null);
-  const inputRef = useRef(null);
+  const [closing, setClosing] = useState(false);
 
-  const hasScrolled = useRef(false);
+  const handleClose = () => {
+    setClosing(true);
+    setTimeout(() => win.close(), 200);
+  };
+
+  const messagesListRef = useRef(null);
+  const shouldScroll = useRef(false);
   useEffect(() => {
-    // Only auto-scroll after sending a message, not on mount/chat switch
-    if (hasScrolled.current) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (shouldScroll.current && messagesListRef.current) {
+      messagesListRef.current.scrollTop = messagesListRef.current.scrollHeight;
     }
   }, [messages]);
 
@@ -109,7 +113,7 @@ export default function AInbox({ win, onDrag }) {
       [selectedChat]: { ...prev[selectedChat], messages: [...prev[selectedChat].messages, newMsg] },
     }));
     setInputText('');
-    hasScrolled.current = true;
+    shouldScroll.current = true;
 
     // Lexi responds in the Sales chat
     if (selectedChat === 0) {
@@ -136,16 +140,16 @@ export default function AInbox({ win, onDrag }) {
   const convo = messages[selectedChat];
 
   return (
-      <div className={`ainbox-window ${!win.isFocused ? 'ainbox-unfocused' : ''}`} style={{ left: win.position.x, top: win.position.y, zIndex: win.zIndex }} onMouseDown={() => win.focus()}>
+      <div className={`ainbox-window ${!win.isFocused ? 'ainbox-unfocused' : ''} ${closing ? 'ainbox-closing' : ''}`} style={{ left: win.position.x, top: win.position.y, zIndex: win.zIndex }} onMouseDown={() => win.focus()}>
         {/* Header */}
         <div className="ainbox-header" onMouseDown={onDrag}>
           <div className="ainbox-traffic-lights">
-            <div className="ainbox-light ainbox-light-close" onClick={(e) => { e.stopPropagation(); win.close(); }} />
+            <div className="ainbox-light ainbox-light-close" onClick={(e) => { e.stopPropagation(); handleClose(); }} />
             <div className="ainbox-light ainbox-light-minimize" />
             <div className="ainbox-light ainbox-light-maximize" />
           </div>
           <div className="ainbox-search">
-            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" style={{ opacity: 0.3 }}>
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" className="ainbox-search-icon">
               <path d="M7 12C9.76142 12 12 9.76142 12 7C12 4.23858 9.76142 2 7 2C4.23858 2 2 4.23858 2 7C2 9.76142 4.23858 12 7 12Z" stroke="currentColor" strokeWidth="1.5" />
               <path d="M10.5 10.5L14 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
             </svg>
@@ -192,7 +196,7 @@ export default function AInbox({ win, onDrag }) {
                 {convo.members && <span className="ainbox-msg-header-members">{convo.members}</span>}
               </div>
             </div>
-            <div className="ainbox-messages-list">
+            <div className="ainbox-messages-list" ref={messagesListRef}>
               {convo.messages.map(msg => (
                 <div key={msg.id} className={`ainbox-msg ${msg.self ? 'ainbox-msg-self' : ''}`}>
                   {!msg.self && <img className="ainbox-msg-avatar" src={msg.avatar} alt="" />}
@@ -205,11 +209,9 @@ export default function AInbox({ win, onDrag }) {
                   </div>
                 </div>
               ))}
-              <div ref={messagesEndRef} />
             </div>
             <div className="ainbox-composer">
               <input
-                ref={inputRef}
                 className="ainbox-composer-input"
                 placeholder={`Message ${convo.name}...`}
                 value={inputText}

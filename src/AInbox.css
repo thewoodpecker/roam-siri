@@ -14,11 +14,17 @@
   flex-direction: column;
   overflow: hidden;
   animation: ainbox-window-in 0.25s ease-out;
+  transition: transform 200ms ease-in, opacity 200ms ease-in;
   box-shadow:
     0 0 0 0.5px var(--border),
     0 25px 80px var(--sc-window-shadow-1, rgba(0,0,0,0.5)),
     0 10px 30px var(--sc-window-shadow-2, rgba(0,0,0,0.3)),
     0 4px 12px var(--sc-window-shadow-3, rgba(0,0,0,0.2));
+}
+
+.ainbox-closing {
+  transform: scale(0.95) !important;
+  opacity: 0 !important;
 }
 
 @keyframes ainbox-window-in {
@@ -75,6 +81,10 @@
   padding: 4px 8px;
   background: var(--background-primary);
   border-radius: 8px;
+}
+
+.ainbox-search-icon {
+  color: var(--text-disabled);
 }
 
 .ainbox-search span {

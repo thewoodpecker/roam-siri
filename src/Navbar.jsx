@@ -17,6 +17,16 @@ const productsMenu = [
       { title: "Mobile", description: "Roam While You Roam", href: "/mobile" },
     ],
   },
+  {
+    heading: "WIP",
+    items: [
+      { title: "Map V3", description: "", href: "#map-v3" },
+      { title: "Vibe Code", description: "", href: "#claude-max" },
+      { title: "War Room", description: "", href: "#war-room" },
+      { title: "Big Meetings", description: "", href: "#big-meetings" },
+      { title: "EPCOT", description: "", href: "#experimental" },
+    ],
+  },
 ];
 
 const slideMedia = [
@@ -453,10 +463,10 @@ export default function Navbar() {
           <div
             className="rounded-2xl overflow-hidden transition-all duration-150 ease-out"
             style={{
-              backgroundColor: 'var(--bg-surface-primary)',
+              backgroundColor: activeMenu !== null ? 'var(--bg-surface-primary)' : 'var(--nav-bg, var(--bg-surface-primary))',
               borderWidth: 1,
               borderStyle: 'solid',
-              borderColor: 'var(--border)',
+              borderColor: activeMenu !== null ? 'var(--border)' : 'var(--nav-border, var(--border))',
               backdropFilter: isV5 ? 'blur(12px)' : 'none',
               WebkitBackdropFilter: isV5 ? 'blur(12px)' : 'none',
             }}

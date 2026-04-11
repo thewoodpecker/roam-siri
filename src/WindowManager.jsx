@@ -63,7 +63,8 @@ export function WindowManagerProvider({ children, initialWindows }) {
     };
   });
 
-  const [state, dispatch] = useReducer(wmReducer, { windows, topZIndex: initialWindows.length });
+  const maxZ = Math.max(...initialWindows.map(w => w.zIndex ?? 1));
+  const [state, dispatch] = useReducer(wmReducer, { windows, topZIndex: maxZ });
 
   const open = useCallback((id) => dispatch({ type: 'OPEN', id }), []);
   const close = useCallback((id) => dispatch({ type: 'CLOSE', id }), []);
