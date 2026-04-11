@@ -15,6 +15,8 @@
   --grid-columns: 12;
   --grid-gutter: 24px;
   --grid-margin: 80px;
+  --btn-bg: #FFFFFF;
+  --btn-text: #131415;
   --grid-max-width: 1200px;
 }
 
@@ -57,6 +59,8 @@
   --bg-secondary: rgba(0,0,0,0.06);
   --bg-surface-primary: #FFFFFF;
   --bg-surface-secondary: #F5F5F7;
+  --btn-bg: #131415;
+  --btn-text: #FFFFFF;
   --bg-surface-elevated-primary: #FFFFFF;
   --bg-surface-elevated-secondary: #E8E8EA;
   --bg-overlay-primary: rgba(255,255,255,0.7);
@@ -564,8 +568,8 @@
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 14px;
   font-weight: 500;
-  color: #000;
-  background: #fff;
+  color: var(--btn-text);
+  background: var(--btn-bg);
   border: none;
   border-radius: 10px;
   padding: 10px 24px;
@@ -1009,6 +1013,10 @@
   font-size: clamp(9px, 1.1vw, 13px);
 }
 
+.sc-office-empty {
+  color: var(--text-disabled) !important;
+}
+
 .sc-room-card .room-count {
   color: var(--text-secondary);
 }
@@ -1204,8 +1212,8 @@
   position: absolute;
   top: 0;
   left: 0;
-  width: clamp(24px, 3.5vw, 40px);
-  height: clamp(24px, 3.5vw, 40px);
+  width: 100%;
+  height: 100%;
   border-radius: 50%;
   pointer-events: none;
   z-index: 0;
@@ -1252,6 +1260,30 @@
   10%, 24%, 37%, 74% { opacity: 0.5; }
   21%, 67%, 77%, 30% { opacity: 0.3; }
   12%, 32%, 54%, 89% { opacity: 0.7; }
+}
+
+/* People movement animations */
+.sc-move-leaving .seat-avatar,
+.sc-move-leaving-added .avatar {
+  animation: sc-person-leave 300ms ease-in forwards;
+}
+
+.sc-move-arriving .seat-avatar {
+  animation: sc-person-arrive 400ms ease-out;
+}
+
+.sc-person-arriving .avatar {
+  animation: sc-person-arrive 400ms ease-out;
+}
+
+@keyframes sc-person-leave {
+  from { transform: scale(1); opacity: 1; }
+  to { transform: scale(0.8); opacity: 0; }
+}
+
+@keyframes sc-person-arrive {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
 }
 
 .sc-room-card .seat-avatar {

@@ -225,7 +225,8 @@ function PrivateRoomCard({ room, storyBubble }) {
     return () => clearTimeout(timer);
   }, [hasTalk]);
 
-  const vibeColor = room.vibe === 'claude' ? CLAUDE : room.vibe === 'codex' ? CODEX : null;
+  const isEmpty = room.people.length === 0;
+  const vibeColor = !isEmpty && room.vibe === 'claude' ? CLAUDE : !isEmpty && room.vibe === 'codex' ? CODEX : null;
   const prevVibeRef = useRef(null);
   const [showGlow, setShowGlow] = useState(false);
   const [glowColor, setGlowColor] = useState(null);
@@ -252,9 +253,9 @@ function PrivateRoomCard({ room, storyBubble }) {
       <div className="big-meeting-card-inner" style={{ height: '100%' }}>
         <div className="meeting-room-card" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
           <div className="card-header" style={{ padding: '0 12px' }}>
-            <h3 className="office-name">{room.name}</h3>
-            {room.vibe === 'claude' && <img className="sc-ai-icon" src="/icons/claude.svg" alt="" />}
-            {room.vibe === 'codex' && <img className="sc-ai-icon" src="/icons/codex.svg" alt="" />}
+            <h3 className={`office-name ${isEmpty ? 'sc-office-empty' : ''}`}>{room.name}</h3>
+            {vibeColor && room.vibe === 'claude' && <img className="sc-ai-icon" src="/icons/claude.svg" alt="" />}
+            {vibeColor && room.vibe === 'codex' && <img className="sc-ai-icon" src="/icons/codex.svg" alt="" />}
           </div>
           {room.people.length > 0 && (
             <div className="private-office-seat">
@@ -330,7 +331,7 @@ function MeetingRoomCardShowcase({ room }) {
           </div>
           <div className="meeting-room-people">
             {room.people.map((person, i) => (
-              <div key={person.name + i} className="person meeting-room-person">
+              <div key={person.name + i} className={`person meeting-room-person ${person._new ? 'sc-person-arriving' : ''}`}>
                 <img className="avatar" src={person.avatar} alt={person.name} />
                 <div className={`avatar-inner-glow ${talking[person.name] ? 'sc-talking' : 'glow-off'}`} />
               </div>
@@ -443,58 +444,60 @@ function ShowcaseMapInner() {
   const [storyViewer, setStoryViewer] = useState(null); // { stories, initialIndex }
   const [viewedStories, setViewedStories] = useState({});
   // People movement — occasionally move someone between offices and meeting rooms
-  const [movements, setMovements] = useState({ removed: {}, added: {} }); // { removed: { roomId: [personIndex] }, added: { roomId: [person] } }
+  const [movements, setMovements] = useState({ removed: {}, added: {}, anim: {} }); // anim: { roomId: 'leaving' | 'arriving' }
 
   useEffect(() => {
     const floor = FLOORS[activeFloor];
     const privateRooms = floor.filter(r => r.type === 'private' && r.people.length === 1 && !r.story);
     const meetingRooms = floor.filter(r => r.type === 'meeting' && r.people.length > 0);
     if (privateRooms.length === 0 || meetingRooms.length === 0) return;
+    const timers = [];
+    const t = (fn, ms) => { const id = setTimeout(fn, ms); timers.push(id); };
 
     const tick = () => {
-      // Pick a random private office person to move
       const srcRoom = privateRooms[Math.floor(Math.random() * privateRooms.length)];
       const dstRoom = meetingRooms[Math.floor(Math.random() * meetingRooms.length)];
       const person = srcRoom.people[0];
 
-      // Move person: remove from office, add to meeting
-      setMovements({ removed: { [srcRoom.id]: true }, added: { [dstRoom.id]: person } });
+      // 1. Leaving: show person with leaving animation
+      setMovements({ removed: {}, added: {}, anim: { [srcRoom.id]: 'leaving' } });
 
-      // After 8-15 seconds, move them back
-      const returnTimer = setTimeout(() => {
-        setMovements({ removed: {}, added: {} });
-      }, 8000 + Math.random() * 7000);
+      // 2. After leave anim, remove person and add to destination with arriving animation
+      t(() => {
+        setMovements({ removed: { [srcRoom.id]: true }, added: { [dstRoom.id]: person }, anim: { [dstRoom.id]: 'arriving' } });
 
-      return returnTimer;
+        // 3. After arrive anim, clear animation state
+        t(() => {
+          setMovements({ removed: { [srcRoom.id]: true }, added: { [dstRoom.id]: person }, anim: {} });
+
+          // 4. After a while, return: leaving animation on destination
+          t(() => {
+            setMovements({ removed: { [srcRoom.id]: true }, added: { [dstRoom.id]: person }, anim: { [dstRoom.id]: 'leaving-added' } });
+
+            // 5. Remove from destination, restore source with arriving animation
+            t(() => {
+              setMovements({ removed: {}, added: {}, anim: { [srcRoom.id]: 'arriving' } });
+
+              // 6. Clear
+              t(() => setMovements({ removed: {}, added: {}, anim: {} }), 400);
+            }, 300);
+          }, 8000 + Math.random() * 7000);
+        }, 400);
+      }, 300);
     };
 
-    // Start after 5 seconds, then repeat
-    let returnTimer;
-    const interval = setInterval(() => {
-      returnTimer = tick();
-    }, 15000 + Math.random() * 10000);
-
-    const initialTimer = setTimeout(() => {
-      returnTimer = tick();
-    }, 5000);
-
-    return () => {
-      clearInterval(interval);
-      clearTimeout(initialTimer);
-      if (returnTimer) clearTimeout(returnTimer);
-    };
+    const interval = setInterval(tick, 15000 + Math.random() * 10000);
+    t(tick, 5000);
+    return () => { clearInterval(interval); timers.forEach(clearTimeout); };
   }, [activeFloor]);
 
   // Apply movements to get the current floor rooms
   const currentFloorRooms = useMemo(() => {
     return FLOORS[activeFloor].map(room => {
-      if (movements.removed[room.id]) {
-        return { ...room, people: [] }; // Person left
-      }
-      if (movements.added[room.id]) {
-        return { ...room, people: [...room.people, movements.added[room.id]] };
-      }
-      return room;
+      let people = room.people;
+      if (movements.removed[room.id]) people = [];
+      if (movements.added[room.id]) people = [...room.people, { ...movements.added[room.id], _new: true }];
+      return { ...room, people, _anim: movements.anim[room.id] || null };
     });
   }, [activeFloor, movements]);
 
@@ -607,7 +610,7 @@ function ShowcaseMapInner() {
                 return (
                   <div
                     key={room.id}
-                    className="sc-grid-cell"
+                    className={`sc-grid-cell ${room._anim ? `sc-move-${room._anim}` : ''}`}
                     style={{ gridColumn, gridRow }}
                   >
                     {room.type === 'theater' ? (
