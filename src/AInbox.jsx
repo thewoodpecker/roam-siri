@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useChat } from './ChatContext';
+import { useChat, registerChatData } from './ChatContext';
 import './AInbox.css';
 
 export const DM_REPLIES_BY_CHAT = {
@@ -510,6 +510,9 @@ export const INITIAL_CONVERSATIONS = {
     ],
   },
 };
+
+// Register data with ChatContext (avoids circular import)
+registerChatData(INITIAL_CONVERSATIONS, DM_REPLIES_BY_CHAT, DM_REPLIES_DEFAULT);
 
 /* ———————————————————————————————————————
    Chevron SVG

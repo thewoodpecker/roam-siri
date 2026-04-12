@@ -1,12 +1,21 @@
 import React, { createContext, useContext, useState, useRef } from 'react';
 
-// Import initial data from AInbox
-import { INITIAL_CONVERSATIONS, DM_REPLIES_BY_CHAT, DM_REPLIES_DEFAULT } from './AInbox';
-
 const ChatContext = createContext();
 
+// Lazy init — INITIAL_CONVERSATIONS, DM_REPLIES_BY_CHAT, DM_REPLIES_DEFAULT
+// are set after AInbox module loads via registerChatData()
+let _initialConversations = {};
+let _dmRepliesByChat = {};
+let _dmRepliesDefault = [];
+
+export function registerChatData(conversations, repliesByChat, repliesDefault) {
+  _initialConversations = conversations;
+  _dmRepliesByChat = repliesByChat;
+  _dmRepliesDefault = repliesDefault;
+}
+
 export function ChatProvider({ children }) {
-  const [messages, setMessages] = useState(INITIAL_CONVERSATIONS);
+  const [messages, setMessages] = useState(() => _initialConversations);
   const lastPicked = useRef({});
 
   const pickRandom = (arr, key) => {
@@ -19,7 +28,7 @@ export function ChatProvider({ children }) {
   };
 
   const getReply = (chatId) => {
-    const replies = DM_REPLIES_BY_CHAT[chatId] || DM_REPLIES_DEFAULT;
+    const replies = _dmRepliesByChat[chatId] || _dmRepliesDefault;
     return pickRandom(replies, 'dm-' + chatId);
   };
 

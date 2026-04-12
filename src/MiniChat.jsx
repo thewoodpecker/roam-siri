@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useChat } from './ChatContext';
-import { DM_REPLIES_BY_CHAT, DM_REPLIES_DEFAULT, INITIAL_CONVERSATIONS } from './AInbox';
 import './MiniChat.css';
 
 /* Map avatar paths to chat IDs */

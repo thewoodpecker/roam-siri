@@ -271,7 +271,7 @@ function PrivateRoomCard({ room, storyBubble }) {
             <div className="private-office-seat">
               <div className="seat-row seat-row-hovered">
                 {room.people.map((person, i) => (
-                  <div key={person.name + i} className="seat-assigned sc-private-person" onClick={(e) => openMiniChat(person, e)} style={{ cursor: getChatIdForAvatar(person.avatar) ? 'pointer' : 'default' }}>
+                  <div key={person.name + i} className="seat-assigned sc-private-person" onClick={(e) => { e.stopPropagation(); openMiniChat(person, e); }} style={{ cursor: getChatIdForAvatar(person.avatar) ? 'pointer' : 'default' }}>
                     <img className="seat-avatar" src={person.avatar} alt={person.name} />
                     <span className="seat-nametag">{person.name}</span>
                     {hasTalk && <div className={`sc-private-talk-ring ${talking[person.name] ? 'sc-talking' : ''}`} />}
@@ -341,7 +341,7 @@ function MeetingRoomCardShowcase({ room }) {
           </div>
           <div className="meeting-room-people">
             {room.people.map((person, i) => (
-              <div key={person.name + i} className={`person meeting-room-person ${person._new ? 'sc-person-arriving' : ''}`} onClick={(e) => openMiniChat(person, e)} style={{ cursor: getChatIdForAvatar(person.avatar) ? 'pointer' : 'default' }}>
+              <div key={person.name + i} className={`person meeting-room-person ${person._new ? 'sc-person-arriving' : ''}`} onClick={(e) => { e.stopPropagation(); openMiniChat(person, e); }} style={{ cursor: getChatIdForAvatar(person.avatar) ? 'pointer' : 'default' }}>
                 <img className="avatar" src={person.avatar} alt={person.name} />
                 <div className={`avatar-inner-glow ${talking[person.name] ? 'sc-talking' : 'glow-off'}`} />
               </div>
@@ -460,10 +460,14 @@ function ShowcaseMapInner() {
   const [miniChat, setMiniChat] = useState(null); // { personName, personAvatar, chatId, position }
 
   const openMiniChat = (person, e) => {
-    e.stopPropagation();
     const chatId = getChatIdForAvatar(person.avatar);
     if (!chatId) return;
     const rect = e.currentTarget.getBoundingClientRect();
+    // Close existing mini chat if clicking same person, or open new one
+    if (miniChat && miniChat.chatId === chatId) {
+      setMiniChat(null);
+      return;
+    }
     setMiniChat({
       personName: person.fullName || person.name,
       personAvatar: person.avatar,
