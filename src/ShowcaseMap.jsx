@@ -160,16 +160,24 @@ const FLOOR_NAMES = Object.keys(FLOORS);
 // Simple story bubble — positioned via CSS inside grid cell
 function SimpleStoryBubble({ image, delay = 0, onClick }) {
   const [visible, setVisible] = useState(false);
+  const [dismissing, setDismissing] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => setVisible(true), delay);
     return () => clearTimeout(timer);
   }, [delay]);
 
+  const handleClick = () => {
+    setDismissing(true);
+    setTimeout(() => {
+      if (onClick) onClick();
+    }, 300);
+  };
+
   if (!visible) return null;
 
   return (
-    <div className="sc-story-bubble" onClick={onClick}>
+    <div className={`sc-story-bubble ${dismissing ? 'sc-story-dismissing' : ''}`} onClick={handleClick}>
     <div className="sc-story-bubble">
       <div className="sc-story-rings">
         <div className="sc-story-ring" style={{ animationDelay: '0.4s' }} />

@@ -1,11 +1,14 @@
-/* Window */
+/* ═══════════════════════════════════════
+   AInbox — Window
+   ═══════════════════════════════════════ */
+
 .ainbox-window {
   position: absolute;
-  width: 720px;
-  height: 520px;
+  width: 780px;
+  height: 580px;
   background: rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
   border: 0.5px solid var(--border);
   border-radius: 32px;
   corner-shape: superellipse;
@@ -15,9 +18,7 @@
   overflow: hidden;
   animation: ainbox-window-in 0.25s ease-out;
   transition: transform 200ms ease-in, opacity 200ms ease-in;
-  box-shadow:
-    0 0 0 0.5px var(--border),
-    var(--shadow-5);
+  box-shadow: 0 0 0 0.5px var(--border), var(--shadow-5);
 }
 
 .ainbox-closing {
@@ -27,18 +28,26 @@
 
 @keyframes ainbox-window-in {
   from { opacity: 0; transform: scale(0.95) translateY(10px); }
-  to { opacity: 1; transform: scale(1) translateY(0); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
 }
 
-/* Header */
-.ainbox-header {
+.ainbox-unfocused .ainbox-light-close,
+.ainbox-unfocused .ainbox-light-minimize,
+.ainbox-unfocused .ainbox-light-maximize {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* ═══════════════════════════════════════
+   Title bar
+   ═══════════════════════════════════════ */
+
+.ainbox-titlebar {
   height: 36px;
   display: flex;
   align-items: center;
   padding: 0 14px;
   position: relative;
   cursor: grab;
-  background: transparent;
   flex-shrink: 0;
 }
 
@@ -58,20 +67,13 @@
 .ainbox-light-minimize { background: #FEBC2E; }
 .ainbox-light-maximize { background: #28C840; }
 
-/* Unfocused: grey out traffic lights */
-.ainbox-unfocused .ainbox-light-close,
-.ainbox-unfocused .ainbox-light-minimize,
-.ainbox-unfocused .ainbox-light-maximize {
-  background: rgba(255, 255, 255, 0.15);
-}
-
 .ainbox-search {
   position: absolute;
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  width: 484px;
-  max-width: 60%;
+  width: 420px;
+  max-width: 55%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -79,19 +81,16 @@
   padding: 4px 8px;
   background: var(--background-primary);
   border-radius: 8px;
-}
-
-.ainbox-search-icon {
   color: var(--text-disabled);
 }
 
-.ainbox-search span {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 12px;
-  color: var(--text-disabled);
-}
+.ainbox-search svg { color: var(--text-disabled); flex-shrink: 0; }
+.ainbox-search span { font-size: 12px; color: var(--text-disabled); }
 
-/* Body */
+/* ═══════════════════════════════════════
+   Body (sidebar + detail)
+   ═══════════════════════════════════════ */
+
 .ainbox-body {
   flex: 1;
   display: flex;
@@ -102,7 +101,10 @@
   overflow: hidden;
 }
 
-/* Sidebar */
+/* ═══════════════════════════════════════
+   Sidebar
+   ═══════════════════════════════════════ */
+
 .ainbox-sidebar {
   width: 240px;
   border-right: 0.5px solid var(--border);
@@ -116,265 +118,1053 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 16px 10px 16px;
+  padding: 0 16px;
+  height: 40px;
+  flex-shrink: 0;
   border-bottom: 0.5px solid var(--border);
+}
+
+.ainbox-sidebar-header-left {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .ainbox-sidebar-title {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 14px;
   font-weight: 500;
   color: var(--text-primary);
   letter-spacing: -0.15px;
 }
 
-.ainbox-chat-list {
-  flex: 1;
-  overflow-y: auto;
+.ainbox-compose-icon {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  opacity: 0.7;
 }
 
-.ainbox-chat-item {
+/* Chevron */
+.ainbox-chevron {
+  color: var(--text-secondary);
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.ainbox-chevron-open {
+  transform: rotate(0deg);
+}
+
+.ainbox-chevron:not(.ainbox-chevron-open) {
+  transform: rotate(-90deg);
+}
+
+/* ——— Favorites row ——— */
+
+.ainbox-favorites {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
-  padding: 10px 12px;
+  justify-content: center;
+  gap: 16px;
+  padding: 16px;
+}
+
+.ainbox-fav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
   cursor: pointer;
-  transition: background 0.15s ease;
+}
+
+.ainbox-fav-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.ainbox-fav-group-avatar {
+  width: 40px;
+  height: 40px;
   position: relative;
 }
 
-.ainbox-chat-item:hover {
+.ainbox-fav-group-avatar .ainbox-fav-group-img {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  position: absolute;
+  border: 2px solid var(--bg-surface-elevated-primary);
+}
+
+.ainbox-fav-group-avatar .ainbox-fav-group-img:first-child {
+  top: 0;
+  left: 0;
+  z-index: 2;
+}
+
+.ainbox-fav-group-avatar .ainbox-fav-group-img:last-child {
+  bottom: 0;
+  right: 0;
+  z-index: 1;
+}
+
+.ainbox-fav-name {
+  font-size: 10px;
+  color: var(--text-primary);
+  text-align: center;
+  letter-spacing: 0.12px;
+  line-height: 12px;
+}
+
+
+/* ——— Sections ——— */
+
+.ainbox-sections {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 16px;
+}
+
+.ainbox-section {
+  margin-bottom: 0;
+}
+
+.ainbox-section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 16px;
+  cursor: pointer;
+  user-select: none;
+  height: 28px;
+}
+
+.ainbox-section {
+  padding: 8px 0;
+  border-top: 0.5px solid var(--border);
+}
+
+.ainbox-section-chevron {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ainbox-section-label {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-secondary);
+  line-height: 20px;
+}
+
+.ainbox-section-items {
+  display: flex;
+  flex-direction: column;
+}
+
+.ainbox-section-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 16px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  height: 28px;
+}
+
+.ainbox-section-item:hover {
   background: var(--background-primary);
 }
 
-.ainbox-chat-active {
+.ainbox-section-item-active {
   background: var(--bg-secondary);
 }
 
-.ainbox-chat-avatar {
-  width: 32px;
-  height: 32px;
+.ainbox-section-item-avatar {
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   object-fit: cover;
   flex-shrink: 0;
 }
 
-.ainbox-chat-info {
-  flex: 1;
-  min-width: 0;
+.ainbox-section-item-avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
 }
 
-.ainbox-chat-top {
+.ainbox-online-dot {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green-400);
+  border: 1.5px solid var(--bg-surface-elevated-primary);
+}
+
+.ainbox-section-item-icon {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.ainbox-section-item-icon-circle {
+  background: var(--background-primary);
+  border-radius: 50%;
+}
+
+.ainbox-section-item-icon-img {
+  width: 14px;
+  height: 14px;
+  opacity: 0.5;
+}
+
+.ainbox-section-item-name {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-primary);
+  line-height: 20px;
+  letter-spacing: -0.15px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ainbox-section-item-add,
+.ainbox-add-folder {
+  color: var(--text-secondary);
+}
+
+.ainbox-section-item-add .ainbox-section-item-name,
+.ainbox-add-folder .ainbox-section-item-name {
+  color: var(--text-secondary);
+}
+
+.ainbox-add-folder {
+  margin-top: 0;
+  padding-top: 24px;
+  border-top: 0.5px solid var(--border);
+  height: auto;
+}
+
+/* ——— Group avatar (overlapping) ——— */
+
+.ainbox-group-avatar {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.ainbox-group-avatar-img {
+  position: absolute;
+  top: 0;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1.5px solid var(--bg-surface-elevated-primary);
+}
+
+/* ═══════════════════════════════════════
+   Detail pane
+   ═══════════════════════════════════════ */
+
+.ainbox-detail {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border-radius: 12px;
+}
+
+/* ——— Detail header ——— */
+
+.ainbox-detail-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 2px;
-}
-
-.ainbox-chat-name {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.ainbox-chat-time {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 11px;
-  color: var(--text-disabled);
-  flex-shrink: 0;
-}
-
-.ainbox-chat-preview {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 12px;
-  color: var(--text-secondary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  line-height: 16px;
-}
-
-.ainbox-chat-badge {
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: #2C80FF;
-  color: var(--text-primary);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 10px;
-  font-weight: 600;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Messages panel */
-.ainbox-messages {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.ainbox-messages-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 16px;
+  padding: 0 14px 0 16px;
   border-bottom: 0.5px solid var(--border);
+  flex-shrink: 0;
+  height: 40px;
 }
 
-.ainbox-msg-header-avatar {
-  width: 28px;
-  height: 28px;
+.ainbox-detail-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ainbox-detail-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ainbox-detail-header-avatar {
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   object-fit: cover;
 }
 
-.ainbox-msg-header-name {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+.ainbox-detail-header-meeting-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--background-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ainbox-detail-header-name {
   font-size: 14px;
   font-weight: 500;
   color: var(--text-primary);
-  display: block;
+  letter-spacing: -0.15px;
+  line-height: 20px;
+}
+
+.ainbox-detail-header-subtitle {
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--text-secondary);
+  letter-spacing: 0.12px;
+  line-height: 12px;
+}
+
+.ainbox-detail-header-actions {
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 2px;
+}
+
+/* ——— Facepile (header) ——— */
+
+.ainbox-facepile {
+  display: flex;
+  align-items: center;
+  gap: 0.5px;
+  background: var(--background-primary);
+  border-radius: 8px;
+  padding: 3px;
+  height: 28px;
+}
+
+.ainbox-facepile-faces {
+  display: flex;
+  padding-right: 6px;
+}
+
+.ainbox-facepile-img {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: -6px;
+  border: 1.5px solid var(--bg-surface-elevated-primary);
+}
+
+.ainbox-facepile-img:last-child {
+  margin-right: 0;
+}
+
+.ainbox-facepile-count {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  padding: 0 4px;
+  background: var(--background-primary);
+  border-radius: 4px;
+}
+
+.ainbox-facepile-count span {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-primary);
+  line-height: 16px;
+  text-align: center;
+}
+
+.ainbox-facepile-add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  background: var(--background-primary);
+  border-radius: 4px;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+/* ——— Pinned toolbar ——— */
+
+.ainbox-pinned-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-bottom: 0.5px solid var(--border);
+  flex-shrink: 0;
+  overflow-x: auto;
+}
+
+.ainbox-pinned-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 4px;
+  border-radius: 6px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.ainbox-pinned-item:hover {
+  background: var(--background-primary);
+}
+
+.ainbox-pinned-img {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  object-fit: cover;
+}
+
+.ainbox-pinned-emoji {
+  font-size: 16px;
+  line-height: 16px;
+}
+
+.ainbox-pinned-label {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-secondary);
+  line-height: 16px;
+  white-space: nowrap;
+}
+
+.ainbox-pinned-more {
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 2px;
+  flex-shrink: 0;
+}
+
+/* ——— Detail messages area ——— */
+
+.ainbox-detail-messages {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 16px 32px;
+  min-height: 0;
+}
+
+/* ═══════════════════════════════════════
+   Group messages (flat style)
+   ═══════════════════════════════════════ */
+
+
+.ainbox-group-msg {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  animation: ainbox-msg-in 400ms ease-out;
+}
+
+@keyframes ainbox-msg-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.ainbox-group-msg-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.ainbox-group-msg-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ainbox-group-msg-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ainbox-group-msg-name {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-primary);
+  line-height: 24px;
+  letter-spacing: -0.32px;
+  white-space: nowrap;
+}
+
+.ainbox-group-msg-time {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-secondary);
+  line-height: 20px;
   letter-spacing: -0.15px;
 }
 
-.ainbox-msg-header-members {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 11px;
-  color: var(--text-secondary);
+.ainbox-group-msg-text {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-primary);
+  line-height: 20px;
+  letter-spacing: -0.15px;
 }
 
-.ainbox-messages-list {
-  flex: 1;
-  overflow-y: auto;
-  padding: 16px;
+/* ═══════════════════════════════════════
+   Thread view
+   ═══════════════════════════════════════ */
+
+/* Breadcrumb header */
+.ainbox-thread-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ainbox-breadcrumb-group {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  line-height: 20px;
+  letter-spacing: -0.15px;
+  cursor: pointer;
+}
+
+.ainbox-breadcrumb-group:hover {
+  text-decoration: underline;
+}
+
+.ainbox-breadcrumb-chevron {
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.ainbox-breadcrumb-current {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  line-height: 20px;
+  letter-spacing: -0.15px;
+}
+
+/* Thread messages area */
+.ainbox-thread-messages {
+  gap: 12px;
+}
+
+/* Original message */
+.ainbox-thread-original {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 8px;
+  padding-bottom: 16px;
+  border-bottom: 0.5px solid var(--border);
 }
 
-.ainbox-msg {
+.ainbox-thread-original-top {
   display: flex;
-  gap: 8px;
+  gap: 12px;
   align-items: flex-start;
 }
 
-.ainbox-msg-self {
-  flex-direction: row-reverse;
+.ainbox-thread-original-info {
+  display: flex;
+  flex-direction: column;
 }
 
-.ainbox-msg-avatar {
+.ainbox-thread-original-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 20px;
+  letter-spacing: -0.15px;
+}
+
+.ainbox-thread-original-time {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-secondary);
+  line-height: 20px;
+  letter-spacing: -0.15px;
+}
+
+.ainbox-thread-original-text {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-primary);
+  line-height: 20px;
+  letter-spacing: -0.15px;
+}
+
+/* Reactions */
+.ainbox-reactions {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.ainbox-reaction {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  background: var(--background-primary);
+  border-radius: 14px;
+  cursor: pointer;
+}
+
+.ainbox-reaction-active {
+  background: var(--indigo-600);
+}
+
+.ainbox-reaction-emoji {
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.ainbox-reaction-count {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 16px;
+}
+
+/* ——— Thread indicator ——— */
+
+.ainbox-thread-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  cursor: pointer;
+}
+
+.ainbox-thread-indicator:hover .ainbox-thread-count {
+  text-decoration: underline;
+}
+
+.ainbox-thread-count {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  line-height: 20px;
+  letter-spacing: -0.15px;
+}
+
+.ainbox-thread-last {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-secondary);
+  line-height: 20px;
+  letter-spacing: -0.15px;
+}
+
+/* ═══════════════════════════════════════
+   DM messages (bubble style)
+   ═══════════════════════════════════════ */
+
+.ainbox-dm-messages {
+  gap: 4px;
+  justify-content: flex-end;
+}
+
+.ainbox-dm-msg {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  max-width: 80%;
+  margin-top: 12px;
+  animation: ainbox-msg-in 400ms ease-out;
+}
+
+.ainbox-dm-msg-consecutive {
+  margin-top: 4px;
+}
+
+.ainbox-dm-msg-self {
+  align-items: flex-end;
+  align-self: flex-end;
+}
+
+.ainbox-dm-bubble {
+  padding: 8px 12px;
+  background: var(--background-primary);
+  border-radius: 18px 18px 18px 4px;
+}
+
+.ainbox-dm-bubble p {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-primary);
+  line-height: 20px;
+  letter-spacing: -0.15px;
+}
+
+.ainbox-dm-bubble-self {
+  background: var(--bg-surface-secondary);
+  border-radius: 20px 20px 4px 20px;
+}
+
+.ainbox-dm-bubble-self p {
+  color: var(--text-on-accented);
+}
+
+/* Date separator */
+.ainbox-dm-date {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 8px 0;
+  max-width: 100%;
+  align-self: stretch;
+  margin-top: 8px;
+}
+
+.ainbox-dm-date-line {
+  flex: 1;
+  height: 0;
+  border-top: 0.5px solid var(--border);
+}
+
+.ainbox-dm-date-text {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-primary);
+  line-height: 16px;
+  white-space: nowrap;
+  padding: 4px 12px;
+  border: 0.5px solid var(--border);
+  border-radius: 20px;
+}
+
+/* Wave system message */
+.ainbox-dm-wave {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  align-self: flex-start;
+  margin-top: 8px;
+  max-width: 100%;
+}
+
+.ainbox-dm-wave span:first-child {
+  font-size: 14px;
+  color: var(--text-secondary);
+  letter-spacing: -0.15px;
+  line-height: 20px;
+}
+
+.ainbox-dm-wave-icon {
+  font-size: 16px;
+}
+
+/* ═══════════════════════════════════════
+   Meeting timeline
+   ═══════════════════════════════════════ */
+
+.ainbox-timeline {
+  flex-shrink: 0;
+  background: var(--bg-surface-elevated-secondary);
+  border: 0.5px solid var(--border);
+  border-radius: 12px;
+  margin: 16px;
+  overflow: hidden;
+  box-shadow: var(--shadow-2);
+}
+
+.ainbox-timeline-ruler {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  height: 20px;
+  padding: 0 16px;
+  overflow: hidden;
+}
+
+.ainbox-timeline-dot {
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: var(--text-disabled);
+  flex-shrink: 0;
+}
+
+.ainbox-timeline-tick {
+  width: 0;
+  height: 4px;
+  border-left: 0.5px solid var(--text-disabled);
+  flex-shrink: 0;
+}
+
+.ainbox-timeline-track {
+  position: relative;
+  height: 36px;
+}
+
+.ainbox-timeline-line {
+  position: absolute;
+  top: 50%;
+  left: 24px;
+  right: 24px;
+  height: 0;
+  border-top: 0.5px solid var(--border);
+}
+
+.ainbox-timeline-avatar {
+  position: absolute;
+  top: 8px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+/* ——— DM typing indicator (inline bubble) ——— */
+
+.ainbox-dm-typing {
+  display: flex;
+  align-items: flex-start;
+  margin-top: 12px;
+  animation: ainbox-slide-up 300ms ease-out;
+}
+
+.ainbox-dm-typing-bubble {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 10px 14px;
+  background: var(--background-primary);
+  border-radius: 18px 18px 18px 4px;
+}
+
+@keyframes ainbox-slide-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.ainbox-dm-typing-bubble span {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--text-secondary);
+  animation: ainbox-typing-bounce 1.4s infinite ease-in-out;
+}
+
+.ainbox-dm-typing-bubble span:nth-child(1) { animation-delay: 0s; }
+.ainbox-dm-typing-bubble span:nth-child(2) { animation-delay: 0.2s; }
+.ainbox-dm-typing-bubble span:nth-child(3) { animation-delay: 0.4s; }
+
+/* ═══════════════════════════════════════
+   Typing indicator
+   ═══════════════════════════════════════ */
+
+.ainbox-typing {
+  position: absolute;
+  top: -24px;
+  left: 12px;
+  height: 31px;
+  width: 60px;
+  z-index: 0;
+  animation: ainbox-slide-up 300ms ease-out;
+}
+
+.ainbox-typing-exit {
+  animation: ainbox-slide-down 300ms ease-in forwards;
+}
+
+@keyframes ainbox-slide-down {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(8px); }
+}
+
+.ainbox-typing-face {
+  position: absolute;
   width: 28px;
   height: 28px;
   border-radius: 50%;
   object-fit: cover;
-  flex-shrink: 0;
-  margin-top: 2px;
+  bottom: 0;
+  background: var(--bg-surface-elevated-secondary);
 }
 
-.ainbox-msg-content {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  max-width: 70%;
-}
+.ainbox-typing-face:nth-child(1) { left: 4px; z-index: 3; }
+.ainbox-typing-face:nth-child(2) { left: 26px; z-index: 2; }
+.ainbox-typing-face:nth-child(3) { left: 48px; z-index: 1; }
 
-.ainbox-msg-self .ainbox-msg-content {
-  align-items: flex-end;
-}
-
-.ainbox-msg-sender {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--text-secondary);
-}
-
-.ainbox-msg-bubble {
-  background: var(--bg-secondary);
-  border-radius: 12px 12px 12px 4px;
-  padding: 8px 12px;
-}
-
-.ainbox-msg-bubble-self {
-  background: #2C80FF;
-  border-radius: 12px 12px 4px 12px;
-}
-
-.ainbox-msg-bubble p {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 13px;
-  color: var(--text-primary);
-  line-height: 18px;
-  letter-spacing: -0.1px;
-}
-
-.ainbox-msg-time {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 10px;
-  color: var(--text-disabled);
-}
-
-/* Composer */
-.ainbox-composer {
-  padding: 10px 16px;
-  border-top: 0.5px solid var(--border);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.ainbox-composer-input {
-  flex: 1;
-  background: var(--background-primary);
-  border: 0.5px solid var(--border);
-  border-radius: 10px;
-  padding: 8px 12px;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 13px;
-  color: var(--text-primary);
-  outline: none;
-}
-
-.ainbox-composer-input::placeholder {
-  color: var(--text-disabled);
-}
-
-.ainbox-composer-input:focus {
-  border-color: var(--border-secondary);
-}
-
-.ainbox-send-btn {
-  width: 32px;
-  height: 32px;
+.ainbox-typing-dots {
+  position: absolute;
+  left: 24px;
+  top: -4px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
-  border: none;
-  background: #2C80FF;
-  color: white;
+  background: var(--bg-surface-elevated-secondary);
+  box-shadow: var(--shadow-2);
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 2px;
+  z-index: 4;
+}
+
+.ainbox-typing-dots span {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--text-secondary);
+  animation: ainbox-typing-bounce 1.4s infinite ease-in-out;
+}
+
+.ainbox-typing-dots span:nth-child(1) { animation-delay: 0s; }
+.ainbox-typing-dots span:nth-child(2) { animation-delay: 0.2s; width: 4px; height: 4px; }
+.ainbox-typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes ainbox-typing-bounce {
+  0%, 80%, 100% { opacity: 0.3; }
+  40% { opacity: 1; }
+}
+
+/* ═══════════════════════════════════════
+   Composer
+   ═══════════════════════════════════════ */
+
+.ainbox-composer {
+  padding: 0 8px 8px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 2;
+  background: var(--bg-surface-elevated-primary);
+}
+
+.ainbox-composer-box {
+  position: relative;
+  z-index: 2;
+  background: var(--bg-surface-elevated-primary);
+  border: 0.5px solid var(--border);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+}
+
+.ainbox-composer-field {
+  display: flex;
+  align-items: center;
+  padding: 10px 8px;
+  gap: 10px;
+}
+
+.ainbox-composer-field input {
+  flex: 1;
+  background: none;
+  border: none;
+  font-size: 14px;
+  color: var(--text-primary);
+  line-height: 20px;
+  letter-spacing: -0.15px;
+  outline: none;
+}
+
+.ainbox-composer-field input::placeholder {
+  color: var(--text-disabled);
+}
+
+.ainbox-composer-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  height: 36px;
+}
+
+.ainbox-toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ainbox-toolbar-icon {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-radius: 6px;
+  padding: 2px;
+}
+
+.ainbox-toolbar-icon:hover {
+  background: var(--background-primary);
+}
+
+.ainbox-toolbar-img {
+  width: 16px;
+  height: 16px;
+  opacity: 0.4;
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 6px;
+}
+
+.ainbox-toolbar-img:hover {
+  opacity: 0.7;
+}
+
+.ainbox-send-active {
+  opacity: 1 !important;
+  filter: brightness(2);
+}
+
+.ainbox-toolbar-divider {
+  width: 0;
+  height: 16px;
+  border-left: 0.5px solid var(--border);
+}
+
+.ainbox-toolbar-plus {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--background-primary);
+  border: none;
+  border-radius: 50%;
+  color: var(--text-secondary);
   cursor: pointer;
   flex-shrink: 0;
-  transition: opacity 0.15s;
 }
 
-.ainbox-send-btn:disabled {
-  opacity: 0.3;
-  cursor: default;
-}
-
-.ainbox-send-btn:not(:disabled):hover {
-  opacity: 0.85;
+.ainbox-toolbar-spacer {
+  flex: 1;
 }
