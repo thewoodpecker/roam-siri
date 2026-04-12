@@ -75,7 +75,14 @@ export default function MiniChat({ personName, personAvatar, chatId, position, o
           type: 'dm', name: personName, subtitle: 'Member of Roam HQ',
           avatar: personAvatar,
           messages: [
-            { id: 1, self: false, text: `Hey! 👋 What's up?` },
+            { id: 1, self: false, text: [
+              "Hey! 👋 What's up?",
+              "Hey there! How's it going?",
+              "Hi! Got a minute?",
+              "Hey! Quick question for you.",
+              "Yo! 👋 You around?",
+              "Hey! Hope you're having a good day!",
+            ][Math.floor(Math.random() * 6)] },
           ],
         },
       };

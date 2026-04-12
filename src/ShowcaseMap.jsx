@@ -457,23 +457,30 @@ function ShowcaseMapInner() {
   const [viewedStories, setViewedStories] = useState({});
   // People movement — occasionally move someone between offices and meeting rooms
   const [movements, setMovements] = useState({ removed: {}, added: {}, anim: {} }); // anim: { roomId: 'leaving' | 'arriving' }
-  const [miniChat, setMiniChat] = useState(null);
+  const [miniChats, setMiniChats] = useState([]);
 
   const openMiniChat = (person, e) => {
     const chatId = getChatIdForAvatar(person.avatar);
     if (!chatId) return;
     const rect = e.currentTarget.getBoundingClientRect();
-    // Close existing mini chat if clicking same person, or open new one
-    if (miniChat && miniChat.chatId === chatId) {
-      setMiniChat(null);
-      return;
-    }
-    setMiniChat({
-      personName: person.fullName || person.name,
-      personAvatar: person.avatar,
-      chatId,
-      position: { x: rect.right + 10, y: Math.max(40, rect.top - 100) },
+    setMiniChats(prev => {
+      // Toggle off if already open
+      if (prev.find(c => c.chatId === chatId)) {
+        return prev.filter(c => c.chatId !== chatId);
+      }
+      // Pin to top-right, stacked horizontally
+      const offset = prev.length * 330;
+      return [...prev, {
+        personName: person.fullName || person.name,
+        personAvatar: person.avatar,
+        chatId,
+        position: { x: window.innerWidth - 340 - offset, y: 100 },
+      }];
     });
+  };
+
+  const closeMiniChat = (chatId) => {
+    setMiniChats(prev => prev.filter(c => c.chatId !== chatId));
   };
 
   useEffect(() => {
@@ -804,7 +811,9 @@ function ShowcaseMapInner() {
         </svg>
       </button>
 
-      {miniChat && <MiniChat {...miniChat} onClose={() => setMiniChat(null)} />}
+      {miniChats.map(mc => (
+        <MiniChat key={mc.chatId} {...mc} onClose={() => closeMiniChat(mc.chatId)} />
+      ))}
     </div>
   );
 }

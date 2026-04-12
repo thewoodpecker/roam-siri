@@ -22,8 +22,12 @@
 }
 
 .ainbox-closing {
-  transform: scale(0.95) !important;
-  opacity: 0 !important;
+  animation: ainbox-window-out 200ms ease-in forwards;
+}
+
+@keyframes ainbox-window-out {
+  from { opacity: 1; transform: scale(1); }
+  to   { opacity: 0; transform: scale(0.9) translateY(10px); }
 }
 
 @keyframes ainbox-window-in {
