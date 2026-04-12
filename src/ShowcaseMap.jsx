@@ -470,12 +470,20 @@ function ShowcaseMapInner() {
       // Pin to top-right of miniRoamOS, stacked horizontally
       const containerRect = miniRoamRef.current?.getBoundingClientRect();
       const containerW = containerRect?.width || 1000;
+      const containerH = containerRect?.height || 800;
       const offset = prev.length * 330;
+      let x = containerW - 330 - offset;
+      // Wrap to next row if off-screen left
+      if (x < 10) {
+        const row = Math.floor((-x + 10) / containerW) + 1;
+        x = containerW - 330 - (offset - row * Math.floor(containerW / 330) * 330);
+        if (x < 10) x = 10;
+      }
       return [...prev, {
         personName: person.fullName || person.name,
         personAvatar: person.avatar,
         chatId,
-        position: { x: containerW - 330 - offset, y: 150 },
+        position: { x: Math.max(10, x), y: 150 },
       }];
     });
   };

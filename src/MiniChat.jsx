@@ -118,9 +118,8 @@ export default function MiniChat({ personName, personAvatar, chatId, position, o
     setTimeout(() => inputRef.current?.focus({ preventScroll: true }), 100);
   }, []);
 
-  // Auto-type on open — wait for convo to exist, then fire once
+  // Auto-type on open — fire once after convo exists
   const hasAutoTyped = useRef(false);
-  const autoTimers = useRef([]);
   useEffect(() => {
     if (!convo || hasAutoTyped.current) return;
     hasAutoTyped.current = true;
@@ -130,19 +129,17 @@ export default function MiniChat({ personName, personAvatar, chatId, position, o
         if (!c) return prev;
         return { ...prev, [chatId]: { ...c, typingAvatars: [personAvatar] } };
       });
-      const t2 = setTimeout(() => {
-        setMessages(prev => {
-          const c = prev[chatId];
-          if (!c) return prev;
-          const reply = { id: Date.now() + Math.random(), self: false, text: getReply(chatId) };
-          return { ...prev, [chatId]: { ...c, typingAvatars: null, messages: [...c.messages, reply] } };
-        });
-      }, 2000 + Math.random() * 2000);
-      autoTimers.current.push(t2);
     }, 800 + Math.random() * 1200);
-    autoTimers.current.push(t1);
-    return () => autoTimers.current.forEach(t => clearTimeout(t));
-  }, [convo]);
+    const t2 = setTimeout(() => {
+      setMessages(prev => {
+        const c = prev[chatId];
+        if (!c) return prev;
+        const reply = { id: Date.now() + Math.random(), self: false, text: getReply(chatId) };
+        return { ...prev, [chatId]: { ...c, typingAvatars: null, messages: [...c.messages, reply] } };
+      });
+    }, 3500 + Math.random() * 2000);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, []);
 
   const handleClose = () => {
     setClosing(true);
@@ -158,22 +155,25 @@ export default function MiniChat({ personName, personAvatar, chatId, position, o
     }));
     setInputText('');
 
-    // Auto-reply
-    if (dmTimer.current) clearTimeout(dmTimer.current);
-    dmTimer.current = setTimeout(() => {
+    // Auto-reply — use two independent timers
+    if (dmTimer.current) { dmTimer.current.forEach(t => clearTimeout(t)); }
+    const typingDelay = 800 + Math.random() * 1200;
+    const sendDelay = typingDelay + 1500 + Math.random() * 2500;
+    const rt1 = setTimeout(() => {
       setMessages(prev => ({
         ...prev,
         [chatId]: { ...prev[chatId], typingAvatars: [personAvatar] },
       }));
-      dmTimer.current = setTimeout(() => {
-        setMessages(prev => {
-          const c = prev[chatId];
-          if (!c) return prev;
-          const reply = { id: Date.now() + Math.random(), self: false, text: getReply(chatId) };
-          return { ...prev, [chatId]: { ...c, typingAvatars: null, messages: [...c.messages, reply] } };
-        });
-      }, 1500 + Math.random() * 2500);
-    }, 800 + Math.random() * 1200);
+    }, typingDelay);
+    const rt2 = setTimeout(() => {
+      setMessages(prev => {
+        const c = prev[chatId];
+        if (!c) return prev;
+        const reply = { id: Date.now() + Math.random(), self: false, text: getReply(chatId) };
+        return { ...prev, [chatId]: { ...c, typingAvatars: null, messages: [...c.messages, reply] } };
+      });
+    }, sendDelay);
+    dmTimer.current = [rt1, rt2];
   };
 
   const getDmGroups = (msgs) => {
