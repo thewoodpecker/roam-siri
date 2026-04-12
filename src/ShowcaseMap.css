@@ -444,6 +444,52 @@
   transition: color 0.2s;
   letter-spacing: -0.15px;
   animation: sc-product-in 0.5s ease-out both;
+  position: relative;
+}
+
+.sc-products-item[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 12px);
+  left: 50%;
+  transform: translateX(-50%) translateY(6px);
+  background: var(--bg-surface-elevated-secondary);
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 16px;
+  letter-spacing: -0.1px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 0.5px solid var(--border);
+  box-shadow: var(--shadow-3);
+  white-space: normal;
+  width: 220px;
+  text-align: center;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 200ms ease, transform 200ms ease;
+  z-index: 100;
+}
+
+.sc-products-item[data-tooltip]::before {
+  content: '';
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%) translateY(6px);
+  border: 5px solid transparent;
+  border-top-color: var(--bg-surface-elevated-secondary);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 200ms ease, transform 200ms ease;
+  z-index: 100;
+}
+
+.sc-products-item[data-tooltip]:hover::after,
+.sc-products-item[data-tooltip]:hover::before {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
 }
 
 .sc-products-item:nth-child(1) { animation-delay: 0.8s; }

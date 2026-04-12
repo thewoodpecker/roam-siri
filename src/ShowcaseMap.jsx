@@ -768,10 +768,21 @@ function ShowcaseMapInner() {
       {ainboxWin.isOpen && <AInbox win={ainboxWin} onDrag={makeDragHandler(ainboxWin)} />}
       {/* Product features bar */}
       <div className="sc-products-bar">
-        {['Virtual Office', 'Drop-In Meetings', 'Theater', 'AInbox', 'Lobby', 'Magicast', 'Magic Minutes', 'On-It', 'On-Air', 'Mobile'].map((item, i) => (
-          <React.Fragment key={item}>
+        {[
+          { name: 'Virtual Office', desc: 'See your whole team on a live map. Who\'s here, who\'s meeting, who\'s available — at a glance.' },
+          { name: 'Drop-In Meetings', desc: 'Knock on someone\'s office to start a conversation instantly. No scheduling, no links.' },
+          { name: 'Theater', desc: 'All-hands for 100+ people. Rows, whispers, backstage, and live Q&A — like a real auditorium.' },
+          { name: 'AInbox', desc: 'DMs, group chats, threads, and confidential messages. Custom folders, pinned chats, guest badges.' },
+          { name: 'Lobby', desc: 'Share a booking link. Guests reserve time or drop in if you\'re free. Your calendar, simplified.' },
+          { name: 'Magicast', desc: 'AI screen recorder with picture-in-picture. Record, transcribe, and share presentations instantly.' },
+          { name: 'Magic Minutes', desc: 'AI meeting summaries and transcriptions. Ask follow-up questions. Late? Get an automatic catch-up.' },
+          { name: 'On-It', desc: 'Your AI assistant. Schedules meetings, sends follow-ups, extracts action items — all automatically.' },
+          { name: 'On-Air', desc: 'Host immersive virtual events. Conferences, panels, and gatherings that feel like being there.' },
+          { name: 'Mobile', desc: 'Take your virtual office anywhere. Full Roam experience on iOS and Android.' },
+        ].map((item, i) => (
+          <React.Fragment key={item.name}>
             {i > 0 && <div className="sc-products-dot" />}
-            <span className="sc-products-item" onClick={item === 'AInbox' ? () => ainboxWin.open() : undefined}>{item}</span>
+            <span className="sc-products-item" onClick={item.name === 'AInbox' ? () => ainboxWin.open() : undefined} data-tooltip={item.desc}>{item.name}</span>
           </React.Fragment>
         ))}
       </div>
