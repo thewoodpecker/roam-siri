@@ -17,6 +17,7 @@ const SIDEBAR_SECTIONS = [
     items: [
       { id: 'grace', name: 'Grace Sutherland', avatar: '/headshots/grace-sutherland.jpg', type: 'dm' },
       { id: 'rob', name: 'Rob Figueiredo', avatar: '/headshots/rob-figueiredo.jpg', type: 'dm' },
+      { id: 'thomas', name: 'Thomas Grapperon', avatar: '/headshots/thomas-grapperon.jpg', type: 'dm' },
     ],
   },
   {
@@ -348,40 +349,42 @@ const CONVERSATIONS = {
 
   /* ——— DM: Grace Sutherland ——— */
   grace: {
-    type: 'dm', name: 'Grace Sutherland', subtitle: 'Member of Roam HQ',
+    type: 'dm', name: 'Grace Sutherland', subtitle: 'Design Lead, Tokyo',
     avatar: '/headshots/grace-sutherland.jpg',
     messages: [
-      { id: 1, self: false, text: "I wanted to chat about the new design and engineering project we've been assigned. Have you had a chance to review the initial requirements?", group: 'a' },
-      { id: 2, self: false, text: "I went through the requirements this morning. It looks like the client wants a robust solution that combines both cutting-edge design and innovative engineering. What are your thoughts on the initial approach?", group: 'a' },
-      { id: 3, self: true, text: "Hey, how's it going?" },
+      { id: 1, self: false, text: "Hey! Just got back from the most incredible ramen spot in Shibuya. Tokyo is the best city for food, honestly.", group: 'a' },
+      { id: 2, self: false, text: "Also — cherry blossom season just started here! Went to Ueno Park this morning before work. Absolutely stunning 🌸", group: 'a' },
+      { id: 3, self: true, text: "So jealous! How's the design work going from Tokyo?" },
       { id: 'date', type: 'date', text: 'Wednesday, January 10' },
-      { id: 4, self: false, text: "I wanted to chat about the new design and engineering project we've been assigned. Have you had a chance to review the initial requirements?", group: 'b' },
-      { id: 5, self: false, text: "I went through the requirements this morning. It looks like the client wants a robust solution that combines both cutting-edge design and innovative engineering. What are your thoughts on the initial approach?", group: 'b' },
-      { id: 6, self: true, text: "I think we should start with a strong concept phase. We need to align the design aesthetics with the engineering feasibility. Maybe we can brainstorm some ideas that balance both aspects? How about a meeting later today to start on that?" },
-      { id: 7, self: false, text: "That sounds like a good plan. I was also thinking we should focus on modularity in our design. It would allow us to easily update or modify parts of the project if needed. What do you think?" },
-      { id: 8, self: true, text: "That sounds like a good plan. I was also thinking we should focus on modularity in our design. It would allow us to easily update or modify parts of the project if needed. What do you think?" },
+      { id: 4, self: false, text: "It's amazing honestly. The quiet mornings here are perfect for deep design work. I'm usually 14 hours ahead so I get a solid 4 hours of focus time before anyone's online.", group: 'b' },
+      { id: 5, self: false, text: "The design scene here is so inspiring too. The typography and signage in Harajuku alone could fill a whole mood board.", group: 'b' },
+      { id: 6, self: true, text: "That's awesome. Have you been to any cool design exhibitions?" },
+      { id: 7, self: false, text: "Yes! teamLab Borderless is a must. The way they blend digital art with physical space — it's exactly where design is heading. Also found this amazing kissaten in Shimokitazawa that's perfect for sketching wireframes." },
+      { id: 8, self: true, text: "I need to visit. How's the icon set redesign coming along?" },
       { id: 9, type: 'wave', text: 'Grace waved at you' },
-      { id: 10, self: false, text: "Absolutely. Modularity can offer a lot of flexibility. We should also consider the materials we use, ensuring they are both high-quality and cost-effective. Have you thought about any specific materials or technologies we should explore?" },
+      { id: 10, self: false, text: "Almost done! 48 icons, all on a 16px grid. The attention to detail I see everywhere in Tokyo has definitely influenced my approach — even the convenience stores here have better design than most apps 😂" },
     ],
   },
 
   /* ——— DM: Rob Figueiredo ——— */
   rob: {
-    type: 'dm', name: 'Rob Figueiredo', subtitle: 'Member of Roam HQ',
+    type: 'dm', name: 'Rob Figueiredo', subtitle: 'Engineering at Roam',
     avatar: '/headshots/rob-figueiredo.jpg',
     messages: [
-      { id: 1, self: false, text: 'Can you review the PR when you get a chance?' },
-      { id: 2, self: true, text: "Sure, I'll take a look this afternoon." },
+      { id: 1, self: false, text: "Hey! The Chat API alpha is getting great traction. Three teams already built bots on top of it this week." },
+      { id: 2, self: true, text: "That's awesome! Are the webhook docs ready?" },
+      { id: 3, self: false, text: "Almost — just finishing the event payload examples. The real-time subscription model is really clean." },
     ],
   },
 
   /* ——— DM: Will (favorite) ——— */
   will: {
-    type: 'dm', name: 'Will Hou', subtitle: 'Member of Roam HQ',
+    type: 'dm', name: 'Will Hou', subtitle: 'Android Engineer at Roam',
     avatar: '/headshots/will-hou.jpg',
     messages: [
-      { id: 1, self: false, text: "What happened on the call before?" },
-      { id: 2, self: true, text: "We discussed the new onboarding flow and timeline." },
+      { id: 1, self: false, text: "The new Material You dynamic colors are working perfectly with our design tokens. Android app looks 🔥" },
+      { id: 2, self: true, text: "Nice! How's the battery optimization going?" },
+      { id: 3, self: false, text: "Down 30% background usage. Also — did you see Arsenal beat City last night? Saka was incredible 🔴" },
     ],
   },
 
@@ -390,8 +393,20 @@ const CONVERSATIONS = {
     type: 'dm', name: 'Howard Lerman', subtitle: 'CEO of Roam',
     avatar: '/headshots/howard-lerman.jpg',
     messages: [
-      { id: 1, self: false, text: "Hey, did you get a chance to look at the new office layout?" },
-      { id: 2, self: true, text: "Yeah it looks great! Love the open floor plan concept." },
+      { id: 1, self: false, text: "Hey, been thinking about the product vision. Every action in Roam should make the company smarter — that's the north star." },
+      { id: 2, self: true, text: "Totally agree. The ambient awareness concept is what sets us apart." },
+      { id: 3, self: false, text: "Exactly. Remote work shouldn't feel isolating. When you open Roam, you should feel like you're walking into the office." },
+    ],
+  },
+
+  /* ——— DM: Thomas Grapperon ——— */
+  thomas: {
+    type: 'dm', name: 'Thomas Grapperon', subtitle: 'iOS Engineer at Roam',
+    avatar: '/headshots/thomas-grapperon.jpg',
+    messages: [
+      { id: 1, self: false, text: "The new SwiftUI navigation APIs in iOS 18 are a game changer. NavigationStack with path-based routing is so much cleaner." },
+      { id: 2, self: true, text: "Worth migrating from NavigationView?" },
+      { id: 3, self: false, text: "Absolutely. I've already migrated our chat flow. Also got Live Activities working — your current Roam room shows on the Dynamic Island!" },
     ],
   },
 };
@@ -768,13 +783,72 @@ export default function AInbox({ win, onDrag }) {
 
   const dmTimers = useRef({});
 
-  const DM_REPLIES = [
+  const DM_REPLIES_BY_CHAT = {
+    'howard-fav': [
+      "You know what excites me? Every action in Roam makes the company smarter. That's the vision — work happening in the open.",
+      "I've been thinking about this a lot. Remote work shouldn't feel isolating. Roam needs to feel like you're actually *there* with your team.",
+      "The best companies are built on transparency. That's why the virtual office matters — you can see who's working on what, in real time.",
+      "Let's make sure we're building for the long term here. The product has to be 10x better than the alternative, not just incrementally better.",
+      "I was just talking to a customer who said Roam changed how their entire company communicates. That's why we do this.",
+      "The key insight is that remote teams need ambient awareness. You don't need to be in a meeting to feel connected — just seeing people around is enough.",
+      "We're not just building a chat app. We're rebuilding the office for the internet age. Every feature should reinforce that.",
+      "Great point. Let me loop in the team on this — I want everyone's perspective before we commit.",
+    ],
+    will: [
+      "Hey, quick update on Android — the new Material You theming is looking incredible. Dynamic colors just work.",
+      "Did you catch the Arsenal match last night? Saka was absolutely unreal. That run in the 78th minute!",
+      "Been debugging a tricky ANR on the Android side. The notification channels rewrite is almost done though.",
+      "Arsenal are top of the league and the Android app is top of the Play Store. Good times 😄",
+      "The Kotlin coroutines migration is paying off big time. Background tasks are so much cleaner now.",
+      "Arteta's tactics this season are brilliant. The way Arsenal press from the front reminds me of peak Wenger but with better defense.",
+      "Just shipped the Android widget for Roam. You can see who's in the office right from your home screen.",
+      "COYG! 🔴 Also, the new Compose UI components are looking sharp on the Android build.",
+      "The battery optimization changes reduced background usage by 30%. Also, what a goal from Ødegaard yesterday!",
+      "Working on Bluetooth audio routing for Android. Also — did you see Arsenal's transfer rumors? Could be a big summer.",
+    ],
+    grace: [
+      "Just got back from the most amazing ramen spot in Shibuya. Tokyo never gets old!",
+      "Living in Tokyo has completely changed how I think about design. The attention to detail here is on another level.",
+      "It's cherry blossom season here! I went to Ueno Park this morning before work — absolutely stunning.",
+      "The train system in Tokyo is incredible. I commute to our co-working space in Roppongi and it's always perfectly on time.",
+      "I've been exploring the design scene in Harajuku. The typography and signage here are so inspiring.",
+      "Tokyo at night is something else. The neon, the energy — it feeds directly into my design work.",
+      "Found an amazing kissaten (old-school coffee shop) in Shimokitazawa. Perfect for sketching wireframes.",
+      "The convenience stores here have better design than most apps 😂 7-Eleven in Japan is genuinely well-designed.",
+      "Working across timezones from Tokyo has its challenges, but the quiet mornings here are perfect for deep design work.",
+      "Just visited teamLab Borderless again — the way they blend digital art with physical space is exactly where design is heading.",
+    ],
+    rob: [
+      "Been working on the developer API docs. The Chat API is in alpha but devs are already building bots with it.",
+      "The webhook system is coming together nicely. You can subscribe to real-time events and build automations on top of Roam.",
+      "Just shipped OAuth app support — developers can now build proper integrations that post messages and manage groups.",
+      "The SCIM 2.0 API is live. Enterprise teams can sync users from Okta or Azure AD automatically now.",
+      "I'm excited about the transcript API. Imagine: meeting ends, AI summarizes it, posts to the group — all automated.",
+      "We've got pre-built connectors for GitHub Actions and Zapier. Makes it super easy to pipe CI/CD alerts into Roam.",
+      "The developer experience is a big priority for me. If building on Roam isn't delightful, we've failed.",
+      "Working on rate limiting and pagination for the API. Boring but essential — developers hate flaky APIs.",
+      "The On-Air API lets you create events, manage RSVPs, and track attendance programmatically. Event platforms can build on top of us.",
+      "Someone just built a standup bot using our webhooks. It pings the team every morning and collects responses. Love seeing this.",
+    ],
+    thomas: [
+      "The new Xcode 16 previews are so much faster. Hot reload for SwiftUI is finally usable in complex views.",
+      "I've been experimenting with the Vision framework for our AR features. Apple's spatial computing APIs are incredible.",
+      "Just got the Swift 6 strict concurrency migration working. No more data races — the compiler catches everything now.",
+      "The App Intents framework is underrated. We can expose Roam actions to Siri and Shortcuts with barely any code.",
+      "I love how Apple handles privacy. The new FingerPrint API detection in iOS 18 is exactly the right approach.",
+      "Been using the new Interactive Widgets. You can now join a Roam room directly from the Lock Screen.",
+      "The Metal shader compilation improvements in iOS 18 are huge. Our room transition animations are buttery smooth now.",
+      "Core Data vs SwiftData — I'm still torn. SwiftData is cleaner but Core Data has way more edge case coverage.",
+      "Apple's design language keeps getting more refined. The new SF Symbols 6 set is massive — over 6,000 icons now.",
+      "Just submitted our TestFlight build. The new Live Activities integration shows your current Roam room on the Dynamic Island.",
+    ],
+  };
+
+  const DM_REPLIES_DEFAULT = [
     "That sounds great, let me take a look!",
     "Got it, I'll get back to you shortly.",
-    "Thanks for the heads up!",
     "Sure thing, let's sync on this later today.",
     "Absolutely, I'll send over the details.",
-    "Haha nice! I'll check it out.",
     "Interesting — let me think about that and get back to you.",
     "On it! Give me a few minutes.",
     "Perfect, that works for me.",
@@ -814,7 +888,7 @@ export default function AInbox({ win, onDrag }) {
             const reply = {
               id: Date.now() + Math.random(),
               self: false,
-              text: DM_REPLIES[Math.floor(Math.random() * DM_REPLIES.length)],
+              text: ((DM_REPLIES_BY_CHAT[chatId] || DM_REPLIES_DEFAULT)[Math.floor(Math.random() * (DM_REPLIES_BY_CHAT[chatId] || DM_REPLIES_DEFAULT).length)]),
             };
             return { ...prev, [chatId]: { ...c, typingAvatars: null, messages: [...c.messages, reply] } };
           });
