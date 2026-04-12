@@ -457,7 +457,12 @@ function ShowcaseMapInner() {
   const [viewedStories, setViewedStories] = useState({});
   // People movement — occasionally move someone between offices and meeting rooms
   const [movements, setMovements] = useState({ removed: {}, added: {}, anim: {} }); // anim: { roomId: 'leaving' | 'arriving' }
-  const [miniChat, setMiniChat] = useState(null); // { personName, personAvatar, chatId, position }
+  const [miniChat, setMiniChat] = useState({
+    personName: 'Grace Sutherland',
+    personAvatar: '/headshots/grace-sutherland.jpg',
+    chatId: 'grace',
+    position: { x: 500, y: 200 },
+  });
 
   const openMiniChat = (person, e) => {
     const chatId = getChatIdForAvatar(person.avatar);
@@ -612,9 +617,9 @@ function ShowcaseMapInner() {
       <div className="miniRoamOS" ref={miniRoamRef}>
         <div className="sc-wallpaper sc-wallpaper-dark" style={{ opacity: theme === 'dark' ? 1 : 0 }} />
         <div className="sc-wallpaper sc-wallpaper-light" style={{ opacity: theme === 'light' ? 1 : 0 }} />
-      <div className={`sc-window ${!mapWin.isFocused ? 'sc-window-unfocused' : ''}`} ref={windowRef} style={{ transform: `translate(${mapWin.position.x}px, ${mapWin.position.y}px)`, zIndex: mapWin.zIndex }}>
+      <div className={`sc-window ${!mapWin.isFocused ? 'sc-window-unfocused' : ''}`} ref={windowRef} style={{ transform: `translate(${mapWin.position.x}px, ${mapWin.position.y}px)`, zIndex: mapWin.zIndex }} onMouseDown={() => mapWin.focus()}>
         {/* Mac window title bar */}
-        <div className="sc-titlebar">
+        <div className="sc-titlebar" onMouseDown={makeDragHandler(mapWin)}>
           <div className="sc-traffic-lights">
             <div className="sc-light sc-light-close" />
             <div className="sc-light sc-light-minimize" />
