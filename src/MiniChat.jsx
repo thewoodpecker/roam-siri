@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useChat } from './ChatContext';
 import { TypingIndicator } from './AInbox';
+import { useWindowManager } from './WindowManager';
 import './MiniChat.css';
 
 /* Map avatar paths to chat IDs */
@@ -25,12 +26,11 @@ const AVATAR_TO_CHAT = {
   '/headshots/peter-lerman.jpg': 'peter-mini',
   '/headshots/aaron-wadhwa.jpg': 'aaron-mini',
   '/headshots/mattias-leino.jpg': 'mattias-mini',
-  '/headshots/ava-lee.jpg': 'ava-mini',
   '/headshots/garima-kewlani.jpg': 'garima-mini',
   '/headshots/michael-walrath.jpg': 'walrath-mini',
   '/headshots/john-huffsmith.jpg': 'huffsmith-mini',
   '/headshots/john-beutner.jpg': 'beutner-mini',
-  '/headshots/joe-woodward.jpg': null,
+  '/headshots/joe-woodward.jpg': 'joe-mini',
 };
 
 export function getChatIdForAvatar(avatar) {
@@ -59,6 +59,16 @@ function DmBubble({ msg, isFirstInGroup }) {
 
 export default function MiniChat({ personName, personAvatar, chatId, position, onClose }) {
   const { messages, setMessages, getReply } = useChat();
+  const { state: wmState, register, unregister, focus: wmFocus } = useWindowManager();
+  const wmId = 'mc-' + chatId;
+
+  // Register with window manager on mount
+  useEffect(() => {
+    register(wmId, position);
+    return () => unregister(wmId);
+  }, []);
+
+  const wmWin = wmState.windows[wmId];
   const [inputText, setInputText] = useState('');
   const [closing, setClosing] = useState(false);
   const messagesRef = useRef(null);
@@ -69,20 +79,25 @@ export default function MiniChat({ personName, personAvatar, chatId, position, o
   useEffect(() => {
     setMessages(prev => {
       if (prev[chatId]) return prev;
+      const greeting = [
+        "Hey! 👋 What's up?",
+        "Hey there! How's it going?",
+        "Hi! Got a minute?",
+        "Hey! Quick question for you.",
+        "Yo! 👋 You around?",
+        "Hey! Hope you're having a good day!",
+      ][Math.floor(Math.random() * 6)];
+      // Pre-populate with a short back-and-forth
+      const firstReply = getReply(chatId);
       return {
         ...prev,
         [chatId]: {
           type: 'dm', name: personName, subtitle: 'Member of Roam HQ',
           avatar: personAvatar,
           messages: [
-            { id: 1, self: false, text: [
-              "Hey! 👋 What's up?",
-              "Hey there! How's it going?",
-              "Hi! Got a minute?",
-              "Hey! Quick question for you.",
-              "Yo! 👋 You around?",
-              "Hey! Hope you're having a good day!",
-            ][Math.floor(Math.random() * 6)] },
+            { id: 1, self: false, text: greeting },
+            { id: 2, self: true, text: "Hey! What's new?" },
+            { id: 3, self: false, text: firstReply },
           ],
         },
       };
@@ -103,10 +118,13 @@ export default function MiniChat({ personName, personAvatar, chatId, position, o
     setTimeout(() => inputRef.current?.focus({ preventScroll: true }), 100);
   }, []);
 
-  // Auto-type on open
+  // Auto-type on open — wait for convo to exist, then fire once
+  const hasAutoTyped = useRef(false);
+  const autoTimers = useRef([]);
   useEffect(() => {
-    if (!convo) return;
-    const t = setTimeout(() => {
+    if (!convo || hasAutoTyped.current) return;
+    hasAutoTyped.current = true;
+    const t1 = setTimeout(() => {
       setMessages(prev => {
         const c = prev[chatId];
         if (!c) return prev;
@@ -120,11 +138,11 @@ export default function MiniChat({ personName, personAvatar, chatId, position, o
           return { ...prev, [chatId]: { ...c, typingAvatars: null, messages: [...c.messages, reply] } };
         });
       }, 2000 + Math.random() * 2000);
-      dmTimer.current = t2;
+      autoTimers.current.push(t2);
     }, 800 + Math.random() * 1200);
-    dmTimer.current = t;
-    return () => { if (dmTimer.current) clearTimeout(dmTimer.current); };
-  }, []);
+    autoTimers.current.push(t1);
+    return () => autoTimers.current.forEach(t => clearTimeout(t));
+  }, [convo]);
 
   const handleClose = () => {
     setClosing(true);
@@ -185,7 +203,8 @@ export default function MiniChat({ personName, personAvatar, chatId, position, o
   return (
     <div
       className={`mc-window ${closing ? 'mc-closing' : ''}`}
-      style={{ left: pos.x, top: pos.y, zIndex: 100 }}
+      style={{ left: pos.x, top: pos.y, zIndex: wmWin?.zIndex || 1 }}
+      onMouseDown={() => { wmFocus(wmId); setTimeout(() => inputRef.current?.focus({ preventScroll: true }), 50); }}
     >
       {/* Header / Titlebar */}
       <div className="mc-header" onMouseDown={handleDrag}>

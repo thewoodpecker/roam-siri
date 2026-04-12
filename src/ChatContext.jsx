@@ -16,15 +16,18 @@ export function registerChatData(conversations, repliesByChat, repliesDefault) {
 
 export function ChatProvider({ children }) {
   const [messages, setMessages] = useState(() => _initialConversations);
-  const lastPicked = useRef({});
+  const usedMessages = useRef({});
 
   const pickRandom = (arr, key) => {
     if (!arr || arr.length === 0) return '';
-    if (arr.length <= 1) return arr[0];
-    let idx;
-    do { idx = Math.floor(Math.random() * arr.length); } while (arr[idx] === lastPicked.current[key] && arr.length > 1);
-    lastPicked.current[key] = arr[idx];
-    return arr[idx];
+    if (!usedMessages.current[key]) usedMessages.current[key] = new Set();
+    const used = usedMessages.current[key];
+    // Reset if all used
+    if (used.size >= arr.length) used.clear();
+    const available = arr.filter(m => !used.has(m));
+    const pick = available[Math.floor(Math.random() * available.length)];
+    used.add(pick);
+    return pick;
   };
 
   const getReply = (chatId) => {

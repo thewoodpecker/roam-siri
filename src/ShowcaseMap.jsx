@@ -14,7 +14,7 @@ const CODEX = '#0000FF';
 
 // Real names from headshot filenames
 const SHOWCASE_PEOPLE = [
-  { name: 'Ava L.', avatar: '/headshots/ava-lee.jpg' },
+  { name: 'Joe W.', fullName: 'Joe Woodward', avatar: '/headshots/joe-woodward.jpg' },
   { name: 'Derek C.', avatar: '/headshots/derek-cicerone.jpg' },
   { name: 'John M.', avatar: '/headshots/john-moffa.jpg' },
   { name: 'Jon B.', avatar: '/headshots/jon-brod.jpg' },
@@ -39,7 +39,6 @@ const SHOWCASE_PEOPLE = [
   { name: 'John B.', avatar: '/headshots/john-beutner.jpg' },
   { name: 'Michael M.', avatar: '/headshots/michael-miller.jpg' },
   { name: 'Garima K.', avatar: '/headshots/garima-kewlani.jpg' },
-  { name: 'Joe W.', avatar: '/headshots/joe-woodward.jpg' },
 ];
 
 const p = (name) => SHOWCASE_PEOPLE.find(p => p.name === name) || SHOWCASE_PEOPLE[0];
@@ -47,7 +46,7 @@ const p = (name) => SHOWCASE_PEOPLE.find(p => p.name === name) || SHOWCASE_PEOPL
 // Floor layouts — each floor has its own rooms
 const FLOORS = {
   'R&D': [
-    { id: 'r1', type: 'private', name: 'Ava L.', people: [p('Ava L.')], pos: { col: 0, row: 0 }, span: 1 },
+    { id: 'r1', type: 'private', name: 'Klas L.', people: [p('Klas L.')], pos: { col: 0, row: 0 }, span: 1 },
     { id: 'r2', type: 'private', name: 'Derek C.', people: [p('Derek C.'), p('Michael M.')], pos: { col: 1, row: 0 }, span: 1 },
     { id: 'r3', type: 'private', name: 'John M.', people: [p('John M.')], pos: { col: 2, row: 0 }, span: 1 },
     { id: 'r4', type: 'private', name: 'Howard L.', people: [p('Howard L.')], pos: { col: 3, row: 0 }, span: 1, story: '/story-1.png' },
@@ -61,10 +60,10 @@ const FLOORS = {
     { id: 'r12', type: 'private', name: 'Jeff G.', people: [p('Jeff G.')], pos: { col: 0, row: 2 }, span: 1 },
     { id: 'r13', type: 'private', name: 'Peter L.', people: [p('Peter L.')], pos: { col: 1, row: 2 }, span: 1 },
     { id: 'r14', type: 'private', name: 'Sean M.', people: [p('Sean M.')], pos: { col: 4, row: 2 }, span: 1 },
-    { id: 'r14b', type: 'private', name: 'Klas L.', people: [p('Klas L.')], pos: { col: 5, row: 2 }, span: 1 },
+    { id: 'r14b', type: 'private', name: 'Joe W.', people: [p('Joe W.')], pos: { col: 5, row: 2 }, span: 1 },
     { id: 'r15', type: 'private', name: 'Aaron W.', people: [p('Aaron W.')], pos: { col: 0, row: 3 }, span: 1 },
     { id: 'r16', type: 'game', name: 'Game Room', people: [], pos: { col: 1, row: 3 }, span: 1 },
-    { id: 'alan-kay', type: 'meeting', name: 'Meeting Room', people: [p('Thomas G.'), p('Tom D.'), p('John H.'), p('Garima K.'), p('Joe W.'), p('John B.')], pos: { col: 2, row: 3 }, colSpan: 2, rowSpan: 2 },
+    { id: 'alan-kay', type: 'meeting', name: 'Meeting Room', people: [p('Thomas G.'), p('Tom D.'), p('John H.'), p('Garima K.'), p('John B.')], pos: { col: 2, row: 3 }, colSpan: 2, rowSpan: 2 },
     { id: 'standup', type: 'meeting', name: 'Daily Standup', people: [p('Lexi B.'), p('Will H.'), p('Arnav B.'), p('Mattias L.')], pos: { col: 4, row: 3 }, colSpan: 2, rowSpan: 2 },
   ],
   'Commercial': [
@@ -115,7 +114,7 @@ const FLOORS = {
   ],
   'Executive': [
     // Large boardroom center
-    { id: 'e-board', type: 'meeting', name: 'Boardroom', people: [p('Howard L.'), p('Joe W.'), p('Peter L.'), p('Derek C.'), p('Rob F.')], pos: { col: 1, row: 0 }, colSpan: 4, rowSpan: 2 },
+    { id: 'e-board', type: 'meeting', name: 'Boardroom', people: [p('Keegan L.'), p('Thomas G.'), p('Klas L.'), p('Will H.'), p('Arnav B.')], pos: { col: 1, row: 0 }, colSpan: 4, rowSpan: 2 },
     { id: 'e1', type: 'private', name: 'Howard L.', people: [p('Howard L.')], pos: { col: 0, row: 0 }, span: 1 },
     { id: 'e2', type: 'private', name: 'Joe W.', people: [p('Joe W.')], pos: { col: 5, row: 0 }, span: 1 },
     { id: 'e3', type: 'private', name: 'Peter L.', people: [p('Peter L.')], pos: { col: 0, row: 1 }, span: 1 },
@@ -468,13 +467,15 @@ function ShowcaseMapInner() {
       if (prev.find(c => c.chatId === chatId)) {
         return prev.filter(c => c.chatId !== chatId);
       }
-      // Pin to top-right, stacked horizontally
+      // Pin to top-right of miniRoamOS, stacked horizontally
+      const containerRect = miniRoamRef.current?.getBoundingClientRect();
+      const containerW = containerRect?.width || 1000;
       const offset = prev.length * 330;
       return [...prev, {
         personName: person.fullName || person.name,
         personAvatar: person.avatar,
         chatId,
-        position: { x: window.innerWidth - 340 - offset, y: 100 },
+        position: { x: containerW - 330 - offset, y: 150 },
       }];
     });
   };
@@ -753,6 +754,9 @@ function ShowcaseMapInner() {
         </div>
         {storyViewer && <StoryViewer stories={storyViewer.stories} initialIndex={storyViewer.initialIndex} onClose={() => setStoryViewer(null)} />}
       </div>
+      {miniChats.map(mc => (
+        <MiniChat key={mc.chatId} {...mc} onClose={() => closeMiniChat(mc.chatId)} />
+      ))}
       {ainboxWin.isOpen && <AInbox win={ainboxWin} onDrag={makeDragHandler(ainboxWin)} />}
       {/* Product features bar */}
       <div className="sc-products-bar">
@@ -811,9 +815,6 @@ function ShowcaseMapInner() {
         </svg>
       </button>
 
-      {miniChats.map(mc => (
-        <MiniChat key={mc.chatId} {...mc} onClose={() => closeMiniChat(mc.chatId)} />
-      ))}
     </div>
   );
 }

@@ -3,7 +3,7 @@
    ═══════════════════════════════════════ */
 
 .mc-window {
-  position: fixed;
+  position: absolute;
   width: 320px;
   height: 520px;
   background: rgba(0, 0, 0, 0.3);

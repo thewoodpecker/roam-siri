@@ -6,6 +6,27 @@ function wmReducer(state, action) {
   const win = state.windows[action.id];
 
   switch (action.type) {
+    case 'REGISTER':
+      return {
+        ...state,
+        topZIndex: state.topZIndex + 1,
+        windows: {
+          ...state.windows,
+          [action.id]: {
+            id: action.id,
+            isOpen: true,
+            position: action.position || { x: 0, y: 0 },
+            size: action.size || { width: 320, height: 520 },
+            zIndex: state.topZIndex + 1,
+          },
+        },
+      };
+
+    case 'UNREGISTER': {
+      const { [action.id]: _, ...rest } = state.windows;
+      return { ...state, windows: rest };
+    }
+
     case 'OPEN':
       return {
         ...state,
@@ -70,9 +91,11 @@ export function WindowManagerProvider({ children, initialWindows }) {
   const close = useCallback((id) => dispatch({ type: 'CLOSE', id }), []);
   const focus = useCallback((id) => dispatch({ type: 'FOCUS', id }), []);
   const move = useCallback((id, position) => dispatch({ type: 'MOVE', id, position }), []);
+  const register = useCallback((id, position) => dispatch({ type: 'REGISTER', id, position }), []);
+  const unregister = useCallback((id) => dispatch({ type: 'UNREGISTER', id }), []);
 
   return (
-    <WindowManagerContext.Provider value={{ state, open, close, focus, move }}>
+    <WindowManagerContext.Provider value={{ state, open, close, focus, move, register, unregister }}>
       {children}
     </WindowManagerContext.Provider>
   );
