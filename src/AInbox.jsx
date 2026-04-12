@@ -1,5 +1,93 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useChat } from './ChatContext';
 import './AInbox.css';
+
+export const DM_REPLIES_BY_CHAT = {
+  'howard-fav': [
+    "You know what excites me? Every action in Roam makes the company smarter. That's the vision — The Office That Thinks.",
+    "Remote work shouldn't feel isolating. Roam needs to feel like you're actually *there* with your team. Ambient presence is everything.",
+    "The best companies are built on transparency. That's why the virtual office matters — you can see who's working on what, in real time.",
+    "100% of founders I know running big companies secretly wish they were running small companies again. That's why I keep Roam lean.",
+    "Hot take: I'm convinced ~99% of all workers spend all day on social media. Roam fixes that by making work visible and engaging.",
+    "We're not building a chat app. We're rebuilding the office for the internet age. Zoom + Slack + Calendly = $50/mo. Roam = $19.50. Open ecosystem. Done.",
+    "Founders — avoid taking public political stands. You have zero to gain and half the world to lose. Your company is all that matters.",
+    "I've reached the point where everything feels like an indulgence that steals from another indulgence. Lifting, reading, coding, selling, family time. I just enjoy it all so much. Impossible to choose — so I do it all.",
+    "My daily routine: wake up, weigh in, heavy lifting, fast until noon, 4 hours of IC work, calls, family dinner, hard reading before bed. Same clothes every day — zero decision fatigue.",
+    "Privacy is a fundamental right. What happened with Telegram's founder in France was a terrifying step backwards for humanity.",
+    "The Miami founder energy is unreal right now. We should do a big Roam-sponsored gathering — founders, VCs, builders. Who's in?",
+    "The product has to be 10x better than the alternative, not incrementally better.",
+  ],
+  will: [
+    "Hey, quick update on Android — the new Material You theming is looking incredible. Dynamic colors just work.",
+    "Did you catch the Arsenal match last night? Saka was absolutely unreal. That run in the 78th minute!",
+    "Been debugging a tricky ANR on the Android side. The notification channels rewrite is almost done though.",
+    "Arsenal are top of the league and the Android app is top of the Play Store. Good times 😄",
+    "The Kotlin coroutines migration is paying off big time. Background tasks are so much cleaner now.",
+    "Arteta's tactics this season are brilliant. The way Arsenal press from the front reminds me of peak Wenger but with better defense.",
+    "Just shipped the Android widget for Roam. You can see who's in the office right from your home screen.",
+    "COYG! 🔴 Also, the new Compose UI components are looking sharp on the Android build.",
+    "The battery optimization changes reduced background usage by 30%. Also, what a goal from Ødegaard yesterday!",
+    "Working on Bluetooth audio routing for Android. Also — did you see Arsenal's transfer rumors? Could be a big summer.",
+  ],
+  grace: [
+    "Just got back from the most amazing ramen spot in Shibuya. Tokyo never gets old!",
+    "Living in Tokyo has completely changed how I think about design. The attention to detail here is on another level.",
+    "It's cherry blossom season here! I went to Ueno Park this morning before work — absolutely stunning.",
+    "The train system in Tokyo is incredible. I commute to our co-working space in Roppongi and it's always perfectly on time.",
+    "I've been exploring the design scene in Harajuku. The typography and signage here are so inspiring.",
+    "Tokyo at night is something else. The neon, the energy — it feeds directly into my design work.",
+    "Found an amazing kissaten (old-school coffee shop) in Shimokitazawa. Perfect for sketching wireframes.",
+    "The convenience stores here have better design than most apps 😂 7-Eleven in Japan is genuinely well-designed.",
+    "Working across timezones from Tokyo has its challenges, but the quiet mornings here are perfect for deep design work.",
+    "Just visited teamLab Borderless again — the way they blend digital art with physical space is exactly where design is heading.",
+  ],
+  rob: [
+    "Been working on the developer API docs. The Chat API is in alpha but devs are already building bots with it.",
+    "The webhook system is coming together nicely. You can subscribe to real-time events and build automations on top of Roam.",
+    "Just shipped OAuth app support — developers can now build proper integrations that post messages and manage groups.",
+    "The SCIM 2.0 API is live. Enterprise teams can sync users from Okta or Azure AD automatically now.",
+    "I'm excited about the transcript API. Imagine: meeting ends, AI summarizes it, posts to the group — all automated.",
+    "We've got pre-built connectors for GitHub Actions and Zapier. Makes it super easy to pipe CI/CD alerts into Roam.",
+    "The developer experience is a big priority for me. If building on Roam isn't delightful, we've failed.",
+    "Working on rate limiting and pagination for the API. Boring but essential — developers hate flaky APIs.",
+    "The On-Air API lets you create events, manage RSVPs, and track attendance programmatically. Event platforms can build on top of us.",
+    "Someone just built a standup bot using our webhooks. It pings the team every morning and collects responses. Love seeing this.",
+  ],
+  thomas: [
+    "The new Xcode 16 previews are so much faster. Hot reload for SwiftUI is finally usable in complex views.",
+    "I've been experimenting with the Vision framework for our AR features. Apple's spatial computing APIs are incredible.",
+    "Just got the Swift 6 strict concurrency migration working. No more data races — the compiler catches everything now.",
+    "The App Intents framework is underrated. We can expose Roam actions to Siri and Shortcuts with barely any code.",
+    "Been using the new Interactive Widgets. You can now join a Roam room directly from the Lock Screen.",
+    "The Metal shader compilation improvements in iOS 18 are huge. Our room transition animations are buttery smooth now.",
+    "Core Data vs SwiftData — I'm still torn. SwiftData is cleaner but Core Data has way more edge case coverage.",
+    "Apple's design language keeps getting more refined. The new SF Symbols 6 set is massive — over 6,000 icons now.",
+    "Just submitted our TestFlight build. The new Live Activities integration shows your current Roam room on the Dynamic Island.",
+  ],
+  lexi: [
+    "Our customers love the drop-in meetings feature. One team told me it cut their meeting scheduling time by 80%!",
+    "Did you know Roam has a free tier? You can get your whole team on it today — no credit card needed.",
+    "I just closed a deal with a 200-person company. They switched from Slack + Zoom to Roam and saved $40K/year!",
+    "The Theater feature is a game changer for all-hands. One client runs their entire company meeting in Roam now.",
+    "Want me to set up a quick demo? I can show you the virtual office, AInbox, drop-in meetings — the whole suite.",
+    "Teams using Roam see 3x better retention than those using traditional chat tools. It's the ambient presence that does it.",
+    "The guest badge feature is huge for sales teams. You can invite prospects into your Roam office for a meeting — for free!",
+    "I had a customer tell me that Roam makes remote work actually feel fun. That's the best compliment we can get.",
+    "Enterprise SSO and SCIM provisioning are live now. Makes onboarding large teams a breeze.",
+    "The AInbox you're using right now? Customers consistently rank it as their favorite feature. Group chats, threads, DMs — all in one place.",
+  ],
+};
+
+export const DM_REPLIES_DEFAULT = [
+  "That sounds great, let me take a look!",
+  "Got it, I'll get back to you shortly.",
+  "Sure thing, let's sync on this later today.",
+  "Absolutely, I'll send over the details.",
+  "Interesting — let me think about that and get back to you.",
+  "On it! Give me a few minutes.",
+  "Perfect, that works for me.",
+  "Great idea, let's do it.",
+];
 
 /* ———————————————————————————————————————
    Data
@@ -18,6 +106,7 @@ const SIDEBAR_SECTIONS = [
       { id: 'grace', name: 'Grace Sutherland', avatar: '/headshots/grace-sutherland.jpg', type: 'dm' },
       { id: 'rob', name: 'Rob Figueiredo', avatar: '/headshots/rob-figueiredo.jpg', type: 'dm' },
       { id: 'thomas', name: 'Thomas Grapperon', avatar: '/headshots/thomas-grapperon.jpg', type: 'dm' },
+      { id: 'lexi', name: 'Lexi Bohonnon', avatar: '/headshots/lexi-bohonnon.jpg', type: 'dm' },
     ],
   },
   {
@@ -47,7 +136,7 @@ const SIDEBAR_SECTIONS = [
   },
 ];
 
-const CONVERSATIONS = {
+export const INITIAL_CONVERSATIONS = {
   /* ——— Group: Design ——— */
   design: {
     type: 'group', name: 'Design', memberCount: 35,
@@ -393,9 +482,9 @@ const CONVERSATIONS = {
     type: 'dm', name: 'Howard Lerman', subtitle: 'CEO of Roam',
     avatar: '/headshots/howard-lerman.jpg',
     messages: [
-      { id: 1, self: false, text: "Hey, been thinking about the product vision. Every action in Roam should make the company smarter — that's the north star." },
-      { id: 2, self: true, text: "Totally agree. The ambient awareness concept is what sets us apart." },
-      { id: 3, self: false, text: "Exactly. Remote work shouldn't feel isolating. When you open Roam, you should feel like you're walking into the office." },
+      { id: 1, self: false, text: "Been thinking a lot about this — every founder I know running a big company secretly wishes they were running a small one again. That's why I keep Roam lean. Small team, big ambition." },
+      { id: 2, self: true, text: "Makes sense. How do you stay so productive with everything going on?" },
+      { id: 3, self: false, text: "Discipline and subtraction. Same clothes every day — zero decision fatigue. Heavy lifting at 6am, fast until noon, 4 hours of deep IC work, then calls. Hard reading before bed. Every day. The routine IS the superpower." },
     ],
   },
 
@@ -407,6 +496,17 @@ const CONVERSATIONS = {
       { id: 1, self: false, text: "The new SwiftUI navigation APIs in iOS 18 are a game changer. NavigationStack with path-based routing is so much cleaner." },
       { id: 2, self: true, text: "Worth migrating from NavigationView?" },
       { id: 3, self: false, text: "Absolutely. I've already migrated our chat flow. Also got Live Activities working — your current Roam room shows on the Dynamic Island!" },
+    ],
+  },
+
+  /* ——— DM: Lexi Bohonnon ——— */
+  lexi: {
+    type: 'dm', name: 'Lexi Bohonnon', subtitle: 'Sales at Roam',
+    avatar: '/headshots/lexi-bohonnon.jpg',
+    messages: [
+      { id: 1, self: false, text: "Hey! 👋 Welcome to Roam. Have you had a chance to explore the virtual office yet? I'd love to give you the full tour!" },
+      { id: 2, self: true, text: "Not yet — what makes it different?" },
+      { id: 3, self: false, text: "Great question! Unlike Slack or Teams, Roam gives you a persistent virtual office where you can see your whole team, drop into meetings instantly, and collaborate like you're actually in the same building. No more scheduling just to have a quick chat!" },
     ],
   },
 };
@@ -523,30 +623,26 @@ function MeetingTimeline({ timeline }) {
    Typing indicator
 ——————————————————————————————————————— */
 function TypingIndicator({ avatars }) {
-  const [visible, setVisible] = useState(false);
-  const [currentAvatars, setCurrentAvatars] = useState(null);
-  const [exiting, setExiting] = useState(false);
+  const [state, setState] = useState({ show: false, exiting: false, srcs: null });
+  const wasShowing = useRef(false);
 
   useEffect(() => {
-    if (avatars && avatars.length > 0 && avatars[0]) {
-      setCurrentAvatars(avatars);
-      setExiting(false);
-      setVisible(true);
-    } else if (visible) {
-      setExiting(true);
-      const t = setTimeout(() => {
-        setVisible(false);
-        setExiting(false);
-        setCurrentAvatars(null);
-      }, 300);
+    const hasAvatars = avatars && avatars.length > 0 && avatars[0];
+    if (hasAvatars) {
+      wasShowing.current = true;
+      setState({ show: true, exiting: false, srcs: avatars });
+    } else if (wasShowing.current) {
+      wasShowing.current = false;
+      setState(prev => ({ ...prev, exiting: true }));
+      const t = setTimeout(() => setState({ show: false, exiting: false, srcs: null }), 300);
       return () => clearTimeout(t);
     }
   }, [avatars]);
 
-  if (!visible || !currentAvatars) return null;
+  if (!state.show || !state.srcs) return null;
   return (
-    <div className={`ainbox-typing ${exiting ? 'ainbox-typing-exit' : ''}`}>
-      {currentAvatars.slice(0, 3).filter(Boolean).map((src, i) => (
+    <div className={`ainbox-typing ${state.exiting ? 'ainbox-typing-exit' : ''}`}>
+      {state.srcs.slice(0, 3).filter(Boolean).map((src, i) => (
         <img key={i} src={src} alt="" className="ainbox-typing-face" />
       ))}
       <div className="ainbox-typing-dots">
@@ -631,11 +727,12 @@ export default function AInbox({ win, onDrag }) {
   const [selectedChat, setSelectedChat] = useState('design');
   const [collapsedSections, setCollapsedSections] = useState({});
   const [inputText, setInputText] = useState('');
-  const [messages, setMessages] = useState(CONVERSATIONS);
+  const { messages, setMessages, pickRandom, getReply } = useChat();
   const [closing, setClosing] = useState(false);
   // threadView: null or { chatId, messageId }
   const [threadView, setThreadView] = useState(null);
   const messagesRef = useRef(null);
+  const composerInputRef = useRef(null);
   const shouldScroll = useRef(false);
 
   const handleClose = () => {
@@ -678,6 +775,42 @@ export default function AInbox({ win, onDrag }) {
       messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
     }
     hasRendered.current = true;
+  }, [selectedChat]);
+
+  // Focus composer on chat change
+  useEffect(() => {
+    setTimeout(() => composerInputRef.current?.focus(), 50);
+  }, [selectedChat]);
+
+  // Auto-type in DMs when opening a conversation
+  const dmAutoTypeRef = useRef(null);
+  useEffect(() => {
+    if (dmAutoTypeRef.current) clearTimeout(dmAutoTypeRef.current);
+    const convoData = messages[selectedChat];
+    if (!convoData || convoData.type !== 'dm') return;
+    // Show typing after a brief pause
+    dmAutoTypeRef.current = setTimeout(() => {
+      setMessages(prev => {
+        const c = prev[selectedChat];
+        if (!c || c.type !== 'dm') return prev;
+        return { ...prev, [selectedChat]: { ...c, typingAvatars: [c.avatar] } };
+      });
+      // Send message after typing
+      dmAutoTypeRef.current = setTimeout(() => {
+        setMessages(prev => {
+          const c = prev[selectedChat];
+          if (!c || c.type !== 'dm') return prev;
+          const reply = {
+            id: Date.now() + Math.random(),
+            self: false,
+            text: getReply(selectedChat),
+          };
+          return { ...prev, [selectedChat]: { ...c, typingAvatars: null, messages: [...c.messages, reply] } };
+        });
+        shouldScroll.current = true;
+      }, 2000 + Math.random() * 2000);
+    }, 800 + Math.random() * 1200);
+    return () => { if (dmAutoTypeRef.current) clearTimeout(dmAutoTypeRef.current); };
   }, [selectedChat]);
 
   // Continuous auto-chat across all group conversations
@@ -739,7 +872,7 @@ export default function AInbox({ win, onDrag }) {
       const timer = setTimeout(() => {
         if (typing[chatId]) return; // already typing, skip
         const people = AUTO_PEOPLE[chatId];
-        const person = people[Math.floor(Math.random() * people.length)];
+        const person = pickRandom(people, 'person-' + chatId);
         typing[chatId] = person;
         // Show typing indicator
         setMessages(prev => {
@@ -759,7 +892,7 @@ export default function AInbox({ win, onDrag }) {
               sender: p.name,
               avatar: p.avatar,
               time: 'Just now',
-              text: AUTO_MESSAGES[Math.floor(Math.random() * AUTO_MESSAGES.length)],
+              text: pickRandom(AUTO_MESSAGES, 'msg-' + chatId),
             };
             return { ...prev, [chatId]: { ...convo, typingAvatars: null, messages: [...convo.messages, msg] } };
           });
@@ -782,78 +915,6 @@ export default function AInbox({ win, onDrag }) {
   const convo = messages[selectedChat];
 
   const dmTimers = useRef({});
-
-  const DM_REPLIES_BY_CHAT = {
-    'howard-fav': [
-      "You know what excites me? Every action in Roam makes the company smarter. That's the vision — work happening in the open.",
-      "I've been thinking about this a lot. Remote work shouldn't feel isolating. Roam needs to feel like you're actually *there* with your team.",
-      "The best companies are built on transparency. That's why the virtual office matters — you can see who's working on what, in real time.",
-      "Let's make sure we're building for the long term here. The product has to be 10x better than the alternative, not just incrementally better.",
-      "I was just talking to a customer who said Roam changed how their entire company communicates. That's why we do this.",
-      "The key insight is that remote teams need ambient awareness. You don't need to be in a meeting to feel connected — just seeing people around is enough.",
-      "We're not just building a chat app. We're rebuilding the office for the internet age. Every feature should reinforce that.",
-      "Great point. Let me loop in the team on this — I want everyone's perspective before we commit.",
-    ],
-    will: [
-      "Hey, quick update on Android — the new Material You theming is looking incredible. Dynamic colors just work.",
-      "Did you catch the Arsenal match last night? Saka was absolutely unreal. That run in the 78th minute!",
-      "Been debugging a tricky ANR on the Android side. The notification channels rewrite is almost done though.",
-      "Arsenal are top of the league and the Android app is top of the Play Store. Good times 😄",
-      "The Kotlin coroutines migration is paying off big time. Background tasks are so much cleaner now.",
-      "Arteta's tactics this season are brilliant. The way Arsenal press from the front reminds me of peak Wenger but with better defense.",
-      "Just shipped the Android widget for Roam. You can see who's in the office right from your home screen.",
-      "COYG! 🔴 Also, the new Compose UI components are looking sharp on the Android build.",
-      "The battery optimization changes reduced background usage by 30%. Also, what a goal from Ødegaard yesterday!",
-      "Working on Bluetooth audio routing for Android. Also — did you see Arsenal's transfer rumors? Could be a big summer.",
-    ],
-    grace: [
-      "Just got back from the most amazing ramen spot in Shibuya. Tokyo never gets old!",
-      "Living in Tokyo has completely changed how I think about design. The attention to detail here is on another level.",
-      "It's cherry blossom season here! I went to Ueno Park this morning before work — absolutely stunning.",
-      "The train system in Tokyo is incredible. I commute to our co-working space in Roppongi and it's always perfectly on time.",
-      "I've been exploring the design scene in Harajuku. The typography and signage here are so inspiring.",
-      "Tokyo at night is something else. The neon, the energy — it feeds directly into my design work.",
-      "Found an amazing kissaten (old-school coffee shop) in Shimokitazawa. Perfect for sketching wireframes.",
-      "The convenience stores here have better design than most apps 😂 7-Eleven in Japan is genuinely well-designed.",
-      "Working across timezones from Tokyo has its challenges, but the quiet mornings here are perfect for deep design work.",
-      "Just visited teamLab Borderless again — the way they blend digital art with physical space is exactly where design is heading.",
-    ],
-    rob: [
-      "Been working on the developer API docs. The Chat API is in alpha but devs are already building bots with it.",
-      "The webhook system is coming together nicely. You can subscribe to real-time events and build automations on top of Roam.",
-      "Just shipped OAuth app support — developers can now build proper integrations that post messages and manage groups.",
-      "The SCIM 2.0 API is live. Enterprise teams can sync users from Okta or Azure AD automatically now.",
-      "I'm excited about the transcript API. Imagine: meeting ends, AI summarizes it, posts to the group — all automated.",
-      "We've got pre-built connectors for GitHub Actions and Zapier. Makes it super easy to pipe CI/CD alerts into Roam.",
-      "The developer experience is a big priority for me. If building on Roam isn't delightful, we've failed.",
-      "Working on rate limiting and pagination for the API. Boring but essential — developers hate flaky APIs.",
-      "The On-Air API lets you create events, manage RSVPs, and track attendance programmatically. Event platforms can build on top of us.",
-      "Someone just built a standup bot using our webhooks. It pings the team every morning and collects responses. Love seeing this.",
-    ],
-    thomas: [
-      "The new Xcode 16 previews are so much faster. Hot reload for SwiftUI is finally usable in complex views.",
-      "I've been experimenting with the Vision framework for our AR features. Apple's spatial computing APIs are incredible.",
-      "Just got the Swift 6 strict concurrency migration working. No more data races — the compiler catches everything now.",
-      "The App Intents framework is underrated. We can expose Roam actions to Siri and Shortcuts with barely any code.",
-      "I love how Apple handles privacy. The new FingerPrint API detection in iOS 18 is exactly the right approach.",
-      "Been using the new Interactive Widgets. You can now join a Roam room directly from the Lock Screen.",
-      "The Metal shader compilation improvements in iOS 18 are huge. Our room transition animations are buttery smooth now.",
-      "Core Data vs SwiftData — I'm still torn. SwiftData is cleaner but Core Data has way more edge case coverage.",
-      "Apple's design language keeps getting more refined. The new SF Symbols 6 set is massive — over 6,000 icons now.",
-      "Just submitted our TestFlight build. The new Live Activities integration shows your current Roam room on the Dynamic Island.",
-    ],
-  };
-
-  const DM_REPLIES_DEFAULT = [
-    "That sounds great, let me take a look!",
-    "Got it, I'll get back to you shortly.",
-    "Sure thing, let's sync on this later today.",
-    "Absolutely, I'll send over the details.",
-    "Interesting — let me think about that and get back to you.",
-    "On it! Give me a few minutes.",
-    "Perfect, that works for me.",
-    "Great idea, let's do it.",
-  ];
 
   const sendMessage = () => {
     if (!inputText.trim() || !convo) return;
@@ -888,7 +949,7 @@ export default function AInbox({ win, onDrag }) {
             const reply = {
               id: Date.now() + Math.random(),
               self: false,
-              text: ((DM_REPLIES_BY_CHAT[chatId] || DM_REPLIES_DEFAULT)[Math.floor(Math.random() * (DM_REPLIES_BY_CHAT[chatId] || DM_REPLIES_DEFAULT).length)]),
+              text: getReply(chatId),
             };
             return { ...prev, [chatId]: { ...c, typingAvatars: null, messages: [...c.messages, reply] } };
           });
@@ -988,7 +1049,7 @@ export default function AInbox({ win, onDrag }) {
                           if (item.threadRef) {
                             setSelectedChat(item.threadRef.chatId);
                             openThread(item.threadRef.chatId, item.threadRef.messageId);
-                          } else if (CONVERSATIONS[item.id]) {
+                          } else if (messages[item.id]) {
                             setSelectedChat(item.id);
                             setThreadView(null);
                           }
@@ -1173,6 +1234,7 @@ export default function AInbox({ win, onDrag }) {
             <div className="ainbox-composer-box">
               <div className="ainbox-composer-field">
                 <input
+                  ref={composerInputRef}
                   placeholder="Write a Message..."
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}

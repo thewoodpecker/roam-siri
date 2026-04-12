@@ -1,0 +1,222 @@
+/* ═══════════════════════════════════════
+   MiniChat window
+   ═══════════════════════════════════════ */
+
+.mc-window {
+  position: absolute;
+  width: 320px;
+  height: 420px;
+  background: var(--bg-surface-elevated-primary);
+  border: 0.5px solid var(--border);
+  border-radius: 16px;
+  corner-shape: superellipse;
+  corner-shape: superellipse(1.6);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: var(--shadow-5);
+  animation: mc-in 250ms ease-out;
+}
+
+.mc-closing {
+  animation: mc-out 200ms ease-in forwards;
+}
+
+@keyframes mc-in {
+  from { opacity: 0; transform: scale(0.9) translateY(10px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes mc-out {
+  from { opacity: 1; transform: scale(1); }
+  to   { opacity: 0; transform: scale(0.9) translateY(10px); }
+}
+
+/* Header */
+.mc-header {
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  height: 36px;
+  flex-shrink: 0;
+  position: relative;
+  cursor: default;
+  border-bottom: 0.5px solid var(--border);
+}
+
+.mc-traffic-lights {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.mc-light {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.mc-light-close { background: #FF5F57; cursor: pointer; }
+.mc-light-minimize { background: #FEBC2E; }
+.mc-light-maximize { background: #28C840; }
+
+.mc-header-center {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mc-header-avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.mc-header-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  letter-spacing: -0.15px;
+  white-space: nowrap;
+}
+
+/* Messages */
+.mc-messages {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  min-height: 0;
+}
+
+.mc-msg {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  max-width: 85%;
+  margin-top: 8px;
+  animation: mc-msg-in 300ms ease-out;
+}
+
+.mc-msg-consecutive {
+  margin-top: 3px;
+}
+
+.mc-msg-self {
+  align-items: flex-end;
+  align-self: flex-end;
+}
+
+.mc-bubble {
+  padding: 8px 12px;
+  background: var(--background-primary);
+}
+
+.mc-bubble p {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-primary);
+  line-height: 18px;
+  letter-spacing: -0.1px;
+}
+
+.mc-bubble-self {
+  background: var(--bg-surface-secondary);
+}
+
+.mc-bubble-self p {
+  color: var(--text-on-accented);
+}
+
+.mc-wave {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+  align-self: flex-start;
+}
+
+@keyframes mc-msg-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Typing */
+.mc-typing-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px 8px;
+  animation: mc-msg-in 300ms ease-out;
+}
+
+.mc-typing-avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.mc-typing-dots {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 6px 10px;
+  background: var(--background-primary);
+  border-radius: 12px;
+}
+
+.mc-typing-dots span {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--text-secondary);
+  animation: ainbox-typing-bounce 1.4s infinite ease-in-out;
+}
+
+.mc-typing-dots span:nth-child(1) { animation-delay: 0s; }
+.mc-typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+.mc-typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+/* Composer */
+.mc-composer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-top: 0.5px solid var(--border);
+  flex-shrink: 0;
+}
+
+.mc-composer input {
+  flex: 1;
+  background: none;
+  border: none;
+  font-size: 13px;
+  color: var(--text-primary);
+  line-height: 18px;
+  outline: none;
+}
+
+.mc-composer input::placeholder {
+  color: var(--text-disabled);
+}
+
+.mc-send {
+  color: var(--text-disabled);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.mc-send-active {
+  color: var(--text-primary);
+}

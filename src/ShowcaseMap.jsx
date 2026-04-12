@@ -3,6 +3,8 @@ import React, { useEffect, useState, useRef, useMemo } from 'react';
 import SiriGlow from './SiriGlow';
 import Navbar from './Navbar';
 import AInbox from './AInbox';
+import MiniChat, { getChatIdForAvatar } from './MiniChat';
+import { ChatProvider } from './ChatContext';
 import { WindowManagerProvider, useWindow } from './WindowManager';
 import StoryViewer from './StoryViewer';
 import './ShowcaseMap.css';
@@ -269,7 +271,7 @@ function PrivateRoomCard({ room, storyBubble }) {
             <div className="private-office-seat">
               <div className="seat-row seat-row-hovered">
                 {room.people.map((person, i) => (
-                  <div key={person.name + i} className="seat-assigned sc-private-person">
+                  <div key={person.name + i} className="seat-assigned sc-private-person" onClick={(e) => openMiniChat(person, e)} style={{ cursor: getChatIdForAvatar(person.avatar) ? 'pointer' : 'default' }}>
                     <img className="seat-avatar" src={person.avatar} alt={person.name} />
                     <span className="seat-nametag">{person.name}</span>
                     {hasTalk && <div className={`sc-private-talk-ring ${talking[person.name] ? 'sc-talking' : ''}`} />}
@@ -339,7 +341,7 @@ function MeetingRoomCardShowcase({ room }) {
           </div>
           <div className="meeting-room-people">
             {room.people.map((person, i) => (
-              <div key={person.name + i} className={`person meeting-room-person ${person._new ? 'sc-person-arriving' : ''}`}>
+              <div key={person.name + i} className={`person meeting-room-person ${person._new ? 'sc-person-arriving' : ''}`} onClick={(e) => openMiniChat(person, e)} style={{ cursor: getChatIdForAvatar(person.avatar) ? 'pointer' : 'default' }}>
                 <img className="avatar" src={person.avatar} alt={person.name} />
                 <div className={`avatar-inner-glow ${talking[person.name] ? 'sc-talking' : 'glow-off'}`} />
               </div>
@@ -421,9 +423,11 @@ const INITIAL_WINDOWS = [
 // Main showcase component
 export default function ShowcaseMap() {
   return (
-    <WindowManagerProvider initialWindows={INITIAL_WINDOWS}>
-      <ShowcaseMapInner />
-    </WindowManagerProvider>
+    <ChatProvider>
+      <WindowManagerProvider initialWindows={INITIAL_WINDOWS}>
+        <ShowcaseMapInner />
+      </WindowManagerProvider>
+    </ChatProvider>
   );
 }
 
@@ -453,6 +457,20 @@ function ShowcaseMapInner() {
   const [viewedStories, setViewedStories] = useState({});
   // People movement — occasionally move someone between offices and meeting rooms
   const [movements, setMovements] = useState({ removed: {}, added: {}, anim: {} }); // anim: { roomId: 'leaving' | 'arriving' }
+  const [miniChat, setMiniChat] = useState(null); // { personName, personAvatar, chatId, position }
+
+  const openMiniChat = (person, e) => {
+    const chatId = getChatIdForAvatar(person.avatar);
+    if (!chatId) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const mapRect = miniRoamRef.current?.getBoundingClientRect() || { left: 0, top: 0 };
+    setMiniChat({
+      personName: person.fullName || person.name,
+      personAvatar: person.avatar,
+      chatId,
+      position: { x: rect.right - mapRect.left + 10, y: rect.top - mapRect.top - 50 },
+    });
+  };
 
   useEffect(() => {
     const floor = FLOORS[activeFloor];
@@ -724,6 +742,7 @@ function ShowcaseMapInner() {
         {storyViewer && <StoryViewer stories={storyViewer.stories} initialIndex={storyViewer.initialIndex} onClose={() => setStoryViewer(null)} />}
       </div>
       {ainboxWin.isOpen && <AInbox win={ainboxWin} onDrag={makeDragHandler(ainboxWin)} />}
+      {miniChat && <MiniChat {...miniChat} onClose={() => setMiniChat(null)} />}
       {/* Product features bar */}
       <div className="sc-products-bar">
         {['Virtual Office', 'Drop-In Meetings', 'Theater', 'AInbox', 'Lobby', 'Magicast', 'Magic Minutes', 'On-It', 'On-Air', 'Mobile'].map((item, i) => (
