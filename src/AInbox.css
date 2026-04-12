@@ -17,9 +17,7 @@
   transition: transform 200ms ease-in, opacity 200ms ease-in;
   box-shadow:
     0 0 0 0.5px var(--border),
-    0 25px 80px var(--sc-window-shadow-1, rgba(0,0,0,0.5)),
-    0 10px 30px var(--sc-window-shadow-2, rgba(0,0,0,0.3)),
-    0 4px 12px var(--sc-window-shadow-3, rgba(0,0,0,0.2));
+    var(--shadow-5);
 }
 
 .ainbox-closing {
