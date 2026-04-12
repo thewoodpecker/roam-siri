@@ -123,13 +123,15 @@ export default function MiniChat({ personName, personAvatar, chatId, position, o
   useEffect(() => {
     if (!convo || hasAutoTyped.current) return;
     hasAutoTyped.current = true;
+    const typingDelay = 800 + Math.random() * 1200;
+    const sendDelay = typingDelay + 2000 + Math.random() * 2000;
     const t1 = setTimeout(() => {
       setMessages(prev => {
         const c = prev[chatId];
         if (!c) return prev;
         return { ...prev, [chatId]: { ...c, typingAvatars: [personAvatar] } };
       });
-    }, 800 + Math.random() * 1200);
+    }, typingDelay);
     const t2 = setTimeout(() => {
       setMessages(prev => {
         const c = prev[chatId];
@@ -137,9 +139,9 @@ export default function MiniChat({ personName, personAvatar, chatId, position, o
         const reply = { id: Date.now() + Math.random(), self: false, text: getReply(chatId) };
         return { ...prev, [chatId]: { ...c, typingAvatars: null, messages: [...c.messages, reply] } };
       });
-    }, 3500 + Math.random() * 2000);
+    }, sendDelay);
     return () => { clearTimeout(t1); clearTimeout(t2); };
-  }, []);
+  }, [convo != null]);
 
   const handleClose = () => {
     setClosing(true);
