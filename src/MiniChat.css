@@ -3,7 +3,7 @@
    ═══════════════════════════════════════ */
 
 .mc-window {
-  position: absolute;
+  position: fixed;
   width: 320px;
   height: 420px;
   background: var(--bg-surface-elevated-primary);

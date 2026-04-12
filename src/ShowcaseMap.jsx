@@ -460,15 +460,15 @@ function ShowcaseMapInner() {
   const [miniChat, setMiniChat] = useState(null); // { personName, personAvatar, chatId, position }
 
   const openMiniChat = (person, e) => {
+    e.stopPropagation();
     const chatId = getChatIdForAvatar(person.avatar);
     if (!chatId) return;
     const rect = e.currentTarget.getBoundingClientRect();
-    const mapRect = miniRoamRef.current?.getBoundingClientRect() || { left: 0, top: 0 };
     setMiniChat({
       personName: person.fullName || person.name,
       personAvatar: person.avatar,
       chatId,
-      position: { x: rect.right - mapRect.left + 10, y: rect.top - mapRect.top - 50 },
+      position: { x: rect.right + 10, y: Math.max(40, rect.top - 100) },
     });
   };
 
@@ -742,7 +742,6 @@ function ShowcaseMapInner() {
         {storyViewer && <StoryViewer stories={storyViewer.stories} initialIndex={storyViewer.initialIndex} onClose={() => setStoryViewer(null)} />}
       </div>
       {ainboxWin.isOpen && <AInbox win={ainboxWin} onDrag={makeDragHandler(ainboxWin)} />}
-      {miniChat && <MiniChat {...miniChat} onClose={() => setMiniChat(null)} />}
       {/* Product features bar */}
       <div className="sc-products-bar">
         {['Virtual Office', 'Drop-In Meetings', 'Theater', 'AInbox', 'Lobby', 'Magicast', 'Magic Minutes', 'On-It', 'On-Air', 'Mobile'].map((item, i) => (
@@ -800,6 +799,7 @@ function ShowcaseMapInner() {
         </svg>
       </button>
 
+      {miniChat && <MiniChat {...miniChat} onClose={() => setMiniChat(null)} />}
     </div>
   );
 }

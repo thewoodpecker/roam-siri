@@ -777,9 +777,11 @@ export default function AInbox({ win, onDrag }) {
     hasRendered.current = true;
   }, [selectedChat]);
 
-  // Focus composer on chat change
+  // Focus composer on chat change (skip initial render)
+  const hasFocused = useRef(false);
   useEffect(() => {
-    setTimeout(() => composerInputRef.current?.focus(), 50);
+    if (!hasFocused.current) { hasFocused.current = true; return; }
+    setTimeout(() => composerInputRef.current?.focus({ preventScroll: true }), 50);
   }, [selectedChat]);
 
   // Auto-type in DMs when opening a conversation

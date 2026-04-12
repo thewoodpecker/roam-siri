@@ -93,7 +93,7 @@ export default function MiniChat({ personName, personAvatar, chatId, position, o
 
   // Focus input
   useEffect(() => {
-    setTimeout(() => inputRef.current?.focus(), 100);
+    setTimeout(() => inputRef.current?.focus({ preventScroll: true }), 100);
   }, []);
 
   // Auto-type on open
