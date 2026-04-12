@@ -625,7 +625,7 @@ function MeetingTimeline({ timeline }) {
 /* ———————————————————————————————————————
    Typing indicator
 ——————————————————————————————————————— */
-function TypingIndicator({ avatars }) {
+export function TypingIndicator({ avatars }) {
   const [state, setState] = useState({ show: false, exiting: false, srcs: null });
   const wasShowing = useRef(false);
 

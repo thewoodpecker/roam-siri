@@ -632,7 +632,8 @@
   background: rgba(255, 255, 255, 0.3);
 }
 
-.sc-viewport[data-theme="light"] .ainbox-window {
+.sc-viewport[data-theme="light"] .ainbox-window,
+.sc-viewport[data-theme="light"] .mc-window {
   background: rgba(255, 255, 255, 0.3);
 }
 
@@ -642,6 +643,11 @@
 
 .sc-viewport[data-theme="light"] .ainbox-msg-bubble {
   background: rgba(0, 0, 0, 0.05);
+}
+
+.sc-viewport[data-theme="light"] .ainbox-dm-bubble-self p,
+.sc-viewport[data-theme="light"] .mc-bubble-self p {
+  color: var(--solid-white);
 }
 
 .sc-viewport[data-theme="light"] .sc-promo-stat-value {

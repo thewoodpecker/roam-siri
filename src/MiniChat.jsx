@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useChat } from './ChatContext';
+import { TypingIndicator } from './AInbox';
 import './MiniChat.css';
 
 /* Map avatar paths to chat IDs */
@@ -201,16 +202,9 @@ export default function MiniChat({ personName, personAvatar, chatId, position, o
           ))}
         </div>
 
-        {/* Typing indicator */}
-        {convo.typingAvatars && convo.typingAvatars[0] && (
-          <div className="mc-typing-row">
-            <img src={convo.typingAvatars[0]} alt="" className="mc-typing-avatar" />
-            <div className="mc-typing-dots"><span /><span /><span /></div>
-          </div>
-        )}
-
         {/* Composer — same style as AInbox */}
         <div className="ainbox-composer">
+          <TypingIndicator avatars={convo.typingAvatars} />
           <div className="ainbox-composer-box">
             <div className="ainbox-composer-field">
               <input

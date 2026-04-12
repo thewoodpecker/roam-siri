@@ -207,7 +207,7 @@ function SimpleStoryBubble({ image, delay = 0, onClick }) {
 }
 
 // Private office room card — uses the same markup as mapv3
-function PrivateRoomCard({ room, storyBubble }) {
+function PrivateRoomCard({ room, storyBubble, onPersonClick }) {
   const [talking, setTalking] = useState({});
   const hasTalk = room.people.length > 1;
 
@@ -271,7 +271,7 @@ function PrivateRoomCard({ room, storyBubble }) {
             <div className="private-office-seat">
               <div className="seat-row seat-row-hovered">
                 {room.people.map((person, i) => (
-                  <div key={person.name + i} className="seat-assigned sc-private-person" onClick={(e) => { e.stopPropagation(); openMiniChat(person, e); }} style={{ cursor: getChatIdForAvatar(person.avatar) ? 'pointer' : 'default' }}>
+                  <div key={person.name + i} className="seat-assigned sc-private-person" onClick={(e) => { e.stopPropagation(); onPersonClick && onPersonClick(person, e); }} style={{ cursor: getChatIdForAvatar(person.avatar) ? 'pointer' : 'default' }}>
                     <img className="seat-avatar" src={person.avatar} alt={person.name} />
                     <span className="seat-nametag">{person.name}</span>
                     {hasTalk && <div className={`sc-private-talk-ring ${talking[person.name] ? 'sc-talking' : ''}`} />}
@@ -316,7 +316,7 @@ function TheaterRoomCard({ room }) {
 }
 
 // Meeting room card — same markup as mapv3, with talking indicators
-function MeetingRoomCardShowcase({ room }) {
+function MeetingRoomCardShowcase({ room, onPersonClick }) {
   const [talking, setTalking] = useState({});
 
   useEffect(() => {
@@ -341,7 +341,7 @@ function MeetingRoomCardShowcase({ room }) {
           </div>
           <div className="meeting-room-people">
             {room.people.map((person, i) => (
-              <div key={person.name + i} className={`person meeting-room-person ${person._new ? 'sc-person-arriving' : ''}`} onClick={(e) => { e.stopPropagation(); openMiniChat(person, e); }} style={{ cursor: getChatIdForAvatar(person.avatar) ? 'pointer' : 'default' }}>
+              <div key={person.name + i} className={`person meeting-room-person ${person._new ? 'sc-person-arriving' : ''}`} onClick={(e) => { e.stopPropagation(); onPersonClick && onPersonClick(person, e); }} style={{ cursor: getChatIdForAvatar(person.avatar) ? 'pointer' : 'default' }}>
                 <img className="avatar" src={person.avatar} alt={person.name} />
                 <div className={`avatar-inner-glow ${talking[person.name] ? 'sc-talking' : 'glow-off'}`} />
               </div>
@@ -457,12 +457,7 @@ function ShowcaseMapInner() {
   const [viewedStories, setViewedStories] = useState({});
   // People movement — occasionally move someone between offices and meeting rooms
   const [movements, setMovements] = useState({ removed: {}, added: {}, anim: {} }); // anim: { roomId: 'leaving' | 'arriving' }
-  const [miniChat, setMiniChat] = useState({
-    personName: 'Grace Sutherland',
-    personAvatar: '/headshots/grace-sutherland.jpg',
-    chatId: 'grace',
-    position: { x: 500, y: 200 },
-  });
+  const [miniChat, setMiniChat] = useState(null);
 
   const openMiniChat = (person, e) => {
     const chatId = getChatIdForAvatar(person.avatar);
@@ -651,13 +646,14 @@ function ShowcaseMapInner() {
                     {room.type === 'theater' ? (
                       <TheaterRoomCard room={room} />
                     ) : room.type === 'meeting' ? (
-                      <MeetingRoomCardShowcase room={room} />
+                      <MeetingRoomCardShowcase room={room} onPersonClick={openMiniChat} />
                     ) : room.type === 'game' ? (
                       <GameRoomCard room={room} />
                     ) : room.type === 'command' ? (
                       <CommandCenterCard room={room} />
                     ) : (
                       <PrivateRoomCard
+                        onPersonClick={openMiniChat}
                         room={{ ...room, vibe: activeVibes[room.id] || null }}
                         storyBubble={room.story && room.people[0] && !viewedStories[room.story] ? (
                           <SimpleStoryBubble
