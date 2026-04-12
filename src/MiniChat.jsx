@@ -225,16 +225,6 @@ export default function MiniChat({ personName, personAvatar, chatId, position, o
               <div className="ainbox-toolbar-plus">
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1V11M1 6H11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
               </div>
-              <div className="ainbox-toolbar-group">
-                <img src="/icons/composer/Bold.svg" alt="" className="ainbox-toolbar-img" title="Bold" />
-                <img src="/icons/composer/Italic.svg" alt="" className="ainbox-toolbar-img" title="Italic" />
-                <img src="/icons/composer/Strikethrough.svg" alt="" className="ainbox-toolbar-img" title="Strikethrough" />
-                <img src="/icons/composer/Code Inline.svg" alt="" className="ainbox-toolbar-img" title="Code" />
-              </div>
-              <div className="ainbox-toolbar-divider" />
-              <div className="ainbox-toolbar-group">
-                <img src="/icons/composer/Link.svg" alt="" className="ainbox-toolbar-img" title="Link" />
-              </div>
               <div className="ainbox-toolbar-spacer" />
               <div className="ainbox-toolbar-group">
                 <img src="/icons/composer/Send.svg" alt="" className={`ainbox-toolbar-img ainbox-send-icon ${inputText.trim() ? 'ainbox-send-active' : ''}`} title="Send" onClick={sendMessage} />

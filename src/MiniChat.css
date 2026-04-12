@@ -5,7 +5,7 @@
 .mc-window {
   position: fixed;
   width: 320px;
-  height: 420px;
+  height: 520px;
   background: rgba(0, 0, 0, 0.3);
   backdrop-filter: blur(30px);
   -webkit-backdrop-filter: blur(30px);

@@ -1140,6 +1140,17 @@
   opacity: 0.7;
 }
 
+.ainbox-toolbar-emoji {
+  font-size: 16px;
+  cursor: pointer;
+  opacity: 0.5;
+  line-height: 1;
+}
+
+.ainbox-toolbar-emoji:hover {
+  opacity: 0.8;
+}
+
 .ainbox-send-active {
   opacity: 1 !important;
   filter: brightness(2);
