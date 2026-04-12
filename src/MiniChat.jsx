@@ -159,15 +159,28 @@ export default function MiniChat({ personName, personAvatar, chatId, position, o
     });
   };
 
+  // Drag handler for titlebar
+  const [pos, setPos] = useState(position);
+  const handleDrag = (e) => {
+    if (e.target.closest('.mc-light')) return;
+    e.preventDefault();
+    const startX = e.clientX, startY = e.clientY;
+    const startPos = { ...pos };
+    const onMove = (ev) => setPos({ x: startPos.x + ev.clientX - startX, y: startPos.y + ev.clientY - startY });
+    const onUp = () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+  };
+
   if (!convo) return null;
 
   return (
     <div
       className={`mc-window ${closing ? 'mc-closing' : ''}`}
-      style={{ left: position.x, top: position.y, zIndex: 100 }}
+      style={{ left: pos.x, top: pos.y, zIndex: 100 }}
     >
-      {/* Header */}
-      <div className="mc-header">
+      {/* Header / Titlebar */}
+      <div className="mc-header" onMouseDown={handleDrag}>
         <div className="mc-traffic-lights">
           <div className="mc-light mc-light-close" onClick={handleClose} />
           <div className="mc-light mc-light-minimize" />
@@ -179,33 +192,56 @@ export default function MiniChat({ personName, personAvatar, chatId, position, o
         </div>
       </div>
 
-      {/* Messages */}
-      <div className="mc-messages" ref={messagesRef}>
-        {getDmGroups(convo.messages).map(msg => (
-          <DmBubble key={msg.id} msg={msg} isFirstInGroup={msg.isFirstInGroup} />
-        ))}
-      </div>
-
-      {/* Typing indicator */}
-      {convo.typingAvatars && convo.typingAvatars[0] && (
-        <div className="mc-typing-row">
-          <img src={convo.typingAvatars[0]} alt="" className="mc-typing-avatar" />
-          <div className="mc-typing-dots"><span /><span /><span /></div>
+      {/* Body */}
+      <div className="mc-body">
+        {/* Messages */}
+        <div className="mc-messages" ref={messagesRef}>
+          {getDmGroups(convo.messages).map(msg => (
+            <DmBubble key={msg.id} msg={msg} isFirstInGroup={msg.isFirstInGroup} />
+          ))}
         </div>
-      )}
 
-      {/* Composer */}
-      <div className="mc-composer">
-        <input
-          ref={inputRef}
-          placeholder="Write a Message..."
-          value={inputText}
-          onChange={(e) => setInputText(e.target.value)}
-          onKeyDown={(e) => { if (e.key === 'Enter') sendMessage(); }}
-        />
-        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" className={`mc-send ${inputText.trim() ? 'mc-send-active' : ''}`} onClick={sendMessage}>
-          <path d="M14 2L7 9M14 2L9.5 14L7 9M14 2L2 6.5L7 9" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
+        {/* Typing indicator */}
+        {convo.typingAvatars && convo.typingAvatars[0] && (
+          <div className="mc-typing-row">
+            <img src={convo.typingAvatars[0]} alt="" className="mc-typing-avatar" />
+            <div className="mc-typing-dots"><span /><span /><span /></div>
+          </div>
+        )}
+
+        {/* Composer — same style as AInbox */}
+        <div className="ainbox-composer">
+          <div className="ainbox-composer-box">
+            <div className="ainbox-composer-field">
+              <input
+                ref={inputRef}
+                placeholder="Write a Message..."
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') sendMessage(); }}
+              />
+            </div>
+            <div className="ainbox-composer-toolbar">
+              <div className="ainbox-toolbar-plus">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1V11M1 6H11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+              </div>
+              <div className="ainbox-toolbar-group">
+                <img src="/icons/composer/Bold.svg" alt="" className="ainbox-toolbar-img" title="Bold" />
+                <img src="/icons/composer/Italic.svg" alt="" className="ainbox-toolbar-img" title="Italic" />
+                <img src="/icons/composer/Strikethrough.svg" alt="" className="ainbox-toolbar-img" title="Strikethrough" />
+                <img src="/icons/composer/Code Inline.svg" alt="" className="ainbox-toolbar-img" title="Code" />
+              </div>
+              <div className="ainbox-toolbar-divider" />
+              <div className="ainbox-toolbar-group">
+                <img src="/icons/composer/Link.svg" alt="" className="ainbox-toolbar-img" title="Link" />
+              </div>
+              <div className="ainbox-toolbar-spacer" />
+              <div className="ainbox-toolbar-group">
+                <img src="/icons/composer/Send.svg" alt="" className={`ainbox-toolbar-img ainbox-send-icon ${inputText.trim() ? 'ainbox-send-active' : ''}`} title="Send" onClick={sendMessage} />
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
