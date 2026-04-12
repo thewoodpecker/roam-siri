@@ -612,9 +612,9 @@ function ShowcaseMapInner() {
       <div className="miniRoamOS" ref={miniRoamRef}>
         <div className="sc-wallpaper sc-wallpaper-dark" style={{ opacity: theme === 'dark' ? 1 : 0 }} />
         <div className="sc-wallpaper sc-wallpaper-light" style={{ opacity: theme === 'light' ? 1 : 0 }} />
-      <div className={`sc-window ${!mapWin.isFocused ? 'sc-window-unfocused' : ''}`} ref={windowRef} style={{ transform: `translate(${mapWin.position.x}px, ${mapWin.position.y}px)`, zIndex: mapWin.zIndex }} onMouseDown={() => mapWin.focus()}>
+      <div className={`sc-window ${!mapWin.isFocused ? 'sc-window-unfocused' : ''}`} ref={windowRef} style={{ transform: `translate(${mapWin.position.x}px, ${mapWin.position.y}px)`, zIndex: mapWin.zIndex }}>
         {/* Mac window title bar */}
-        <div className="sc-titlebar" onMouseDown={makeDragHandler(mapWin)}>
+        <div className="sc-titlebar">
           <div className="sc-traffic-lights">
             <div className="sc-light sc-light-close" />
             <div className="sc-light sc-light-minimize" />
