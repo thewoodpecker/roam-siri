@@ -1349,27 +1349,29 @@ function TabSwitcher({ activeTab, onTabChange }) {
   ];
 
   return (
-    <div className="tab-hamburger-wrap" ref={menuRef}>
-      <button className="tab-hamburger-btn" onClick={() => setOpen(!open)}>
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <path d="M2 4H14M2 8H14M2 12H14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-        </svg>
+    <div className="dev-settings-wrap" ref={menuRef}>
+      <button className="dev-settings-btn" onClick={() => setOpen(!open)}>
+        <img src="/icons/Settings.svg" alt="" width="16" height="16" style={{ opacity: 0.5 }} />
       </button>
       {open && (
-        <div className="tab-hamburger-menu">
+        <div className="dev-settings-menu">
           {tabs.map((t, i) => (
             t.section ? (
-              <div key={`section-${i}`} className="tab-hamburger-section">{t.section}</div>
+              <div key={`section-${i}`} className="dev-settings-section">{t.section}</div>
             ) : (
               <button
                 key={t.id}
-                className={`tab-hamburger-item ${activeTab === t.id ? 'tab-hamburger-active' : ''}`}
+                className={`dev-settings-item ${activeTab === t.id ? 'dev-settings-active' : ''}`}
                 onClick={() => { onTabChange(t.id); setOpen(false); }}
               >
                 {t.label}
               </button>
             )
           ))}
+          <div className="dev-settings-section">Tools</div>
+          <button className="dev-settings-item" onClick={() => { window.dispatchEvent(new Event('toggle-grid')); setOpen(false); }}>
+            Toggle Grid
+          </button>
         </div>
       )}
     </div>

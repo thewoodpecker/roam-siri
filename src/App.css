@@ -22,12 +22,12 @@
   pointer-events: auto;
 }
 
-/* Hamburger menu */
-.tab-hamburger-wrap {
+/* Dev settings menu */
+.dev-settings-wrap {
   position: relative;
 }
 
-.tab-hamburger-btn {
+.dev-settings-btn {
   background: none;
   border: none;
   border-radius: 10px;
@@ -40,11 +40,11 @@
   transition: background 0.2s, color 0.2s;
 }
 
-.tab-hamburger-btn:hover {
+.dev-settings-btn:hover {
   color: var(--text-primary);
 }
 
-.tab-hamburger-menu {
+.dev-settings-menu {
   position: absolute;
   bottom: calc(100% + 6px);
   left: 0;
@@ -65,7 +65,7 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-.tab-hamburger-item {
+.dev-settings-item {
   background: none;
   border: none;
   color: rgba(255, 255, 255, 0.6);
@@ -79,12 +79,12 @@
   transition: background 0.15s, color 0.15s;
 }
 
-.tab-hamburger-item:hover {
+.dev-settings-item:hover {
   background: rgba(255, 255, 255, 0.08);
   color: #fff;
 }
 
-.tab-hamburger-section {
+.dev-settings-section {
   font-size: 10px;
   font-weight: 600;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -96,7 +96,7 @@
   border-top: 0.5px solid rgba(255, 255, 255, 0.08);
 }
 
-.tab-hamburger-active {
+.dev-settings-active {
   color: #fff;
   background: rgba(255, 255, 255, 0.06);
 }

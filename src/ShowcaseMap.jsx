@@ -450,6 +450,11 @@ function ShowcaseMapInner() {
   };
   const [navLogoVisible, setNavLogoVisible] = useState(false);
   const [showGrid, setShowGrid] = useState(false);
+  useEffect(() => {
+    const handler = () => setShowGrid(g => !g);
+    window.addEventListener('toggle-grid', handler);
+    return () => window.removeEventListener('toggle-grid', handler);
+  }, []);
   const [activeVibes, setActiveVibes] = useState({});
   const miniRoamRef = useRef(null);
   const [storyViewer, setStoryViewer] = useState(null); // { stories, initialIndex }
@@ -766,7 +771,8 @@ function ShowcaseMapInner() {
         <MiniChat key={mc.chatId} {...mc} onClose={() => closeMiniChat(mc.chatId)} />
       ))}
       {ainboxWin.isOpen && <AInbox win={ainboxWin} onDrag={makeDragHandler(ainboxWin)} />}
-      {/* Product features bar */}
+      </div>
+      {/* Product features bar — outside miniRoamOS for z-index */}
       <div className="sc-products-bar">
         {[
           { name: 'Virtual Office', desc: 'See your whole team on a live map. Who\'s here, who\'s meeting, who\'s available — at a glance.' },
@@ -785,7 +791,6 @@ function ShowcaseMapInner() {
             <span className="sc-products-item" onClick={item.name === 'AInbox' ? () => ainboxWin.open() : undefined} data-tooltip={item.desc}>{item.name}</span>
           </React.Fragment>
         ))}
-      </div>
       </div>
 
       {/* Promo section */}
@@ -817,22 +822,18 @@ function ShowcaseMapInner() {
         </div>
       </div>
 
-      {/* Theme toggle — fixed bottom-left next to hamburger */}
-      <button className="sc-theme-toggle-fixed" onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')}>
-        {theme === 'dark' ? (
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="3.5" stroke="currentColor" strokeWidth="1.2" /><path d="M8 1.5V3M8 13V14.5M1.5 8H3M13 8H14.5M3.4 3.4L4.5 4.5M11.5 11.5L12.6 12.6M3.4 12.6L4.5 11.5M11.5 4.5L12.6 3.4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" /></svg>
-        ) : (
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M14 8.5C13.3 12.1 10 14.5 6.5 13.5C3 12.5 1 9.5 2 6C2.8 3.2 5.5 1.5 8.5 2C7 3.5 6.5 6 8 8.5C9 10 11 11 14 8.5Z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-        )}
-      </button>
-      <button className="sc-grid-toggle-fixed" onClick={() => setShowGrid(g => !g)} style={{ opacity: showGrid ? 1 : undefined }}>
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <rect x="1" y="1" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.2" />
-          <rect x="10" y="1" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.2" />
-          <rect x="1" y="10" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.2" />
-          <rect x="10" y="10" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.2" />
-        </svg>
-      </button>
+      {/* Theme capsule + grid toggle — pinned to right side */}
+      <div className="sc-right-controls">
+        <div className="sc-theme-capsule" onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')}>
+          <div className={`sc-theme-capsule-knob ${theme === 'light' ? 'bottom' : ''}`} />
+          <div className={`sc-theme-capsule-icon ${theme === 'dark' ? 'active' : ''}`}>
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M14 8.5C13.3 12.1 10 14.5 6.5 13.5C3 12.5 1 9.5 2 6C2.8 3.2 5.5 1.5 8.5 2C7 3.5 6.5 6 8 8.5C9 10 11 11 14 8.5Z" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" /></svg>
+          </div>
+          <div className={`sc-theme-capsule-icon ${theme === 'light' ? 'active' : ''}`}>
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="3" stroke="currentColor" strokeWidth="1.3" /><path d="M8 2V3.5M8 12.5V14M2 8H3.5M12.5 8H14M3.8 3.8L4.8 4.8M11.2 11.2L12.2 12.2M3.8 12.2L4.8 11.2M11.2 4.8L12.2 3.8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" /></svg>
+          </div>
+        </div>
+      </div>
 
     </div>
   );
