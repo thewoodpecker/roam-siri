@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react';
+import ReactDOM from 'react-dom';
 // data.js imports removed — floor data is self-contained
 import SiriGlow from './SiriGlow';
 import Navbar from './Navbar';
@@ -430,6 +431,37 @@ export default function ShowcaseMap() {
   );
 }
 
+function ProductItem({ name, desc, onClick }) {
+  const [hover, setHover] = useState(false);
+  const ref = useRef(null);
+  const [pos, setPos] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    if (hover && ref.current) {
+      const rect = ref.current.getBoundingClientRect();
+      setPos({ x: rect.left + rect.width / 2, y: rect.top });
+    }
+  }, [hover]);
+
+  return (
+    <span
+      ref={ref}
+      className="sc-products-item"
+      onClick={onClick}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+    >
+      {name}
+      {hover && ReactDOM.createPortal(
+        <div className="sc-product-tooltip" style={{ left: pos.x, top: pos.y - 12 }}>
+          <div className="sc-product-tooltip-inner">{desc}</div>
+        </div>,
+        document.body
+      )}
+    </span>
+  );
+}
+
 function ShowcaseMapInner() {
   const [theme, setTheme] = useState('dark');
   const [activeFloor, setActiveFloor] = useState('R&D');
@@ -586,23 +618,59 @@ function ShowcaseMapInner() {
     window.addEventListener('mouseup', onUp);
   };
 
-  // Randomly cycle vibe coding across private offices
+  // Randomly cycle vibe coding — each person vibes independently, 1-4 at a time
   useEffect(() => {
     const privateRooms = currentFloorRooms.filter(r => r.type === 'private' && r.people.length === 1);
-    const pickVibes = () => {
-      const shuffled = [...privateRooms].sort(() => Math.random() - 0.5);
-      const next = {};
-      // 1 claude + 1 codex
-      if (shuffled[0]) next[shuffled[0].id] = 'claude';
-      if (shuffled[1]) next[shuffled[1].id] = 'codex';
-      setActiveVibes(next);
+    if (privateRooms.length < 2) return;
+    const timers = [];
+
+    // Start a vibe on a random room, then stop it after a random duration
+    const startVibe = () => {
+      setActiveVibes(prev => {
+        const activeIds = Object.keys(prev);
+        if (activeIds.length >= 4) return prev; // max 4
+        const available = privateRooms.filter(r => !prev[r.id]);
+        if (available.length === 0) return prev;
+        const room = available[Math.floor(Math.random() * available.length)];
+        const type = Math.random() < 0.5 ? 'claude' : 'codex';
+        return { ...prev, [room.id]: type };
+      });
     };
-    pickVibes();
-    const interval = setInterval(pickVibes, 6000 + Math.random() * 4000);
-    return () => clearInterval(interval);
+
+    const stopRandomVibe = () => {
+      setActiveVibes(prev => {
+        const activeIds = Object.keys(prev);
+        if (activeIds.length <= 1) return prev; // keep at least 1
+        const removeId = activeIds[Math.floor(Math.random() * activeIds.length)];
+        const next = { ...prev };
+        delete next[removeId];
+        return next;
+      });
+    };
+
+    // Schedule starts and stops independently
+    const scheduleStart = () => {
+      const delay = 2000 + Math.random() * 5000;
+      timers.push(setTimeout(() => { startVibe(); scheduleStart(); }, delay));
+    };
+
+    const scheduleStop = () => {
+      const delay = 4000 + Math.random() * 8000;
+      timers.push(setTimeout(() => { stopRandomVibe(); scheduleStop(); }, delay));
+    };
+
+    // Seed with 2 initial vibes
+    startVibe();
+    setTimeout(startVibe, 500 + Math.random() * 1500);
+
+    scheduleStart();
+    scheduleStop();
+
+    return () => timers.forEach(t => clearTimeout(t));
   }, [activeFloor]);
   const windowRef = useRef(null);
   const viewportRef = useRef(null);
+  const productsBarRef = useRef(null);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -771,9 +839,8 @@ function ShowcaseMapInner() {
         <MiniChat key={mc.chatId} {...mc} onClose={() => closeMiniChat(mc.chatId)} />
       ))}
       {ainboxWin.isOpen && <AInbox win={ainboxWin} onDrag={makeDragHandler(ainboxWin)} />}
-      </div>
-      {/* Product features bar — outside miniRoamOS for z-index */}
-      <div className="sc-products-bar">
+      {/* Product features bar — inside miniRoamOS, pinned to bottom */}
+      <div className="sc-products-bar" ref={productsBarRef}>
         {[
           { name: 'Virtual Office', desc: 'See your whole team on a live map. Who\'s here, who\'s meeting, who\'s available — at a glance.' },
           { name: 'Drop-In Meetings', desc: 'Knock on someone\'s office to start a conversation instantly. No scheduling, no links.' },
@@ -788,9 +855,10 @@ function ShowcaseMapInner() {
         ].map((item, i) => (
           <React.Fragment key={item.name}>
             {i > 0 && <div className="sc-products-dot" />}
-            <span className="sc-products-item" onClick={item.name === 'AInbox' ? () => ainboxWin.open() : undefined} data-tooltip={item.desc}>{item.name}</span>
+            <ProductItem name={item.name} desc={item.desc} onClick={item.name === 'AInbox' ? () => ainboxWin.open() : undefined} />
           </React.Fragment>
         ))}
+      </div>
       </div>
 
       {/* Promo section */}

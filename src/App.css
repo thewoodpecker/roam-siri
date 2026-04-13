@@ -10,11 +10,12 @@
 
 .toolbar {
   position: fixed;
-  bottom: 0;
-  left: 0;
+  bottom: 24px;
+  left: var(--grid-margin, 40px);
   z-index: 999999;
   display: flex;
-  padding: 16px;
+  align-items: center;
+  height: 20px;
   pointer-events: none;
 }
 
@@ -31,7 +32,7 @@
   background: none;
   border: none;
   border-radius: 10px;
-  padding: 8px;
+  padding: 0;
   cursor: pointer;
   color: var(--text-secondary);
   display: flex;
@@ -40,8 +41,21 @@
   transition: background 0.2s, color 0.2s;
 }
 
+.dev-settings-icon {
+  opacity: 0.5;
+  filter: brightness(0.8);
+}
+
+.dev-settings-btn:hover .dev-settings-icon {
+  opacity: 0.8;
+}
+
 .dev-settings-btn:hover {
   color: var(--text-primary);
+}
+
+:root[data-theme="light"] .dev-settings-icon {
+  filter: brightness(0) opacity(0.4);
 }
 
 .dev-settings-menu {
