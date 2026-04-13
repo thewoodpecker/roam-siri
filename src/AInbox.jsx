@@ -1258,7 +1258,7 @@ export default function AInbox({ win, onDrag }) {
   const sendMessage = () => {
     if (!inputText.trim() || !convo) return;
     const chatId = selectedChat;
-    const newMsg = convo.type === 'group'
+    const newMsg = (convo.type === 'group' || convo.type === 'meeting')
       ? { id: Date.now(), sender: 'You', avatar: '/headshots/joe-woodward.jpg', time: 'now', text: inputText.trim() }
       : { id: Date.now(), self: true, text: inputText.trim() };
     setMessages(prev => ({
@@ -1532,7 +1532,7 @@ export default function AInbox({ win, onDrag }) {
               {/* Pinned toolbar */}
               {convo.pinnedItems && <PinnedToolbar items={convo.pinnedItems} />}
               {/* Meeting timeline */}
-              {convo.timeline && <MeetingTimeline timeline={convo.timeline} />}
+              {convo.timeline && <div className="ainbox-timeline-wrap"><MeetingTimeline timeline={convo.timeline} /></div>}
               {/* Group messages */}
               <div className="ainbox-detail-messages ainbox-group-messages" ref={messagesRef}>
                 {convo.messages.map(msg => (

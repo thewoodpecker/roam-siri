@@ -895,14 +895,22 @@
    Meeting timeline
    ═══════════════════════════════════════ */
 
-.ainbox-timeline {
+.ainbox-timeline-wrap {
   flex-shrink: 0;
+  height: 86px;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  border-bottom: 0.5px solid var(--border);
+}
+
+.ainbox-timeline {
   background: var(--bg-surface-elevated-secondary);
   border: 0.5px solid var(--border);
   border-radius: 12px;
-  margin: 16px;
   overflow: hidden;
   box-shadow: var(--shadow-2);
+  width: 100%;
 }
 
 .ainbox-timeline-ruler {
