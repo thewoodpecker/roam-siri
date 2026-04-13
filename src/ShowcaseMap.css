@@ -584,6 +584,26 @@
   padding: 32px;
 }
 
+/* Reversed layout — visual left, text right */
+.sc-feature-visual-left {
+  grid-column: 1 / span 8;
+}
+
+.sc-feature-text-right {
+  grid-column: 9 / span 4;
+}
+
+.sc-feature-visual .onair-window {
+  position: relative !important;
+  left: auto !important;
+  bottom: auto !important;
+  width: 100% !important;
+  height: 100% !important;
+  animation: none !important;
+  pointer-events: auto;
+  border-radius: 32px;
+}
+
 .sc-feature-visual .ainbox-window {
   position: relative !important;
   left: auto !important;

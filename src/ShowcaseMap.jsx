@@ -58,7 +58,7 @@ const FLOORS = {
     { id: 'r7', type: 'private', name: 'Michael W.', people: [p('Michael W.')], pos: { col: 1, row: 1 }, span: 1 },
     { id: 'theater', type: 'theater', name: 'Theater', people: [], pos: { col: 2, row: 1 }, colSpan: 2, rowSpan: 2 },
     { id: 'r8', type: 'private', name: 'Rob F.', people: [p('Rob F.')], pos: { col: 4, row: 1 }, span: 1 },
-    { id: 'r8b', type: 'private', name: 'Chelsea T.', people: [p('Chelsea T.')], pos: { col: 5, row: 1 }, span: 1, story: '/story-2.png' },
+    { id: 'r8b', type: 'private', name: 'Chelsea T.', people: [p('Chelsea T.')], pos: { col: 5, row: 1 }, span: 1 },
     { id: 'r12', type: 'private', name: 'Jeff G.', people: [p('Jeff G.')], pos: { col: 0, row: 2 }, span: 1 },
     { id: 'r13', type: 'private', name: 'Peter L.', people: [p('Peter L.')], pos: { col: 1, row: 2 }, span: 1 },
     { id: 'r14', type: 'private', name: 'Sean M.', people: [p('Sean M.')], pos: { col: 4, row: 2 }, span: 1 },
@@ -71,7 +71,7 @@ const FLOORS = {
   'Commercial': [
     // Large lobby spanning top-left
     { id: 'c-lobby', type: 'meeting', name: 'Sales Floor', people: [p('Lexi B.'), p('Will H.'), p('Peter L.'), p('Sean M.'), p('Chelsea T.'), p('Garima K.'), p('Joe W.')], pos: { col: 0, row: 0 }, colSpan: 3, rowSpan: 2 },
-    { id: 'c1', type: 'private', name: 'Arnav B.', people: [p('Arnav B.')], pos: { col: 3, row: 0 }, span: 1, story: '/story-3.jpg' },
+    { id: 'c1', type: 'private', name: 'Arnav B.', people: [p('Arnav B.')], pos: { col: 3, row: 0 }, span: 1 },
     { id: 'c2', type: 'private', name: 'Aaron W.', people: [p('Aaron W.')], pos: { col: 4, row: 0 }, span: 1 },
     { id: 'c3', type: 'private', name: 'Tom D.', people: [p('Tom D.')], pos: { col: 5, row: 0 }, span: 1 },
     // Row 2 — right side offices
@@ -95,7 +95,7 @@ const FLOORS = {
     { id: 'm3', type: 'private', name: 'Keegan L.', people: [p('Keegan L.')], pos: { col: 4, row: 0 }, span: 1 },
     { id: 'm4', type: 'private', name: 'John M.', people: [p('John M.')], pos: { col: 5, row: 0 }, span: 1 },
     // Row 2 — meeting room in the center
-    { id: 'm5', type: 'private', name: 'Lexi B.', people: [p('Lexi B.')], pos: { col: 0, row: 1 }, span: 1, story: '/story-4.jpg' },
+    { id: 'm5', type: 'private', name: 'Lexi B.', people: [p('Lexi B.')], pos: { col: 0, row: 1 }, span: 1 },
     { id: 'm-brand', type: 'meeting', name: 'Brand Review', people: [p('Ava L.'), p('Derek C.'), p('Arnav B.'), p('Aaron W.')], pos: { col: 1, row: 1 }, colSpan: 2, rowSpan: 2 },
     { id: 'm-content', type: 'meeting', name: 'Content Sync', people: [p('Howard L.'), p('Rob F.'), p('Joe W.')], pos: { col: 3, row: 1 }, colSpan: 2, rowSpan: 2 },
     { id: 'm6', type: 'private', name: 'Mattias L.', people: [p('Mattias L.')], pos: { col: 5, row: 1 }, span: 1 },
@@ -419,7 +419,7 @@ function FloorCard({ name, rooms, active, onClick }) {
 const INITIAL_WINDOWS = [
   { id: 'map', isOpen: true, position: { x: 0, y: 0 }, zIndex: 25 },
   { id: 'ainbox', isOpen: false, position: { x: 60, y: 300 }, zIndex: 30 },
-  { id: 'onair', isOpen: true, position: { x: 120, y: 80 }, zIndex: 30 },
+  { id: 'onair', isOpen: false, position: { x: 60, y: 300 }, zIndex: 30 },
 ];
 
 // Main showcase component
@@ -631,7 +631,7 @@ function ShowcaseMapInner() {
     const startVibe = () => {
       setActiveVibes(prev => {
         const activeIds = Object.keys(prev);
-        if (activeIds.length >= 4) return prev; // max 4
+        if (activeIds.length >= 2) return prev; // max 2
         const available = privateRooms.filter(r => !prev[r.id]);
         if (available.length === 0) return prev;
         const room = available[Math.floor(Math.random() * available.length)];
@@ -655,12 +655,12 @@ function ShowcaseMapInner() {
 
     // Schedule starts and stops independently
     const scheduleStart = () => {
-      const delay = 3000 + Math.random() * 5000;
+      const delay = 8000 + Math.random() * 10000;
       timers.push(setTimeout(() => { startVibe(); scheduleStart(); }, delay));
     };
 
     const scheduleStop = () => {
-      const delay = 6000 + Math.random() * 8000;
+      const delay = 12000 + Math.random() * 15000;
       timers.push(setTimeout(() => { stopRandomVibe(); scheduleStop(); }, delay));
     };
 
@@ -679,7 +679,11 @@ function ShowcaseMapInner() {
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
-    return () => document.documentElement.removeAttribute('data-theme');
+    document.body.style.background = theme === 'light' ? '#FFFFFF' : '#0C0C0E';
+    return () => {
+      document.documentElement.removeAttribute('data-theme');
+      document.body.style.background = '';
+    };
   }, [theme]);
 
   useEffect(() => {
@@ -829,7 +833,7 @@ function ShowcaseMapInner() {
               <div className="sc-toolbar-pill" data-tooltip="Recordings">
                 <img src="/icons/recordings.svg" width="16" height="16" alt="" />
               </div>
-              <div className="sc-toolbar-pill" data-tooltip="On-Air">
+              <div className="sc-toolbar-pill" data-tooltip="On-Air" onClick={() => onairWin.open()}>
                 <img src="/icons/on-air.svg" width="16" height="16" alt="" />
               </div>
               <div className="sc-toolbar-pill" data-tooltip="Calendar">
@@ -893,6 +897,21 @@ function ShowcaseMapInner() {
             <AInbox win={{ position: { x: 0, y: 0 }, zIndex: 1, isFocused: true, focus: () => {}, close: () => {}, open: () => {} }} onDrag={() => {}} />
           </div>
         </div>
+        </div>
+      </div>
+
+      {/* Feature section — On-Air */}
+      <div className="sc-feature-section sc-feature-section-reverse">
+        <div className="sc-section-grid">
+          <div className="sc-feature-visual sc-feature-visual-left">
+            <div className="sc-feature-wallpaper" style={{ backgroundImage: `url(/wallpaper-${theme}.png)` }}>
+              <OnAir win={{ position: { x: 0, y: 0 }, zIndex: 1, isFocused: true, focus: () => {}, close: () => {}, open: () => {} }} onDrag={() => {}} />
+            </div>
+          </div>
+          <div className="sc-feature-text sc-feature-text-right">
+            <h2 className="sc-feature-title">ON-AIR</h2>
+            <p className="sc-feature-desc">Now anyone can host Immersive Events for the Creator-Era</p>
+          </div>
         </div>
       </div>
 

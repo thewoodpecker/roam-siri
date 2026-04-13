@@ -1,5 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './OnAir.css';
+
+const ONAIR_COLORS = [
+  { bg: '#1a1a1a', image: '/on-air/static-landscape-black.png' },
+  { bg: '#d32f2f', image: '/on-air/static-landscape-red.png' },
+  { bg: '#ff8f00', image: '/on-air/static-landscape-orange.png' },
+  { bg: '#008e52', image: '/on-air/static-landscape-green.png' },
+  { bg: '#0059dc', image: '/on-air/on-air-blue-landscape.png' },
+  { bg: '#5700c9', image: '/on-air/static-landscape-purple.png' },
+];
+
+// Preload all images
+ONAIR_COLORS.forEach(c => {
+  if (c.image) {
+    const img = new Image();
+    img.src = c.image;
+  }
+});
 
 export default function OnAir({ win, onDrag }) {
   const [closing, setClosing] = useState(false);
@@ -10,15 +27,7 @@ export default function OnAir({ win, onDrag }) {
   };
 
   const [selectedColor, setSelectedColor] = useState(0);
-  const colors = [
-    { bg: '#1a1a1a', video: '/on-air/curtain-sway-landscape-black.mp4' },
-    { bg: '#f2f2f2', video: null },
-    { bg: '#d32f2f', video: '/on-air/curtain-sway-landscape-red.mp4' },
-    { bg: '#ff8f00', video: '/on-air/curtain-sway-landscape-orange.mp4' },
-    { bg: '#008e52', video: '/on-air/curtain-sway-landscape-green.mp4' },
-    { bg: '#0059dc', video: '/on-air/curtain-sway-landscape-blue.mp4' },
-    { bg: '#5700c9', video: '/on-air/curtain-sway-landscape-purple.mp4' },
-  ];
+  const colors = ONAIR_COLORS;
 
   return (
     <div
@@ -38,42 +47,39 @@ export default function OnAir({ win, onDrag }) {
 
       {/* Body */}
       <div className="onair-body">
-        {/* Curtain video background */}
-        {colors[selectedColor].video && (
-          <video
-            key={colors[selectedColor].video}
-            className="onair-curtain-video"
-            src={colors[selectedColor].video}
-            autoPlay
-            loop
-            muted
-            playsInline
+        {/* Curtain backgrounds — all stacked, cross-fade with opacity */}
+        {colors.map((c, i) => c.image && (
+          <img
+            key={c.image}
+            className={`onair-curtain-bg ${i === selectedColor ? 'onair-curtain-active' : ''}`}
+            src={c.image}
+            alt=""
           />
-        )}
+        ))}
 
         {/* Center content */}
         <div className="onair-center">
           <div className="onair-form">
             <div className="onair-field onair-field-title">
-              <span>Set Title</span>
+              <input type="text" placeholder="Set Title" className="onair-input onair-input-title" />
             </div>
             <div className="onair-field onair-field-desc">
-              <span>Set Description</span>
+              <input type="text" placeholder="Set Description" className="onair-input onair-input-desc" />
             </div>
           </div>
 
           <div className="onair-form">
             <div className="onair-field">
-              <span>Set Date</span>
+              <input type="text" placeholder="Set Date" className="onair-input" />
             </div>
             <div className="onair-field">
-              <span>Set Location</span>
+              <input type="text" placeholder="Set Location" className="onair-input" />
             </div>
           </div>
 
           <div className="onair-host">
             <div className="onair-host-avatar">
-              <img src="/headshots/howard-lerman.jpg" alt="" />
+              <img src="/on-air/3d-guy.png" alt="" />
             </div>
             <div className="onair-host-label">
               <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1V11M1 6H11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
@@ -101,36 +107,17 @@ export default function OnAir({ win, onDrag }) {
         {/* Right toolbar */}
         <div className="onair-tools">
           <div className="onair-tool onair-tool-share">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 8H12M12 8L8.5 4.5M12 8L8.5 11.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            <svg width="20" height="20" viewBox="0 0 16 16" fill="none"><path d="M4 8H12M12 8L8.5 4.5M12 8L8.5 11.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </div>
           <div className="onair-tool">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" strokeWidth="1.2"/><circle cx="7" cy="12" r="1.5" fill="currentColor"/><path d="M3 11L7 7L11 11L14 8L17 11" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            <img src="/icons/on-air-image.svg" alt="" className="onair-tool-icon" />
           </div>
           <div className="onair-tool">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" stroke="currentColor" strokeWidth="1.2"/><circle cx="10" cy="10" r="2" stroke="currentColor" strokeWidth="1.2"/><path d="M10 3V5M10 15V17M3 10H5M15 10H17" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>
+            <img src="/icons/on-air-settings.svg" alt="" className="onair-tool-icon" />
           </div>
         </div>
 
         {/* Bottom toggles */}
-        <div className="onair-toggle-curtain">
-          <div className="onair-toggle-line onair-toggle-line-v" />
-          <div className="onair-toggle-pill">
-            <span>Curtain</span>
-            <div className="onair-toggle-switch onair-toggle-on">
-              <div className="onair-toggle-knob" />
-            </div>
-          </div>
-        </div>
-
-        <div className="onair-toggle-logo">
-          <div className="onair-toggle-line" />
-          <div className="onair-toggle-pill">
-            <span>Add Logo</span>
-            <div className="onair-toggle-switch onair-toggle-on">
-              <div className="onair-toggle-knob" />
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );

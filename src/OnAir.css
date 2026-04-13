@@ -4,13 +4,15 @@
 
 .onair-window {
   position: absolute;
-  width: 720px;
-  height: 520px;
-  background: rgba(0, 0, 0, 0.7);
+  width: 780px;
+  height: 580px;
+  background: rgba(0, 0, 0, 0.3);
   backdrop-filter: blur(30px);
   -webkit-backdrop-filter: blur(30px);
   border: 0.5px solid var(--border);
-  border-radius: 12px;
+  border-radius: 32px;
+  corner-shape: superellipse;
+  corner-shape: superellipse(1.6);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -77,24 +79,32 @@
   white-space: nowrap;
 }
 
-/* Body */
+/* Body — always dark mode */
 .onair-body {
   flex: 1;
   position: relative;
-  background: var(--bg-surface-elevated-primary);
-  border: 0.5px solid var(--border);
+  background: #1E1D20;
+  border: 0.5px solid rgba(255,255,255,0.1);
   border-radius: 16px 16px 0 0;
   overflow: hidden;
+  color-scheme: dark;
+  color: white;
 }
 
-/* Curtain video background */
-.onair-curtain-video {
+/* Curtain background images — stacked, cross-fade */
+.onair-curtain-bg {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
   z-index: 0;
+  opacity: 0;
+  transition: opacity 600ms ease;
+}
+
+.onair-curtain-bg.onair-curtain-active {
+  opacity: 1;
 }
 
 /* Center content */
@@ -119,8 +129,8 @@
 }
 
 .onair-field {
-  background: var(--background-primary);
-  border: 1px dashed var(--border);
+  background: rgba(255,255,255,0.05);
+  border: 1px dashed rgba(255,255,255,0.1);
   border-radius: 12px;
   padding: 8px 16px;
   display: flex;
@@ -128,7 +138,7 @@
   justify-content: center;
   font-size: 16px;
   font-weight: 500;
-  color: var(--text-primary);
+  color: white;
   line-height: 24px;
   letter-spacing: -0.32px;
 }
@@ -140,9 +150,40 @@
   letter-spacing: 0;
 }
 
-.onair-field-desc span {
-  color: var(--text-secondary);
+.onair-input {
+  background: none;
+  border: none;
+  outline: none;
+  width: 100%;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 500;
+  color: white;
+  line-height: 24px;
+  letter-spacing: -0.32px;
+}
+
+.onair-input::placeholder {
+  color: white;
+}
+
+.onair-input-title {
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 32px;
+  letter-spacing: 0;
+}
+
+.onair-input-title::placeholder {
+  color: white;
+}
+
+.onair-input-desc {
   font-weight: 400;
+}
+
+.onair-input-desc::placeholder {
+  color: rgba(255,255,255,0.5);
 }
 
 /* Host */
@@ -157,9 +198,9 @@
   width: 84px;
   height: 84px;
   border-radius: 50%;
-  border: 1px dashed var(--border);
+  border: 1px dashed rgba(255,255,255,0.1);
   padding: 6px;
-  background: var(--background-primary);
+  background: rgba(255,255,255,0.05);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -179,7 +220,7 @@
   gap: 4px;
   font-size: 14px;
   font-weight: 500;
-  color: var(--text-primary);
+  color: white;
   letter-spacing: -0.15px;
 }
 
@@ -192,8 +233,8 @@
   flex-direction: column;
   gap: 12px;
   align-items: center;
-  background: var(--background-primary);
-  border: 0.5px solid var(--border);
+  background: rgba(255,255,255,0.05);
+  border: 0.5px solid rgba(255,255,255,0.1);
   border-radius: 40px;
   padding: 12px;
   z-index: 2;
@@ -223,8 +264,8 @@
   flex-direction: column;
   gap: 4px;
   align-items: center;
-  background: var(--background-primary);
-  border: 0.5px solid var(--border);
+  background: rgba(255,255,255,0.05);
+  border: 0.5px solid rgba(255,255,255,0.1);
   border-radius: 40px;
   padding: 4px;
   z-index: 2;
@@ -237,12 +278,18 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--text-primary);
+  color: white;
   cursor: pointer;
 }
 
 .onair-tool:hover {
-  background: var(--background-primary);
+  background: rgba(255,255,255,0.05);
+}
+
+.onair-tool-icon {
+  width: 20px;
+  height: 20px;
+  opacity: 0.6;
 }
 
 .onair-tool-share {
