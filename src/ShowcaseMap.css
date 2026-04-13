@@ -1037,6 +1037,12 @@
 
 .sc-light-close {
   background: #FF5F57;
+  position: relative;
+}
+.sc-light-close::before {
+  content: '';
+  position: absolute;
+  inset: -8px;
 }
 
 .sc-light-minimize {

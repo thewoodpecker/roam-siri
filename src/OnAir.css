@@ -63,7 +63,8 @@
   border-radius: 50%;
 }
 
-.onair-light-close { background: #FF5F57; cursor: pointer; }
+.onair-light-close { background: #FF5F57; cursor: pointer; position: relative; }
+.onair-light-close::before { content: ''; position: absolute; inset: -8px; }
 .onair-light-minimize { background: #FEBC2E; }
 .onair-light-maximize { background: #28C840; }
 

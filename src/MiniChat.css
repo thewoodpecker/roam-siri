@@ -58,7 +58,8 @@
   border-radius: 50%;
 }
 
-.mc-light-close { background: #FF5F57; cursor: pointer; }
+.mc-light-close { background: #FF5F57; cursor: pointer; position: relative; }
+.mc-light-close::before { content: ''; position: absolute; inset: -8px; }
 .mc-light-minimize { background: #FEBC2E; }
 .mc-light-maximize { background: #28C840; }
 

@@ -64,7 +64,8 @@
   border-radius: 50%;
 }
 
-.meeting-win-light-close { background: #FF5F57; cursor: pointer; }
+.meeting-win-light-close { background: #FF5F57; cursor: pointer; position: relative; }
+.meeting-win-light-close::before { content: ''; position: absolute; inset: -8px; }
 .meeting-win-light-min { background: #FEBC2E; }
 .meeting-win-light-max { background: #28C840; }
 

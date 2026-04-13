@@ -67,7 +67,8 @@
   border-radius: 50%;
 }
 
-.ainbox-light-close { background: #FF5F57; cursor: pointer; }
+.ainbox-light-close { background: #FF5F57; cursor: pointer; position: relative; }
+.ainbox-light-close::before { content: ''; position: absolute; inset: -8px; }
 .ainbox-light-minimize { background: #FEBC2E; }
 .ainbox-light-maximize { background: #28C840; }
 
