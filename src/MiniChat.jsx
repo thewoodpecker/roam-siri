@@ -75,6 +75,15 @@ export default function MiniChat({ personName, personAvatar, chatId, position, o
   const inputRef = useRef(null);
   const dmTimer = useRef(null);
 
+  // Cleanup dmTimer on unmount
+  useEffect(() => {
+    return () => {
+      if (dmTimer.current) {
+        dmTimer.current.forEach(t => clearTimeout(t));
+      }
+    };
+  }, []);
+
   // Ensure conversation exists
   useEffect(() => {
     setMessages(prev => {

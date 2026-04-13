@@ -20,7 +20,7 @@ ONAIR_COLORS.forEach(c => {
 
 const DEMO_EVENTS = [
   { title: 'The Future of Remote Work', desc: 'How AI and spatial computing will reshape the office', date: 'June 15, 2026 · 2:00 PM EST', location: 'Roam Virtual Auditorium', host: 'Howard Lerman', avatar: '/headshots/howard-lerman.jpg', color: 5 },
-  { title: 'Design Systems at Scale', desc: 'Building and maintaining design systems across platforms', date: 'July 8, 2026 · 11:00 AM PST', location: 'Roam Design Studio', host: 'Grace Sutherland', avatar: '/headshots/grace-sutherland.jpg', color: 4 },
+  { title: 'Design Systems at Scale', desc: 'Building and maintaining design systems across platforms', date: 'July 8, 2026 · 11:00 AM PST', location: 'Roam Design Studio', host: 'Joe Woodward', avatar: '/headshots/joe-woodward.jpg', color: 4 },
   { title: 'AI-First Products', desc: 'When AI is the foundation, not an afterthought', date: 'August 22, 2026 · 3:00 PM GMT', location: 'Roam Innovation Lab', host: 'Klas Leino', avatar: '/headshots/klas-leino.jpg', color: 3 },
   { title: 'Roam Creator Summit', desc: 'Where builders, makers, and creators collide', date: 'Sept 10, 2026 · 1:00 PM EST', location: 'Roam Main Stage', host: 'Chelsea Turbin', avatar: '/headshots/chelsea-turbin.jpg', color: 2 },
   { title: 'Engineering All-Hands', desc: 'Q3 roadmap, architecture deep-dives, and demos', date: 'Oct 3, 2026 · 10:00 AM PST', location: 'Roam Theater', host: 'Derek Cicerone', avatar: '/headshots/derek-cicerone.jpg', color: 0 },
@@ -51,8 +51,6 @@ export default function OnAir({ win, onDrag, demo }) {
   };
 
   const [selectedColor, setSelectedColor] = useState(0);
-  const colors = ONAIR_COLORS;
-
   // Demo mode — cycle through events with typewriter effect
   const [demoActive, setDemoActive] = useState(false);
   const [demoEvent, setDemoEvent] = useState(null);
@@ -129,7 +127,7 @@ export default function OnAir({ win, onDrag, demo }) {
       {/* Body */}
       <div className="onair-body">
         {/* Curtain backgrounds — all stacked, cross-fade with opacity */}
-        {colors.map((c, i) => c.image && (
+        {ONAIR_COLORS.map((c, i) => c.image && (
           <img
             key={c.image}
             className={`onair-curtain-bg ${i === selectedColor ? 'onair-curtain-active' : ''}`}
@@ -181,11 +179,11 @@ export default function OnAir({ win, onDrag, demo }) {
 
         {/* Left color picker */}
         <div className="onair-colors">
-          {colors.map((c, i) => (
+          {ONAIR_COLORS.map((c, i) => (
             <div
               key={i}
               className={`onair-color ${selectedColor === i ? 'onair-color-selected' : ''}`}
-              style={{ background: c.bg, border: c.border ? '0.5px solid var(--border)' : '0.5px solid var(--border)' }}
+              style={{ background: c.bg, border: '0.5px solid var(--border)' }}
               onClick={() => setSelectedColor(i)}
             >
               {selectedColor === i && (

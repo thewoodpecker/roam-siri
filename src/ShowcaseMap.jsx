@@ -6,6 +6,7 @@ import Navbar from './Navbar';
 import AInbox from './AInbox';
 import MiniChat, { getChatIdForAvatar } from './MiniChat';
 import OnAir from './OnAir';
+import MeetingWindow from './MeetingWindow';
 import { ChatProvider } from './ChatContext';
 import { WindowManagerProvider, useWindow } from './WindowManager';
 import StoryViewer from './StoryViewer';
@@ -71,7 +72,7 @@ const FLOORS = {
   'Commercial': [
     // Large lobby spanning top-left
     { id: 'c-lobby', type: 'meeting', name: 'Sales Floor', people: [p('Lexi B.'), p('Will H.'), p('Peter L.'), p('Sean M.'), p('Chelsea T.'), p('Garima K.'), p('Joe W.')], pos: { col: 0, row: 0 }, colSpan: 3, rowSpan: 2 },
-    { id: 'c1', type: 'private', name: 'Arnav B.', people: [p('Arnav B.')], pos: { col: 3, row: 0 }, span: 1 },
+    { id: 'c1', type: 'private', name: 'Arnav B.', people: [p('Arnav B.')], pos: { col: 3, row: 0 }, span: 1, story: '/story-3.jpg' },
     { id: 'c2', type: 'private', name: 'Aaron W.', people: [p('Aaron W.')], pos: { col: 4, row: 0 }, span: 1 },
     { id: 'c3', type: 'private', name: 'Tom D.', people: [p('Tom D.')], pos: { col: 5, row: 0 }, span: 1 },
     // Row 2 — right side offices
@@ -91,11 +92,11 @@ const FLOORS = {
   'Marketing': [
     // Row 1 — offices with a gap in the middle
     { id: 'm1', type: 'private', name: 'Grace S.', people: [p('Grace S.')], pos: { col: 0, row: 0 }, span: 1 },
-    { id: 'm2', type: 'private', name: 'Chelsea T.', people: [p('Chelsea T.')], pos: { col: 1, row: 0 }, span: 1 },
+    { id: 'm2', type: 'private', name: 'Chelsea T.', people: [p('Chelsea T.')], pos: { col: 1, row: 0 }, span: 1, story: '/story-2.png' },
     { id: 'm3', type: 'private', name: 'Keegan L.', people: [p('Keegan L.')], pos: { col: 4, row: 0 }, span: 1 },
     { id: 'm4', type: 'private', name: 'John M.', people: [p('John M.')], pos: { col: 5, row: 0 }, span: 1 },
     // Row 2 — meeting room in the center
-    { id: 'm5', type: 'private', name: 'Lexi B.', people: [p('Lexi B.')], pos: { col: 0, row: 1 }, span: 1 },
+    { id: 'm5', type: 'private', name: 'Lexi B.', people: [p('Lexi B.')], pos: { col: 0, row: 1 }, span: 1, story: '/story-4.jpg' },
     { id: 'm-brand', type: 'meeting', name: 'Brand Review', people: [p('Ava L.'), p('Derek C.'), p('Arnav B.'), p('Aaron W.')], pos: { col: 1, row: 1 }, colSpan: 2, rowSpan: 2 },
     { id: 'm-content', type: 'meeting', name: 'Content Sync', people: [p('Howard L.'), p('Rob F.'), p('Joe W.')], pos: { col: 3, row: 1 }, colSpan: 2, rowSpan: 2 },
     { id: 'm6', type: 'private', name: 'Mattias L.', people: [p('Mattias L.')], pos: { col: 5, row: 1 }, span: 1 },
@@ -181,7 +182,6 @@ function SimpleStoryBubble({ image, delay = 0, onClick }) {
 
   return (
     <div className={`sc-story-bubble ${dismissing ? 'sc-story-dismissing' : ''}`} onClick={(e) => { e.stopPropagation(); handleClick(); }}>
-    <div className="sc-story-bubble">
       <div className="sc-story-rings">
         <div className="sc-story-ring" style={{ animationDelay: '0.4s' }} />
         <div className="sc-story-ring" style={{ animationDelay: '0.7s' }} />
@@ -202,7 +202,6 @@ function SimpleStoryBubble({ image, delay = 0, onClick }) {
           <path d="M5.586 5.586L0 0H14L8.414 5.586a2 2 0 01-2.828 0z" fill="#2C80FF" />
         </svg>
       </div>
-    </div>
     </div>
   );
 }
@@ -317,7 +316,7 @@ function TheaterRoomCard({ room }) {
 }
 
 // Meeting room card — same markup as mapv3, with talking indicators
-function MeetingRoomCardShowcase({ room, onPersonClick }) {
+function MeetingRoomCardShowcase({ room, onPersonClick, onRoomClick }) {
   const [talking, setTalking] = useState({});
 
   useEffect(() => {
@@ -333,7 +332,7 @@ function MeetingRoomCardShowcase({ room, onPersonClick }) {
   }, [room.people]);
 
   return (
-    <div className="sc-room-card">
+    <div className="sc-room-card" onClick={() => onRoomClick && onRoomClick(room)} style={{ cursor: 'pointer' }}>
       <div className="big-meeting-card-inner" style={{ height: '100%' }}>
         <div className="meeting-room-card" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
           <div className="card-header" style={{ padding: '0 12px' }}>
@@ -420,6 +419,7 @@ const INITIAL_WINDOWS = [
   { id: 'map', isOpen: true, position: { x: 0, y: 0 }, zIndex: 25 },
   { id: 'ainbox', isOpen: false, position: { x: 60, y: 300 }, zIndex: 30 },
   { id: 'onair', isOpen: false, position: { x: 60, y: 300 }, zIndex: 30 },
+  { id: 'meeting', isOpen: false, position: { x: 80, y: 250 }, zIndex: 30 },
 ];
 
 // Main showcase component
@@ -603,6 +603,10 @@ function ShowcaseMapInner() {
   const mapWin = useWindow('map');
   const ainboxWin = useWindow('ainbox');
   const onairWin = useWindow('onair');
+  const meetingWin = useWindow('meeting');
+  const [activeMeetingRoom, setActiveMeetingRoom] = useState(null);
+  const [joinedRoomId, setJoinedRoomId] = useState(null);
+  const JOE = { name: 'Joe W.', fullName: 'Joe Woodward', avatar: '/headshots/joe-woodward.jpg' };
 
   const makeDragHandler = (win) => (e) => {
     if (e.target.closest('.sc-traffic-lights') || e.target.closest('.ainbox-traffic-lights') || e.target.closest('.sc-theme-toggle')) return;
@@ -744,7 +748,7 @@ function ShowcaseMapInner() {
                     {room.type === 'theater' ? (
                       <TheaterRoomCard room={room} />
                     ) : room.type === 'meeting' ? (
-                      <MeetingRoomCardShowcase room={room} onPersonClick={openMiniChat} />
+                      <MeetingRoomCardShowcase room={{ ...room, people: joinedRoomId === room.id ? [...room.people, JOE] : room.people }} onPersonClick={openMiniChat} onRoomClick={(r) => { setJoinedRoomId(r.id); setActiveMeetingRoom({ ...r, people: [...r.people, JOE] }); meetingWin.open(); }} />
                     ) : room.type === 'game' ? (
                       <GameRoomCard room={room} />
                     ) : room.type === 'command' ? (
@@ -849,6 +853,7 @@ function ShowcaseMapInner() {
       ))}
       {ainboxWin.isOpen && <AInbox win={ainboxWin} onDrag={makeDragHandler(ainboxWin)} />}
       {onairWin.isOpen && <OnAir win={onairWin} onDrag={makeDragHandler(onairWin)} demo />}
+      {meetingWin.isOpen && activeMeetingRoom && <MeetingWindow win={meetingWin} onDrag={makeDragHandler(meetingWin)} roomName={activeMeetingRoom.name} people={activeMeetingRoom.people} onOpenChat={() => ainboxWin.open()} onOpenOnAir={() => onairWin.open()} />}
       {/* Product features bar — inside miniRoamOS, pinned to bottom */}
       <div className="sc-products-bar" ref={productsBarRef}>
         {[
@@ -911,6 +916,31 @@ function ShowcaseMapInner() {
           <div className="sc-feature-text sc-feature-text-right">
             <h2 className="sc-feature-title">ON-AIR</h2>
             <p className="sc-feature-desc">Now anyone can host Immersive Events for the Creator-Era</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Feature section — Meeting Room */}
+      <div className="sc-feature-section">
+        <div className="sc-section-grid">
+          <div className="sc-feature-text">
+            <h2 className="sc-feature-title">VIDEO CONFERENCING</h2>
+            <p className="sc-feature-desc">Jump into a Meeting Room for video conferencing when you need to collaborate. When you're done, you're done! Includes high resolution screensharing and whiteboard as well. No more back-to-back video meetings filling out all day. Just meet when you need to, and when you're done, back to work.</p>
+          </div>
+          <div className="sc-feature-visual">
+            <div className="sc-feature-wallpaper" style={{ backgroundImage: `url(/wallpaper-${theme}.png)` }}>
+              <MeetingWindow
+                win={{ position: { x: 0, y: 0 }, zIndex: 1, isFocused: true, focus: () => {}, close: () => {}, open: () => {} }}
+                onDrag={() => {}}
+                roomName="Daily Standup"
+                people={[
+                  { name: 'Howard L.', fullName: 'Howard Lerman', avatar: '/headshots/howard-lerman.jpg' },
+                  { name: 'Grace S.', fullName: 'Grace Sutherland', avatar: '/headshots/grace-sutherland.jpg' },
+                  { name: 'Derek C.', fullName: 'Derek Cicerone', avatar: '/headshots/derek-cicerone.jpg' },
+                  { name: 'Joe W.', fullName: 'Joe Woodward', avatar: '/headshots/joe-woodward.jpg' },
+                ]}
+              />
+            </div>
           </div>
         </div>
       </div>

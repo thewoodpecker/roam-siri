@@ -593,6 +593,16 @@
   grid-column: 9 / span 4;
 }
 
+.sc-feature-visual .meeting-win {
+  position: relative !important;
+  left: auto !important;
+  bottom: auto !important;
+  width: 100% !important;
+  height: 100% !important;
+  animation: none !important;
+  pointer-events: auto;
+}
+
 .sc-feature-visual .onair-window {
   position: relative !important;
   left: auto !important;
@@ -687,7 +697,8 @@
 
 .sc-viewport[data-theme="light"] .ainbox-window,
 .sc-viewport[data-theme="light"] .mc-window,
-.sc-viewport[data-theme="light"] .onair-window {
+.sc-viewport[data-theme="light"] .onair-window,
+.sc-viewport[data-theme="light"] .meeting-win {
   background: rgba(255, 255, 255, 0.3);
 }
 

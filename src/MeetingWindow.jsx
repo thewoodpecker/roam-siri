@@ -1,0 +1,325 @@
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import './MeetingWindow.css';
+
+const ROAMOJIS = ['🤣', '🔥', '👏', '👍', '🍿', '🎉', '🚀', '😍', '💯'];
+
+const SOUND_ROAMOJIS = [
+  { emoji: '👏', label: 'Clap', levels: ['/audio/clap.mp3', '/audio/clap2.mp3', '/audio/clap3.mp3', '/audio/clap4.mp3'] },
+  { emoji: '😂', label: 'Laugh', levels: ['/audio/laugh1.mp3', '/audio/laugh2.mp3', '/audio/laugh3.mp3', '/audio/laugh4.mp3'] },
+  { emoji: '🥁', label: 'Drum', levels: ['/audio/drum.mp3'] },
+  { emoji: '🔥', label: 'Fire', levels: ['/audio/fire.mp3'] },
+];
+
+function SoundButton({ emoji, level, onClick }) {
+  const bars = 16;
+  const levelClass = level <= 0 ? '' : level <= 1 ? 'roamoji-bars-l1' : level <= 2 ? 'roamoji-bars-l2' : 'roamoji-bars-l3';
+  return (
+    <button className={`roamoji-sound-btn ${level > 0 ? 'roamoji-sound-active' : ''}`} onClick={onClick}>
+      <span className="roamoji-sound-emoji">{emoji}</span>
+      <div className={`roamoji-sound-bars ${levelClass}`}>
+        {Array.from({ length: bars }, (_, i) => (
+          <div key={i} className="roamoji-sound-bar" />
+        ))}
+      </div>
+    </button>
+  );
+}
+
+function RoamojiGhost({ emoji, avatar, id, onDone, startX }) {
+  useEffect(() => {
+    const t = setTimeout(onDone, 3000);
+    return () => clearTimeout(t);
+  }, []);
+
+  return (
+    <div
+      className="roamoji-ghost"
+      style={{ left: startX }}
+    >
+      <img src={avatar} alt="" className="roamoji-ghost-avatar" />
+      <span className="roamoji-ghost-emoji">{emoji}</span>
+    </div>
+  );
+}
+
+const VIEW_ICONS = {
+  dynamic: <img src="/icons/sparkle-double.svg" alt="" className="meeting-win-view-svg" />,
+  gallery: <img src="/icons/gallery.svg" alt="" className="meeting-win-view-svg" />,
+  speaker: <img src="/icons/active-speaker.svg" alt="" className="meeting-win-view-svg" />,
+};
+
+const VIEW_MODES = [
+  { id: 'dynamic', label: 'Dynamic' },
+  { id: 'gallery', label: 'Gallery' },
+  { id: 'speaker', label: 'Active Speaker' },
+];
+
+export default function MeetingWindow({ win, onDrag, roomName, people, onOpenChat, onOpenOnAir }) {
+  const [closing, setClosing] = useState(false);
+  const [activeSpeaker, setActiveSpeaker] = useState(0);
+  const [viewMode, setViewMode] = useState('gallery');
+  const [viewMenuOpen, setViewMenuOpen] = useState(false);
+  const viewMenuRef = useRef(null);
+  const [roamojiOpen, setRoamojiOpen] = useState(true);
+  const [roamojiClosing, setRoamojiClosing] = useState(false);
+  const [ghosts, setGhosts] = useState([]);
+  const ghostIdRef = useRef(0);
+
+  const [soundLevels, setSoundLevels] = useState({});
+  const soundClickCounts = useRef({});
+  const soundTimers = useRef({});
+  const activeAudios = useRef({});
+
+  // Cleanup activeAudios and soundTimers on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(soundTimers.current).forEach(t => clearTimeout(t));
+      Object.values(activeAudios.current).forEach(a => {
+        if (a) { a.pause(); a.currentTime = 0; }
+      });
+    };
+  }, []);
+
+  const playSound = useCallback((soundItem) => {
+    const key = soundItem.emoji;
+    // Track clicks within a 3-second window
+    if (!soundClickCounts.current[key]) soundClickCounts.current[key] = 0;
+    soundClickCounts.current[key]++;
+    const clicks = soundClickCounts.current[key];
+
+    // Determine level: 1-3 clicks = level 0, 4-8 = level 1, 9-15 = level 2, 16+ = level 3
+    const level = clicks <= 3 ? 0 : clicks <= 8 ? 1 : clicks <= 15 ? 2 : 3;
+    const clampedLevel = Math.min(level, soundItem.levels.length - 1);
+
+    setSoundLevels(prev => ({ ...prev, [key]: level }));
+
+    // Stop previous audio for this sound and play the right level
+    if (activeAudios.current[key]) {
+      activeAudios.current[key].pause();
+      activeAudios.current[key] = null;
+    }
+    const audio = new Audio(soundItem.levels[clampedLevel]);
+    audio.volume = 0.3 + level * 0.15;
+    audio.play().catch(() => {});
+    activeAudios.current[key] = audio;
+
+    // Decay clicks after 3 seconds of no clicking
+    clearTimeout(soundTimers.current[key]);
+    soundTimers.current[key] = setTimeout(() => {
+      soundClickCounts.current[key] = 0;
+      setSoundLevels(prev => ({ ...prev, [key]: 0 }));
+      activeAudios.current[key] = null;
+    }, 3000);
+
+    // Show ghost
+    const startX = 20 + Math.random() * 60 + '%';
+    setGhosts(prev => [...prev, { id: ghostIdRef.current++, emoji: soundItem.emoji, avatar: '/headshots/joe-woodward.jpg', startX }]);
+  }, []);
+
+  const sendRoamoji = useCallback((emoji) => {
+    const startX = 30 + Math.random() * 60 + '%';
+    setGhosts(prev => [...prev, {
+      id: ghostIdRef.current++,
+      emoji,
+      avatar: '/headshots/joe-woodward.jpg',
+      startX,
+    }]);
+  }, []);
+
+  const removeGhost = useCallback((id) => {
+    setGhosts(prev => prev.filter(g => g.id !== id));
+  }, []);
+
+  // Auto-reactions from other participants — sometimes burst multiple
+  useEffect(() => {
+    const timers = [];
+    const scheduleReaction = () => {
+      const delay = 1000 + Math.random() * 3000;
+      const t = setTimeout(() => {
+        const person = people[Math.floor(Math.random() * people.length)];
+        const emoji = ROAMOJIS[Math.floor(Math.random() * ROAMOJIS.length)];
+        const burstCount = Math.random() < 0.4 ? 1 : Math.random() < 0.6 ? 2 + Math.floor(Math.random() * 3) : 4 + Math.floor(Math.random() * 4);
+        for (let b = 0; b < burstCount; b++) {
+          const bt = setTimeout(() => {
+            const startX = 20 + Math.random() * 60 + '%';
+            setGhosts(prev => [...prev, {
+              id: ghostIdRef.current++,
+              emoji,
+              avatar: person.avatar,
+              startX,
+            }]);
+          }, b * (150 + Math.random() * 200));
+          timers.push(bt);
+        }
+        scheduleReaction();
+      }, delay);
+      timers.push(t);
+    };
+    scheduleReaction();
+    return () => timers.forEach(t => clearTimeout(t));
+  }, [people]);
+
+  const handleClose = () => {
+    setClosing(true);
+    setTimeout(() => win.close(), 200);
+  };
+
+  // Close view menu on click outside
+  useEffect(() => {
+    if (!viewMenuOpen) return;
+    const handler = (e) => { if (viewMenuRef.current && !viewMenuRef.current.contains(e.target)) setViewMenuOpen(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [viewMenuOpen]);
+
+  // Match video feeds to people by gender
+  const WOMEN = ['Grace', 'Chelsea', 'Lexi', 'Garima', 'Ava'];
+  const videoMap = {};
+  let womanUsed = false, manUsed = false;
+  people.forEach((p, i) => {
+    const name = p.fullName || p.name;
+    const isWoman = WOMEN.some(w => name.includes(w));
+    if (isWoman && !womanUsed) { videoMap[i] = '/meeting-room/woman-01.mp4'; womanUsed = true; }
+    else if (!isWoman && !manUsed) { videoMap[i] = '/meeting-room/man-01.mp4'; manUsed = true; }
+  });
+  const videoOff = new Set(people.map((_, i) => i).filter(i => !videoMap[i]));
+
+  // Rotate active speaker with variable timing
+  useEffect(() => {
+    let timerId;
+    const scheduleNext = () => {
+      timerId = setTimeout(() => {
+        setActiveSpeaker(prev => (prev + 1) % people.length);
+        scheduleNext();
+      }, 4000 + Math.random() * 3000);
+    };
+    scheduleNext();
+    return () => clearTimeout(timerId);
+  }, [people.length]);
+
+  // Grid layout: 1 person = 1x1, 2 = 2x1, 3-4 = 2x2, 5-6 = 3x2, 7+ = 3x3
+  const cols = people.length <= 1 ? 1 : people.length <= 4 ? 2 : 3;
+  const rows = people.length <= 2 ? 1 : people.length <= 6 ? 2 : 3;
+
+  return (
+    <div
+      className={`meeting-win ${!win.isFocused ? 'meeting-win-unfocused' : ''} ${closing ? 'meeting-win-closing' : ''}`}
+      style={{ left: win.position.x, top: win.position.y, zIndex: win.zIndex }}
+      onMouseDown={() => win.focus()}
+    >
+      {/* Header */}
+      <div className="meeting-win-header" onMouseDown={onDrag}>
+        <div className="meeting-win-lights">
+          <div className="meeting-win-light meeting-win-light-close" onClick={(e) => { e.stopPropagation(); handleClose(); }} />
+          <div className="meeting-win-light meeting-win-light-min" />
+          <div className="meeting-win-light meeting-win-light-max" />
+        </div>
+        <div className="meeting-win-header-center">
+          <span className="meeting-win-title">{roomName}</span>
+          <span className="meeting-win-subtitle">Recording Magic Minutes</span>
+        </div>
+        <div className="meeting-win-header-right" ref={viewMenuRef}>
+          <div className="meeting-win-gallery-btn" onMouseDown={(e) => e.stopPropagation()} onClick={() => setViewMenuOpen(v => !v)}>
+            <span className="meeting-win-gallery-icon">{VIEW_ICONS[viewMode]}</span>
+            <span>{VIEW_MODES.find(m => m.id === viewMode)?.label}</span>
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2.5 4L5 6.5L7.5 4" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          </div>
+          {viewMenuOpen && (
+            <div className="meeting-win-view-menu">
+              {VIEW_MODES.map(m => (
+                <div key={m.id} className={`meeting-win-view-item ${viewMode === m.id ? 'meeting-win-view-active' : ''}`} onClick={() => { setViewMode(m.id); setViewMenuOpen(false); }}>
+                  <span className="meeting-win-view-icon">{VIEW_ICONS[m.id]}</span>
+                  <span>{m.label}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Video grid */}
+      <div className="meeting-win-body">
+        <div className="meeting-win-grid" style={{ gridTemplateColumns: `repeat(${cols}, 1fr)`, gridTemplateRows: `repeat(${rows}, 1fr)` }}>
+          {people.map((person, i) => (
+            <div key={person.name + i} className={`meeting-win-tile ${i === activeSpeaker ? 'meeting-win-tile-active' : ''} ${videoOff.has(i) ? 'meeting-win-tile-off' : ''}`}>
+              {videoOff.has(i) ? (
+                <div className="meeting-win-avatar-wrap">
+                  <img src={person.avatar} alt="" className="meeting-win-avatar" />
+                </div>
+              ) : (
+                <video
+                  className="meeting-win-video"
+                  src={videoMap[i]}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                />
+              )}
+              <div className="meeting-win-name">
+                <span>{person.fullName || person.name}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Roamoji ghosts */}
+        <div className="roamoji-ghost-container">
+          {ghosts.map(g => (
+            <RoamojiGhost key={g.id} emoji={g.emoji} avatar={g.avatar} id={g.id} startX={g.startX} onDone={() => removeGhost(g.id)} />
+          ))}
+        </div>
+
+        {/* Roamoji bar */}
+        {roamojiOpen && (
+          <div className={`roamoji-bar ${roamojiClosing ? 'roamoji-bar-closing' : ''}`}>
+            {SOUND_ROAMOJIS.map(s => (
+              <SoundButton key={s.label} emoji={s.emoji} sound={s.sound} level={soundLevels[s.emoji] || 0} onClick={() => playSound(s)} />
+            ))}
+            <div className="roamoji-divider" />
+            {ROAMOJIS.map((emoji, i) => (
+              <button key={emoji + i} className="roamoji-btn" onClick={() => sendRoamoji(emoji)}>
+                {emoji}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Toolbar */}
+        <div className="meeting-win-toolbar-wrap">
+          <div className="meeting-win-toolbar">
+            {/* Left */}
+            <div className="meeting-win-pill-group">
+              <div className="meeting-win-pill" onClick={onOpenChat}><img src="/icons/chat.svg" alt="" /></div>
+            </div>
+            {/* Center */}
+            <div className="meeting-win-pill-group">
+              <div className="meeting-win-pill"><img src="/icons/video-on.svg" alt="" /></div>
+              <div className="meeting-win-pill"><img src="/icons/microphone.svg" alt="" /></div>
+              <div className="meeting-win-pill"><img src="/icons/screenshare.svg" alt="" /></div>
+              <div className="meeting-win-pill"><img src="/icons/hand-raise.svg" alt="" /></div>
+              <div className={`meeting-win-pill ${roamojiOpen ? 'meeting-win-pill-active' : ''}`} onClick={() => {
+                if (roamojiOpen) {
+                  setRoamojiClosing(true);
+                  setTimeout(() => { setRoamojiOpen(false); setRoamojiClosing(false); }, 200);
+                } else {
+                  setRoamojiOpen(true);
+                }
+              }}><img src="/icons/emoji.svg" alt="" /></div>
+              <div className="meeting-win-pill"><img src="/icons/magic-quill.svg" alt="" /></div>
+              <div className="meeting-win-pill meeting-win-pill-leave" onClick={handleClose}><img src="/icons/door.svg" alt="" /></div>
+            </div>
+            {/* Right */}
+            <div className="meeting-win-toolbar-right">
+              <div className="meeting-win-pill-group">
+                <div className="meeting-win-pill"><img src="/icons/add-people.svg" alt="" /></div>
+                <div className="meeting-win-pill"><img src="/icons/meeting-chat.svg" alt="" /></div>
+                <div className="meeting-win-pill"><img src="/icons/floors.svg" alt="" /></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
