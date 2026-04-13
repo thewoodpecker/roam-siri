@@ -179,7 +179,7 @@ function SimpleStoryBubble({ image, delay = 0, onClick }) {
   if (!visible) return null;
 
   return (
-    <div className={`sc-story-bubble ${dismissing ? 'sc-story-dismissing' : ''}`} onClick={handleClick}>
+    <div className={`sc-story-bubble ${dismissing ? 'sc-story-dismissing' : ''}`} onClick={(e) => { e.stopPropagation(); handleClick(); }}>
     <div className="sc-story-bubble">
       <div className="sc-story-rings">
         <div className="sc-story-ring" style={{ animationDelay: '0.4s' }} />
@@ -632,7 +632,9 @@ function ShowcaseMapInner() {
         const available = privateRooms.filter(r => !prev[r.id]);
         if (available.length === 0) return prev;
         const room = available[Math.floor(Math.random() * available.length)];
-        const type = Math.random() < 0.5 ? 'claude' : 'codex';
+        const claudeCount = Object.values(prev).filter(v => v === 'claude').length;
+        const codexCount = Object.values(prev).filter(v => v === 'codex').length;
+        const type = claudeCount <= codexCount ? 'claude' : 'codex';
         return { ...prev, [room.id]: type };
       });
     };
@@ -650,12 +652,12 @@ function ShowcaseMapInner() {
 
     // Schedule starts and stops independently
     const scheduleStart = () => {
-      const delay = 2000 + Math.random() * 5000;
+      const delay = 3000 + Math.random() * 5000;
       timers.push(setTimeout(() => { startVibe(); scheduleStart(); }, delay));
     };
 
     const scheduleStop = () => {
-      const delay = 4000 + Math.random() * 8000;
+      const delay = 6000 + Math.random() * 8000;
       timers.push(setTimeout(() => { stopRandomVibe(); scheduleStop(); }, delay));
     };
 

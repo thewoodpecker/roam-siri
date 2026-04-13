@@ -1107,8 +1107,9 @@
   position: absolute;
   inset: 0;
   opacity: 0;
-  transition: opacity 800ms ease;
+  transition: opacity 800ms ease !important;
   pointer-events: none;
+  z-index: 10;
 }
 
 .sc-glow-fade.sc-glow-visible {
