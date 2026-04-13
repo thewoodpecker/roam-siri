@@ -666,7 +666,8 @@
 }
 
 .sc-viewport[data-theme="light"] .ainbox-window,
-.sc-viewport[data-theme="light"] .mc-window {
+.sc-viewport[data-theme="light"] .mc-window,
+.sc-viewport[data-theme="light"] .onair-window {
   background: rgba(255, 255, 255, 0.3);
 }
 

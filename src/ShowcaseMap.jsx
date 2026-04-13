@@ -5,6 +5,7 @@ import SiriGlow from './SiriGlow';
 import Navbar from './Navbar';
 import AInbox from './AInbox';
 import MiniChat, { getChatIdForAvatar } from './MiniChat';
+import OnAir from './OnAir';
 import { ChatProvider } from './ChatContext';
 import { WindowManagerProvider, useWindow } from './WindowManager';
 import StoryViewer from './StoryViewer';
@@ -418,6 +419,7 @@ function FloorCard({ name, rooms, active, onClick }) {
 const INITIAL_WINDOWS = [
   { id: 'map', isOpen: true, position: { x: 0, y: 0 }, zIndex: 25 },
   { id: 'ainbox', isOpen: false, position: { x: 60, y: 300 }, zIndex: 30 },
+  { id: 'onair', isOpen: true, position: { x: 120, y: 80 }, zIndex: 30 },
 ];
 
 // Main showcase component
@@ -600,6 +602,7 @@ function ShowcaseMapInner() {
 
   const mapWin = useWindow('map');
   const ainboxWin = useWindow('ainbox');
+  const onairWin = useWindow('onair');
 
   const makeDragHandler = (win) => (e) => {
     if (e.target.closest('.sc-traffic-lights') || e.target.closest('.ainbox-traffic-lights') || e.target.closest('.sc-theme-toggle')) return;
@@ -841,6 +844,7 @@ function ShowcaseMapInner() {
         <MiniChat key={mc.chatId} {...mc} onClose={() => closeMiniChat(mc.chatId)} />
       ))}
       {ainboxWin.isOpen && <AInbox win={ainboxWin} onDrag={makeDragHandler(ainboxWin)} />}
+      {onairWin.isOpen && <OnAir win={onairWin} onDrag={makeDragHandler(onairWin)} />}
       {/* Product features bar — inside miniRoamOS, pinned to bottom */}
       <div className="sc-products-bar" ref={productsBarRef}>
         {[
@@ -857,7 +861,7 @@ function ShowcaseMapInner() {
         ].map((item, i) => (
           <React.Fragment key={item.name}>
             {i > 0 && <div className="sc-products-dot" />}
-            <ProductItem name={item.name} desc={item.desc} onClick={item.name === 'AInbox' ? () => ainboxWin.open() : undefined} />
+            <ProductItem name={item.name} desc={item.desc} onClick={item.name === 'AInbox' ? () => ainboxWin.open() : item.name === 'On-Air' ? () => onairWin.open() : undefined} />
           </React.Fragment>
         ))}
       </div>
