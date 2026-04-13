@@ -748,7 +748,7 @@ function ShowcaseMapInner() {
                     {room.type === 'theater' ? (
                       <TheaterRoomCard room={room} />
                     ) : room.type === 'meeting' ? (
-                      <MeetingRoomCardShowcase room={{ ...room, people: joinedRoomId === room.id ? [...room.people, JOE] : room.people }} onPersonClick={openMiniChat} onRoomClick={(r) => { setJoinedRoomId(r.id); setActiveMeetingRoom({ ...r, people: [...r.people, JOE] }); meetingWin.open(); }} />
+                      <MeetingRoomCardShowcase room={{ ...room, people: joinedRoomId === room.id && !room.people.some(p => p.avatar === JOE.avatar) ? [...room.people, JOE] : room.people }} onPersonClick={openMiniChat} onRoomClick={(r) => { setJoinedRoomId(r.id); const ppl = r.people.some(p => p.avatar === JOE.avatar) ? r.people : [...r.people, JOE]; setActiveMeetingRoom({ ...r, people: ppl }); meetingWin.open(); }} />
                     ) : room.type === 'game' ? (
                       <GameRoomCard room={room} />
                     ) : room.type === 'command' ? (
