@@ -266,7 +266,7 @@ function PrivateRoomCard({ room, storyBubble, onPersonClick }) {
           <div className="card-header" style={{ padding: '0 12px' }}>
             <h3 className={`office-name ${isEmpty ? 'sc-office-empty' : ''}`}>{room.name}</h3>
             {vibeColor && room.vibe === 'claude' && <img className="sc-ai-icon" src="/icons/claude.svg" alt="" />}
-            {vibeColor && room.vibe === 'codex' && <img className="sc-ai-icon" src="/icons/codex.svg" alt="" />}
+            {vibeColor && room.vibe === 'codex' && <img className="sc-ai-icon" src="/icons/codex-white.svg" alt="" />}
           </div>
           {room.people.length > 0 && (
             <div className="private-office-seat">
@@ -848,7 +848,7 @@ function ShowcaseMapInner() {
         <MiniChat key={mc.chatId} {...mc} onClose={() => closeMiniChat(mc.chatId)} />
       ))}
       {ainboxWin.isOpen && <AInbox win={ainboxWin} onDrag={makeDragHandler(ainboxWin)} />}
-      {onairWin.isOpen && <OnAir win={onairWin} onDrag={makeDragHandler(onairWin)} />}
+      {onairWin.isOpen && <OnAir win={onairWin} onDrag={makeDragHandler(onairWin)} demo />}
       {/* Product features bar — inside miniRoamOS, pinned to bottom */}
       <div className="sc-products-bar" ref={productsBarRef}>
         {[
@@ -905,7 +905,7 @@ function ShowcaseMapInner() {
         <div className="sc-section-grid">
           <div className="sc-feature-visual sc-feature-visual-left">
             <div className="sc-feature-wallpaper" style={{ backgroundImage: `url(/wallpaper-${theme}.png)` }}>
-              <OnAir win={{ position: { x: 0, y: 0 }, zIndex: 1, isFocused: true, focus: () => {}, close: () => {}, open: () => {} }} onDrag={() => {}} />
+              <OnAir win={{ position: { x: 0, y: 0 }, zIndex: 1, isFocused: true, focus: () => {}, close: () => {}, open: () => {} }} onDrag={() => {}} demo />
             </div>
           </div>
           <div className="sc-feature-text sc-feature-text-right">
