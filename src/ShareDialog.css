@@ -4,6 +4,8 @@
   inset: 0;
   background: var(--bg-overlay-primary);
   border-radius: inherit;
+  corner-shape: superellipse;
+  corner-shape: superellipse(1.6);
   display: flex;
   align-items: center;
   justify-content: center;

@@ -1536,7 +1536,25 @@
   justify-content: flex-end;
   padding-bottom: 2px;
   flex-shrink: 0;
-  position: relative;
+  position: absolute;
+  left: 50%;
+  bottom: 8px;
+  transform: translateX(-50%);
+  transition: opacity 200ms ease;
+}
+
+.sc-shelf-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.sc-shelf-open {
+  animation: sc-shelf-fade-in 200ms ease-out;
+}
+
+.sc-shelf-open-closing {
+  animation: sc-shelf-fade-out 200ms ease-out forwards;
+  pointer-events: none;
 }
 
 .sc-shelf-items {
@@ -1629,12 +1647,21 @@
   border-radius: 36px;
   corner-shape: superellipse;
   corner-shape: superellipse(1.6);
-  animation: sc-shelf-overlay-in 180ms ease-out;
+  animation: sc-shelf-fade-in 200ms ease-out;
 }
 
-@keyframes sc-shelf-overlay-in {
+.sc-shelf-overlay-closing {
+  animation: sc-shelf-fade-out 200ms ease-out forwards;
+}
+
+@keyframes sc-shelf-fade-in {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+
+@keyframes sc-shelf-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
 }
 
 /* Chevron button on closed shelf — opens the shelf */

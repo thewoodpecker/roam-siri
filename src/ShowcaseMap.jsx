@@ -55,10 +55,10 @@ const p = (name) => SHOWCASE_PEOPLE.find(p => p.name === name) || SHOWCASE_PEOPL
 // Floor layouts — each floor has its own rooms
 const FLOORS = {
   'R&D': [
-    { id: 'r1', type: 'private', name: 'Klas L.', people: [p('Klas L.')], pos: { col: 0, row: 0 }, span: 1 },
+    { id: 'r1', type: 'private', name: 'Klas L.', people: [], pos: { col: 0, row: 0 }, span: 1 },
     { id: 'r2', type: 'private', name: 'Derek C.', people: [p('Derek C.'), p('Michael M.')], pos: { col: 1, row: 0 }, span: 1 },
     { id: 'r3', type: 'private', name: 'John M.', people: [p('John M.')], pos: { col: 2, row: 0 }, span: 1 },
-    { id: 'r4', type: 'private', name: 'Howard L.', people: [], pos: { col: 3, row: 0 }, span: 1 },
+    { id: 'r4', type: 'private', name: 'Howard L.', people: [p('Howard L.')], pos: { col: 3, row: 0 }, span: 1, story: '/story-1.png' },
     { id: 'r5', type: 'private', name: 'Keegan L.', people: [p('Keegan L.')], pos: { col: 4, row: 0 }, span: 1 },
     { id: 'r5b', type: 'private', name: 'Jon B.', people: [p('Jon B.')], pos: { col: 5, row: 0 }, span: 1 },
     { id: 'r6', type: 'private', name: 'Grace S.', people: [p('Grace S.')], pos: { col: 0, row: 1 }, span: 1 },
@@ -704,8 +704,8 @@ function ShowcaseMapInner() {
     });
   }, [activeFloor, movements]);
 
-  const theaterSpeakers = useMemo(() => [p('Tom D.'), p('Howard L.')], []);
-  const speakerStories = { 'Howard L.': '/story-1.png' };
+  const theaterSpeakers = useMemo(() => [p('Tom D.'), p('Klas L.')], []);
+  const speakerStories = {};
 
   const allStoryRooms = useMemo(() => {
     const rooms = [];
@@ -730,6 +730,14 @@ function ShowcaseMapInner() {
   const [activeMeetingRoom, setActiveMeetingRoom] = useState(null);
   const [joinedRoomId, setJoinedRoomId] = useState(null);
   const [shelfOpen, setShelfOpen] = useState(false);
+  const [shelfClosing, setShelfClosing] = useState(false);
+  const shelfActive = shelfOpen || shelfClosing;
+  const closeShelf = useCallback(() => {
+    if (!shelfOpen) return;
+    setShelfOpen(false);
+    setShelfClosing(true);
+    setTimeout(() => setShelfClosing(false), 220);
+  }, [shelfOpen]);
   const [shelfPhotoIdx, setShelfPhotoIdx] = useState(1);
   const [shelfDir, setShelfDir] = useState(null);
   const openShelfPhoto = useCallback((idx) => {
@@ -755,6 +763,17 @@ function ShowcaseMapInner() {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [shelfWin.isOpen, shelfWin.isFocused, prevShelfPhoto, nextShelfPhoto]);
+
+  // Preload all shelf photos when the window opens so nav is instant
+  useEffect(() => {
+    if (!shelfWin.isOpen) return;
+    const imgs = [];
+    for (let i = 1; i <= SHELF_TOTAL; i++) {
+      const img = new Image();
+      img.src = `/shelf/photos/photo-${i}.png`;
+      imgs.push(img);
+    }
+  }, [shelfWin.isOpen]);
   const JOE = { name: 'Joe W.', fullName: 'Joe Woodward', avatar: '/headshots/joe-woodward.jpg' };
 
   const makeDragHandler = (win) => (e) => {
@@ -972,12 +991,30 @@ function ShowcaseMapInner() {
         </div>
 
         {/* Shelf overlay — dims the entire window behind the open shelf */}
-        {shelfOpen && <div className="sc-shelf-overlay" onClick={() => setShelfOpen(false)} />}
+        {shelfActive && <div className={`sc-shelf-overlay ${shelfClosing ? 'sc-shelf-overlay-closing' : ''}`} onClick={closeShelf} />}
 
         {/* Shelf — absolute-positioned, sits above the toolbar */}
-        <div className={`sc-shelf-wrap ${shelfOpen ? 'sc-shelf-wrap-open' : ''}`}>
-            {shelfOpen ? (
-              <div className="sc-shelf-open">
+        <div className={`sc-shelf-wrap ${shelfActive ? 'sc-shelf-wrap-open' : ''}`}>
+            <div className={`sc-shelf ${shelfOpen ? 'sc-shelf-hidden' : ''}`}>
+              <div className="sc-shelf-items">
+                {[1, 2, 3, 4].map(idx => (
+                  <div
+                    key={idx}
+                    className="sc-shelf-item"
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => openShelfPhoto(idx)}
+                  >
+                    <img src={`/shelf/photos/photo-${idx}.png`} alt="" />
+                  </div>
+                ))}
+              </div>
+              <div className="sc-shelf-base" />
+              <button className="sc-shelf-chevron" aria-label="Open shelf" onClick={() => setShelfOpen(true)}>
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 9L7 5L11 9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </button>
+            </div>
+            {shelfActive && (
+              <div className={`sc-shelf-open ${shelfClosing ? 'sc-shelf-open-closing' : ''}`}>
                 <div className="sc-shelf-open-header">
                   <div className="sc-shelf-open-pill">
                     <span className="sc-shelf-open-title">Joe's Shelf</span>
@@ -985,7 +1022,7 @@ function ShowcaseMapInner() {
                       <img className="sc-shelf-open-avatar" src={JOE.avatar} alt="" />
                     </div>
                   </div>
-                  <div className="sc-toolbar-pill sc-shelf-open-close" aria-label="Close shelf" onClick={() => setShelfOpen(false)}>
+                  <div className="sc-toolbar-pill sc-shelf-open-close" aria-label="Close shelf" onClick={closeShelf}>
                     <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 9L7 5L11 9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" transform="rotate(180 7 7)"/></svg>
                   </div>
                 </div>
@@ -1028,25 +1065,6 @@ function ShowcaseMapInner() {
                     );
                   });
                 })()}
-              </div>
-            ) : (
-              <div className="sc-shelf">
-                <div className="sc-shelf-items">
-                  {[1, 2, 3, 4].map(idx => (
-                    <div
-                      key={idx}
-                      className="sc-shelf-item"
-                      style={{ cursor: 'pointer' }}
-                      onClick={() => openShelfPhoto(idx)}
-                    >
-                      <img src={`/shelf/photos/photo-${idx}.png`} alt="" />
-                    </div>
-                  ))}
-                </div>
-                <div className="sc-shelf-base" />
-                <button className="sc-shelf-chevron" aria-label="Open shelf" onClick={() => setShelfOpen(true)}>
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 9L7 5L11 9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                </button>
               </div>
             )}
         </div>
