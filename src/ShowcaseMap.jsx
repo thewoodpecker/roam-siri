@@ -1148,6 +1148,40 @@ function ShowcaseMapInner() {
               <button className="sc-promo-btn">Free Trial</button>
             </div>
           </div>
+          <div className="sc-marquee">
+            <div className="sc-marquee-track">
+              {Array.from({ length: 2 }).map((_, copy) => {
+                const logos = [
+                  { src: '/marquee/logo-wistia.svg', alt: 'Wistia', w: 110, h: 24 },
+                  { src: '/marquee/logo-omni.svg', alt: 'Omni Analytics', w: 71, h: 28 },
+                  { src: '/marquee/logo-customer-io.svg', alt: 'Customer.io', w: 174, h: 24 },
+                  { src: '/marquee/logo-deepgram.svg', alt: 'Deepgram', w: 130, h: 30 },
+                  { src: '/marquee/logo-flex.svg', alt: 'Flex', w: 63, h: 24 },
+                  { src: '/marquee/logo-givecampus.svg', alt: 'GiveCampus', w: 149, h: 17 },
+                  { src: '/marquee/logo-pulley.svg', alt: 'Pulley', w: 90, h: 28 },
+                  { src: '/marquee/logo-keep.svg', alt: 'Keep', w: 84, h: 24 },
+                  { src: '/marquee/logo-real.svg', alt: 'Real', w: 71, h: 30 },
+                  { src: '/marquee/logo-sonsie.svg', alt: 'Sonsie', w: 98, h: 24 },
+                  { src: '/marquee/logo-nofraud.svg', alt: 'NoFraud', w: 128, h: 24 },
+                  { src: '/marquee/logo-mpire.svg', alt: 'Mpire Financial', w: 81, h: 40 },
+                  { src: '/marquee/logo-frida.svg', alt: 'Fridababy', w: 70, h: 28 },
+                ];
+                return (
+                  <div key={copy} className="sc-marquee-group" aria-hidden={copy === 1 ? 'true' : undefined}>
+                    {logos.map(l => (
+                      <span
+                        key={l.src}
+                        className="sc-marquee-logo"
+                        role="img"
+                        aria-label={l.alt}
+                        style={{ width: l.w, height: l.h, WebkitMaskImage: `url(${l.src})`, maskImage: `url(${l.src})` }}
+                      />
+                    ))}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </div>
 

@@ -354,6 +354,47 @@
   gap: 16px;
 }
 
+.sc-marquee {
+  grid-column: 7 / -1;
+  align-self: center;
+  width: 100%;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 8%, #000 92%, transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0, #000 8%, #000 92%, transparent 100%);
+}
+
+.sc-marquee-track {
+  display: flex;
+  width: fit-content;
+  animation: sc-marquee-scroll 30s linear infinite;
+}
+
+.sc-marquee-group {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.sc-marquee-logo {
+  display: block;
+  flex-shrink: 0;
+  margin: 0 24px;
+  background: var(--text-primary);
+  opacity: 0.5;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  user-select: none;
+}
+
+@keyframes sc-marquee-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
 .sc-promo-text {
   flex: 1;
   display: flex;
@@ -1611,14 +1652,13 @@
   border: 0;
   padding: 0;
   cursor: pointer;
-  color: var(--text-subtle);
-  opacity: 0.6;
-  transition: opacity 160ms ease;
+  color: var(--text-secondary);
+  transition: color 160ms ease;
   z-index: 4;
 }
 
 .sc-shelf-chevron:hover {
-  opacity: 1;
+  color: var(--text-primary);
 }
 
 /* Open shelf — 3-row stack with header */
