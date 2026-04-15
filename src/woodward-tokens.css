@@ -23,6 +23,7 @@
   --bg-surface-elevated-tertiary: var(--solid-white);
   --bg-surface-primary-subdued: var(--graphite-900);
   --bg-surface-elevated-primary-subdued: var(--graphite-700);
+  --bg-on-surface-primary: #303236;
   --fills-vibrant-tertiary: #121212;
 
   /* ——— Semantic Backgrounds ——— */

@@ -50,17 +50,59 @@ function buildGradientStops(elapsed, opacityMult, shades, intensity) {
   return { om, topOp, midHighOp, midOp, shades };
 }
 
-function drawRoundedRect(ctx, x, y, w, h, r) {
+function drawRoundedRect(ctx, x, y, w, h, r, cornerExponent) {
+  if (!cornerExponent || cornerExponent <= 2) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+    return;
+  }
+  // Super-ellipse corners: |dx/r|^n + |dy/r|^n = 1 with n = cornerExponent
+  // Sample each quarter arc with 32 line segments.
+  const n = cornerExponent;
+  const k = 2 / n;
+  const segs = 32;
+  const c = (t) => Math.pow(Math.cos(t), k);
+  const s = (t) => Math.pow(Math.sin(t), k);
+
   ctx.beginPath();
+  // top edge
   ctx.moveTo(x + r, y);
   ctx.lineTo(x + w - r, y);
-  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  // top-right corner: (x+w-r, y) → (x+w, y+r)
+  for (let i = 0; i <= segs; i++) {
+    const t = (i / segs) * (Math.PI / 2);
+    ctx.lineTo(x + w - r + r * s(t), y + r - r * c(t));
+  }
+  // right edge
   ctx.lineTo(x + w, y + h - r);
-  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  // bottom-right: (x+w, y+h-r) → (x+w-r, y+h)
+  for (let i = 0; i <= segs; i++) {
+    const t = (i / segs) * (Math.PI / 2);
+    ctx.lineTo(x + w - r + r * c(t), y + h - r + r * s(t));
+  }
+  // bottom edge
   ctx.lineTo(x + r, y + h);
-  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  // bottom-left: (x+r, y+h) → (x, y+h-r)
+  for (let i = 0; i <= segs; i++) {
+    const t = (i / segs) * (Math.PI / 2);
+    ctx.lineTo(x + r - r * s(t), y + h - r + r * c(t));
+  }
+  // left edge
   ctx.lineTo(x, y + r);
-  ctx.quadraticCurveTo(x, y, x + r, y);
+  // top-left: (x, y+r) → (x+r, y)
+  for (let i = 0; i <= segs; i++) {
+    const t = (i / segs) * (Math.PI / 2);
+    ctx.lineTo(x + r - r * c(t), y + r - r * s(t));
+  }
   ctx.closePath();
 }
 
@@ -80,7 +122,7 @@ function createConicGradient(ctx, cx, cy, params, angle) {
   return grad;
 }
 
-export default function SiriGlow({ active, color = '#EB6139', intensity = 1, width, height, borderRadius = 12 }) {
+export default function SiriGlow({ active, color = '#EB6139', intensity = 1, width, height, borderRadius = 12, cornerExponent }) {
   const canvasRef = useRef(null);
   const animRef = useRef(null);
   const startRef = useRef(0);
@@ -159,7 +201,7 @@ export default function SiriGlow({ active, color = '#EB6139', intensity = 1, wid
 
     // Clip to card shape
     ctx.save();
-    drawRoundedRect(ctx, cardX, cardY, cardW, cardH, r);
+    drawRoundedRect(ctx, cardX, cardY, cardW, cardH, r, cornerExponent);
     ctx.clip();
 
     // Layer 1: Halo — wide spread, heavy blur
@@ -169,7 +211,7 @@ export default function SiriGlow({ active, color = '#EB6139', intensity = 1, wid
     ctx.strokeStyle = createConicGradient(ctx, cx, cy,
       buildGradientStops(elapsed, 0.8 * iOpacity, shades, iRaw), angle);
     ctx.lineWidth = 14 * iScale;
-    drawRoundedRect(ctx, cardX, cardY, cardW, cardH, r);
+    drawRoundedRect(ctx, cardX, cardY, cardW, cardH, r, cornerExponent);
     ctx.stroke();
     ctx.restore();
 
@@ -180,7 +222,7 @@ export default function SiriGlow({ active, color = '#EB6139', intensity = 1, wid
     ctx.strokeStyle = createConicGradient(ctx, cx, cy,
       buildGradientStops(elapsed, 1.0 * iOpacity, shades, iRaw), angle);
     ctx.lineWidth = 6 * iScale;
-    drawRoundedRect(ctx, cardX, cardY, cardW, cardH, r);
+    drawRoundedRect(ctx, cardX, cardY, cardW, cardH, r, cornerExponent);
     ctx.stroke();
     ctx.restore();
 
@@ -190,14 +232,14 @@ export default function SiriGlow({ active, color = '#EB6139', intensity = 1, wid
     ctx.strokeStyle = createConicGradient(ctx, cx, cy,
       buildGradientStops(elapsed, 1.0 * iOpacity, shades, iRaw), angle);
     ctx.lineWidth = 3 * iScale;
-    drawRoundedRect(ctx, cardX, cardY, cardW, cardH, r);
+    drawRoundedRect(ctx, cardX, cardY, cardW, cardH, r, cornerExponent);
     ctx.stroke();
     ctx.restore();
 
     ctx.restore(); // unclip
 
     animRef.current = requestAnimationFrame(render);
-  }, [active, borderRadius]);
+  }, [active, borderRadius, cornerExponent]);
 
   useEffect(() => {
     if (active) {

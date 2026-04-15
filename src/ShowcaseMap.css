@@ -62,6 +62,7 @@
   --bg-surface-raised: #FFFFFF;
   --bg-surface-elevated-primary: #FFFFFF;
   --bg-surface-elevated-secondary: #FFFFFF;
+  --bg-on-surface-primary: #E8E8EA;
   --bg-overlay-primary: rgba(0,0,0,0.4);
   --bg-overlay-secondary: rgba(0,0,0,0.1);
   --text-primary: #1D1D1F;
@@ -584,6 +585,11 @@
   padding: 32px;
 }
 
+/* Disable internal sidebar scrolling in marketing AInbox instance */
+.sc-feature-wallpaper .ainbox-sections {
+  overflow-y: hidden;
+}
+
 /* Reversed layout — visual left, text right */
 .sc-feature-visual-left {
   grid-column: 1 / span 8;
@@ -775,6 +781,81 @@
 
 .miniRoamOS > .sc-window {
   position: relative;
+}
+
+/* Platform Badge — from Figma node 77560:32459 */
+/* Positioned absolutely in the navbar, centered like the Roam logo.
+   Fades out when the Roam logo fades in on scroll. */
+.sc-platform-badge {
+  position: absolute;
+  top: 36px;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  border-radius: 30px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 0.5px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(50px);
+  -webkit-backdrop-filter: blur(50px);
+  z-index: 100000;
+  opacity: 1;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.sc-navbar-wrap[data-logo-visible="true"] .sc-platform-badge {
+  opacity: 0;
+}
+
+/* Light mode — flip glass fills and text gradient to contrast against a light wallpaper */
+.sc-viewport[data-theme="light"] .sc-platform-badge {
+  background: rgba(0, 0, 0, 0.06);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+.sc-viewport[data-theme="light"] .sc-platform-badge-text {
+  background-image: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.35) 0%,
+    rgba(0, 0, 0, 0.35) 35%,
+    rgba(255, 255, 255, 0.55) 50%,
+    rgba(0, 0, 0, 0.35) 65%,
+    rgba(0, 0, 0, 0.35) 100%
+  );
+}
+
+.sc-platform-badge-text {
+  font-family: 'Possibility', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  line-height: normal;
+  letter-spacing: -0.5px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  text-align: center;
+  background-image: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.3) 0%,
+    rgba(255, 255, 255, 0.3) 35%,
+    #e0e0e0 50%,
+    rgba(255, 255, 255, 0.3) 65%,
+    rgba(255, 255, 255, 0.3) 100%
+  );
+  background-size: 500% 100%;
+  background-repeat: no-repeat;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: sc-platform-swipe 4s linear infinite;
+}
+
+@keyframes sc-platform-swipe {
+  0% { background-position: 100% 0; }
+  100% { background-position: 0% 0; }
 }
 
 /* Mac window frame */
@@ -1069,12 +1150,13 @@
   background: var(--bg-surface-primary-subdued);
   border-radius: 20px 20px 0 0;
   border-top: 0.5px solid var(--border);
+  position: relative;
 }
 
 /* Map grid area */
 .sc-map {
   flex: 1;
-  padding: 16px;
+  padding: 16px 16px 72px;
   overflow: visible;
   border-radius: 20px 0 0 0;
   display: flex;
@@ -1114,6 +1196,11 @@
 .sc-room-card .meeting-room-card {
   background-color: var(--bg-surface-elevated-primary) !important;
   overflow: visible !important;
+  transition: background-color 200ms ease !important;
+}
+
+.sc-room-card:hover .meeting-room-card {
+  background-color: var(--bg-surface-elevated-secondary) !important;
 }
 
 .sc-room-card .big-meeting-card-inner {
@@ -1160,11 +1247,10 @@
   pointer-events: none;
 }
 
-.sc-story-bubble {
+.sc-viewport .sc-story-bubble {
   position: absolute;
   bottom: calc(100% - 1px);
   left: 50%;
-  transform: translateX(-50%);
   z-index: 20;
   display: flex;
   flex-direction: column;
@@ -1173,20 +1259,13 @@
   transform-origin: bottom center;
   cursor: pointer;
   filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2)) drop-shadow(0 1px 3px rgba(0,0,0,0.15));
+  transition: transform 200ms ease-in-out, filter 0.5s ease;
 }
 
 .sc-viewport[data-theme="light"] .sc-story-bubble {
   filter: drop-shadow(0 4px 8px rgba(0,0,0,0.08)) drop-shadow(0 1px 3px rgba(0,0,0,0.06));
 }
 
-.sc-story-dismissing {
-  animation: sc-story-dismiss 300ms ease-in forwards !important;
-}
-
-@keyframes sc-story-dismiss {
-  from { transform: translateX(-50%) scale(1); opacity: 1; }
-  to { transform: translateX(-50%) scale(0.85); opacity: 0; }
-}
 
 @keyframes sc-story-appear {
   from { transform: translateX(-50%) scale(0.9); opacity: 0; }
@@ -1264,6 +1343,12 @@
   height: 16px;
   flex-shrink: 0;
   border-radius: 3px;
+}
+
+.sc-ai-icon-combo {
+  width: auto;
+  height: 16px;
+  flex-shrink: 0;
 }
 
 .sc-room-video-icon {
@@ -1359,7 +1444,7 @@
   left: -8%;
   right: -8%;
   border-radius: 50%;
-  background-color: rgba(255, 255, 255, 0.15);
+  background-color: var(--background-primary);
 }
 
 .sc-private-talk-ring::before {
@@ -1370,7 +1455,7 @@
   left: -16%;
   right: -16%;
   border-radius: 50%;
-  background-color: rgba(255, 255, 255, 0.08);
+  background-color: var(--background-primary);
   animation: sc-wonder-talking 8s steps(5) infinite alternate;
 }
 
@@ -1382,6 +1467,344 @@
 .sc-private-person .seat-avatar {
   position: relative;
   z-index: 1;
+}
+
+/* Shelf — matches Figma node 76324:7733 */
+.sc-shelf-wrap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 56px;
+  display: flex;
+  justify-content: center;
+  padding: 4px 0 8px;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.sc-shelf-wrap > .sc-shelf,
+.sc-shelf-wrap > .sc-shelf-open {
+  pointer-events: auto;
+}
+
+.sc-shelf {
+  width: 208px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding-bottom: 2px;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.sc-shelf-items {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0 12px;
+  margin-bottom: -4px;
+  width: 100%;
+  z-index: 2;
+  position: relative;
+}
+
+.sc-shelf-item {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  border: 0.5px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--background-primary);
+  box-shadow:
+    0 1px 4px 0 rgba(0, 0, 0, 0.3),
+    0 6px 10px 0 rgba(0, 0, 0, 0.2);
+  transform: scale(1);
+  transform-origin: bottom center;
+  transition: transform 300ms ease-in-out !important;
+  will-change: transform;
+}
+
+.sc-shelf-item:hover {
+  transform: scale(1.08) !important;
+  z-index: 3;
+}
+
+.sc-shelf-item > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
+}
+
+.sc-shelf-base {
+  width: 100%;
+  height: 15px;
+  margin-bottom: -2px;
+  z-index: 1;
+  position: relative;
+  filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.3)) drop-shadow(0 6px 10px rgba(0, 0, 0, 0.2));
+  --ledge-lip: #303236;
+  --ledge-body: #1D1E20;
+}
+
+.sc-shelf-base::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 9px;
+  background: var(--ledge-lip);
+  clip-path: polygon(3px 100%, 14px 0, calc(100% - 14px) 0, calc(100% - 3px) 100%);
+}
+
+.sc-shelf-base::after {
+  content: '';
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  top: 7px;
+  bottom: 0;
+  background: var(--ledge-body);
+  border-radius: 4px;
+}
+
+.sc-viewport[data-theme="light"] .sc-shelf-base {
+  --ledge-lip: #E8EAEE;
+  --ledge-body: #C9CCD1;
+}
+
+/* Overlay behind open shelf — covers titlebar + content + toolbar */
+.sc-shelf-overlay {
+  position: absolute;
+  inset: 0;
+  background: var(--bg-overlay-primary);
+  z-index: 4;
+  border-radius: 36px;
+  corner-shape: superellipse;
+  corner-shape: superellipse(1.6);
+  animation: sc-shelf-overlay-in 180ms ease-out;
+}
+
+@keyframes sc-shelf-overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Chevron button on closed shelf — opens the shelf */
+.sc-shelf-chevron {
+  position: absolute;
+  right: -22px;
+  top: 20px;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  color: var(--text-subtle);
+  opacity: 0.6;
+  transition: opacity 160ms ease;
+  z-index: 4;
+}
+
+.sc-shelf-chevron:hover {
+  opacity: 1;
+}
+
+/* Open shelf — 3-row stack with header */
+.sc-shelf-wrap-open {
+  padding: 0;
+}
+
+.sc-shelf-open {
+  width: 294px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  padding-bottom: 8px;
+}
+
+
+.sc-shelf-open-header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  color: var(--text-icon-primary, #fff);
+  margin-bottom: 4px;
+}
+
+.sc-shelf-open-header > .sc-shelf-open-close {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.sc-shelf-open-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 4px 4px 8px;
+  border-radius: 16px;
+  background: var(--bg-surface-elevated-primary);
+  box-shadow: var(--shadow-2);
+}
+
+.sc-shelf-open-title {
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+  letter-spacing: 0;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.sc-shelf-open-avatars {
+  display: flex;
+  align-items: center;
+}
+
+.sc-shelf-open-avatars > .sc-shelf-open-avatar + .sc-shelf-open-avatar {
+  margin-left: -6px;
+}
+
+.sc-shelf-open-avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1.5px solid rgba(0, 0, 0, 0.3);
+}
+
+.sc-shelf-open-icon-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  color: var(--text-primary);
+  opacity: 0.6;
+  border-radius: 8px;
+  transition: opacity 160ms ease, background 160ms ease;
+}
+
+.sc-shelf-open-icon-btn:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.sc-viewport[data-theme="light"] .sc-shelf-open-icon-btn:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.sc-shelf-open-row {
+  width: 294px;
+  align-self: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4px 0 15px;
+  position: relative;
+}
+
+.sc-shelf-open-row > .sc-shelf-base {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -2px;
+  width: auto;
+  margin: 0;
+}
+
+.sc-shelf-open-items {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0;
+  margin-bottom: -4px;
+  z-index: 2;
+  position: relative;
+}
+
+.sc-shelf-item-wide {
+  width: 60px;
+}
+
+.sc-shelf-item-tall {
+  height: 50px;
+}
+
+.sc-shelf-item-xtall {
+  height: 60px;
+}
+
+
+
+/* Theater stage + speakers */
+.sc-theater-stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 14px 0;
+  overflow: visible !important;
+}
+
+.sc-theater-speaker {
+  position: relative;
+  width: clamp(28px, 3.2vw, 40px);
+  height: clamp(28px, 3.2vw, 40px);
+  flex-shrink: 0;
+}
+
+.sc-viewport .sc-theater-speaker-img {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  z-index: 1;
+  transition: transform 200ms ease-in-out;
+}
+
+.sc-viewport .sc-theater-speaker:hover .sc-theater-speaker-img {
+  transform: scale(1.15);
+}
+
+.sc-room-card .theater-preview-stage,
+.sc-room-card .theater-preview-bench {
+  background: var(--background-primary);
+}
+
+.sc-room-card .theater-preview-dot {
+  width: 3px;
+  height: 3px;
+  background: var(--text-primary);
+  opacity: 0.7;
+}
+
+.sc-room-card .theater-preview-dot.theater-preview-dot-active {
+  background: var(--text-primary);
+  opacity: 1;
 }
 
 @keyframes sc-wonder-talking {
@@ -1419,10 +1842,10 @@
   width: clamp(24px, 3.5vw, 40px);
   height: auto;
   aspect-ratio: 1;
-  transition: transform 300ms ease-in-out, opacity 300ms ease;
+  transition: transform 200ms ease-in-out, opacity 300ms ease;
 }
 
-.sc-room-card .seat-assigned:hover .seat-avatar {
+.sc-room-card .seat-assigned:hover:not(:has(.sc-story-bubble:hover)) .seat-avatar {
   transform: scale(1.15);
 }
 
@@ -1433,7 +1856,7 @@
   transition: transform 400ms ease-in-out !important;
 }
 
-.sc-room-card {
+.sc-viewport .sc-room-card {
   background: var(--bg-surface-elevated-primary);
   border-radius: 10px;
   box-shadow: var(--shadow-1);
@@ -1441,8 +1864,13 @@
   width: 100%;
   height: 100%;
   position: relative;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 200ms ease, background-color 200ms ease;
   cursor: pointer;
+}
+
+.sc-viewport .sc-room-card:hover {
+  background: var(--bg-surface-elevated-secondary);
+  box-shadow: var(--shadow-2);
 }
 
 
@@ -1616,7 +2044,7 @@
 }
 
 /* Floor card */
-.sc-floor-card {
+.sc-viewport .sc-floor-card {
   background: var(--bg-surface-elevated-primary);
   border-radius: 12px;
   padding: 9px;
@@ -1625,6 +2053,12 @@
   gap: 6px;
   width: 100%;
   box-shadow: var(--shadow-1);
+  transition: background-color 200ms ease, box-shadow 200ms ease;
+}
+
+.sc-viewport .sc-floor-card:hover {
+  background: var(--bg-surface-elevated-secondary);
+  box-shadow: var(--shadow-2);
 }
 
 .sc-floor-name {
@@ -1726,6 +2160,7 @@
   background: var(--bg-surface-primary-subdued);
   flex-shrink: 0;
   position: relative;
+  z-index: 6;
 }
 
 .sc-toolbar-group {
@@ -1881,4 +2316,153 @@
     opacity: 1;
     transform: translateX(0);
   }
+}
+
+/* Shelf photo viewer window */
+.shelf-win {
+  position: absolute;
+  width: 640px;
+  height: 480px;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border: 0.5px solid var(--border);
+  border-radius: 24px;
+  corner-shape: superellipse;
+  corner-shape: superellipse(1.6);
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-5);
+  overflow: hidden;
+  animation: sc-window-in 280ms ease-out;
+}
+
+.shelf-win-closing {
+  animation: shelf-win-out 180ms ease-in forwards;
+}
+
+@keyframes shelf-win-out {
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: 0; transform: scale(0.96); }
+}
+
+.shelf-win-unfocused {
+  opacity: 0.9;
+}
+
+.shelf-win-titlebar {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  position: relative;
+  cursor: grab;
+  flex-shrink: 0;
+  border-bottom: 0.5px solid var(--border);
+}
+
+.shelf-win-lights {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.shelf-win-light {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.shelf-win-light-close { background: #FF5F57; cursor: pointer; position: relative; }
+.shelf-win-light-close::before { content: ''; position: absolute; inset: -8px; }
+.shelf-win-light-min { background: #FEBC2E; }
+.shelf-win-light-max { background: #28C840; }
+
+.shelf-win-unfocused .shelf-win-light-close,
+.shelf-win-unfocused .shelf-win-light-min,
+.shelf-win-unfocused .shelf-win-light-max {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.shelf-win-title {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.shelf-win-title-text {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  letter-spacing: -0.1px;
+  min-width: 48px;
+  text-align: center;
+}
+
+.shelf-win-nav {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  color: var(--text-primary);
+  cursor: pointer;
+  opacity: 0.65;
+  transition: opacity 160ms ease, background 160ms ease;
+  padding: 0;
+}
+
+.shelf-win-nav:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.sc-viewport[data-theme="light"] .shelf-win-nav:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.shelf-win-title-spacer {
+  flex: 1;
+}
+
+.shelf-win-body {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+.shelf-win-body > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.shelf-win-img-next {
+  animation: shelf-win-slide-next 340ms cubic-bezier(0.22, 0.8, 0.3, 1);
+}
+
+.shelf-win-img-prev {
+  animation: shelf-win-slide-prev 340ms cubic-bezier(0.22, 0.8, 0.3, 1);
+}
+
+@keyframes shelf-win-slide-next {
+  from { opacity: 0; transform: translateX(16%); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes shelf-win-slide-prev {
+  from { opacity: 0; transform: translateX(-16%); }
+  to { opacity: 1; transform: translateX(0); }
 }

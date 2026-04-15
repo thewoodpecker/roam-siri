@@ -1,0 +1,207 @@
+/* Overlay — covers the parent window, dims behind dialog */
+.share-dialog-overlay {
+  position: absolute;
+  inset: 0;
+  background: var(--bg-overlay-primary);
+  border-radius: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9000;
+  animation: share-dialog-overlay-in 180ms ease-out;
+}
+
+@keyframes share-dialog-overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Dialog card */
+.share-dialog {
+  width: min(620px, calc(100% - 48px));
+  max-height: calc(100% - 48px);
+  background: var(--bg-surface-elevated-primary, #1d1e20);
+  border: 0.5px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  animation: share-dialog-in 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes share-dialog-in {
+  from { opacity: 0; transform: scale(0.96) translateY(6px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Header */
+.share-dialog-header {
+  position: relative;
+  height: 56px;
+  flex-shrink: 0;
+  border-bottom: 0.5px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.share-dialog-title {
+  font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 24px;
+  letter-spacing: -0.32px;
+  color: #fff;
+  margin: 0;
+}
+
+.share-dialog-icon-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: inset 0 0.5px 0 0 rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: background-color 150ms ease;
+}
+
+.share-dialog-icon-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.share-dialog-icon-btn img {
+  display: block;
+  width: 16px;
+  height: 16px;
+}
+
+.share-dialog-close {
+  left: 14px;
+}
+
+.share-dialog-search {
+  right: 14px;
+}
+
+/* Body */
+.share-dialog-body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.share-dialog-screens {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  padding: 16px;
+}
+
+/* Tile */
+.share-dialog-tile {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 12px;
+  background: transparent;
+  transition: background-color 150ms ease;
+}
+
+.share-dialog-tile:hover,
+.share-dialog-tile-selected {
+  background: var(--bg-surface-elevated-secondary);
+}
+
+.share-dialog-thumb {
+  width: 100%;
+  height: 112px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.share-dialog-thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.share-dialog-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 12px;
+  line-height: 16px;
+  color: #fff;
+}
+
+.share-dialog-label-icon {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+}
+
+/* Footer */
+.share-dialog-footer {
+  height: 70px;
+  flex-shrink: 0;
+  border-top: 0.5px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 16px;
+}
+
+.share-dialog-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 14px;
+  line-height: 20px;
+  letter-spacing: -0.15px;
+  cursor: pointer;
+  transition: background-color 150ms ease;
+}
+
+.share-dialog-btn-secondary {
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  box-shadow: inset 0 0.5px 0 rgba(255, 255, 255, 0.1);
+}
+
+.share-dialog-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.share-dialog-btn-primary {
+  background: #fff;
+  color: #000;
+}
+
+.share-dialog-btn-primary:hover {
+  background: rgba(255, 255, 255, 0.9);
+}

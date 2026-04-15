@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import ShareDialog from './ShareDialog';
 import './MeetingWindow.css';
 
 const ROAMOJIS = ['🤣', '🔥', '👏', '👍', '🍿', '🎉', '🚀', '😍', '💯'];
@@ -62,6 +63,7 @@ export default function MeetingWindow({ win, onDrag, roomName, people, onOpenCha
   const viewMenuRef = useRef(null);
   const [roamojiOpen, setRoamojiOpen] = useState(true);
   const [roamojiClosing, setRoamojiClosing] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   const [ghosts, setGhosts] = useState([]);
   const ghostIdRef = useRef(0);
 
@@ -294,9 +296,9 @@ export default function MeetingWindow({ win, onDrag, roomName, people, onOpenCha
             </div>
             {/* Center */}
             <div className="meeting-win-pill-group">
-              <div className="meeting-win-pill"><img src="/icons/video-on.svg" alt="" /></div>
+              <div className="meeting-win-pill meeting-win-pill-muted"><img src="/icons/video-off.svg" alt="" /></div>
               <div className="meeting-win-pill"><img src="/icons/microphone.svg" alt="" /></div>
-              <div className="meeting-win-pill"><img src="/icons/screenshare.svg" alt="" /></div>
+              <div className="meeting-win-pill" onClick={() => setShareOpen(true)}><img src="/icons/screenshare.svg" alt="" /></div>
               <div className="meeting-win-pill"><img src="/icons/hand-raise.svg" alt="" /></div>
               <div className={`meeting-win-pill ${roamojiOpen ? 'meeting-win-pill-active' : ''}`} onClick={() => {
                 if (roamojiOpen) {
@@ -320,6 +322,7 @@ export default function MeetingWindow({ win, onDrag, roomName, people, onOpenCha
           </div>
         </div>
       </div>
+      <ShareDialog open={shareOpen} onClose={() => setShareOpen(false)} />
     </div>
   );
 }

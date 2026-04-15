@@ -4,6 +4,9 @@ import { offices as officeData, meetingRooms } from './data';
 import ShowcaseMap from './ShowcaseMap';
 import './App.css';
 
+// Flip to `false` to show the dev settings icon in the top-left
+const HIDE_CHROME = false;
+
 const CLAUDE = '#EB6139';
 const CODEX = '#0000FF';
 
@@ -445,7 +448,7 @@ const DEV_ACTIVITIES = [
   'Migrating', 'Optimizing', 'Pushing',
 ];
 
-function SmallCard({ office, isActive, glowColor, onStatusEdit, provider }) {
+function SmallCard({ office, isActive, glowColor, onStatusEdit, provider, borderRadius = 12, glowIntensity, cornerExponent }) {
   const [tokens, setTokens] = useState(0);
   const [showLabel, setShowLabel] = useState(false);
   const [fading, setFading] = useState(false);
@@ -505,11 +508,11 @@ function SmallCard({ office, isActive, glowColor, onStatusEdit, provider }) {
     <div className="office-card">
       {provider === 'both' ? (
         <>
-          <SiriGlow active={isActive} color={CLAUDE} intensity={4} borderRadius={12} />
-          <SiriGlow active={isActive} color={CODEX} intensity={3} borderRadius={12} />
+          <SiriGlow active={isActive} color={CLAUDE} intensity={glowIntensity ?? 4} borderRadius={borderRadius} cornerExponent={cornerExponent} />
+          <SiriGlow active={isActive} color={CODEX} intensity={glowIntensity ?? 3} borderRadius={borderRadius} cornerExponent={cornerExponent} />
         </>
       ) : (
-        <SiriGlow active={isActive} color={glowColor} borderRadius={12} />
+        <SiriGlow active={isActive} color={glowColor} intensity={glowIntensity} borderRadius={borderRadius} cornerExponent={cornerExponent} />
       )}
       {showLabel && (
         <span className={`token-label ${fading ? 'fade-out' : ''}`}>
@@ -1333,6 +1336,7 @@ function TabSwitcher({ activeTab, onTabChange }) {
     { section: 'WIP' },
     { id: 'map-v3', label: 'Map V3' },
     { id: 'claude-max', label: 'Vibe Code' },
+    { id: 'big-vibe', label: 'Big Vibe' },
     { id: 'war-room', label: 'War Room' },
     { id: 'big-meetings', label: 'Big Meetings' },
     { id: 'experimental', label: 'EPCOT' },
@@ -1477,6 +1481,61 @@ function ClaudeMaxView() {
         ))}
       </div>
       <FloorDevControls vibePercent={vibePercent} onVibePercentChange={setVibePercent} provider={provider} onProviderChange={setProvider} />
+    </div>
+  );
+}
+
+function BigVibeView() {
+  const small = officeData.filter(o => o.size === 'small');
+  const office = small[0];
+  const [provider, setProvider] = useState('both');
+  const [intensity, setIntensity] = useState(15);
+  const [radius, setRadius] = useState(60);
+  const [cardWidth, setCardWidth] = useState(840);
+
+  if (!office) return null;
+  const glowColor = provider === 'codex' ? CODEX : CLAUDE;
+  return (
+    <div className="big-vibe-view">
+      <div className="big-vibe-scale" style={{ width: cardWidth }}>
+        <SmallCard
+          office={office}
+          isActive={true}
+          glowColor={glowColor}
+          provider={provider}
+          borderRadius={radius}
+          glowIntensity={intensity}
+          cornerExponent={3}
+        />
+      </div>
+      <div className="big-vibe-controls">
+        {['claude', 'codex', 'both'].map(p => (
+          <button
+            key={p}
+            className={`big-vibe-seg ${provider === p ? 'big-vibe-seg-active' : ''}`}
+            onClick={() => setProvider(p)}
+          >
+            {p === 'both' ? 'Combo' : p === 'codex' ? 'Codex' : 'Claude'}
+          </button>
+        ))}
+      </div>
+      <div className="big-vibe-sliders">
+        <label className="big-vibe-slider">
+          <span className="big-vibe-slider-label">Intensity</span>
+          <input type="range" min={1} max={20} step={0.5} value={intensity} onChange={(e) => setIntensity(Number(e.target.value))} />
+          <span className="big-vibe-slider-value">{intensity}</span>
+        </label>
+        <label className="big-vibe-slider">
+          <span className="big-vibe-slider-label">Corner radius</span>
+          <input type="range" min={0} max={200} step={1} value={radius} onChange={(e) => setRadius(Number(e.target.value))} />
+          <span className="big-vibe-slider-value">{radius}</span>
+        </label>
+        <label className="big-vibe-slider">
+          <span className="big-vibe-slider-label">Card width</span>
+          <input type="range" min={300} max={1400} step={10} value={cardWidth} onChange={(e) => setCardWidth(Number(e.target.value))} />
+          <span className="big-vibe-slider-value">{cardWidth}</span>
+        </label>
+      </div>
     </div>
   );
 }
@@ -3149,7 +3208,7 @@ function ExperimentalView() {
 function useHashTab() {
   const getTab = () => {
     const hash = window.location.hash.replace('#', '');
-    const valid = ['map-v3', 'claude-max', 'big-meetings', 'war-room', 'experimental', 'showcase'];
+    const valid = ['map-v3', 'claude-max', 'big-vibe', 'big-meetings', 'war-room', 'experimental', 'showcase'];
     return valid.includes(hash) ? hash : 'showcase';
   };
   const [tab, setTab] = useState(getTab);
@@ -3173,11 +3232,12 @@ export default function App() {
 
   return (
     <div className="layout">
-      <div className="toolbar">
+      <div className="toolbar" style={HIDE_CHROME ? { display: 'none' } : undefined}>
         <TabSwitcher activeTab={activeTab} onTabChange={setActiveTab} />
       </div>
       {activeTab === 'map-v3' && <EditMapView />}
       {activeTab === 'claude-max' && <ClaudeMaxView />}
+      {activeTab === 'big-vibe' && <BigVibeView />}
       {activeTab === 'war-room' && <WarRoomView />}
       {activeTab === 'big-meetings' && <BigMeetingsView />}
       {activeTab === 'experimental' && <ExperimentalView />}
