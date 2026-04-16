@@ -50,7 +50,7 @@ function DmBubble({ msg, isFirstInGroup }) {
   const radiusOut = isFirstInGroup ? '20px 20px 4px 20px' : '20px 4px 4px 20px';
   return (
     <div className={`mc-msg ${msg.self ? 'mc-msg-self' : ''} ${!isFirstInGroup ? 'mc-msg-consecutive' : ''}`}>
-      <div className={`mc-bubble ${msg.self ? 'mc-bubble-self' : ''}`} style={{ borderRadius: msg.self ? radiusOut : radiusIn }}>
+      <div className={`mc-msg-bubble ${msg.self ? 'mc-msg-bubble-self' : ''}`} style={{ borderRadius: msg.self ? radiusOut : radiusIn }}>
         <p>{msg.text}</p>
       </div>
     </div>

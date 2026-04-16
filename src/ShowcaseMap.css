@@ -389,6 +389,8 @@
   -webkit-mask-position: center;
   mask-position: center;
   user-select: none;
+  transform: scale(0.7);
+  transform-origin: center;
 }
 
 @keyframes sc-marquee-scroll {
@@ -466,9 +468,7 @@
 /* Handwritten "Explore this demo" annotation */
 .sc-hint {
   position: absolute;
-  bottom: 58px;
-  left: 60px;
-  z-index: 99998;
+  z-index: 2147483647;
   pointer-events: none;
   transition: opacity 400ms ease-out;
 }
@@ -483,27 +483,27 @@
   align-items: flex-start;
   gap: 2px;
   position: relative;
-  width: 120px;
+  width: max-content;
+}
+
+.sc-hint-text-wrap {
+  position: relative;
+  display: inline-block;
 }
 
 .sc-hint-blob {
   position: absolute;
-  top: -4px;
-  left: -24px;
-  right: -24px;
-  height: auto;
+  top: 50%;
+  left: 50%;
+  width: 160px;
+  height: 80px;
+  transform: translate(-50%, calc(-50% + 10px));
   z-index: -1;
   overflow: visible;
-}
-
-.sc-hint-blob path {
-  stroke-dasharray: 1 2;
-  stroke-dashoffset: 1;
-  animation: sc-blob-draw 1.4s ease-in-out 1s both;
+  pointer-events: none;
 }
 
 @keyframes sc-blob-draw {
-  from { stroke-dashoffset: 1; }
   to { stroke-dashoffset: 0; }
 }
 
@@ -514,15 +514,15 @@
   color: white;
   white-space: nowrap;
   display: inline-block;
-  overflow: hidden;
   position: relative;
   margin-top: 8px;
+  clip-path: inset(0 100% 0 0);
+  opacity: 0.4;
   animation: sc-handwrite 2s ease-in-out 1s both;
 }
 
 @keyframes sc-handwrite {
-  from { max-width: 0; opacity: 0.4; }
-  to { max-width: 300px; opacity: 0.85; }
+  to { clip-path: inset(0 0 0 0); opacity: 0.85; }
 }
 
 .sc-hint-arrow {
@@ -697,6 +697,36 @@
   font-weight: 400;
   line-height: 24px;
   color: var(--text-secondary);
+}
+
+.sc-feature-buttons {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sc-feature-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 400;
+  color: #FFFFFF;
+  background: rgba(255, 255, 255, 0.05);
+  border: 0;
+  border-radius: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  cursor: pointer;
+  text-decoration: none;
+  user-select: none;
+  box-shadow: inset 0 0.03125rem 0 0 rgba(255, 255, 255, 0.1);
+  transition: color 0.15s ease-in-out, background 0.15s ease-in-out;
+}
+
+.sc-feature-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .sc-feature-visual {
@@ -879,7 +909,7 @@
 }
 
 .sc-viewport[data-theme="light"] .ainbox-dm-bubble-self p,
-.sc-viewport[data-theme="light"] .mc-bubble-self p {
+.sc-viewport[data-theme="light"] .mc-msg-bubble-self p {
   color: var(--solid-white);
 }
 

@@ -1343,7 +1343,7 @@ function TabSwitcher({ activeTab, onTabChange }) {
   ];
 
   return (
-    <div className="dev-settings-wrap" ref={menuRef}>
+    <div className="dev-settings-wrap" ref={menuRef} style={{ display: 'none' }}>
       <button className="dev-settings-btn" onClick={() => setOpen(!open)}>
         <img src="/icons/Settings.svg" alt="" width="16" height="16" className="dev-settings-icon" />
       </button>

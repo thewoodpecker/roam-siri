@@ -129,12 +129,12 @@
   align-self: flex-end;
 }
 
-.mc-bubble {
+.mc-msg-bubble {
   padding: 8px 12px;
   background: var(--background-primary);
 }
 
-.mc-bubble p {
+.mc-msg-bubble p {
   font-size: 13px;
   font-weight: 400;
   color: var(--text-primary);
@@ -142,11 +142,11 @@
   letter-spacing: -0.1px;
 }
 
-.mc-bubble-self {
+.mc-msg-bubble-self {
   background: var(--bg-surface-secondary);
 }
 
-.mc-bubble-self p {
+.mc-msg-bubble-self p {
   color: var(--text-on-accented);
 }
 

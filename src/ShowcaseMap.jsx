@@ -745,35 +745,141 @@ export default function ShowcaseMap() {
   );
 }
 
-function ProductItem({ name, desc, onClick }) {
-  const [hover, setHover] = useState(false);
-  const ref = useRef(null);
-  const [pos, setPos] = useState({ x: 0, y: 0 });
-
-  useEffect(() => {
-    if (hover && ref.current) {
-      const rect = ref.current.getBoundingClientRect();
-      setPos({ x: rect.left + rect.width / 2, y: rect.top });
-    }
-  }, [hover]);
-
+function ProductItem({ name, onClick }) {
   return (
-    <span
-      ref={ref}
-      className="sc-products-item"
-      onClick={onClick}
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
-    >
+    <span className="sc-products-item" onClick={onClick}>
       {name}
-      {hover && ReactDOM.createPortal(
-        <div className="sc-product-tooltip" style={{ left: pos.x, top: pos.y - 12 }}>
-          <div className="sc-product-tooltip-inner">{desc}</div>
-        </div>,
-        document.body
-      )}
     </span>
   );
+}
+
+const HINT_BLOBS = {
+  squiggle: {
+    viewBox: '0 0 105 50',
+    strokeWidth: 20,
+    d: 'M11.7979 28.2915C11.7664 28.2915 18.5772 22.4576 22.333 20.5719C31.824 15.8068 38.3529 11.9222 39.1367 12.0002C40.1678 12.1027 39.5956 15.2438 37.8693 21.2281C36.6289 25.5282 34.1167 32.2288 33.2468 35.5397C32.377 38.8507 33.0896 38.5269 36.0768 36.2944C44.4078 30.0679 49.8009 26.0446 49.8892 26.9359C49.9404 27.4536 49.7597 28.1139 49.5082 28.9741C49.2567 29.8342 48.8773 30.8766 50.6701 29.8848C52.4629 28.893 56.4395 25.8355 58.6156 24.6293C60.7916 23.4232 61.0467 24.1612 61.1781 25.433C61.3095 26.7048 61.3095 28.4881 61.4955 29.5778C61.6816 30.6675 62.0536 31.0096 62.7643 30.9137C64.6087 30.6648 70.3738 26.2757 77.6641 21.511C80.0337 19.9623 80.2238 21.0697 79.5305 23.1423C77.7152 28.569 75.7412 32.2593 75.7202 32.9551C75.7028 33.5311 81.4791 29.2448 88.8073 23.7441C91.2742 21.8924 91.574 22.4813 91.4995 23.9278C91.2992 27.8163 90.6685 30.8728 90.9544 31.9683C91.1061 32.5492 91.8975 32.9159 92.8065 32.9647',
+  },
+  peaks: {
+    viewBox: '0 0 108 60',
+    strokeWidth: 20,
+    d: 'M10.0045 38.1941C9.98392 38.1941 10.0232 37.3823 10.3379 35.3249C10.7905 32.3653 12.7762 28.4701 15.3117 24.0437C16.5802 21.8291 18.0682 19.8303 19.3853 18.142C21.7652 15.0914 24.1206 13.0206 26.0857 11.5547C28.6806 9.61893 30.1698 9.98476 30.6719 10.1128C31.124 10.228 31.0502 13.2065 30.3257 21.8996C29.806 28.1346 28.1651 37.991 27.4182 43.366C26.6713 48.741 26.6604 49.3153 26.977 49.3435C27.2936 49.3717 27.9381 48.8364 32.6249 42.578C37.3118 36.3195 46.0213 24.3541 50.957 17.7409C55.8926 11.1277 56.7904 10.2292 57.2871 10.1038C57.7838 9.97831 57.8521 10.6531 57.426 13.4962C56.9999 16.3393 56.0772 21.3303 55.5492 24.868C54.7363 30.3152 54.8669 32.7527 55.1862 33.3124C55.3319 33.5678 55.9038 33.2914 59.0119 30.167C62.12 27.0427 67.8644 20.9577 70.9437 17.725C74.023 14.4923 74.263 14.2964 74.2544 14.7083C74.2458 15.1203 73.9812 16.146 73.1334 18.6838C72.2855 21.2216 70.8624 25.2402 69.8711 28.5328C68.1611 34.213 67.7724 37.4653 67.792 38.5786C67.7998 39.0226 68.0896 39.1925 68.7304 38.8225C69.3712 38.4525 70.4272 37.5301 74.3347 33.3241C78.2423 29.1181 84.9692 21.6564 88.3744 18.2915C91.7795 14.9266 91.659 15.8847 90.9733 18.1997C89.1945 24.2054 87.6318 28.4443 87.8993 29.0281C89.2007 28.6299 91.3884 27.2006 93.9354 25.362C95.2322 24.4904 96.5381 23.7437 97.8835 22.9744',
+  },
+  waves: {
+    viewBox: '0 0 118 50',
+    strokeWidth: 20,
+    d: 'M10.0026 28.3845C10.3626 27.5178 13.4421 23.295 17.5631 18.5535C20.2479 15.4643 21.916 14.5327 22.5207 14.3087C22.82 14.1979 23.1373 14.1965 23.4246 14.3731C24.088 14.7806 24.3826 15.9723 24.9115 20.1046C25.3562 23.5796 25.8915 29.8842 26.2935 33.3699C26.7531 37.3558 27.3207 38.1769 27.894 38.7486C28.1749 39.0288 28.5994 39.096 29.1168 38.9716C29.6342 38.8472 30.2736 38.4798 34.0299 34.1763C37.7863 29.8729 44.6402 21.6445 48.4677 17.1159C52.8283 11.9564 53.8355 11.1475 54.5241 10.746C54.8514 10.5552 55.2366 10.6027 55.5122 10.8074C56.13 11.2662 56.3319 12.8255 56.8093 18.2382C57.2004 22.6725 57.5283 30.5615 57.894 34.6759C58.2597 38.7903 58.5597 38.8982 62.3473 33.9052C66.135 28.9122 73.4011 18.815 77.2441 13.8562C81.0872 8.89747 81.287 9.38312 81.2971 11.6259C81.3252 17.8562 81.01 22.5101 81.224 23.5274C81.408 24.4018 81.9452 24.9346 82.3972 25.2596C82.6221 25.4213 82.9183 25.4465 83.2852 25.399C84.1189 25.2911 85.3076 24.342 87.5569 22.0366C94.2851 15.1403 95.2521 13.9451 95.7144 13.9999C99.8256 14.4872 96.3545 23.6518 96.5521 24.0974C96.6559 24.3314 96.9943 24.443 97.3887 24.4395C100.812 23.1401 105.236 21.0796 105.959 20.936C106.353 20.8716 106.801 20.8245 107.262 20.7761',
+  },
+  bumps: {
+    viewBox: '0 0 98 51',
+    strokeWidth: 20,
+    d: 'M10.0001 31.8999C10.207 31.675 13.3393 28.0977 17.9698 23.0364C19.4994 21.3645 19.6668 21.8033 19.7249 24.7544C19.783 27.7055 19.8043 33.2297 19.8636 36.2531C19.9229 39.2765 20.0196 39.6317 20.2023 39.8554C20.3851 40.0791 20.6509 40.1606 21.0634 39.9748C21.4759 39.789 22.027 39.3333 24.0508 36.4502C26.0746 33.567 29.5544 28.2703 31.4681 25.5715C33.3817 22.8726 33.6238 22.9323 33.9089 23.8983C35.4352 29.0693 35.5348 30.5641 36.0101 31.1254C36.2379 31.3944 36.6385 31.4234 37.1862 31.2338C37.7339 31.0442 38.4677 30.5821 42.2704 27.0982C46.0731 23.6143 52.9226 17.1225 56.6476 13.6547C60.3727 10.1869 60.7659 9.93975 61.0255 10.0122C61.6054 10.1741 61.3233 12.187 60.2917 17.0543C59.5301 20.6476 57.9762 26.4529 57.3247 29.3493C56.6733 32.2458 56.8924 32.0398 58.6863 29.6223C60.4801 27.2048 63.842 22.5819 65.5954 20.3866C67.3489 18.1914 67.3921 18.564 66.6773 21.0852C65.9625 23.6065 64.4885 28.2651 63.6769 30.9372C62.8654 33.6093 62.761 34.1536 62.9677 34.2907C63.5869 34.7015 67.2089 30.8398 71.8236 26.2178C73.4493 24.5895 73.6716 24.4684 74.105 24.5875C76.4078 25.2206 78.4218 25.8442 81.1276 25.4604C82.3364 25.2889 83.2574 24.859 84.0297 24.7792C84.401 24.7409 84.7384 24.8464 84.9233 25.1627C85.1082 25.4789 85.1324 26.0384 85.4031 26.2977C85.6739 26.5571 86.1905 26.4994 86.6166 26.4268C87.0427 26.3542 87.3627 26.2685 87.6924 26.1802',
+  },
+};
+
+const HINT_ARROWS = {
+  'curve-right': {
+    width: 54,
+    height: 34,
+    viewBox: '0 0 27 17',
+    paths: [
+      'M0.500122 0.500244C0.641852 0.912715 2.71482 3.22199 6.56575 6.81723C10.5913 10.5755 14.2039 12.4234 16.1056 13.3459C17.8952 14.0583 19.553 14.5135 21.5345 14.7562C22.7437 14.8528 24.3664 14.8953 26.1609 15.0417',
+      'M21.622 16.1366C21.6921 16.1366 23.4294 16.1366 25.9053 16.0009C26.6906 15.9578 26.4766 15.5938 26.0332 15.1835C24.9124 14.2321 23.8243 13.2416 23.0939 12.488C22.7538 12.1677 22.4758 11.9733 22.1894 11.7729',
+    ],
+  },
+  'down-left': {
+    width: 22,
+    height: 76,
+    viewBox: '0 0 11 38',
+    paths: [
+      'M10.2578 0.284805C10.2578 0.28255 10.2578 0.280294 10.2357 2.70611C10.2137 5.13193 10.1695 9.9859 10.0507 13.1532C9.93195 16.3205 9.73988 17.654 9.2945 19.4699C8.28694 23.5778 6.56002 27.6754 4.77999 31.0473C3.88232 32.6134 2.99609 33.8854 2.44883 34.6359C1.90157 35.3864 1.72014 35.5769 1.5332 35.7731',
+      'M0.5 30.0559C0.5 30.073 0.5 32.488 0.562117 36.0715C0.58255 37.2504 0.748467 37.1245 1.51396 36.6234C3.68243 35.2484 5.23234 34.2631 5.40368 34.0712C5.4706 33.9639 5.49687 33.8368 5.55371 33.7058',
+    ],
+  },
+  'swoop-right': {
+    width: 52,
+    height: 48,
+    viewBox: '0 0 26 24',
+    paths: [
+      'M0.5 0.5C0.5 1.10328 0.544312 3.24437 0.688794 6.30285C0.77452 8.11753 1.72307 9.86621 2.92831 11.9357C3.85566 13.528 5.29435 14.5162 6.80665 15.5605C7.59915 16.1078 8.51603 16.5798 9.86801 17.1722C11.22 17.7646 12.9981 18.4349 14.6709 18.9034C16.3438 19.3719 17.8574 19.6182 18.9634 19.7564C20.7218 19.9172 22.1702 19.8408 23.4813 19.6461C24.0162 19.551 24.2862 19.4634 24.6812 19.334',
+      'M22.1592 18.2471C22.1554 18.2471 22.1515 18.2471 22.9036 18.2471C23.6557 18.2471 25.1639 18.2471 25.3384 18.9961C25.5129 19.7451 24.3079 21.2432 23.0665 22.7866',
+    ],
+  },
+};
+
+const HINT_BLOB_KEYS = Object.keys(HINT_BLOBS);
+const HINT_ARROW_KEYS = Object.keys(HINT_ARROWS);
+
+function pickRandom(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function Hint({ text, blob, arrow, visible = true, className = '', style }) {
+  const [randomBlob] = useState(() => pickRandom(HINT_BLOB_KEYS));
+  const [randomArrow] = useState(() => pickRandom(HINT_ARROW_KEYS));
+  const blobDef = HINT_BLOBS[blob ?? randomBlob];
+  const arrowDef = HINT_ARROWS[arrow ?? randomArrow];
+  const pathRef = useRef(null);
+  const [pathLen, setPathLen] = useState(0);
+  useEffect(() => {
+    if (!pathRef.current) return;
+    const path = pathRef.current;
+    const svg = path.ownerSVGElement;
+    const rect = svg.getBoundingClientRect();
+    const scaleX = rect.width / svg.viewBox.baseVal.width;
+    const scaleY = rect.height / svg.viewBox.baseVal.height;
+    setPathLen(path.getTotalLength() * Math.max(scaleX, scaleY));
+  }, [blobDef]);
+  return ReactDOM.createPortal(
+    <div className={`sc-hint ${!visible ? 'sc-hint-hidden' : ''} ${className}`} style={style}>
+      <div className="sc-hint-row">
+        <span className="sc-hint-text-wrap">
+          <svg className="sc-hint-blob" viewBox={blobDef.viewBox} preserveAspectRatio="none" fill="none">
+            <path
+              ref={pathRef}
+              d={blobDef.d}
+              stroke="black"
+              strokeWidth={blobDef.strokeWidth}
+              strokeLinecap="round"
+              vectorEffect="non-scaling-stroke"
+              style={pathLen ? { strokeDasharray: pathLen, strokeDashoffset: pathLen, animation: 'sc-blob-draw 2s ease-in-out 1s forwards' } : { opacity: 0 }}
+            />
+          </svg>
+          <span className="sc-hint-text">{text}</span>
+        </span>
+        <svg className="sc-hint-arrow" width={arrowDef.width} height={arrowDef.height} viewBox={arrowDef.viewBox} fill="none">
+          {arrowDef.paths.map((d, i) => (
+            <path key={i} d={d} stroke="white" strokeLinecap="round" />
+          ))}
+        </svg>
+      </div>
+    </div>,
+    document.body
+  );
+}
+
+function useTargetHintStyle(targetRef, active, offset = { top: -30, left: 'center' }, transform = 'translate(-100%, -100%) translateX(40px)') {
+  const [style, setStyle] = useState(null);
+  useEffect(() => {
+    if (!active || !targetRef.current) return;
+    const update = () => {
+      if (!targetRef.current) return;
+      const rect = targetRef.current.getBoundingClientRect();
+      const left = offset.left === 'center' ? rect.left + rect.width / 2 : rect.left + offset.left;
+      setStyle({
+        top: rect.top + window.pageYOffset + offset.top,
+        left: left + window.pageXOffset,
+        transform,
+      });
+    };
+    update();
+    window.addEventListener('resize', update);
+    window.addEventListener('scroll', update, true);
+    return () => {
+      window.removeEventListener('resize', update);
+      window.removeEventListener('scroll', update, true);
+    };
+  }, [active]);
+  return style;
 }
 
 function ShowcaseMapInner() {
@@ -948,6 +1054,7 @@ function ShowcaseMapInner() {
   const [shelfClosing, setShelfClosing] = useState(false);
   const [mapPulse, setMapPulse] = useState(false);
   const [hintVisible, setHintVisible] = useState(true);
+  const introHintStyle = useTargetHintStyle(miniRoamRef, hintVisible, { top: 150, left: 90 }, 'none');
   const [mapMounted, setMapMounted] = useState(false);
   const [wallpaperLoaded, setWallpaperLoaded] = useState(false);
   useEffect(() => {
@@ -1456,18 +1563,7 @@ function ShowcaseMapInner() {
       {magicastWin.isOpen && <div className="mc-recording-border" />}
       {/* Product features bar — inside miniRoamOS, pinned to bottom */}
       {/* Handwritten annotation pointing to the product bar */}
-      <div className={`sc-hint ${!hintVisible ? 'sc-hint-hidden' : ''}`} style={HIDE_CHROME ? { display: 'none' } : undefined}>
-        <div className="sc-hint-row">
-          <svg className="sc-hint-blob" viewBox="0 0 105 50" fill="none">
-            <path pathLength="1" d="M11.7979 28.2915C11.7664 28.2915 18.5772 22.4576 22.333 20.5719C31.824 15.8068 38.3529 11.9222 39.1367 12.0002C40.1678 12.1027 39.5956 15.2438 37.8693 21.2281C36.6289 25.5282 34.1167 32.2288 33.2468 35.5397C32.377 38.8507 33.0896 38.5269 36.0768 36.2944C44.4078 30.0679 49.8009 26.0446 49.8892 26.9359C49.9404 27.4536 49.7597 28.1139 49.5082 28.9741C49.2567 29.8342 48.8773 30.8766 50.6701 29.8848C52.4629 28.893 56.4395 25.8355 58.6156 24.6293C60.7916 23.4232 61.0467 24.1612 61.1781 25.433C61.3095 26.7048 61.3095 28.4881 61.4955 29.5778C61.6816 30.6675 62.0536 31.0096 62.7643 30.9137C64.6087 30.6648 70.3738 26.2757 77.6641 21.511C80.0337 19.9623 80.2238 21.0697 79.5305 23.1423C77.7152 28.569 75.7412 32.2593 75.7202 32.9551C75.7028 33.5311 81.4791 29.2448 88.8073 23.7441C91.2742 21.8924 91.574 22.4813 91.4995 23.9278C91.2992 27.8163 90.6685 30.8728 90.9544 31.9683C91.1061 32.5492 91.8975 32.9159 92.8065 32.9647" stroke="black" strokeWidth="20" strokeLinecap="round" />
-          </svg>
-          <span className="sc-hint-text">Product Tour</span>
-          <svg className="sc-hint-arrow" width="54" height="34" viewBox="0 0 27 17" fill="none">
-            <path d="M0.500122 0.500244C0.641852 0.912715 2.71482 3.22199 6.56575 6.81723C10.5913 10.5755 14.2039 12.4234 16.1056 13.3459C17.8952 14.0583 19.553 14.5135 21.5345 14.7562C22.7437 14.8528 24.3664 14.8953 26.1609 15.0417" stroke="white" strokeLinecap="round" />
-            <path d="M21.622 16.1366C21.6921 16.1366 23.4294 16.1366 25.9053 16.0009C26.6906 15.9578 26.4766 15.5938 26.0332 15.1835C24.9124 14.2321 23.8243 13.2416 23.0939 12.488C22.7538 12.1677 22.4758 11.9733 22.1894 11.7729" stroke="white" strokeLinecap="round" />
-          </svg>
-        </div>
-      </div>
+      <Hint text="Product Tour" blob="peaks" arrow="swoop-right" visible={hintVisible} style={{ ...(introHintStyle || { top: 150, left: 90 }), ...(HIDE_CHROME ? { display: 'none' } : {}) }} />
       <div className="sc-products-bar" ref={productsBarRef} style={HIDE_CHROME ? { display: 'none' } : undefined}>
         {[
           { name: 'Virtual Office', desc: 'See your whole team on a live map. Who\'s here, who\'s meeting, who\'s available — at a glance.' },
@@ -1543,6 +1639,10 @@ function ShowcaseMapInner() {
         <div className="sc-feature-text">
           <h2 className="sc-feature-title">GROUP CHAT</h2>
           <p className="sc-feature-desc">Send Direct Messages, Group Chats, or Confidential Chats with AInbox. Set up your own custom groups. Tailor for your own bespoke workflow with custom folders, pinned chats, bookmarks, scheduled messages, and drag-and-drop reordering. Search your entire history. Give out guest badges to chat with people outside your organization, free!</p>
+          <div className="sc-feature-buttons">
+            <button className="sc-feature-btn">Free Trial</button>
+            <button className="sc-feature-btn">Book Demo</button>
+          </div>
         </div>
         <div className="sc-feature-visual">
           <div className="sc-feature-wallpaper" style={{ backgroundImage: `url(/wallpaper-${theme}.png)` }}>
@@ -1563,6 +1663,10 @@ function ShowcaseMapInner() {
           <div className="sc-feature-text sc-feature-text-right">
             <h2 className="sc-feature-title">ON-AIR</h2>
             <p className="sc-feature-desc">Now anyone can host Immersive Events for the Creator-Era</p>
+            <div className="sc-feature-buttons">
+              <button className="sc-feature-btn">Free Trial</button>
+              <button className="sc-feature-btn">Book Demo</button>
+            </div>
           </div>
         </div>
       </div>
@@ -1573,6 +1677,10 @@ function ShowcaseMapInner() {
           <div className="sc-feature-text">
             <h2 className="sc-feature-title">VIDEO CONFERENCING</h2>
             <p className="sc-feature-desc">Jump into a Meeting Room for video conferencing when you need to collaborate. When you're done, you're done! Includes high resolution screensharing and whiteboard as well. No more back-to-back video meetings filling out all day. Just meet when you need to, and when you're done, back to work.</p>
+            <div className="sc-feature-buttons">
+              <button className="sc-feature-btn">Free Trial</button>
+              <button className="sc-feature-btn">Book Demo</button>
+            </div>
           </div>
           <div className="sc-feature-visual">
             <div className="sc-feature-wallpaper" style={{ backgroundImage: `url(/wallpaper-${theme}.png)` }}>
@@ -1610,6 +1718,10 @@ function ShowcaseMapInner() {
           <div className="sc-feature-text sc-feature-text-right">
             <h2 className="sc-feature-title">THEATER</h2>
             <p className="sc-feature-desc">Take your presentations to the next level with a unique new Theater format for all-hands. Your audience sits in rows where they can whisper to each other. There's a backstage, Q&amp;A microphone, and stadium mode for 100+ people. All the world's a stage!</p>
+            <div className="sc-feature-buttons">
+              <button className="sc-feature-btn">Free Trial</button>
+              <button className="sc-feature-btn">Book Demo</button>
+            </div>
           </div>
         </div>
       </div>
@@ -1620,6 +1732,10 @@ function ShowcaseMapInner() {
           <div className="sc-feature-text">
             <h2 className="sc-feature-title">AI SCREEN RECORDER</h2>
             <p className="sc-feature-desc">Record sales demos, investor updates, product releases, announcements or anything else you need right from your desktop with Roam Magicast. Record your screen and add your video or audio picture-in-picture to create a captivating presentation right in Roam. Easily share via AInbox or a link with someone externally. They'll get your Magicast and its transcription.</p>
+            <div className="sc-feature-buttons">
+              <button className="sc-feature-btn">Free Trial</button>
+              <button className="sc-feature-btn">Book Demo</button>
+            </div>
           </div>
           <div className="sc-feature-visual" style={{ position: 'relative' }}>
             <div className="sc-feature-wallpaper" style={{ backgroundImage: `url(/wallpaper-${theme}.png)` }}>
