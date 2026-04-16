@@ -227,7 +227,7 @@ function SimpleStoryBubble({ image, delay = 0, onClick }) {
 }
 
 // Private office room card — uses the same markup as mapv3
-function PrivateRoomCard({ room, storyBubble, onPersonClick }) {
+function PrivateRoomCard({ room, storyBubble, onPersonClick, onRoomClick }) {
   const [talking, setTalking] = useState({});
   const hasTalk = room.people.length > 1;
 
@@ -275,8 +275,13 @@ function PrivateRoomCard({ room, storyBubble, onPersonClick }) {
     prevVibeRef.current = activeVibe;
   }, [activeVibe]);
 
+  const clickable = !!onRoomClick;
   return (
-    <div className="sc-room-card">
+    <div
+      className="sc-room-card"
+      onClick={clickable ? () => onRoomClick(room) : undefined}
+      style={clickable ? { cursor: 'pointer' } : undefined}
+    >
       <div className={`sc-glow-fade ${showGlow ? 'sc-glow-visible' : ''}`}>
         {renderedVibe === 'claude' && <SiriGlow active={true} color={CLAUDE} intensity={3} borderRadius={12} />}
         {renderedVibe === 'codex' && <SiriGlow active={true} color={CODEX} intensity={3} borderRadius={12} />}
@@ -299,7 +304,7 @@ function PrivateRoomCard({ room, storyBubble, onPersonClick }) {
             <div className="private-office-seat">
               <div className="seat-row seat-row-hovered">
                 {room.people.map((person, i) => (
-                  <div key={person.name + i} className="seat-assigned sc-private-person" onClick={(e) => { e.stopPropagation(); onPersonClick && onPersonClick(person, e); }} style={{ cursor: getChatIdForAvatar(person.avatar) ? 'pointer' : 'default' }}>
+                  <div key={person.name + i} className={`seat-assigned sc-private-person ${person.isJoining ? 'sc-joining' : ''}`} onClick={(e) => { e.stopPropagation(); onPersonClick && onPersonClick(person, e); }} style={{ cursor: getChatIdForAvatar(person.avatar) ? 'pointer' : 'default' }}>
                     <img className="seat-avatar" src={person.avatar} alt={person.name} />
                     <span className="seat-nametag">{person.name}</span>
                     {hasTalk && <div className={`sc-private-talk-ring ${talking[person.name] ? 'sc-talking' : ''}`} />}
@@ -418,7 +423,7 @@ function MeetingRoomCardShowcase({ room, onPersonClick, onRoomClick }) {
           </div>
           <div className="meeting-room-people">
             {room.people.map((person, i) => (
-              <div key={person.name + i} className={`person meeting-room-person ${person._new ? 'sc-person-arriving' : ''}`} onClick={(e) => { e.stopPropagation(); onPersonClick && onPersonClick(person, e); }} style={{ cursor: getChatIdForAvatar(person.avatar) ? 'pointer' : 'default' }}>
+              <div key={person.name + i} className={`person meeting-room-person ${person._new ? 'sc-person-arriving' : ''} ${person.isJoining ? 'sc-joining' : ''}`} onClick={(e) => { e.stopPropagation(); onPersonClick && onPersonClick(person, e); }} style={{ cursor: getChatIdForAvatar(person.avatar) ? 'pointer' : 'default' }}>
                 <img className="avatar" src={person.avatar} alt={person.name} />
                 <div className={`avatar-inner-glow ${talking[person.name] ? 'sc-talking' : 'glow-off'}`} />
               </div>
@@ -492,6 +497,67 @@ function FloorCard({ name, rooms, active, onClick }) {
 }
 
 
+function MagicastWindow({ win, onDrag }) {
+  const [closing, setClosing] = useState(false);
+  const handleClose = () => {
+    setClosing(true);
+    setTimeout(() => win.close(), 180);
+  };
+  return (
+    <div
+      className={`mc-win ${!win.isFocused ? 'mc-win-unfocused' : ''} ${closing ? 'mc-win-closing' : ''}`}
+      style={{ left: win.position.x, top: win.position.y, zIndex: win.zIndex }}
+      onMouseDown={() => win.focus()}
+    >
+      <div className="mc-win-titlebar" onMouseDown={onDrag}>
+        <div className="mc-win-lights">
+          <div className="mc-win-light mc-win-light-close" onClick={(e) => { e.stopPropagation(); handleClose(); }} />
+          <div className="mc-win-light mc-win-light-min" />
+          <div className="mc-win-light mc-win-light-max" />
+        </div>
+        <span className="mc-win-title">Magicast</span>
+      </div>
+      <div className="mc-win-body">
+        <div className="mc-win-preview">
+          <img className="mc-win-preview-bg" src="/magicast/preview.png" alt="" />
+          <div className="mc-win-preview-overlay" />
+          <img className="mc-win-preview-avatar" src="/magicast/avatar.png" alt="" />
+        </div>
+        <div className="mc-win-row">
+          <span className="mc-win-row-icon" style={{ WebkitMaskImage: 'url(/magicast/video.svg)', maskImage: 'url(/magicast/video.svg)' }} />
+          <span className="mc-win-row-label">Camera</span>
+          <span className="mc-win-row-value">Logi 4K Pro</span>
+          <div className="mc-win-row-chevron">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 5L8 9L12 5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+          </div>
+        </div>
+        <div className="mc-win-row">
+          <span className="mc-win-row-icon" style={{ WebkitMaskImage: 'url(/magicast/microphone.svg)', maskImage: 'url(/magicast/microphone.svg)' }} />
+          <span className="mc-win-row-label">Microphone</span>
+          <span className="mc-win-row-value">Default</span>
+          <div className="mc-win-row-chevron">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 5L8 9L12 5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+          </div>
+        </div>
+        <div className="mc-win-row">
+          <span className="mc-win-row-icon" style={{ WebkitMaskImage: 'url(/magicast/monitor.svg)', maskImage: 'url(/magicast/monitor.svg)' }} />
+          <span className="mc-win-row-label">Screens</span>
+          <span className="mc-win-row-value">Entire Screen</span>
+          <svg className="mc-win-row-chev-right" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 4L10 8L6 12" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+        </div>
+        <div className="mc-win-row">
+          <span className="mc-win-row-icon" style={{ WebkitMaskImage: 'url(/magicast/effects.svg)', maskImage: 'url(/magicast/effects.svg)' }} />
+          <span className="mc-win-row-label">Effects</span>
+          <span className="mc-win-row-value">Background Blur</span>
+          <svg className="mc-win-row-chev-right" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 4L10 8L6 12" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+        </div>
+        <button className="mc-win-record">Start Recording</button>
+      </div>
+    </div>
+  );
+}
+
+
 const INITIAL_WINDOWS = [
   { id: 'map', isOpen: true, position: { x: 0, y: 0 }, zIndex: 25 },
   { id: 'ainbox', isOpen: false, position: { x: 60, y: 300 }, zIndex: 30 },
@@ -499,9 +565,25 @@ const INITIAL_WINDOWS = [
   { id: 'meeting', isOpen: false, position: { x: 80, y: 250 }, zIndex: 30 },
   { id: 'theater', isOpen: false, position: { x: 70, y: 220 }, zIndex: 30 },
   { id: 'shelf', isOpen: false, position: { x: 120, y: 280 }, zIndex: 30 },
+  { id: 'magicast', isOpen: false, position: { x: 200, y: 200 }, zIndex: 30 },
 ];
 
 const SHELF_TOTAL = 12;
+
+function KnockDialog({ room, onCancel }) {
+  const firstName = (room?.people?.[0]?.fullName || room?.people?.[0]?.name || room?.name || '').split(/\s+/)[0] || 'their';
+  return (
+    <div className="sc-knock-overlay" onClick={onCancel}>
+      <div className="sc-knock-dialog" onClick={(e) => e.stopPropagation()}>
+        <div className="sc-knock-icon">
+          <img src="/icons/knock.svg" alt="" />
+        </div>
+        <div className="sc-knock-label">Knocking on {firstName}'s Door<span className="sc-knock-dots"><span>.</span><span>.</span><span>.</span></span></div>
+        <button className="sc-knock-cancel" onClick={onCancel}>Cancel</button>
+      </div>
+    </div>
+  );
+}
 
 function ShelfWindow({ win, onDrag, photoIdx, direction, onPrev, onNext }) {
   const [closing, setClosing] = useState(false);
@@ -727,10 +809,42 @@ function ShowcaseMapInner() {
   const meetingWin = useWindow('meeting');
   const theaterWin = useWindow('theater');
   const shelfWin = useWindow('shelf');
+  const magicastWin = useWindow('magicast');
   const [activeMeetingRoom, setActiveMeetingRoom] = useState(null);
   const [joinedRoomId, setJoinedRoomId] = useState(null);
+  const [knockingRoom, setKnockingRoom] = useState(null);
+  const [homecomingId, setHomecomingId] = useState(null);
+  const knockTimerRef = useRef(null);
+  const suppressHomeRef = useRef(false);
+  const knockOnHoward = useCallback(() => {
+    const howardRoom = FLOORS['R&D'].find(r => r.id === 'r4');
+    if (!howardRoom) return;
+    if (activeFloor !== 'R&D') setActiveFloor('R&D');
+    if (knockingRoom || joinedRoomId === howardRoom.id) return;
+    setKnockingRoom(howardRoom);
+    knockTimerRef.current = setTimeout(() => {
+      setKnockingRoom(null);
+      if (meetingWin.isOpen || theaterWin.isOpen) suppressHomeRef.current = true;
+      if (meetingWin.isOpen) meetingWin.close();
+      if (theaterWin.isOpen) theaterWin.close();
+      setJoinedRoomId(howardRoom.id);
+    }, 3000);
+  }, [activeFloor, knockingRoom, joinedRoomId, meetingWin, theaterWin]);
   const [shelfOpen, setShelfOpen] = useState(false);
   const [shelfClosing, setShelfClosing] = useState(false);
+  const [mapPulse, setMapPulse] = useState(false);
+  const [mapMounted, setMapMounted] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setMapMounted(true), 500);
+    return () => clearTimeout(t);
+  }, []);
+  const pulseMapWindow = useCallback(() => {
+    setMapPulse(false);
+    requestAnimationFrame(() => {
+      setMapPulse(true);
+      setTimeout(() => setMapPulse(false), 720);
+    });
+  }, []);
   const shelfActive = shelfOpen || shelfClosing;
   const closeShelf = useCallback(() => {
     if (!shelfOpen) return;
@@ -753,6 +867,34 @@ function ShowcaseMapInner() {
     setShelfDir('next');
     setShelfPhotoIdx(i => i % SHELF_TOTAL + 1);
   }, []);
+
+  // If meeting or theater window closes while Joe is in that room, send him home
+  const sendHome = useCallback(() => {
+    setJoinedRoomId(null);
+    const joeOffice = (FLOORS[activeFloor] || []).find(r => r.type === 'private' && r.people.some(p => p.avatar === JOE.avatar));
+    if (joeOffice) {
+      setHomecomingId(joeOffice.id);
+      setTimeout(() => setHomecomingId(null), 700);
+    }
+  }, [activeFloor]);
+
+  const wasMeetingOpenRef = useRef(false);
+  useEffect(() => {
+    if (wasMeetingOpenRef.current && !meetingWin.isOpen) {
+      if (suppressHomeRef.current) suppressHomeRef.current = false;
+      else sendHome();
+    }
+    wasMeetingOpenRef.current = meetingWin.isOpen;
+  }, [meetingWin.isOpen, sendHome]);
+
+  const wasTheaterOpenRef = useRef(false);
+  useEffect(() => {
+    if (wasTheaterOpenRef.current && !theaterWin.isOpen) {
+      if (suppressHomeRef.current) suppressHomeRef.current = false;
+      else sendHome();
+    }
+    wasTheaterOpenRef.current = theaterWin.isOpen;
+  }, [theaterWin.isOpen, sendHome]);
 
   useEffect(() => {
     if (!shelfWin.isOpen || !shelfWin.isFocused) return;
@@ -896,7 +1038,7 @@ function ShowcaseMapInner() {
       <div className="miniRoamOS" ref={miniRoamRef}>
         <div className="sc-wallpaper sc-wallpaper-dark" style={{ opacity: theme === 'dark' ? 1 : 0 }} />
         <div className="sc-wallpaper sc-wallpaper-light" style={{ opacity: theme === 'light' ? 1 : 0 }} />
-      <div className={`sc-window ${!mapWin.isFocused ? 'sc-window-unfocused' : ''}`} ref={windowRef} style={{ transform: `translate(${mapWin.position.x}px, ${mapWin.position.y}px)`, zIndex: mapWin.zIndex }} onMouseDown={() => mapWin.focus()}>
+      <div className={`sc-window ${!mapWin.isFocused ? 'sc-window-unfocused' : ''} ${mapMounted ? 'sc-window-mounted' : ''} ${mapPulse ? 'sc-window-pulse' : ''}`} ref={windowRef} style={{ transform: `translate(${mapWin.position.x}px, ${mapWin.position.y}px)`, zIndex: mapWin.zIndex }} onMouseDown={() => mapWin.focus()}>
         {/* Mac window title bar */}
         <div className="sc-titlebar" onMouseDown={makeDragHandler(mapWin)}>
           <div className="sc-traffic-lights">
@@ -945,7 +1087,7 @@ function ShowcaseMapInner() {
                         }}
                       />
                     ) : room.type === 'meeting' ? (
-                      <MeetingRoomCardShowcase room={{ ...room, people: joinedRoomId === room.id && !room.people.some(p => p.avatar === JOE.avatar) ? [...room.people, JOE] : room.people }} onPersonClick={openMiniChat} onRoomClick={(r) => { setJoinedRoomId(r.id); const ppl = r.people.some(p => p.avatar === JOE.avatar) ? r.people : [...r.people, JOE]; setActiveMeetingRoom({ ...r, people: ppl }); meetingWin.open(); }} />
+                      <MeetingRoomCardShowcase room={{ ...room, people: joinedRoomId === room.id && !room.people.some(p => p.avatar === JOE.avatar) ? [...room.people, { ...JOE, isJoining: true }] : room.people }} onPersonClick={openMiniChat} onRoomClick={(r) => { setJoinedRoomId(r.id); const ppl = r.people.some(p => p.avatar === JOE.avatar) ? r.people : [...r.people, JOE]; setActiveMeetingRoom({ ...r, people: ppl }); meetingWin.open(); }} />
                     ) : room.type === 'game' ? (
                       <GameRoomCard room={room} />
                     ) : room.type === 'command' ? (
@@ -953,7 +1095,42 @@ function ShowcaseMapInner() {
                     ) : (
                       <PrivateRoomCard
                         onPersonClick={openMiniChat}
-                        room={{ ...room, vibe: activeVibes[room.id] || null }}
+                        onRoomClick={room.people.length === 0 ? undefined : (r) => {
+                          if (joinedRoomId === r.id) return;
+                          const isMyOffice = room.people.some(p => p.avatar === JOE.avatar);
+                          if (isMyOffice) {
+                            if (knockingRoom) {
+                              clearTimeout(knockTimerRef.current);
+                              setKnockingRoom(null);
+                            }
+                            if (meetingWin.isOpen) meetingWin.close();
+                            if (theaterWin.isOpen) theaterWin.close();
+                            setJoinedRoomId(null);
+                            setHomecomingId(room.id);
+                            setTimeout(() => setHomecomingId(null), 700);
+                            return;
+                          }
+                          if (knockingRoom) return;
+                          setKnockingRoom(r);
+                          knockTimerRef.current = setTimeout(() => {
+                            setKnockingRoom(null);
+                            if (meetingWin.isOpen || theaterWin.isOpen) suppressHomeRef.current = true;
+                            if (meetingWin.isOpen) meetingWin.close();
+                            if (theaterWin.isOpen) theaterWin.close();
+                            setJoinedRoomId(r.id);
+                          }, 3000);
+                        }}
+                        room={{
+                          ...room,
+                          people: joinedRoomId === room.id && !room.people.some(p => p.avatar === JOE.avatar)
+                            ? [...room.people, { ...JOE, isJoining: true }]
+                            : joinedRoomId && joinedRoomId !== room.id
+                              ? room.people.filter(p => p.avatar !== JOE.avatar)
+                              : homecomingId === room.id
+                                ? room.people.map(p => p.avatar === JOE.avatar ? { ...p, isJoining: true } : p)
+                                : room.people,
+                          vibe: activeVibes[room.id] || null,
+                        }}
                         storyBubble={room.story && room.people[0] && !viewedStories[room.story] ? (
                           <SimpleStoryBubble
                             image={room.story}
@@ -1092,6 +1269,15 @@ function ShowcaseMapInner() {
             <div className="sc-toolbar-pill" data-tooltip="Magic Minutes">
               <img src="/icons/magic-quill.svg" width="16" height="16" alt="" />
             </div>
+            {joinedRoomId && (
+              <div className="sc-toolbar-pill sc-toolbar-pill-exit" data-tooltip="Leave Room" onClick={() => {
+                if (meetingWin.isOpen) meetingWin.close();
+                if (theaterWin.isOpen) theaterWin.close();
+                sendHome();
+              }}>
+                <img src="/icons/door.svg" width="16" height="16" alt="" />
+              </div>
+            )}
           </div>
 
           {/* Right group */}
@@ -1107,7 +1293,7 @@ function ShowcaseMapInner() {
               }}>
                 <img src="/icons/story.svg" width="16" height="16" alt="" />
               </div>
-              <div className="sc-toolbar-pill" data-tooltip="Magicast">
+              <div className="sc-toolbar-pill" data-tooltip="Magicast" onClick={() => magicastWin.open()}>
                 <img src="/icons/magicast.svg" width="16" height="16" alt="" />
               </div>
               <div className="sc-toolbar-pill" data-tooltip="Recordings">
@@ -1124,6 +1310,7 @@ function ShowcaseMapInner() {
         </div>
         {storyViewer && <StoryViewer stories={storyViewer.stories} initialIndex={storyViewer.initialIndex} onClose={() => setStoryViewer(null)} />}
         <ShareDialog open={shareOpen} onClose={() => setShareOpen(false)} />
+        {knockingRoom && <KnockDialog room={knockingRoom} onCancel={() => { clearTimeout(knockTimerRef.current); setKnockingRoom(null); }} />}
       </div>
       {miniChats.map(mc => (
         <MiniChat key={mc.chatId} {...mc} onClose={() => closeMiniChat(mc.chatId)} />
@@ -1133,6 +1320,7 @@ function ShowcaseMapInner() {
       {meetingWin.isOpen && activeMeetingRoom && <MeetingWindow win={meetingWin} onDrag={makeDragHandler(meetingWin)} roomName={activeMeetingRoom.name} people={activeMeetingRoom.people} onOpenChat={() => ainboxWin.open()} onOpenOnAir={() => onairWin.open()} />}
       {theaterWin.isOpen && <TheaterWindow win={theaterWin} onDrag={makeDragHandler(theaterWin)} speakers={theaterSpeakers} audience={SHOWCASE_PEOPLE} me={JOE} onOpenChat={() => ainboxWin.open()} />}
       {shelfWin.isOpen && <ShelfWindow win={shelfWin} onDrag={makeDragHandler(shelfWin)} photoIdx={shelfPhotoIdx} direction={shelfDir} onPrev={prevShelfPhoto} onNext={nextShelfPhoto} />}
+      {magicastWin.isOpen && <MagicastWindow win={magicastWin} onDrag={makeDragHandler(magicastWin)} />}
       {/* Product features bar — inside miniRoamOS, pinned to bottom */}
       <div className="sc-products-bar" ref={productsBarRef} style={HIDE_CHROME ? { display: 'none' } : undefined}>
         {[
@@ -1149,7 +1337,7 @@ function ShowcaseMapInner() {
         ].map((item, i) => (
           <React.Fragment key={item.name}>
             {i > 0 && <div className="sc-products-dot" />}
-            <ProductItem name={item.name} desc={item.desc} onClick={item.name === 'AInbox' ? () => ainboxWin.open() : item.name === 'On-Air' ? () => onairWin.open() : item.name === 'Theater' ? () => theaterWin.open() : undefined} />
+            <ProductItem name={item.name} desc={item.desc} onClick={item.name === 'AInbox' ? () => ainboxWin.open() : item.name === 'On-Air' ? () => onairWin.open() : item.name === 'Theater' ? () => theaterWin.open() : item.name === 'Magicast' ? () => magicastWin.open() : item.name === 'Virtual Office' ? pulseMapWindow : item.name === 'Drop-In Meetings' ? knockOnHoward : undefined} />
           </React.Fragment>
         ))}
       </div>
