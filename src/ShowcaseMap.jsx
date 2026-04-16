@@ -834,9 +834,16 @@ function ShowcaseMapInner() {
   const [shelfClosing, setShelfClosing] = useState(false);
   const [mapPulse, setMapPulse] = useState(false);
   const [mapMounted, setMapMounted] = useState(false);
+  const [wallpaperLoaded, setWallpaperLoaded] = useState(false);
   useEffect(() => {
     const t = setTimeout(() => setMapMounted(true), 500);
     return () => clearTimeout(t);
+  }, []);
+  useEffect(() => {
+    const src = theme === 'light' ? '/wallpaper-light.png' : '/wallpaper-dark.png';
+    const img = new Image();
+    img.onload = () => setWallpaperLoaded(true);
+    img.src = src;
   }, []);
   const pulseMapWindow = useCallback(() => {
     setMapPulse(false);
@@ -1036,8 +1043,8 @@ function ShowcaseMapInner() {
       </div>
 
       <div className="miniRoamOS" ref={miniRoamRef}>
-        <div className="sc-wallpaper sc-wallpaper-dark" style={{ opacity: theme === 'dark' ? 1 : 0 }} />
-        <div className="sc-wallpaper sc-wallpaper-light" style={{ opacity: theme === 'light' ? 1 : 0 }} />
+        <div className="sc-wallpaper sc-wallpaper-dark" style={{ opacity: theme === 'dark' && wallpaperLoaded ? 1 : 0 }} />
+        <div className="sc-wallpaper sc-wallpaper-light" style={{ opacity: theme === 'light' && wallpaperLoaded ? 1 : 0 }} />
       <div className={`sc-window ${!mapWin.isFocused ? 'sc-window-unfocused' : ''} ${mapMounted ? 'sc-window-mounted' : ''} ${mapPulse ? 'sc-window-pulse' : ''}`} ref={windowRef} style={{ transform: `translate(${mapWin.position.x}px, ${mapWin.position.y}px)`, zIndex: mapWin.zIndex }} onMouseDown={() => mapWin.focus()}>
         {/* Mac window title bar */}
         <div className="sc-titlebar" onMouseDown={makeDragHandler(mapWin)}>

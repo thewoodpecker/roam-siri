@@ -357,6 +357,10 @@
   height: 16px;
 }
 
+.sc-viewport[data-theme="light"] .theater-win-avatar-btn img {
+  filter: invert(1);
+}
+
 .theater-win-avatar-badge {
   position: absolute;
   top: -2px;

@@ -93,6 +93,7 @@ export default function StoryViewer({ stories, initialIndex = 0, onClose }) {
             <div
               key={story.image}
               className={`sv-card ${isCurrent ? 'sv-card-active' : 'sv-card-peek'}`}
+              style={{ animationDelay: `${i * 80}ms` }}
               onClick={isCurrent ? undefined : () => setCurrentIndex(i)}
             >
               <img className="sv-image" src={story.image} alt="" />

@@ -1539,9 +1539,6 @@ export default function AInbox({ win, onDrag }) {
                     <div className="ainbox-facepile-count">
                       <span>{convo.memberCount}</span>
                     </div>
-                    <div className="ainbox-facepile-add">
-                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 2V10M2 6H10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
-                    </div>
                   </div>
                   <div className="ainbox-detail-header-actions">
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="3" r="1" fill="currentColor"/><circle cx="8" cy="8" r="1" fill="currentColor"/><circle cx="8" cy="13" r="1" fill="currentColor"/></svg>
