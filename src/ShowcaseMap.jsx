@@ -504,8 +504,8 @@ const MAGICAST_SHAPES = [
   { id: 'square', mask: '/magicast/squareMask.svg' },
 ];
 
-function MagicastBubble({ onPositionChange, closing }) {
-  const [size, setSize] = useState(260);
+function MagicastBubble({ onPositionChange, closing, initialSize = 260, initialPos = { x: 820, y: 340 } }) {
+  const [size, setSize] = useState(initialSize);
   const [pos, setPos] = useState(null);
   const [shape, setShape] = useState('circle');
   const [hovered, setHovered] = useState(false);
@@ -554,13 +554,13 @@ function MagicastBubble({ onPositionChange, closing }) {
     }
   }, [pos, size, onPositionChange]);
 
+  const defaultPos = initialPos;
   const startDrag = (e) => {
     if (resizing.current) return;
     e.preventDefault();
-    const el = e.currentTarget.closest('.mc-bubble');
-    const rect = el.getBoundingClientRect();
-    if (!pos) setPos({ x: rect.left, y: rect.top });
-    dragging.current = { startX: pos ? pos.x : rect.left, startY: pos ? pos.y : rect.top, mouseX: e.clientX, mouseY: e.clientY };
+    const currentPos = pos || defaultPos;
+    if (!pos) setPos(defaultPos);
+    dragging.current = { startX: currentPos.x, startY: currentPos.y, mouseX: e.clientX, mouseY: e.clientY };
   };
 
   const startResize = (e, corner) => {
@@ -572,7 +572,7 @@ function MagicastBubble({ onPositionChange, closing }) {
   return (
     <div
       className={`mc-bubble ${closing ? 'mc-bubble-closing' : ''}`}
-      style={pos ? { left: pos.x, top: pos.y, width: size, height: size } : { right: 100, bottom: 100, width: size, height: size }}
+      style={pos ? { left: pos.x, top: pos.y, width: size, height: size } : { left: defaultPos.x, top: defaultPos.y, width: size, height: size }}
       onMouseDown={startDrag}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => { if (!resizing.current && !dragging.current) setHovered(false); }}
@@ -619,7 +619,7 @@ function MagicastWindow({ win, onDrag, pipPos }) {
   return (
     <div
       className={`mc-win ${!win.isFocused ? 'mc-win-unfocused' : ''} ${closing ? 'mc-win-closing' : ''}`}
-      style={{ left: win.position.x, bottom: 100, zIndex: win.zIndex }}
+      style={{ left: win.position.x, top: win.position.y, zIndex: win.zIndex }}
       onMouseDown={() => win.focus()}
     >
       <div className="mc-win-titlebar" onMouseDown={onDrag}>
@@ -678,7 +678,7 @@ const INITIAL_WINDOWS = [
   { id: 'meeting', isOpen: false, position: { x: 80, y: 250 }, zIndex: 30 },
   { id: 'theater', isOpen: false, position: { x: 70, y: 220 }, zIndex: 30 },
   { id: 'shelf', isOpen: false, position: { x: 120, y: 280 }, zIndex: 30 },
-  { id: 'magicast', isOpen: false, position: { x: 30, y: 180 }, zIndex: 30 },
+  { id: 'magicast', isOpen: false, position: { x: 40, y: 160 }, zIndex: 30 },
 ];
 
 const SHELF_TOTAL = 12;
@@ -1621,13 +1621,11 @@ function ShowcaseMapInner() {
             <h2 className="sc-feature-title">AI SCREEN RECORDER</h2>
             <p className="sc-feature-desc">Record sales demos, investor updates, product releases, announcements or anything else you need right from your desktop with Roam Magicast. Record your screen and add your video or audio picture-in-picture to create a captivating presentation right in Roam. Easily share via AInbox or a link with someone externally. They'll get your Magicast and its transcription.</p>
           </div>
-          <div className="sc-feature-visual">
-            <div className="sc-feature-wallpaper" style={{ backgroundImage: `url(/wallpaper-${theme}.png)`, position: 'relative' }}>
+          <div className="sc-feature-visual" style={{ position: 'relative' }}>
+            <div className="sc-feature-wallpaper" style={{ backgroundImage: `url(/wallpaper-${theme}.png)` }}>
               <MagicastWindow win={{ position: { x: 0, y: 0 }, zIndex: 1, isFocused: true, focus: () => {}, close: () => {}, open: () => {} }} onDrag={() => {}} />
-              <div className="sc-feature-pip">
-                <video src="/meeting-room/man-01.mp4" autoPlay loop muted playsInline />
-              </div>
             </div>
+            <MagicastBubble initialSize={240} initialPos={{ x: 530, y: 420 }} />
           </div>
         </div>
       </div>

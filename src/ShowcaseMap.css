@@ -766,15 +766,13 @@
   margin: 0 auto;
 }
 
-.sc-feature-pip {
+.sc-feature-wallpaper:has(.mc-bubble) {
+  overflow: visible;
+}
+
+.sc-feature-wallpaper .mc-bubble {
+  z-index: 10;
   position: absolute;
-  right: 40px;
-  bottom: 40px;
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  overflow: hidden;
-  z-index: 2;
 }
 
 .sc-feature-pip > video {
@@ -2812,7 +2810,7 @@
 
 /* Magicast window */
 .mc-win {
-  position: fixed;
+  position: absolute;
   width: 420px;
   background: rgba(0, 0, 0, 0.3);
   backdrop-filter: blur(30px);
@@ -2843,7 +2841,7 @@
 }
 
 .mc-win-unfocused {
-  opacity: 0.9;
+  opacity: 1;
 }
 
 .mc-win-titlebar {
@@ -3031,9 +3029,9 @@
 
 /* Magicast PiP bubble — uses SVG masks from the real product */
 .mc-bubble {
-  position: fixed;
+  position: absolute;
   aspect-ratio: 1;
-  z-index: 35;
+  z-index: 99990;
   background: none;
   cursor: grab;
   animation: mc-bubble-in 400ms cubic-bezier(0.22, 1, 0.36, 1);
