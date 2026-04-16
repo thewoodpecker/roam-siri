@@ -1,6 +1,7 @@
 /* ============================================
    Showcase Map — Animated product mockup
    ============================================ */
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&display=swap');
 @import './woodward-tokens.css';
 
 @font-face {
@@ -462,6 +463,96 @@
 }
 
 /* Product features bar */
+/* Handwritten "Explore this demo" annotation */
+.sc-hint {
+  position: absolute;
+  bottom: 58px;
+  left: 60px;
+  z-index: 99998;
+  pointer-events: none;
+  transition: opacity 400ms ease-out;
+}
+
+.sc-hint-hidden {
+  opacity: 0;
+}
+
+.sc-hint-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.sc-hint-blob {
+  position: absolute;
+  top: -4px;
+  left: -24px;
+  width: 220px;
+  height: auto;
+  z-index: -1;
+  overflow: visible;
+}
+
+.sc-hint-blob path {
+  stroke-dasharray: 1 2;
+  stroke-dashoffset: 1;
+  animation: sc-blob-draw 1.4s ease-in-out 1s both;
+}
+
+@keyframes sc-blob-draw {
+  from { stroke-dashoffset: 1; }
+  to { stroke-dashoffset: 0; }
+}
+
+.sc-hint-text {
+  font-family: 'Caveat', cursive;
+  font-size: 28px;
+  font-weight: 700;
+  color: white;
+  white-space: nowrap;
+  display: inline-block;
+  overflow: hidden;
+  position: relative;
+  margin-top: 8px;
+  animation: sc-handwrite 2s ease-in-out 1s both;
+}
+
+@keyframes sc-handwrite {
+  from { max-width: 0; opacity: 0.4; }
+  to { max-width: 300px; opacity: 0.85; }
+}
+
+.sc-hint-arrow {
+  flex-shrink: 0;
+  margin-left: 40px;
+}
+
+.sc-hint-arrow path:first-child {
+  stroke-dasharray: 60;
+  stroke-dashoffset: 60;
+  animation: sc-stroke-draw 800ms ease-in-out 2.2s both;
+}
+
+.sc-hint-arrow path:nth-child(2) {
+  stroke-dasharray: 20;
+  stroke-dashoffset: 20;
+  animation: sc-stroke-draw 400ms ease-in-out 2.8s both;
+}
+
+@keyframes sc-stroke-draw {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes sc-arrow-draw {
+  from { opacity: 0; }
+  to { opacity: 0.85; }
+}
+
+@keyframes sc-arrow-stroke {
+  to { stroke-dashoffset: 0; }
+}
+
 .sc-products-bar {
   position: absolute;
   bottom: 24px;
@@ -661,6 +752,18 @@
   border-radius: 32px;
 }
 
+.sc-feature-visual .mc-win {
+  position: relative !important;
+  left: auto !important;
+  bottom: auto !important;
+  width: 100% !important;
+  max-width: 420px;
+  height: auto !important;
+  animation: none !important;
+  pointer-events: auto;
+  margin: 0 auto;
+}
+
 .sc-feature-visual .ainbox-window {
   position: relative !important;
   left: auto !important;
@@ -788,6 +891,7 @@
   align-items: center;
   justify-content: center;
 }
+
 
 .sc-wallpaper {
   position: absolute;
@@ -2688,7 +2792,7 @@
 
 /* Magicast window */
 .mc-win {
-  position: absolute;
+  position: fixed;
   width: 420px;
   background: rgba(0, 0, 0, 0.3);
   backdrop-filter: blur(30px);
@@ -2782,7 +2886,7 @@
 
 .mc-win-preview {
   margin: 0 16px;
-  height: 203px;
+  aspect-ratio: 16 / 9;
   border-radius: 12px;
   border: 2px solid var(--border);
   overflow: hidden;
@@ -2808,11 +2912,12 @@
 .mc-win-preview-avatar {
   position: absolute;
   left: 10px;
-  bottom: 14px;
+  top: 50%;
   width: 96px;
   height: 96px;
   border-radius: 50%;
   object-fit: cover;
+  transition: left 100ms ease-out, top 100ms ease-out;
 }
 
 .mc-win-row {
@@ -2887,4 +2992,177 @@
 
 .mc-win-record:hover {
   background: #e53935;
+}
+
+/* Magicast recording border — fixed overlay on the entire viewport */
+.mc-recording-border {
+  position: fixed;
+  inset: 0;
+  box-shadow: inset 0 0 0 6px var(--text-warning);
+  z-index: 99999;
+  pointer-events: none;
+  animation: mc-recording-border-in 400ms ease-out;
+}
+
+@keyframes mc-recording-border-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Magicast PiP bubble — uses SVG masks from the real product */
+.mc-bubble {
+  position: fixed;
+  aspect-ratio: 1;
+  z-index: 35;
+  background: none;
+  cursor: grab;
+  animation: mc-bubble-in 400ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.mc-bubble:active {
+  cursor: grabbing;
+}
+
+.mc-bubble-closing {
+  animation: mc-win-out 200ms ease-in forwards;
+  pointer-events: none;
+}
+
+@keyframes mc-bubble-in {
+  from { opacity: 0; transform: scale(0.5); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.mc-bubble-masked {
+  position: absolute;
+  inset: 4px;
+  background: none;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: 100%;
+  mask-size: 100%;
+}
+
+.mc-bubble-masked-square {
+  -webkit-mask-image: none !important;
+  mask-image: none !important;
+  border-radius: 17%;
+  corner-shape: superellipse;
+  corner-shape: superellipse(1.6);
+  overflow: hidden;
+}
+
+.mc-bubble-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
+  border: 0;
+  outline: none;
+}
+
+/* Hover UI — outline, corners, shape bar */
+.mc-bubble-hover-ui {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 200ms ease-in-out;
+  pointer-events: none;
+}
+
+.mc-bubble-hover-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.mc-bubble-outline {
+  position: absolute;
+  inset: 2px;
+  width: calc(100% - 4px);
+  height: calc(100% - 4px);
+  pointer-events: none;
+}
+
+.mc-bubble-corner {
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  cursor: nwse-resize;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mc-bubble-corner > img {
+  width: 22px;
+  height: 22px;
+  display: block;
+  pointer-events: none;
+}
+
+.mc-bubble-corner-tl { top: -6px; left: -6px; }
+.mc-bubble-corner-tr { top: -6px; right: -6px; cursor: nesw-resize; }
+.mc-bubble-corner-br { bottom: -6px; right: -6px; }
+.mc-bubble-corner-bl { bottom: -6px; left: -6px; cursor: nesw-resize; }
+
+/* Shape toolbar — inside the bubble at the bottom */
+.mc-bubble-shapes {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  background: var(--bg-surface-elevated-secondary, #27282b);
+  border-radius: 12px;
+  box-shadow: var(--shadow-4);
+}
+
+.mc-bubble-shape {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  padding: 0;
+  color: var(--text-secondary);
+  transition: background 160ms ease, color 160ms ease;
+}
+
+.mc-bubble-shape:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+}
+
+.mc-bubble-shape-active {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+}
+
+.mc-bubble-shape-icon {
+  width: 20px;
+  height: 20px;
+  opacity: 0.5;
+}
+
+.mc-bubble-shape-active .mc-bubble-shape-icon,
+.mc-bubble-shape:hover .mc-bubble-shape-icon {
+  opacity: 1;
+}
+
+.sc-viewport[data-theme="light"] .mc-bubble-shape-icon {
+  filter: invert(1);
 }

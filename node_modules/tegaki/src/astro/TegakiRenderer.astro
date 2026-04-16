@@ -1,0 +1,130 @@
+---
+import { TegakiEngine, type TegakiEngineOptions } from '../core/index.ts';
+import type { TegakiBundle } from '../types.ts';
+
+interface Props extends Omit<TegakiEngineOptions, 'onComplete'> {
+  /** When true, registers the font bundle for client-side lookup by name. If no text is provided, renders nothing else. */
+  bundle?: boolean;
+  /** When true, injects an @font-face rule so the browser starts loading the font immediately. */
+  loadFont?: boolean;
+  class?: string;
+  [key: string]: any;
+}
+
+const { text, font, bundle: registerBundle, loadFont, time, effects, timing, quality, showOverlay, class: className, style: userStyle, ...attrs } = Astro.props;
+
+// Resolve the font bundle for SSR
+let resolvedFont: TegakiBundle | undefined;
+if (typeof font === 'string') {
+  resolvedFont = TegakiEngine.getBundle(font);
+} else if (font) {
+  resolvedFont = font;
+  TegakiEngine.registerBundle(font);
+}
+
+const shouldRender = !!text || !(registerBundle || loadFont);
+
+const engineOptions: Omit<TegakiEngineOptions, 'onComplete'> = {
+  text,
+  font: resolvedFont,
+  time,
+  effects: effects as Record<string, any>,
+  timing,
+  quality,
+  showOverlay,
+};
+
+function styleToString(style: Record<string, any>): string {
+  return Object.entries(style)
+    .filter(([, v]) => v != null)
+    .map(([k, v]) => {
+      const prop = k.startsWith('--') ? k : k.replace(/[A-Z]/g, (m) => `-${m.toLowerCase()}`);
+      const val = typeof v === 'number' && !k.startsWith('--') ? `${v}px` : String(v);
+      return `${prop}:${val}`;
+    })
+    .join(';');
+}
+
+function escapeAttr(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function htmlCreateElement(tag: string, props: Record<string, any>, ...children: string[]): string {
+  const parts: string[] = [];
+  for (const [key, value] of Object.entries(props)) {
+    if (value == null || value === false) continue;
+    if (key === 'style' && typeof value === 'object') {
+      const css = styleToString(value);
+      if (css) parts.push(`style="${escapeAttr(css)}"`);
+    } else if (typeof value === 'boolean') {
+      parts.push(key);
+    } else {
+      parts.push(`${key}="${escapeAttr(String(value))}"`);
+    }
+  }
+  const open = parts.length > 0 ? `<${tag} ${parts.join(' ')}>` : `<${tag}>`;
+  const content = children.map((c) => (typeof c === 'string' && !c.startsWith('<') ? escapeHtml(c) : c)).join('');
+  return `${open}${content}</${tag}>`;
+}
+
+const renderResult = shouldRender ? TegakiEngine.renderElements(engineOptions, htmlCreateElement) : null;
+const innerHtml = renderResult?.content ?? '';
+const rootStyle = renderResult
+  ? styleToString(renderResult.rootProps.style) + (userStyle ? `;${typeof userStyle === 'object' ? styleToString(userStyle) : userStyle}` : '')
+  : typeof userStyle === 'object' ? styleToString(userStyle) : (userStyle ?? '');
+
+// For serialization, replace the full bundle with just the family name.
+const clientOptions = {
+  ...engineOptions,
+  font: resolvedFont?.family,
+};
+---
+
+{loadFont && resolvedFont?.fontFaceCSS && (
+  <style is:inline set:html={resolvedFont.fontFaceCSS} />
+)}
+
+{registerBundle && resolvedFont && (
+  <script is:inline type="application/json" data-tegaki-bundle set:html={JSON.stringify(resolvedFont)} />
+)}
+
+{shouldRender && (
+  <div class={className} {...attrs} data-tegaki="root" style={rootStyle} data-tegaki-options={JSON.stringify(clientOptions)} set:html={innerHtml} />
+)}
+
+<script>
+  import { TegakiEngine } from 'tegaki/core';
+
+  function hydrateBundle(el: Element) {
+    TegakiEngine.registerBundle(JSON.parse(el.textContent || '{}'));
+  }
+
+  function hydrateContainer(container: HTMLElement) {
+    if (container.dataset.tegakiHydrated) return;
+    container.dataset.tegakiHydrated = '';
+    const options = JSON.parse(container.dataset.tegakiOptions || '{}');
+    const engine = new TegakiEngine(container, { adopt: true, ...options });
+    container.dispatchEvent(new CustomEvent('tegaki:ready', { detail: { engine }, bubbles: true }));
+  }
+
+  // Hydrate existing elements
+  document.querySelectorAll<HTMLScriptElement>('[data-tegaki-bundle]').forEach(hydrateBundle);
+  document.querySelectorAll<HTMLElement>('[data-tegaki-options]').forEach(hydrateContainer);
+
+  // Watch for dynamically added elements (View Transitions, client-side routing, etc.)
+  new MutationObserver((mutations) => {
+    for (const mutation of mutations) {
+      for (const node of mutation.addedNodes) {
+        if (!(node instanceof HTMLElement)) continue;
+        if (node.matches('[data-tegaki-bundle]')) hydrateBundle(node);
+        if (node.matches('[data-tegaki-options]')) hydrateContainer(node);
+        node.querySelectorAll<HTMLScriptElement>('[data-tegaki-bundle]').forEach(hydrateBundle);
+        node.querySelectorAll<HTMLElement>('[data-tegaki-options]').forEach(hydrateContainer);
+      }
+    }
+  }).observe(document.body, { childList: true, subtree: true });
+</script>

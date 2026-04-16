@@ -497,7 +497,120 @@ function FloorCard({ name, rooms, active, onClick }) {
 }
 
 
-function MagicastWindow({ win, onDrag }) {
+const MAGICAST_SHAPES = [
+  { id: 'circle', mask: '/magicast/circleMask.svg' },
+  { id: 'circleScalloped', mask: '/magicast/circleScallopedMask.svg' },
+  { id: 'pentagon', mask: '/magicast/pentagonMask.svg' },
+  { id: 'square', mask: '/magicast/squareMask.svg' },
+];
+
+function MagicastBubble({ onPositionChange, closing }) {
+  const [size, setSize] = useState(260);
+  const [pos, setPos] = useState(null);
+  const [shape, setShape] = useState('circle');
+  const [hovered, setHovered] = useState(false);
+  const resizing = useRef(null);
+  const dragging = useRef(null);
+
+  const maskUrl = MAGICAST_SHAPES.find(s => s.id === shape)?.mask || MAGICAST_SHAPES[0].mask;
+
+  useEffect(() => {
+    const onMove = (e) => {
+      if (resizing.current) {
+        const { corner: c, mouseX: mx, mouseY: my, startSize: ss, startPosX: sx, startPosY: sy } = resizing.current;
+        const dx = e.clientX - mx;
+        const dy = e.clientY - my;
+        let delta;
+        if (c === 'br') delta = Math.max(dx, dy);
+        else if (c === 'bl') delta = Math.max(-dx, dy);
+        else if (c === 'tr') delta = Math.max(dx, -dy);
+        else delta = Math.max(-dx, -dy);
+        const ns = Math.max(80, Math.min(400, ss + delta));
+        const d = ns - ss;
+        setSize(ns);
+        if (c === 'tl') setPos({ x: sx - d, y: sy - d });
+        else if (c === 'tr') setPos({ x: sx, y: sy - d });
+        else if (c === 'bl') setPos({ x: sx - d, y: sy });
+      } else if (dragging.current) {
+        setPos({
+          x: dragging.current.startX + e.clientX - dragging.current.mouseX,
+          y: dragging.current.startY + e.clientY - dragging.current.mouseY,
+        });
+      }
+    };
+    const onUp = () => { resizing.current = null; dragging.current = null; };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    return () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
+  }, []);
+
+  useEffect(() => {
+    if (onPositionChange) {
+      const bubbleRef = document.querySelector('.mc-bubble');
+      if (bubbleRef) {
+        const rect = bubbleRef.getBoundingClientRect();
+        onPositionChange({ x: rect.left / window.innerWidth, y: rect.top / window.innerHeight });
+      }
+    }
+  }, [pos, size, onPositionChange]);
+
+  const startDrag = (e) => {
+    if (resizing.current) return;
+    e.preventDefault();
+    const el = e.currentTarget.closest('.mc-bubble');
+    const rect = el.getBoundingClientRect();
+    if (!pos) setPos({ x: rect.left, y: rect.top });
+    dragging.current = { startX: pos ? pos.x : rect.left, startY: pos ? pos.y : rect.top, mouseX: e.clientX, mouseY: e.clientY };
+  };
+
+  const startResize = (e, corner) => {
+    e.preventDefault();
+    e.stopPropagation();
+    resizing.current = { mouseX: e.clientX, mouseY: e.clientY, startSize: size, startPosX: pos.x, startPosY: pos.y, corner };
+  };
+
+  return (
+    <div
+      className={`mc-bubble ${closing ? 'mc-bubble-closing' : ''}`}
+      style={pos ? { left: pos.x, top: pos.y, width: size, height: size } : { right: 100, bottom: 100, width: size, height: size }}
+      onMouseDown={startDrag}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => { if (!resizing.current && !dragging.current) setHovered(false); }}
+    >
+      <div
+        className={`mc-bubble-masked ${shape === 'square' ? 'mc-bubble-masked-square' : ''}`}
+        style={shape !== 'square' ? { WebkitMaskImage: `url(${maskUrl})`, maskImage: `url(${maskUrl})` } : undefined}
+      >
+        <video className="mc-bubble-video" src="/meeting-room/man-01.mp4" autoPlay loop muted playsInline />
+      </div>
+      <div className={`mc-bubble-hover-ui ${hovered ? 'mc-bubble-hover-visible' : ''}`}>
+        <img className="mc-bubble-outline" src="/magicast/outline.svg" alt="" />
+        <div className="mc-bubble-corner mc-bubble-corner-tl" onMouseDown={(e) => startResize(e, 'tl')}><img src="/magicast/corner.svg" alt="" /></div>
+        <div className="mc-bubble-corner mc-bubble-corner-tr" onMouseDown={(e) => startResize(e, 'tr')}><img src="/magicast/corner.svg" alt="" style={{ transform: 'rotate(90deg)' }} /></div>
+        <div className="mc-bubble-corner mc-bubble-corner-br" onMouseDown={(e) => startResize(e, 'br')}><img src="/magicast/corner.svg" alt="" style={{ transform: 'rotate(180deg)' }} /></div>
+        <div className="mc-bubble-corner mc-bubble-corner-bl" onMouseDown={(e) => startResize(e, 'bl')}><img src="/magicast/corner.svg" alt="" style={{ transform: 'rotate(270deg)' }} /></div>
+        <div className="mc-bubble-shapes">
+          {[
+            { id: 'circle', icon: '/magicast/shape-circle.svg' },
+            { id: 'circleScalloped', icon: '/magicast/shape-squiggle.svg' },
+            { id: 'pentagon', icon: '/magicast/shape-pentagon.svg' },
+            { id: 'square', icon: '/magicast/shape-square.svg' },
+          ].map(s => (
+            <button
+              key={s.id}
+              className={`mc-bubble-shape ${shape === s.id ? 'mc-bubble-shape-active' : ''}`}
+              onClick={(e) => { e.stopPropagation(); setShape(s.id); }}
+            >
+              <img src={s.icon} alt="" className="mc-bubble-shape-icon" />
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MagicastWindow({ win, onDrag, pipPos }) {
   const [closing, setClosing] = useState(false);
   const handleClose = () => {
     setClosing(true);
@@ -506,7 +619,7 @@ function MagicastWindow({ win, onDrag }) {
   return (
     <div
       className={`mc-win ${!win.isFocused ? 'mc-win-unfocused' : ''} ${closing ? 'mc-win-closing' : ''}`}
-      style={{ left: win.position.x, top: win.position.y, zIndex: win.zIndex }}
+      style={{ left: win.position.x, bottom: 100, zIndex: win.zIndex }}
       onMouseDown={() => win.focus()}
     >
       <div className="mc-win-titlebar" onMouseDown={onDrag}>
@@ -521,7 +634,7 @@ function MagicastWindow({ win, onDrag }) {
         <div className="mc-win-preview">
           <img className="mc-win-preview-bg" src="/magicast/preview.png" alt="" />
           <div className="mc-win-preview-overlay" />
-          <img className="mc-win-preview-avatar" src="/magicast/avatar.png" alt="" />
+          <video className="mc-win-preview-avatar" src="/meeting-room/man-01.mp4" autoPlay loop muted playsInline style={pipPos ? { left: `${pipPos.x * 100}%`, top: `${pipPos.y * 100}%` } : undefined} />
         </div>
         <div className="mc-win-row">
           <span className="mc-win-row-icon" style={{ WebkitMaskImage: 'url(/magicast/video.svg)', maskImage: 'url(/magicast/video.svg)' }} />
@@ -565,7 +678,7 @@ const INITIAL_WINDOWS = [
   { id: 'meeting', isOpen: false, position: { x: 80, y: 250 }, zIndex: 30 },
   { id: 'theater', isOpen: false, position: { x: 70, y: 220 }, zIndex: 30 },
   { id: 'shelf', isOpen: false, position: { x: 120, y: 280 }, zIndex: 30 },
-  { id: 'magicast', isOpen: false, position: { x: 200, y: 200 }, zIndex: 30 },
+  { id: 'magicast', isOpen: false, position: { x: 30, y: 180 }, zIndex: 30 },
 ];
 
 const SHELF_TOTAL = 12;
@@ -831,8 +944,10 @@ function ShowcaseMapInner() {
     }, 3000);
   }, [activeFloor, knockingRoom, joinedRoomId, meetingWin, theaterWin]);
   const [shelfOpen, setShelfOpen] = useState(false);
+  const [pipPos, setPipPos] = useState(null);
   const [shelfClosing, setShelfClosing] = useState(false);
   const [mapPulse, setMapPulse] = useState(false);
+  const [hintVisible, setHintVisible] = useState(true);
   const [mapMounted, setMapMounted] = useState(false);
   const [wallpaperLoaded, setWallpaperLoaded] = useState(false);
   useEffect(() => {
@@ -853,6 +968,15 @@ function ShowcaseMapInner() {
     });
   }, []);
   const shelfActive = shelfOpen || shelfClosing;
+  const [pipClosing, setPipClosing] = useState(false);
+  const wasMagicastOpenRef2 = useRef(false);
+  useEffect(() => {
+    if (wasMagicastOpenRef2.current && !magicastWin.isOpen) {
+      setPipClosing(true);
+      setTimeout(() => setPipClosing(false), 200);
+    }
+    wasMagicastOpenRef2.current = magicastWin.isOpen;
+  }, [magicastWin.isOpen]);
   const closeShelf = useCallback(() => {
     if (!shelfOpen) return;
     setShelfOpen(false);
@@ -1042,7 +1166,7 @@ function ShowcaseMapInner() {
         <Navbar />
       </div>
 
-      <div className="miniRoamOS" ref={miniRoamRef}>
+      <div className="miniRoamOS" ref={miniRoamRef} onClick={() => hintVisible && setHintVisible(false)}>
         <div className="sc-wallpaper sc-wallpaper-dark" style={{ opacity: theme === 'dark' && wallpaperLoaded ? 1 : 0 }} />
         <div className="sc-wallpaper sc-wallpaper-light" style={{ opacity: theme === 'light' && wallpaperLoaded ? 1 : 0 }} />
       <div className={`sc-window ${!mapWin.isFocused ? 'sc-window-unfocused' : ''} ${mapMounted ? 'sc-window-mounted' : ''} ${mapPulse ? 'sc-window-pulse' : ''}`} ref={windowRef} style={{ transform: `translate(${mapWin.position.x}px, ${mapWin.position.y}px)`, zIndex: mapWin.zIndex }} onMouseDown={() => mapWin.focus()}>
@@ -1327,8 +1451,23 @@ function ShowcaseMapInner() {
       {meetingWin.isOpen && activeMeetingRoom && <MeetingWindow win={meetingWin} onDrag={makeDragHandler(meetingWin)} roomName={activeMeetingRoom.name} people={activeMeetingRoom.people} onOpenChat={() => ainboxWin.open()} onOpenOnAir={() => onairWin.open()} />}
       {theaterWin.isOpen && <TheaterWindow win={theaterWin} onDrag={makeDragHandler(theaterWin)} speakers={theaterSpeakers} audience={SHOWCASE_PEOPLE} me={JOE} onOpenChat={() => ainboxWin.open()} />}
       {shelfWin.isOpen && <ShelfWindow win={shelfWin} onDrag={makeDragHandler(shelfWin)} photoIdx={shelfPhotoIdx} direction={shelfDir} onPrev={prevShelfPhoto} onNext={nextShelfPhoto} />}
-      {magicastWin.isOpen && <MagicastWindow win={magicastWin} onDrag={makeDragHandler(magicastWin)} />}
+      {magicastWin.isOpen && <MagicastWindow win={magicastWin} onDrag={makeDragHandler(magicastWin)} pipPos={pipPos} />}
+      {magicastWin.isOpen && <MagicastBubble onPositionChange={setPipPos} />}
+      {magicastWin.isOpen && <div className="mc-recording-border" />}
       {/* Product features bar — inside miniRoamOS, pinned to bottom */}
+      {/* Handwritten annotation pointing to the product bar */}
+      <div className={`sc-hint ${!hintVisible ? 'sc-hint-hidden' : ''}`} style={HIDE_CHROME ? { display: 'none' } : undefined}>
+        <div className="sc-hint-row">
+          <svg className="sc-hint-blob" viewBox="0 0 156 50" fill="none">
+            <path pathLength="1" d="M11.7979 28.2915C11.7664 28.2915 18.5772 22.4576 22.333 20.5719C31.824 15.8068 38.353 11.9222 39.1367 12.0002C40.1678 12.1027 39.5956 15.2438 37.8694 21.2281C36.6289 25.5282 34.1167 32.2288 33.2469 35.5397C32.377 38.8507 33.0896 38.5269 36.0768 36.2944C44.4078 30.0679 49.801 26.0446 49.8892 26.9359C49.9404 27.4536 49.7597 28.1139 49.5082 28.9741C49.2567 29.8342 48.8773 30.8766 50.6701 29.8848C52.4629 28.893 56.4395 25.8355 58.6156 24.6293C60.7917 23.4232 61.0467 24.1612 61.1781 25.433C61.3095 26.7048 61.3095 28.4881 61.4956 29.5778C61.6816 30.6675 62.0536 31.0096 62.7643 30.9137C64.6087 30.6648 70.3739 26.2757 77.6641 21.511C80.0337 19.9623 80.2238 21.0697 79.5305 23.1423C77.7152 28.569 75.7412 32.2593 75.7202 32.9551C75.7029 33.5311 81.4791 29.2448 88.8073 23.7441C91.2743 21.8924 91.5741 22.4813 91.4996 23.9278C91.2992 27.8163 90.6685 30.8728 90.9545 31.9683C91.1061 32.5492 91.8975 32.9159 92.8066 32.9647C94.8967 33.077 99.8142 30.1965 105.393 27.5452C107.128 26.7209 107.067 28.0972 106.657 29.4211C105.759 32.3213 104.803 34.293 104.823 34.9939C104.841 35.6421 110.593 31.8834 118.068 26.5885C120.804 24.651 121.454 24.3274 121.954 24.2843C122.454 24.2412 122.799 24.5121 122.893 25.111C122.987 25.71 122.819 26.6289 122.829 27.272C122.84 27.9151 123.034 28.2547 123.517 28.2915C129.294 28.7312 136.057 22.2525 136.874 22.2731C137.817 22.2969 137.002 24.5335 137.016 25.5712C137.299 25.9095 138.142 25.8655 139.306 25.7348C140.47 25.6041 141.929 25.3881 143.798 25.1656" stroke="black" strokeWidth="24" strokeLinecap="round" />
+          </svg>
+          <span className="sc-hint-text">Explore this demo</span>
+          <svg className="sc-hint-arrow" width="54" height="34" viewBox="0 0 27 17" fill="none">
+            <path d="M0.500122 0.500244C0.641852 0.912715 2.71482 3.22199 6.56575 6.81723C10.5913 10.5755 14.2039 12.4234 16.1056 13.3459C17.8952 14.0583 19.553 14.5135 21.5345 14.7562C22.7437 14.8528 24.3664 14.8953 26.1609 15.0417" stroke="white" strokeLinecap="round" />
+            <path d="M21.622 16.1366C21.6921 16.1366 23.4294 16.1366 25.9053 16.0009C26.6906 15.9578 26.4766 15.5938 26.0332 15.1835C24.9124 14.2321 23.8243 13.2416 23.0939 12.488C22.7538 12.1677 22.4758 11.9733 22.1894 11.7729" stroke="white" strokeLinecap="round" />
+          </svg>
+        </div>
+      </div>
       <div className="sc-products-bar" ref={productsBarRef} style={HIDE_CHROME ? { display: 'none' } : undefined}>
         {[
           { name: 'Virtual Office', desc: 'See your whole team on a live map. Who\'s here, who\'s meeting, who\'s available — at a glance.' },
@@ -1471,6 +1610,21 @@ function ShowcaseMapInner() {
           <div className="sc-feature-text sc-feature-text-right">
             <h2 className="sc-feature-title">THEATER</h2>
             <p className="sc-feature-desc">Take your presentations to the next level with a unique new Theater format for all-hands. Your audience sits in rows where they can whisper to each other. There's a backstage, Q&amp;A microphone, and stadium mode for 100+ people. All the world's a stage!</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Feature section — Magicast */}
+      <div className="sc-feature-section">
+        <div className="sc-section-grid">
+          <div className="sc-feature-text">
+            <h2 className="sc-feature-title">AI SCREEN RECORDER</h2>
+            <p className="sc-feature-desc">Record sales demos, investor updates, product releases, announcements or anything else you need right from your desktop with Roam Magicast. Record your screen and add your video or audio picture-in-picture to create a captivating presentation right in Roam. Easily share via AInbox or a link with someone externally. They'll get your Magicast and its transcription.</p>
+          </div>
+          <div className="sc-feature-visual">
+            <div className="sc-feature-wallpaper" style={{ backgroundImage: `url(/wallpaper-${theme}.png)` }}>
+              <MagicastWindow win={{ position: { x: 0, y: 0 }, zIndex: 1, isFocused: true, focus: () => {}, close: () => {}, open: () => {} }} onDrag={() => {}} />
+            </div>
           </div>
         </div>
       </div>
