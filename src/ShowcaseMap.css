@@ -619,28 +619,66 @@
   }
 }
 
-.sc-products-item::after {
-  content: 'Try';
-  position: absolute;
-  bottom: calc(100% + 4px);
-  left: 50%;
-  transform: translateX(-50%);
-  font-family: 'Caveat', cursive;
-  font-size: 18px;
-  font-weight: 700;
-  line-height: 1;
-  white-space: nowrap;
-  color: var(--text-primary);
-  opacity: 0;
-  pointer-events: none;
-}
-
 .sc-products-item:hover {
   color: var(--text-primary);
 }
 
-.sc-products-item:hover::after {
-  opacity: 1;
+/* Feature highlight overlay (hover a product → dim everything but the target) */
+.sc-feature-spotlight {
+  position: absolute;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.72);
+  pointer-events: none;
+  z-index: 50;
+  animation: sc-feature-spotlight-in 0.18s ease-out;
+}
+
+.sc-feature-hint {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  z-index: 52;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  pointer-events: none;
+  text-align: center;
+  white-space: nowrap;
+  animation: sc-feature-hint-in 0.18s ease-out;
+}
+
+.sc-feature-hint-try {
+  font-family: 'Caveat', cursive;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.1;
+}
+
+.sc-feature-hint-name {
+  font-family: 'Caveat', cursive;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.1;
+}
+
+.sc-feature-hint-arrow {
+  margin-top: 4px;
+  opacity: 0.9;
+}
+
+.miniRoamOS[data-feature-hint] .sc-products-bar {
+  z-index: 60;
+}
+
+@keyframes sc-feature-spotlight-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes sc-feature-hint-in {
+  from { opacity: 0; transform: translate(-50%, calc(-100% + 8px)); }
+  to   { opacity: 1; transform: translate(-50%, -100%); }
 }
 
 .sc-products-dot {
