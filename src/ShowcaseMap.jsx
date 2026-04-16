@@ -747,11 +747,24 @@ export default function ShowcaseMap() {
 
 function ProductItem({ name, onClick }) {
   return (
-    <span className="sc-products-item" onClick={onClick}>
+    <span className="sc-products-item" data-label={name} onClick={onClick}>
       {name}
     </span>
   );
 }
+
+const PRODUCTS = [
+  { name: 'Virtual Office' },
+  { name: 'Drop-In Meetings' },
+  { name: 'Theater' },
+  { name: 'AInbox' },
+  { name: 'Lobby' },
+  { name: 'Magicast' },
+  { name: 'Magic Minutes' },
+  { name: 'On-It' },
+  { name: 'On-Air' },
+  { name: 'Mobile' },
+];
 
 const HINT_BLOBS = {
   squiggle: {
@@ -813,7 +826,7 @@ function pickRandom(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-function Hint({ text, blob, arrow, visible = true, className = '', style }) {
+function Hint({ text, blob, arrow, visible = true, className = '', style, portal = true }) {
   const [randomBlob] = useState(() => pickRandom(HINT_BLOB_KEYS));
   const [randomArrow] = useState(() => pickRandom(HINT_ARROW_KEYS));
   const blobDef = HINT_BLOBS[blob ?? randomBlob];
@@ -829,7 +842,7 @@ function Hint({ text, blob, arrow, visible = true, className = '', style }) {
     const scaleY = rect.height / svg.viewBox.baseVal.height;
     setPathLen(path.getTotalLength() * Math.max(scaleX, scaleY));
   }, [blobDef]);
-  return ReactDOM.createPortal(
+  const content = (
     <div className={`sc-hint ${!visible ? 'sc-hint-hidden' : ''} ${className}`} style={style}>
       <div className="sc-hint-row">
         <span className="sc-hint-text-wrap">
@@ -852,9 +865,9 @@ function Hint({ text, blob, arrow, visible = true, className = '', style }) {
           ))}
         </svg>
       </div>
-    </div>,
-    document.body
+    </div>
   );
+  return portal ? ReactDOM.createPortal(content, document.body) : content;
 }
 
 function useTargetHintStyle(targetRef, active, offset = { top: -30, left: 'center' }, transform = 'translate(-100%, -100%) translateX(40px)') {
@@ -1054,7 +1067,21 @@ function ShowcaseMapInner() {
   const [shelfClosing, setShelfClosing] = useState(false);
   const [mapPulse, setMapPulse] = useState(false);
   const [hintVisible, setHintVisible] = useState(true);
-  const introHintStyle = useTargetHintStyle(miniRoamRef, hintVisible, { top: 150, left: 90 }, 'none');
+  const [introHintStyle, setIntroHintStyle] = useState(null);
+  useEffect(() => {
+    const update = () => {
+      if (!windowRef.current || !miniRoamRef.current) return;
+      const wRect = windowRef.current.getBoundingClientRect();
+      const mRect = miniRoamRef.current.getBoundingClientRect();
+      setIntroHintStyle({
+        top: wRect.top - mRect.top - 90,
+        left: wRect.left - mRect.left - 60,
+      });
+    };
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, [mapWin.position.x, mapWin.position.y]);
   const [mapMounted, setMapMounted] = useState(false);
   const [wallpaperLoaded, setWallpaperLoaded] = useState(false);
   useEffect(() => {
@@ -1563,23 +1590,12 @@ function ShowcaseMapInner() {
       {magicastWin.isOpen && <div className="mc-recording-border" />}
       {/* Product features bar — inside miniRoamOS, pinned to bottom */}
       {/* Handwritten annotation pointing to the product bar */}
-      <Hint text="Product Tour" blob="peaks" arrow="swoop-right" visible={hintVisible} style={{ ...(introHintStyle || { top: 150, left: 90 }), ...(HIDE_CHROME ? { display: 'none' } : {}) }} />
+      <Hint portal={false} text="Product Tour" blob="peaks" arrow="swoop-right" visible={hintVisible} style={{ ...(introHintStyle || { top: 150, left: 90 }), ...(HIDE_CHROME ? { display: 'none' } : {}) }} />
       <div className="sc-products-bar" ref={productsBarRef} style={HIDE_CHROME ? { display: 'none' } : undefined}>
-        {[
-          { name: 'Virtual Office', desc: 'See your whole team on a live map. Who\'s here, who\'s meeting, who\'s available — at a glance.' },
-          { name: 'Drop-In Meetings', desc: 'Knock on someone\'s office to start a conversation instantly. No scheduling, no links.' },
-          { name: 'Theater', desc: 'All-hands for 100+ people. Rows, whispers, backstage, and live Q&A — like a real auditorium.' },
-          { name: 'AInbox', desc: 'DMs, group chats, threads, and confidential messages. Custom folders, pinned chats, guest badges.' },
-          { name: 'Lobby', desc: 'Share a booking link. Guests reserve time or drop in if you\'re free. Your calendar, simplified.' },
-          { name: 'Magicast', desc: 'AI screen recorder with picture-in-picture. Record, transcribe, and share presentations instantly.' },
-          { name: 'Magic Minutes', desc: 'AI meeting summaries and transcriptions. Ask follow-up questions. Late? Get an automatic catch-up.' },
-          { name: 'On-It', desc: 'Your AI assistant. Schedules meetings, sends follow-ups, extracts action items — all automatically.' },
-          { name: 'On-Air', desc: 'Host immersive virtual events. Conferences, panels, and gatherings that feel like being there.' },
-          { name: 'Mobile', desc: 'Take your virtual office anywhere. Full Roam experience on iOS and Android.' },
-        ].map((item, i) => (
+        {PRODUCTS.map((item, i) => (
           <React.Fragment key={item.name}>
             {i > 0 && <div className="sc-products-dot" />}
-            <ProductItem name={item.name} desc={item.desc} onClick={item.name === 'AInbox' ? () => ainboxWin.open() : item.name === 'On-Air' ? () => onairWin.open() : item.name === 'Theater' ? () => theaterWin.open() : item.name === 'Magicast' ? () => magicastWin.open() : item.name === 'Virtual Office' ? pulseMapWindow : item.name === 'Drop-In Meetings' ? knockOnHoward : undefined} />
+            <ProductItem name={item.name} onClick={item.name === 'AInbox' ? () => ainboxWin.open() : item.name === 'On-Air' ? () => onairWin.open() : item.name === 'Theater' ? () => theaterWin.open() : item.name === 'Magicast' ? () => magicastWin.open() : item.name === 'Virtual Office' ? pulseMapWindow : item.name === 'Drop-In Meetings' ? knockOnHoward : undefined} />
           </React.Fragment>
         ))}
       </div>

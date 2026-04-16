@@ -578,40 +578,9 @@
   color: var(--text-secondary);
   white-space: nowrap;
   cursor: pointer;
-  transition: color 0.2s;
   letter-spacing: -0.15px;
   animation: sc-product-in 0.5s ease-out both;
   position: relative;
-}
-
-/* Product tooltip — rendered via portal to document.body */
-.sc-product-tooltip {
-  position: fixed;
-  transform: translateX(-50%) translateY(-100%);
-  z-index: 9999999;
-  pointer-events: none;
-  animation: sc-tooltip-in 200ms ease-out;
-}
-
-.sc-product-tooltip-inner {
-  background: var(--bg-surface-elevated-secondary);
-  color: var(--text-primary);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 12px;
-  font-weight: 400;
-  line-height: 16px;
-  letter-spacing: -0.1px;
-  padding: 8px 12px;
-  border-radius: 8px;
-  box-shadow: var(--shadow-3);
-  white-space: normal;
-  width: 220px;
-  text-align: center;
-}
-
-@keyframes sc-tooltip-in {
-  from { opacity: 0; transform: translateX(-50%) translateY(calc(-100% + 6px)); }
-  to   { opacity: 1; transform: translateX(-50%) translateY(-100%); }
 }
 
 .sc-products-item:nth-child(1) { animation-delay: 0.8s; }
@@ -650,8 +619,28 @@
   }
 }
 
+.sc-products-item::after {
+  content: 'Try';
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: 'Caveat', cursive;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--text-primary);
+  opacity: 0;
+  pointer-events: none;
+}
+
 .sc-products-item:hover {
   color: var(--text-primary);
+}
+
+.sc-products-item:hover::after {
+  opacity: 1;
 }
 
 .sc-products-dot {
@@ -895,6 +884,7 @@
 
 .sc-viewport[data-theme="light"] .ainbox-window,
 .sc-viewport[data-theme="light"] .mc-window,
+.sc-viewport[data-theme="light"] .mc-win,
 .sc-viewport[data-theme="light"] .onair-window,
 .sc-viewport[data-theme="light"] .meeting-win {
   background: rgba(255, 255, 255, 0.3);
