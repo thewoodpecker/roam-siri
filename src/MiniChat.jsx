@@ -38,6 +38,7 @@ export function getChatIdForAvatar(avatar) {
 }
 
 function DmBubble({ msg, isFirstInGroup }) {
+  const [translated, setTranslated] = useState(false);
   if (msg.type === 'wave') {
     return (
       <div className="mc-wave">
@@ -48,10 +49,28 @@ function DmBubble({ msg, isFirstInGroup }) {
   }
   const radiusIn = isFirstInGroup ? '18px 18px 18px 4px' : '4px 18px 18px 4px';
   const radiusOut = isFirstInGroup ? '20px 20px 4px 20px' : '20px 4px 4px 20px';
+  const displayText = translated && msg.translation ? msg.translation : msg.text;
   return (
     <div className={`mc-msg ${msg.self ? 'mc-msg-self' : ''} ${!isFirstInGroup ? 'mc-msg-consecutive' : ''}`}>
       <div className={`mc-msg-bubble ${msg.self ? 'mc-msg-bubble-self' : ''}`} style={{ borderRadius: msg.self ? radiusOut : radiusIn }}>
-        <p>{msg.text}</p>
+        <p>{displayText}</p>
+        {msg.translation && (
+          <button
+            type="button"
+            className="mc-translate-btn"
+            onClick={() => setTranslated(t => !t)}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="m5 8 6 6" />
+              <path d="m4 14 6-6 2-3" />
+              <path d="M2 5h12" />
+              <path d="M7 2h1" />
+              <path d="m22 22-5-10-5 10" />
+              <path d="M14 18h6" />
+            </svg>
+            {translated ? 'Show original' : 'Translate'}
+          </button>
+        )}
       </div>
     </div>
   );
@@ -98,6 +117,9 @@ export default function MiniChat({ personName, personAvatar, chatId, position, o
       ][Math.floor(Math.random() * 6)];
       // Pre-populate with a short back-and-forth
       const firstReply = getReply(chatId);
+      const thirdMsg = typeof firstReply === 'object' && firstReply.text
+        ? { id: 3, self: false, text: firstReply.text, translation: firstReply.translation }
+        : { id: 3, self: false, text: firstReply };
       return {
         ...prev,
         [chatId]: {
@@ -106,7 +128,7 @@ export default function MiniChat({ personName, personAvatar, chatId, position, o
           messages: [
             { id: 1, self: false, text: greeting },
             { id: 2, self: true, text: "Hey! What's new?" },
-            { id: 3, self: false, text: firstReply },
+            thirdMsg,
           ],
         },
       };
@@ -145,7 +167,10 @@ export default function MiniChat({ personName, personAvatar, chatId, position, o
       setMessages(prev => {
         const c = prev[chatId];
         if (!c) return prev;
-        const reply = { id: Date.now() + Math.random(), self: false, text: getReply(chatId) };
+        const raw = getReply(chatId);
+        const reply = typeof raw === 'object' && raw.text
+          ? { id: Date.now() + Math.random(), self: false, text: raw.text, translation: raw.translation }
+          : { id: Date.now() + Math.random(), self: false, text: raw };
         return { ...prev, [chatId]: { ...c, typingAvatars: null, messages: [...c.messages, reply] } };
       });
     }, sendDelay);
@@ -180,7 +205,10 @@ export default function MiniChat({ personName, personAvatar, chatId, position, o
       setMessages(prev => {
         const c = prev[chatId];
         if (!c) return prev;
-        const reply = { id: Date.now() + Math.random(), self: false, text: getReply(chatId) };
+        const raw = getReply(chatId);
+        const reply = typeof raw === 'object' && raw.text
+          ? { id: Date.now() + Math.random(), self: false, text: raw.text, translation: raw.translation }
+          : { id: Date.now() + Math.random(), self: false, text: raw };
         return { ...prev, [chatId]: { ...c, typingAvatars: null, messages: [...c.messages, reply] } };
       });
     }, sendDelay);

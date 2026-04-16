@@ -759,14 +759,6 @@ function ProductItem({ name, onClick, onMouseEnter, onMouseLeave }) {
   );
 }
 
-const FEATURE_TARGETS = {
-  AInbox:            { selector: '[data-tooltip="AInbox"]',                  radius: '999px', padding: 6 },
-  'Magic Minutes':   { selector: '[data-tooltip="Magic Minutes"]',           radius: '999px', padding: 6 },
-  'On-Air':          { selector: '[data-tooltip="On-Air"]',                  radius: '999px', padding: 6 },
-  Magicast:          { selector: '[data-tooltip="Magicast"]',                radius: '999px', padding: 6 },
-  Theater:           { selector: '.sc-grid-cell[data-room-type="theater"]',  radius: '14px',  padding: 4 },
-  'Drop-In Meetings':{ selector: '.sc-grid-cell[data-room-name="Peter L."]', radius: '14px',  padding: 4 },
-};
 
 const PRODUCTS = [
   { name: 'Virtual Office' },
@@ -1087,23 +1079,18 @@ function ShowcaseMapInner() {
   const [introHintStyle, setIntroHintStyle] = useState(null);
   useEffect(() => {
     const update = () => {
-      if (!productsBarRef.current || !miniRoamRef.current) return;
-      const firstItem = productsBarRef.current.querySelector('.sc-products-item');
-      if (!firstItem) return;
-      const iRect = firstItem.getBoundingClientRect();
+      if (!windowRef.current || !miniRoamRef.current) return;
+      const wRect = windowRef.current.getBoundingClientRect();
       const mRect = miniRoamRef.current.getBoundingClientRect();
       setIntroHintStyle({
-        top: iRect.top - mRect.top - 80,
-        left: Math.max(40, iRect.left - mRect.left + 20),
+        top: wRect.top - mRect.top - 90,
+        left: wRect.left - mRect.left - 60,
       });
     };
-    const t = setTimeout(update, 0);
+    update();
     window.addEventListener('resize', update);
-    return () => {
-      clearTimeout(t);
-      window.removeEventListener('resize', update);
-    };
-  }, []);
+    return () => window.removeEventListener('resize', update);
+  }, [mapWin.position.x, mapWin.position.y]);
   const [mapMounted, setMapMounted] = useState(false);
   const [wallpaperLoaded, setWallpaperLoaded] = useState(false);
   useEffect(() => {
@@ -1288,42 +1275,6 @@ function ShowcaseMapInner() {
   const windowRef = useRef(null);
   const viewportRef = useRef(null);
   const productsBarRef = useRef(null);
-  const [hintedFeature, setHintedFeature] = useState(null);
-  const [hintTargetRect, setHintTargetRect] = useState(null);
-  useEffect(() => {
-    if (!hintedFeature || !windowRef.current) {
-      setHintTargetRect(null);
-      return;
-    }
-    const target = FEATURE_TARGETS[hintedFeature];
-    if (!target) {
-      setHintTargetRect(null);
-      return;
-    }
-    const el = windowRef.current.querySelector(target.selector);
-    if (!el) {
-      setHintTargetRect(null);
-      return;
-    }
-    const update = () => {
-      if (!windowRef.current) return;
-      const r = el.getBoundingClientRect();
-      const c = windowRef.current.getBoundingClientRect();
-      setHintTargetRect({
-        top: r.top - c.top,
-        left: r.left - c.left,
-        width: r.width,
-        height: r.height,
-      });
-    };
-    update();
-    window.addEventListener('resize', update);
-    window.addEventListener('scroll', update, true);
-    return () => {
-      window.removeEventListener('resize', update);
-      window.removeEventListener('scroll', update, true);
-    };
-  }, [hintedFeature]);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -1358,7 +1309,7 @@ function ShowcaseMapInner() {
         <Navbar />
       </div>
 
-      <div className="miniRoamOS" ref={miniRoamRef} data-feature-hint={hintTargetRect ? hintedFeature : undefined} onClick={() => hintVisible && setHintVisible(false)}>
+      <div className="miniRoamOS" ref={miniRoamRef} onClick={() => hintVisible && setHintVisible(false)}>
         <div className="sc-wallpaper sc-wallpaper-dark" style={{ opacity: theme === 'dark' && wallpaperLoaded ? 1 : 0 }} />
         <div className="sc-wallpaper sc-wallpaper-light" style={{ opacity: theme === 'light' && wallpaperLoaded ? 1 : 0 }} />
       <div className={`sc-window ${!mapWin.isFocused ? 'sc-window-unfocused' : ''} ${mapMounted ? 'sc-window-mounted' : ''} ${mapPulse ? 'sc-window-pulse' : ''}`} ref={windowRef} style={{ transform: `translate(${mapWin.position.x}px, ${mapWin.position.y}px)`, zIndex: mapWin.zIndex }} onMouseDown={() => mapWin.focus()}>
@@ -1636,49 +1587,6 @@ function ShowcaseMapInner() {
         {storyViewer && <StoryViewer stories={storyViewer.stories} initialIndex={storyViewer.initialIndex} onClose={() => setStoryViewer(null)} />}
         <ShareDialog open={shareOpen} onClose={() => setShareOpen(false)} />
         {knockingRoom && <KnockDialog room={knockingRoom} onCancel={() => { clearTimeout(knockTimerRef.current); setKnockingRoom(null); }} />}
-        {hintTargetRect && (() => {
-          const cfg = FEATURE_TARGETS[hintedFeature] || { radius: '999px', padding: 6 };
-          const pad = cfg.padding;
-          return (
-          <>
-            <div
-              className="sc-feature-spotlight"
-              style={{
-                top: hintTargetRect.top - pad,
-                left: hintTargetRect.left - pad,
-                width: hintTargetRect.width + pad * 2,
-                height: hintTargetRect.height + pad * 2,
-                borderRadius: cfg.radius,
-              }}
-            />
-            <div
-              className="sc-feature-hint"
-              style={{
-                top: hintTargetRect.top,
-                left: hintTargetRect.left + hintTargetRect.width / 2,
-              }}
-            >
-              <div className="sc-feature-hint-try">Try</div>
-              <div className="sc-feature-hint-name">{hintedFeature}</div>
-              <svg className="sc-feature-hint-arrow" width="28" height="56" viewBox="0 0 14 28" fill="none">
-                <path
-                  d="M7 1 C 10 6 4 11 8 16 C 11 20 4 23 7 25"
-                  stroke="white"
-                  strokeWidth="1"
-                  strokeLinecap="round"
-                />
-                <path
-                  d="M3.5 21 L 7 25.5 L 10.5 21"
-                  stroke="white"
-                  strokeWidth="1"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </div>
-          </>
-          );
-        })()}
       </div>
       {miniChats.map(mc => (
         <MiniChat key={mc.chatId} {...mc} onClose={() => closeMiniChat(mc.chatId)} />
@@ -1693,7 +1601,7 @@ function ShowcaseMapInner() {
       {magicastWin.isOpen && <div className="mc-recording-border" />}
       {/* Product features bar — inside miniRoamOS, pinned to bottom */}
       {/* Handwritten annotation pointing to the product bar */}
-      <Hint portal={false} text="Product Tour" blob="peaks" arrow={false} visible={hintVisible} style={{ ...(introHintStyle || { top: 150, left: 90 }), ...(HIDE_CHROME ? { display: 'none' } : {}) }} />
+      <Hint portal={false} text="Product Tour" blob="peaks" arrow="swoop-right" visible={hintVisible} style={{ ...(introHintStyle || { top: 150, left: 90 }), ...(HIDE_CHROME ? { display: 'none' } : {}) }} />
       <div className="sc-products-bar" ref={productsBarRef} style={HIDE_CHROME ? { display: 'none' } : undefined}>
         {PRODUCTS.map((item, i) => (
           <React.Fragment key={item.name}>
@@ -1701,8 +1609,7 @@ function ShowcaseMapInner() {
             <ProductItem
               name={item.name}
               onClick={item.name === 'AInbox' ? () => ainboxWin.open() : item.name === 'On-Air' ? () => onairWin.open() : item.name === 'Theater' ? () => theaterWin.open() : item.name === 'Magicast' ? () => magicastWin.open() : item.name === 'Virtual Office' ? pulseMapWindow : item.name === 'Drop-In Meetings' ? knockOnHoward : undefined}
-              onMouseEnter={() => { setHintedFeature(item.name); setHintVisible(false); }}
-              onMouseLeave={() => setHintedFeature(null)}
+              onMouseEnter={() => setHintVisible(false)}
             />
           </React.Fragment>
         ))}

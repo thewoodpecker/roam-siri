@@ -833,6 +833,29 @@
   letter-spacing: -0.15px;
 }
 
+.ainbox-translate-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 6px;
+  padding: 0;
+  background: none;
+  border: none;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-accent-secondary);
+  cursor: pointer;
+  letter-spacing: -0.1px;
+}
+
+.ainbox-translate-btn:hover {
+  text-decoration: underline;
+}
+
+.ainbox-translate-btn svg {
+  flex-shrink: 0;
+}
+
 .ainbox-dm-bubble-self {
   background: var(--bg-surface-secondary);
   border-radius: 20px 20px 4px 20px;

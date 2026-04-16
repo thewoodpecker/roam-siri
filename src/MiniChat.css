@@ -150,6 +150,29 @@
   color: var(--text-on-accented);
 }
 
+.mc-translate-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 6px;
+  padding: 0;
+  background: none;
+  border: none;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-accent-secondary);
+  cursor: pointer;
+  letter-spacing: -0.1px;
+}
+
+.mc-translate-btn:hover {
+  text-decoration: underline;
+}
+
+.mc-translate-btn svg {
+  flex-shrink: 0;
+}
+
 .mc-wave {
   display: flex;
   align-items: center;

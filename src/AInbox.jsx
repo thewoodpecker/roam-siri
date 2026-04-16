@@ -29,18 +29,21 @@ export const DM_REPLIES_BY_CHAT = {
     "Peter's down in Orlando building the CX team while I'm up here in Miami building the product. Two brothers, two cities, one mission.",
   ],
   will: [
-    "Hey, quick update on Android — the new Material You theming is looking incredible. Dynamic colors just work.",
-    "Did you catch the Arsenal match last night? Saka was absolutely unreal. That run in the 78th minute!",
-    "Been debugging a tricky ANR on the Android side. The notification channels rewrite is almost done though.",
-    "Arsenal are top of the league and the Android app is top of the Play Store. Good times 😄",
-    "The Kotlin coroutines migration is paying off big time. Background tasks are so much cleaner now.",
-    "Arteta's tactics this season are brilliant. The way Arsenal press from the front reminds me of peak Wenger but with better defense.",
-    "Just shipped the Android widget for Roam. You can see who's in the office right from your home screen.",
-    "COYG! 🔴 Also, the new Compose UI components are looking sharp on the Android build.",
-    "The battery optimization changes reduced background usage by 30%. Also, what a goal from Ødegaard yesterday!",
-    "Working on Bluetooth audio routing for Android. Also — did you see Arsenal's transfer rumors? Could be a big summer.",
-    "Solmi just destroyed another pair of shoes 😂 That dog has zero chill but I love her. She was sitting on my keyboard during standup this morning.",
-    "Took Solmi to the dog park after work. She made friends with a golden retriever twice her size. Fearless little pup. 🐕",
+    { text: "嗨，Android 嘅更新 — 新嘅 Material You theme 靚到爆，dynamic colors 完全無難度就搞掂咗。", translation: "Hey, quick update on Android — the new Material You theming is looking incredible. Dynamic colors just work." },
+    { text: "你尋晚有冇睇阿仙奴場波？Saka 簡直無解，78分鐘嗰次推進真係勁到癲！", translation: "Did you catch the Arsenal match last night? Saka was absolutely unreal — that run in the 78th minute!" },
+    { text: "今日喺 Android 呢邊 debug 緊個棘手嘅 ANR，notification channels 嗰個 rewrite 差唔多搞掂。", translation: "Been debugging a tricky ANR on the Android side. The notification channels rewrite is almost done." },
+    { text: "阿仙奴排聯賽榜首，Android app 又排 Play Store 榜首。雙喜臨門啊 😄", translation: "Arsenal are top of the league and the Android app is top of the Play Store. Good times 😄" },
+    { text: "Kotlin coroutines 嘅 migration 真係值到盡，background tasks 而家乾淨好多。", translation: "The Kotlin coroutines migration is paying off big time. Background tasks are so much cleaner now." },
+    { text: "Arteta 今季嘅戰術真係勁，阿仙奴由前場壓迫嗰種打法令我諗起溫格高峰期，不過防守仲紮實啲。", translation: "Arteta's tactics this season are brilliant. The way Arsenal press from the front reminds me of peak Wenger but with better defense." },
+    { text: "啱啱 ship 咗 Roam 嘅 Android widget，喺 home screen 都直接見到邊個喺 office。", translation: "Just shipped the Android widget for Roam. You can see who's in the office right from your home screen." },
+    { text: "COYG! 🔴 另外新嘅 Compose UI components 喺 Android build 入面好靚。", translation: "COYG! 🔴 Also, the new Compose UI components are looking sharp on the Android build." },
+    { text: "電池優化搞掂咗，background usage 跌咗 30%。另外，Ødegaard 尋晚嗰個波你睇咗未？簡直藝術品！", translation: "The battery optimization changes reduced background usage by 30%. Also, what a goal from Ødegaard yesterday!" },
+    { text: "而家搞緊 Android 嘅 Bluetooth audio routing。順便問下，阿仙奴嘅轉會消息你有冇跟？今個夏天可能會勁。", translation: "Working on Bluetooth audio routing for Android. Also — did you see Arsenal's transfer rumors? Could be a big summer." },
+    { text: "Solmi 又咬爛咗對鞋 😂 隻狗零自制力但係我好錫佢，今朝 standup 佢坐晒喺個 keyboard 度。", translation: "Solmi just destroyed another pair of shoes 😂 That dog has zero chill but I love her. She was sitting on my keyboard during standup this morning." },
+    { text: "放工帶咗 Solmi 去 McCarren Park 嘅狗公園，識咗隻比佢大兩倍嘅 golden retriever。好細粒但夠膽。🐕", translation: "Took Solmi to the McCarren Park dog run after work. She made friends with a golden retriever twice her size. Fearless little pup. 🐕" },
+    { text: "Williamsburg 嘅咖啡店真係犯規，行兩步就有五間。朝早行去 Bedford Ave 返工，心情都好晒。", translation: "The Williamsburg coffee scene is unfair — five shops within walking distance. Strolling to Bedford Ave in the morning puts me in a great mood." },
+    { text: "週末帶 Solmi 行咗 Williamsburg Bridge，望返 Manhattan 嗰個 view，我覺得呢個係全紐約最 underrated 嘅 skyline。", translation: "Walked Solmi across the Williamsburg Bridge this weekend — the view back at Manhattan is hands down the most underrated skyline in NYC." },
+    { text: "Brooklyn 嘅 L train 朝早擠到爆，好彩我而家 remote 做 Roam。由屋企行落去 Domino Park 開工，唔同 level。", translation: "The L train in Brooklyn is packed in the mornings — lucky I'm remote on Roam now. Walking down to Domino Park to work is a different level." },
   ],
   grace: [
     "Split my week between the city and Long Island. Monday–Wednesday in NYC, Thursday–Friday out east. Best of both worlds.",
@@ -72,28 +75,29 @@ export const DM_REPLIES_BY_CHAT = {
     "Someone just built a standup bot using our webhooks. It pings the team every morning and collects responses. Love seeing this.",
   ],
   thomas: [
-    "Bonjour! 🇫🇷 Ze new Xcode 16 previews are so much faster. Hot reload for SwiftUI is finally usable in complex views. Magnifique!",
-    "Salut mon ami! 🥐 I've been experimenting wiz ze Vision framework for our AR features. Apple's spatial computing APIs are incroyable.",
-    "Bonjour! Just got ze Swift 6 strict concurrency migration working. No more data races — ze compiler catches everyzing now. 🇫🇷",
-    "Salut! Ze App Intents framework is underrated. We can expose Roam actions to Siri and Shortcuts wiz barely any code. C'est fantastique!",
-    "Bonjour! 🥐 Been using ze new Interactive Widgets. You can now join a Roam room directly from ze Lock Screen. Très cool.",
-    "Salut mon ami! Ze Metal shader compilation improvements in iOS 18 are 'uge. Our room transition animations are buttery smooth now. 🇫🇷",
-    "Bonjour! Core Data vs SwiftData — I'm still torn. SwiftData is cleaner but Core Data 'as way more edge case coverage. C'est la vie.",
-    "Salut! 🥐 Apple's design language keeps getting more refined. Ze new SF Symbols 6 set is massive — over 6,000 icons now. Incroyable!",
-    "Bonjour mon ami! 🇫🇷 Just submitted our TestFlight build. Ze Live Activities integration shows your current Roam room on ze Dynamic Island.",
-    "Mon Dieu! 🥐 Zis croissant I 'ad zis morning was magnifique. Butter, layers, crunch — ze perfect start to ze day. Vive la France! 🇫🇷",
-    "Salut! I found a boulangerie in Miami zat makes croissants almost as good as Paris. Almost. Zey are still missing somezing. 🥐",
-    "Bonjour! 🇫🇷 You cannot write good code wizout a proper breakfast. For me, zat means a croissant, un café, and zen I am ready. 🥐",
-    "Salut mon ami! Ze French approach to engineering is like ze French approach to food — precision, elegance, and absolutely no shortcuts. 🇫🇷",
-    "Bonjour! 🥐 I miss Paris sometimes. Ze architecture, ze café culture, ze smell of fresh bread in ze morning. But Miami 'as ze sunshine. 🇫🇷",
-    "Mon Dieu! Someone brought donuts to ze office. I appreciate ze gesture but... zey are not croissants. Zis is not ze same zing. 🥐🇫🇷",
-    "Salut! SwiftUI reminds me of French cuisine — simple on ze surface, incredibly complex underneath. Zat is what makes it beautiful. 🇫🇷🥐",
-    "Oh putain! Ze build just broke. Give me five minutes, I will fix zis. Nobody panic. 🥐",
-    "Eh mon garcon! 🇫🇷 'Ave you tried ze new gesture navigation? It feels like butter. Smooth like a croissant fresh from ze oven. 🥐",
-    "Oh putain! I just realized we shipped wizout ze accessibility labels. Fixing now. Zis is not acceptable. 🇫🇷",
-    "Eh mon garcon, come look at zis animation I built! Ze spring curve is *parfait*. 🥐🇫🇷",
-    "Sacré bleu! 🇫🇷 Ze TestFlight reviewers rejected our build for a missing privacy string. I will fix zis immédiatement. 🥐",
-    "Sacré bleu! Who changed ze font weight on ze navigation bar?! Zis was perfection before. We must revert. 🇫🇷🥐",
+    { text: "Oh là là, mon ami! 🥐🇫🇷 Les nouveaux aperçus de Xcode 16 sont absolument magnifiques — beaucoup plus rapides qu'avant, et le rechargement à chaud pour SwiftUI fonctionne enfin même dans des vues très complexes. C'est un petit miracle!", translation: "Xcode 16 previews are much faster now, and hot reload for SwiftUI finally works in complex views." },
+    { text: "Salut mon pote! 🥐 Je suis en train de jouer avec le framework Vision pour nos fonctionnalités de réalité augmentée. Les interfaces de programmation pour l'informatique spatiale chez Apple sont vraiment incroyables, c'est comme de la magie pure.", translation: "I'm playing with Apple's Vision framework for our AR features. The spatial computing APIs are incredible." },
+    { text: "Bonjour! 🇫🇷 Je viens de terminer la migration vers Swift 6 avec la concurrence stricte. Plus de courses aux données, plus de bugs bizarres à trois heures du matin — le compilateur attrape tout maintenant. Magnifique!", translation: "Just finished migrating to Swift 6 strict concurrency. No more data races — the compiler catches everything now." },
+    { text: "Eh dis-donc! Le framework App Intents est vraiment sous-estimé à mon avis. On peut exposer les actions de Roam à Siri et aux Raccourcis avec presque zéro ligne de code. C'est fantastique, j'te jure.", translation: "The App Intents framework is underrated. We can expose Roam actions to Siri and Shortcuts with barely any code." },
+    { text: "Bonjour mon ami! 🥐 J'utilise les nouveaux widgets interactifs. Maintenant tu peux rejoindre une salle Roam directement depuis ton écran de verrouillage, sans ouvrir l'application. Très pratique, très élégant.", translation: "Using the new Interactive Widgets — you can join a Roam room directly from your Lock Screen now." },
+    { text: "Oh purée! 🇫🇷 Les améliorations de compilation des shaders Metal dans iOS 18 sont énormes. Nos animations de transition entre les salles sont lisses comme du beurre frais sur une baguette chaude.", translation: "The Metal shader compilation improvements in iOS 18 are huge — our room transition animations are buttery smooth." },
+    { text: "Bonjour! Core Data ou SwiftData — je suis toujours déchiré entre les deux. SwiftData est plus propre mais Core Data couvre beaucoup plus de cas limites. C'est la vie, mon ami.", translation: "Still torn between Core Data and SwiftData — SwiftData is cleaner but Core Data handles more edge cases." },
+    { text: "Salut! 🥐 Le langage visuel d'Apple devient de plus en plus raffiné, tu remarques? Le nouveau jeu de SF Symbols 6 est massif — plus de six mille icônes maintenant. Incroyable, non?", translation: "Apple's design language keeps getting more refined. The new SF Symbols 6 set has over 6,000 icons now." },
+    { text: "Bonjour mon pote! 🇫🇷 Je viens juste de soumettre notre version TestFlight. L'intégration des Activités en Direct fait apparaître ta salle Roam actuelle directement sur l'île Dynamique. Trop cool.", translation: "Just submitted our TestFlight build. Live Activities now show your current Roam room on the Dynamic Island." },
+    { text: "Mon Dieu! 🥐 Ce croissant que j'ai mangé ce matin était une œuvre d'art absolue. Le beurre, les couches feuilletées, le croustillant parfait — le début idéal d'une journée. Vive la France, j'te dis!", translation: "The croissant I had this morning was a masterpiece — butter, flaky layers, perfect crunch." },
+    { text: "Eh dis-donc! J'ai trouvé une boulangerie dans le West Village qui fait des croissants presque aussi bons qu'à Paris. Presque. Il leur manque encore quelque chose d'indéfinissable, tu vois ce que je veux dire? 🥐", translation: "Found a bakery in the West Village that makes croissants almost as good as Paris. Almost — they're still missing something." },
+    { text: "Bonjour! 🇫🇷 Tu ne peux pas écrire du bon code sans un petit déjeuner convenable, c'est impossible. Pour moi, ça veut dire un croissant, un café noir, et là je suis prêt à affronter le monde. 🥐", translation: "You can't write good code without a proper breakfast — for me that's a croissant and a coffee." },
+    { text: "Salut mon ami! L'approche française de l'ingénierie est comme l'approche française de la cuisine — précision, élégance, et absolument aucun raccourci. On prend le temps qu'il faut. 🇫🇷", translation: "The French approach to engineering is like French cuisine — precision, elegance, no shortcuts." },
+    { text: "Bonjour! 🥐 Parfois Paris me manque, franchement. L'architecture, la culture des cafés, l'odeur du pain frais le matin. Mais New York a son énergie à elle, c'est déjà pas mal. 🇫🇷", translation: "I miss Paris sometimes — the architecture, café culture, smell of fresh bread. But NYC has its own energy." },
+    { text: "Oh là là! Quelqu'un a apporté des beignets au bureau aujourd'hui. J'apprécie le geste, c'est très gentil, mais... ce n'est pas un croissant. Ce n'est absolument pas la même chose. 🥐🇫🇷", translation: "Someone brought donuts to the office. I appreciate it but — they're not croissants." },
+    { text: "Eh dis-donc! SwiftUI me rappelle la cuisine française — simple en surface, incroyablement complexe en dessous. C'est exactement ce qui la rend belle, cette complexité cachée. 🇫🇷🥐", translation: "SwiftUI is like French cuisine — simple on the surface, incredibly complex underneath." },
+    { text: "Oh putain! 🥐 La compilation vient de casser à l'instant. Donne-moi cinq minutes, je vais régler ça tout de suite. Que personne ne panique, je te le promets, tout sera réparé rapidement.", translation: "The build just broke. Give me five minutes, I'll fix it. Don't panic." },
+    { text: "Eh mon garçon! 🇫🇷 Tu as essayé la nouvelle navigation gestuelle? C'est lisse comme du beurre, mon ami. Aussi doux qu'un croissant frais sorti du four à six heures du matin. 🥐", translation: "Have you tried the new gesture navigation? It's as smooth as a fresh croissant." },
+    { text: "Oh putain! Je viens de réaliser qu'on a livré la version sans les étiquettes d'accessibilité. Je corrige ça maintenant, tout de suite. C'est complètement inacceptable, je suis désolé. 🇫🇷", translation: "I just realized we shipped without accessibility labels. Fixing it now — unacceptable." },
+    { text: "Eh mon garçon, viens voir cette animation que j'ai construite! La courbe de rebond est absolument parfaite, je te jure. C'est mon petit chef-d'œuvre de la journée. 🥐🇫🇷", translation: "Come look at this animation I built — the spring curve is perfect." },
+    { text: "Sacré bleu! 🇫🇷 Les relecteurs de TestFlight ont rejeté notre version pour une chaîne de confidentialité manquante. Je vais corriger ça immédiatement, ne t'en fais pas mon ami. 🥐", translation: "TestFlight rejected our build for a missing privacy string. Fixing it immediately." },
+    { text: "Sacré bleu! Qui a changé la graisse de la police sur la barre de navigation?! C'était de la perfection absolue avant, on doit revenir en arrière tout de suite. C'est une urgence esthétique, j'te dis. 🇫🇷🥐", translation: "Who changed the font weight on the navigation bar?! It was perfect before — we need to revert." },
+    { text: "Mon ami! 🥐 Ce matin j'ai marché dans Central Park avant le bureau. L'automne à New York, c'est presque comme Paris — mais avec des gratte-ciels en fond. Magnifique quand même! 🇫🇷", translation: "I walked through Central Park this morning before the office. Autumn in NYC is almost like Paris — but with skyscrapers in the background. Still beautiful!" },
   ],
   'joe-mini': [
     "Derby County are going up this year, I can feel it. Come On You Rams! 🐏",
@@ -353,6 +357,23 @@ export const DM_REPLIES_BY_CHAT = {
     "Living in Orlando means I'm 20 minutes from Disney, Universal, AND SeaWorld. Theme park capital of the world and it never gets old.",
     "Howard's up in Miami hitting the gym and driving the Rolls. I'm in Orlando at Magic Kingdom with the kids. The Lerman brothers lifestyle. 😂",
     "Building Roam with my brother Howard is a dream. He's the vision guy, I'm the people guy. Together we've got every angle covered.",
+  ],
+  'aaron-mini': [
+    "Growth update: we hit our signup target for the week. The new onboarding flow is converting way better than the old one.",
+    "Running the numbers on our funnel this morning. The drop-off from trial-to-paid is the single biggest lever we have right now.",
+    "Came out of EY-Parthenon doing software strategy diligence for PE clients — so I've basically audited every competitor's GTM before joining Roam. Big unlock.",
+    "The thing nobody tells you about consulting: you learn faster from 30 bad strategies than 1 good one. That's the PE diligence playbook.",
+    "Before Roam I was a data scientist at Class Valuation. Taught me to trust the data but interview the outliers — that's usually where the story is.",
+    "Virginia Tech represent. 🦃 CompE major, Econ minor. The econ minor is doing way more work in my day-to-day than I expected.",
+    "Shoutout to TJ. 🧪 Magnet school in Alexandria — easily the most formative academic environment I've ever been in. Friends from there are still in my ear every week.",
+    "Full-ride scholarship to VT was honestly the reason I got to take risks in my career. Zero debt = way more optionality post-grad.",
+    "In college I was bouncing between Sterling Point Advisors as an analyst, a couple of student consulting orgs, project manager gigs. Basically never stopped working.",
+    "Engineer who can write a deck > consultant who can read one. That's the bet I made leaving EY-P for a growth seat here.",
+    "My favorite growth experiments are the ones that should work on paper and don't. That's where the actual learning lives.",
+    "DMV born and raised. NoVA → Blacksburg → back to the DMV. I'm a creature of habit when it comes to ZIP codes.",
+    "The best part of working at Roam is getting to use the product to build the company that builds the product. Closest thing to eating your own cooking.",
+    "Talked to a prospect today who was stitching Slack + Zoom + Calendly + a Notion wiki. Our pitch basically wrote itself.",
+    "Quant background is a cheat code for growth. Every lever is a regression you haven't run yet.",
   ],
   lexi: [
     "Our customers love the drop-in meetings feature. One team told me it cut their meeting scheduling time by 80%!",
@@ -761,9 +782,9 @@ export const INITIAL_CONVERSATIONS = {
     type: 'dm', name: 'Will Hou', subtitle: 'Android Engineer at Roam',
     avatar: '/headshots/will-hou.jpg',
     messages: [
-      { id: 1, self: false, text: "The new Material You dynamic colors are working perfectly with our design tokens. Android app looks 🔥" },
-      { id: 2, self: true, text: "Nice! How's the battery optimization going?" },
-      { id: 3, self: false, text: "Down 30% background usage. Also — did you see Arsenal beat City last night? Saka was incredible 🔴" },
+      { id: 1, self: false, text: "新嘅 Material You dynamic colors 同我哋嘅 design tokens 完美配合，Android app 而家靚到爆 🔥", translation: "The new Material You dynamic colors are working perfectly with our design tokens. Android app looks 🔥" },
+      { id: 2, self: true, text: "勁喎！battery optimization 點呀？", translation: "Nice! How's the battery optimization going?" },
+      { id: 3, self: false, text: "background usage 減咗 30%。另外，尋晚阿仙奴贏 City 你睇咗未？Saka 真係神級 🔴", translation: "Down 30% background usage. Also — did you see Arsenal beat City last night? Saka was incredible 🔴" },
     ],
   },
 
@@ -783,9 +804,9 @@ export const INITIAL_CONVERSATIONS = {
     type: 'dm', name: 'Thomas Grapperon', subtitle: 'iOS Engineer at Roam',
     avatar: '/headshots/thomas-grapperon.jpg',
     messages: [
-      { id: 1, self: false, text: "Bonjour! 🥐🇫🇷 Ze new SwiftUI navigation APIs in iOS 18 are a game changer, mon ami. NavigationStack wiz path-based routing is so much cleaner!" },
+      { id: 1, self: false, text: "Bonjour mon ami! 🥐🇫🇷 Les nouvelles interfaces de navigation SwiftUI dans iOS 18 sont une vraie révolution, franchement. NavigationStack avec le routage basé sur les chemins, c'est tellement plus propre et élégant!", translation: "The new SwiftUI navigation APIs in iOS 18 are a game changer — NavigationStack with path-based routing is much cleaner." },
       { id: 2, self: true, text: "Worth migrating from NavigationView?" },
-      { id: 3, self: false, text: "Oh putain, absolutely! I've already migrated our chat flow. Also got Live Activities working — your current Roam room shows on ze Dynamic Island! Magnifique! 🥐" },
+      { id: 3, self: false, text: "Oh putain, absolument! J'ai déjà migré notre flux de discussion la semaine dernière. Et en plus j'ai réussi à faire marcher les Activités en Direct — ta salle Roam actuelle apparaît directement sur l'île Dynamique! Magnifique, non? 🥐", translation: "Absolutely — I already migrated our chat flow, and got Live Activities working so your current Roam room shows on the Dynamic Island." },
     ],
   },
 
@@ -968,6 +989,7 @@ function GroupMessage({ msg, onThreadClick }) {
    DM bubble message
 ——————————————————————————————————————— */
 function DmMessage({ msg, isFirstInGroup, isLastInGroup }) {
+  const [translated, setTranslated] = useState(false);
   if (msg.type === 'date') {
     return (
       <div className="ainbox-dm-date">
@@ -993,13 +1015,31 @@ function DmMessage({ msg, isFirstInGroup, isLastInGroup }) {
     ? '20px 20px 4px 20px'
     : '20px 4px 4px 20px';
 
+  const displayText = translated && msg.translation ? msg.translation : msg.text;
   return (
     <div className={`ainbox-dm-msg ${msg.self ? 'ainbox-dm-msg-self' : ''} ${!isFirstInGroup ? 'ainbox-dm-msg-consecutive' : ''}`}>
       <div
         className={`ainbox-dm-bubble ${msg.self ? 'ainbox-dm-bubble-self' : ''}`}
         style={{ borderRadius: msg.self ? radiusOutgoing : radiusIncoming }}
       >
-        <p>{msg.text}</p>
+        <p>{displayText}</p>
+        {msg.translation && (
+          <button
+            type="button"
+            className="ainbox-translate-btn"
+            onClick={() => setTranslated(t => !t)}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="m5 8 6 6" />
+              <path d="m4 14 6-6 2-3" />
+              <path d="M2 5h12" />
+              <path d="M7 2h1" />
+              <path d="m22 22-5-10-5 10" />
+              <path d="M14 18h6" />
+            </svg>
+            {translated ? 'Show original' : 'Translate'}
+          </button>
+        )}
       </div>
     </div>
   );
