@@ -845,7 +845,7 @@ function Hint({ text, blob, arrow, visible = true, className = '', style, portal
   const [randomBlob] = useState(() => pickRandom(HINT_BLOB_KEYS));
   const [randomArrow] = useState(() => pickRandom(HINT_ARROW_KEYS));
   const blobDef = HINT_BLOBS[blob ?? randomBlob];
-  const arrowDef = HINT_ARROWS[arrow ?? randomArrow];
+  const arrowDef = arrow === false ? null : HINT_ARROWS[arrow ?? randomArrow];
   const pathRef = useRef(null);
   const [pathLen, setPathLen] = useState(0);
   useEffect(() => {
@@ -874,11 +874,13 @@ function Hint({ text, blob, arrow, visible = true, className = '', style, portal
           </svg>
           <span className="sc-hint-text">{text}</span>
         </span>
-        <svg className="sc-hint-arrow" width={arrowDef.width} height={arrowDef.height} viewBox={arrowDef.viewBox} fill="none">
-          {arrowDef.paths.map((d, i) => (
-            <path key={i} d={d} stroke="white" strokeLinecap="round" />
-          ))}
-        </svg>
+        {arrowDef && (
+          <svg className="sc-hint-arrow" width={arrowDef.width} height={arrowDef.height} viewBox={arrowDef.viewBox} fill="none">
+            {arrowDef.paths.map((d, i) => (
+              <path key={i} d={d} stroke="white" strokeLinecap="round" />
+            ))}
+          </svg>
+        )}
       </div>
     </div>
   );
@@ -1085,18 +1087,23 @@ function ShowcaseMapInner() {
   const [introHintStyle, setIntroHintStyle] = useState(null);
   useEffect(() => {
     const update = () => {
-      if (!windowRef.current || !miniRoamRef.current) return;
-      const wRect = windowRef.current.getBoundingClientRect();
+      if (!productsBarRef.current || !miniRoamRef.current) return;
+      const firstItem = productsBarRef.current.querySelector('.sc-products-item');
+      if (!firstItem) return;
+      const iRect = firstItem.getBoundingClientRect();
       const mRect = miniRoamRef.current.getBoundingClientRect();
       setIntroHintStyle({
-        top: wRect.top - mRect.top - 90,
-        left: wRect.left - mRect.left - 60,
+        top: iRect.top - mRect.top - 80,
+        left: Math.max(40, iRect.left - mRect.left + 20),
       });
     };
-    update();
+    const t = setTimeout(update, 0);
     window.addEventListener('resize', update);
-    return () => window.removeEventListener('resize', update);
-  }, [mapWin.position.x, mapWin.position.y]);
+    return () => {
+      clearTimeout(t);
+      window.removeEventListener('resize', update);
+    };
+  }, []);
   const [mapMounted, setMapMounted] = useState(false);
   const [wallpaperLoaded, setWallpaperLoaded] = useState(false);
   useEffect(() => {
@@ -1686,7 +1693,7 @@ function ShowcaseMapInner() {
       {magicastWin.isOpen && <div className="mc-recording-border" />}
       {/* Product features bar — inside miniRoamOS, pinned to bottom */}
       {/* Handwritten annotation pointing to the product bar */}
-      <Hint portal={false} text="Product Tour" blob="peaks" arrow="swoop-right" visible={false} style={{ ...(introHintStyle || { top: 150, left: 90 }), ...(HIDE_CHROME ? { display: 'none' } : {}) }} />
+      <Hint portal={false} text="Product Tour" blob="peaks" arrow={false} visible={hintVisible} style={{ ...(introHintStyle || { top: 150, left: 90 }), ...(HIDE_CHROME ? { display: 'none' } : {}) }} />
       <div className="sc-products-bar" ref={productsBarRef} style={HIDE_CHROME ? { display: 'none' } : undefined}>
         {PRODUCTS.map((item, i) => (
           <React.Fragment key={item.name}>
@@ -1694,7 +1701,7 @@ function ShowcaseMapInner() {
             <ProductItem
               name={item.name}
               onClick={item.name === 'AInbox' ? () => ainboxWin.open() : item.name === 'On-Air' ? () => onairWin.open() : item.name === 'Theater' ? () => theaterWin.open() : item.name === 'Magicast' ? () => magicastWin.open() : item.name === 'Virtual Office' ? pulseMapWindow : item.name === 'Drop-In Meetings' ? knockOnHoward : undefined}
-              onMouseEnter={() => setHintedFeature(item.name)}
+              onMouseEnter={() => { setHintedFeature(item.name); setHintVisible(false); }}
               onMouseLeave={() => setHintedFeature(null)}
             />
           </React.Fragment>
