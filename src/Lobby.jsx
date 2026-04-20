@@ -9,6 +9,7 @@ const INITIAL_LINKS = [
   { id: 1, name: 'Secret Meeting',   slug: 'ro.am/joe/secret',        duration: '15m', dropIn: true,  hasThumb: true,  active: true  },
   { id: 2, name: '8 Minute Meeting', slug: 'ro.am/joe/8',             duration: '8m',  dropIn: false, hasThumb: false, active: false },
   { id: 3, name: 'Design Studio',    slug: 'ro.am/joe/design-studio', duration: '30m', dropIn: true,  hasThumb: true,  active: false },
+  { id: 4, name: 'Meet Joe',         slug: 'ro.am/joe/meet',          duration: '20m', dropIn: true,  hasThumb: true,  active: true  },
 ];
 
 const INITIAL_HQ_LINKS = [
@@ -363,10 +364,10 @@ export default function Lobby({ win, onDrag }) {
 
         {activeNav === 'my-links' || activeNav === 'hq-links' ? (
           <div className="lb-list">
-            {(activeNav === 'hq-links' ? hqLinks : links).map((link) => (
+            {(activeNav === 'hq-links' ? hqLinks.slice(0, 3) : links).map((link) => (
               <div key={link.id} className="lb-card" onClick={() => setSelectedLink(link)}>
                 <div className="lb-thumb">
-                  <img src={THUMBS[link.id % THUMBS.length]} alt="" />
+                  <img src={activeNav === 'hq-links' ? (link.id === 2 ? '/lobby/lobby-green.png' : '/lobby/lobby-thumb.png') : THUMBS[link.id % THUMBS.length]} alt="" />
                 </div>
                 <div className="lb-card-info">
                   <div className="lb-card-title-row">

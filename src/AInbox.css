@@ -990,7 +990,7 @@
   box-shadow: var(--shadow-2);
   width: 100%;
   position: relative;
-  transition: background 200ms ease, box-shadow 200ms ease;
+  transition: background 50ms ease, box-shadow 50ms ease;
 }
 
 .ainbox-timeline-ruler {
