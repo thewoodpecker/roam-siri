@@ -382,9 +382,9 @@ function AvailabilitySection() {
   return (
     <div className="lbd-panel lbd-panel-pad">
       <div className="lbd-host-row lbd-host-row-border">
-        <img src="/headshots/howard-lerman.jpg" alt="" className="lbd-host-avatar-img" />
+        <img src="/headshots/joe-woodward.jpg" alt="" className="lbd-host-avatar-img" />
         <div className="lbd-host-info">
-          <span className="lbd-host-name">Howard Lerman</span>
+          <span className="lbd-host-name">Joe Woodward</span>
           <span className="lbd-host-email">Weekdays, 10:00 AM - 4:00 PM</span>
         </div>
       </div>

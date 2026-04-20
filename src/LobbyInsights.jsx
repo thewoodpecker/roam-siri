@@ -164,14 +164,14 @@ const dropInChartData = [
 ];
 
 const lobbyLinks = [
-  { name: 'May I Meet You?',     slug: 'ro.am/howard',           booked: 89, showRate: 91, showColor: GREEN,  dropIns: 24 },
-  { name: 'Hour with Howard',    slug: 'ro.am/howard/hour',      booked: 42, showRate: 88, showColor: YELLOW, dropIns: 8  },
-  { name: "Howard's Lobby",      slug: 'ro.am/howard/next',      booked: 67, showRate: 94, showColor: GREEN,  dropIns: 31 },
-  { name: 'Onboard Your Company',slug: 'ro.am/howard/roamgineer',booked: 38, showRate: 97, showColor: GREEN,  dropIns: 5  },
+  { name: 'Secret Meeting',      slug: 'ro.am/joe/secret',        booked: 89, showRate: 91, showColor: GREEN,  dropIns: 24 },
+  { name: '8 Minute Meeting',    slug: 'ro.am/joe/8',             booked: 42, showRate: 88, showColor: YELLOW, dropIns: 8  },
+  { name: 'Design Studio',       slug: 'ro.am/joe/design-studio', booked: 67, showRate: 94, showColor: GREEN,  dropIns: 31 },
+  { name: 'Meet Joe',            slug: 'ro.am/joe/meet',          booked: 38, showRate: 97, showColor: GREEN,  dropIns: 5  },
 ];
 
 const people = [
-  { avatar: '/headshots/howard-lerman.jpg',   name: 'Howard L.',  booked: 89, completed: 78, cancelled: 6, showRate: 88, showColor: YELLOW, dropIns: 34 },
+  { avatar: '/headshots/joe-woodward.jpg',    name: 'Joe W.',     booked: 89, completed: 78, cancelled: 6, showRate: 88, showColor: YELLOW, dropIns: 34 },
   { avatar: '/headshots/chelsea-turbin.jpg',  name: 'Chelsea T.', booked: 52, completed: 46, cancelled: 4, showRate: 88, showColor: YELLOW, dropIns: 15 },
   { avatar: '/headshots/john-huffsmith.jpg',  name: 'Huffy S.',   booked: 44, completed: 37, cancelled: 2, showRate: 84, showColor: YELLOW, dropIns: 15 },
 ];

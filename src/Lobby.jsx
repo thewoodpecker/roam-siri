@@ -30,25 +30,25 @@ const SCHEDULE = [
   {
     day: 'Mon', date: '11', today: true,
     events: [
-      { id: 1, time: '9:00 - 11:30 AM', name: 'Jon Snow',      meeting: "Jesse's Lobby",    slug: 'ro.am/jesse/fire' },
-      { id: 2, time: '12:30 - 1:30 PM', name: 'Annette Black', meeting: 'Fashion Police',   slug: 'ro.am/jesse/urban' },
-      { id: 3, time: '3:30 - 4:30 PM',  name: 'Eleanor Pena',  meeting: 'Mountaineers',     slug: 'ro.am/jesse/mountain' },
-      { id: 4, time: '6:30 - 8:30 PM',  name: 'Jacob Jones',   meeting: 'Meet Jesse',       slug: 'ro.am/jesse/fire' },
+      { id: 1, time: '9:00 - 11:30 AM', name: 'Jon Snow',      meeting: "Secret Meeting",   slug: 'ro.am/joe/secret' },
+      { id: 2, time: '12:30 - 1:30 PM', name: 'Annette Black', meeting: '8 Minute Meeting', slug: 'ro.am/joe/8' },
+      { id: 3, time: '3:30 - 4:30 PM',  name: 'Eleanor Pena',  meeting: 'Design Studio',    slug: 'ro.am/joe/design-studio' },
+      { id: 4, time: '6:30 - 8:30 PM',  name: 'Jacob Jones',   meeting: 'Meet Joe',         slug: 'ro.am/joe/meet' },
     ],
   },
   {
     day: 'Tue', date: '12',
     events: [
-      { id: 5, time: '9:00 - 11:30 AM', name: 'Brooklyn Simmons', meeting: 'Creative Meet',    slug: 'ro.am/jesse/creative' },
-      { id: 6, time: '12:30 - 1:30 PM', name: 'Kristin Watson',   meeting: 'Celebration Hour', slug: 'ro.am/jesse/fiesta' },
-      { id: 7, time: '3:30 - 4:30 PM',  name: 'Floyd Miles',      meeting: 'Design Review',    slug: 'ro.am/jesse/design' },
+      { id: 5, time: '9:00 - 11:30 AM', name: 'Brooklyn Simmons', meeting: 'Design Studio',    slug: 'ro.am/joe/design-studio' },
+      { id: 6, time: '12:30 - 1:30 PM', name: 'Kristin Watson',   meeting: 'Secret Meeting',   slug: 'ro.am/joe/secret' },
+      { id: 7, time: '3:30 - 4:30 PM',  name: 'Floyd Miles',      meeting: 'Design Review',    slug: 'ro.am/joe/design-review' },
     ],
   },
   {
     day: 'Wed', date: '13',
     events: [
-      { id: 8, time: '10:00 - 11:00 AM', name: 'Cameron Williamson', meeting: 'Sprint Planning', slug: 'ro.am/jesse/sprint' },
-      { id: 9, time: '2:00 - 3:00 PM',   name: 'Savannah Nguyen',    meeting: 'Product Sync',    slug: 'ro.am/jesse/product' },
+      { id: 8, time: '10:00 - 11:00 AM', name: 'Cameron Williamson', meeting: '8 Minute Meeting', slug: 'ro.am/joe/8' },
+      { id: 9, time: '2:00 - 3:00 PM',   name: 'Savannah Nguyen',    meeting: 'Meet Joe',         slug: 'ro.am/joe/meet' },
     ],
   },
 ];
@@ -395,7 +395,7 @@ export default function Lobby({ win, onDrag }) {
           </div>
         ) : activeNav === 'calendar-settings' ? (
           <div className="lb-calsettings">
-            {[{ email: 'jon.snow@ro.am' }, { email: 'jon@gmail.com' }].map((c) => (
+            {[{ email: 'joe@ro.am' }, { email: 'joe.c.woodward@gmail.com' }].map((c) => (
               <div key={c.email} className="lb-calsettings-row">
                 <div className="lb-calsettings-icon">
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none">

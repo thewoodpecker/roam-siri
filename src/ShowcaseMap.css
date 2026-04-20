@@ -833,6 +833,11 @@
   pointer-events: auto;
 }
 
+.sc-feature-visual .mm-summary,
+.sc-feature-visual .mm-transcript {
+  overflow: hidden !important;
+}
+
 .sc-feature-visual .ainbox-window {
   position: relative !important;
   left: auto !important;
