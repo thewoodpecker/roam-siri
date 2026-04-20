@@ -9,6 +9,7 @@ import OnAir from './OnAir';
 import MeetingWindow from './MeetingWindow';
 import TheaterWindow from './TheaterWindow';
 import MagicMinutes from './MagicMinutes';
+import Recordings from './Recordings';
 import { ChatProvider } from './ChatContext';
 import { WindowManagerProvider, useWindow } from './WindowManager';
 import StoryViewer from './StoryViewer';
@@ -694,6 +695,7 @@ const INITIAL_WINDOWS = [
   { id: 'shelf', isOpen: false, position: { x: 120, y: 280 }, zIndex: 30 },
   { id: 'magicast', isOpen: false, position: { x: 40, y: 160 }, zIndex: 30 },
   { id: 'magicminutes', isOpen: false, position: { x: 60, y: 180 }, zIndex: 30 },
+  { id: 'recordings', isOpen: false, position: { x: 80, y: 160 }, zIndex: 30 },
 ];
 
 const SHELF_TOTAL = 12;
@@ -1067,6 +1069,7 @@ function ShowcaseMapInner() {
   const shelfWin = useWindow('shelf');
   const magicastWin = useWindow('magicast');
   const magicminutesWin = useWindow('magicminutes');
+  const recordingsWin = useWindow('recordings');
   const [activeMeetingRoom, setActiveMeetingRoom] = useState(null);
   const [joinedRoomId, setJoinedRoomId] = useState(null);
   const [knockingRoom, setKnockingRoom] = useState(null);
@@ -1100,7 +1103,7 @@ function ShowcaseMapInner() {
       const wRect = windowRef.current.getBoundingClientRect();
       const mRect = miniRoamRef.current.getBoundingClientRect();
       setIntroHintStyle({
-        top: wRect.top - mRect.top - 90,
+        top: wRect.top - mRect.top - 50,
         left: wRect.left - mRect.left - 60,
       });
     };
@@ -1589,7 +1592,7 @@ function ShowcaseMapInner() {
               <div className="sc-toolbar-pill" data-tooltip="Magicast" onClick={() => magicastWin.open()}>
                 <img src="/icons/magicast.svg" width="16" height="16" alt="" />
               </div>
-              <div className="sc-toolbar-pill" data-tooltip="Recordings">
+              <div className="sc-toolbar-pill" data-tooltip="Recordings" onClick={() => recordingsWin.open()}>
                 <img src="/icons/recordings.svg" width="16" height="16" alt="" />
               </div>
               <div className="sc-toolbar-pill" data-tooltip="On-Air" onClick={() => onairWin.open()}>
@@ -1617,9 +1620,10 @@ function ShowcaseMapInner() {
       {magicastWin.isOpen && <MagicastBubble onPositionChange={setPipPos} shape={magicastShape} onShapeChange={setMagicastShape} />}
       {magicastWin.isOpen && <div className="mc-recording-border" />}
       {magicminutesWin.isOpen && <MagicMinutes win={magicminutesWin} onDrag={makeDragHandler(magicminutesWin)} />}
+      {recordingsWin.isOpen && <Recordings win={recordingsWin} onDrag={makeDragHandler(recordingsWin)} />}
       {/* Product features bar — inside miniRoamOS, pinned to bottom */}
       {/* Handwritten annotation pointing to the product bar */}
-      <Hint portal={false} text="Product Tour" blob="peaks" arrow="swoop-right" visible={hintVisible} style={{ ...(introHintStyle || { top: 150, left: 90 }), ...(HIDE_CHROME ? { display: 'none' } : {}) }} />
+      <Hint portal={false} text="Product Tour" blob="peaks" arrow="swoop-right" visible={hintVisible} style={{ ...(introHintStyle || { top: 190, left: 90 }), ...(HIDE_CHROME ? { display: 'none' } : {}) }} />
       <div className="sc-products-bar" ref={productsBarRef} style={HIDE_CHROME ? { display: 'none' } : undefined}>
         {PRODUCTS.map((item, i) => (
           <React.Fragment key={item.name}>

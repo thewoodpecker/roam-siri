@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import './MagicMinutes.css';
 
 const VIDEO_PEOPLE = [
@@ -180,24 +180,15 @@ const FullscreenIcon = () => (
 /* Ruler builder */
 function Ruler() {
   const items = [];
-  const minutes = [1, 2, 3, 4, null, 6];
+  const minutes = [1, 2, 3, 4, 5, 6];
   for (let m = 0; m < minutes.length; m++) {
-    // 2 dots before each minute mark
     items.push(<div key={`d1-${m}`} className="mm-ruler-dot" />);
-    items.push(<div key={`d2-${m}`} className="mm-ruler-dot" />);
-    // tick
     items.push(<div key={`t-${m}`} className="mm-ruler-tick" />);
-    // 2 dots after tick
-    items.push(<div key={`d3-${m}`} className="mm-ruler-dot" />);
-    items.push(<div key={`d4-${m}`} className="mm-ruler-dot" />);
-    // minute label (or skip)
+    items.push(<div key={`d2-${m}`} className="mm-ruler-dot" />);
     if (minutes[m]) {
       items.push(<span key={`l-${m}`} className="mm-ruler-label">{minutes[m]}m</span>);
     }
-    // 2 more dots
-    items.push(<div key={`d5-${m}`} className="mm-ruler-dot" />);
-    items.push(<div key={`d6-${m}`} className="mm-ruler-dot" />);
-    // tick between groups
+    items.push(<div key={`d3-${m}`} className="mm-ruler-dot" />);
     if (m < minutes.length - 1) {
       items.push(<div key={`t2-${m}`} className="mm-ruler-tick" />);
     }
@@ -209,44 +200,76 @@ function Ruler() {
   );
 }
 
-export default function MagicMinutes({ win, onDrag }) {
-  const [closing, setClosing] = useState(false);
+export function MagicMinutesBody({ meeting }) {
   const [activeTab, setActiveTab] = useState('summary');
+  const [handleX, setHandleX] = useState(304);
+  const timelineRef = useRef(null);
 
-  const handleClose = () => {
-    setClosing(true);
-    setTimeout(() => win.close(), 200);
+  const title = meeting?.title || 'Q2 Roadmap';
+  const whenLabel = meeting?.when || '11:30 AM - 12:00 PM';
+  const calendarLabel = meeting?.calendarLabel || (meeting ? meeting.title : 'Maps Standup');
+  const locationLabel = meeting?.location || 'Walt Disney';
+  const audioOnly = !!meeting?.audioOnly;
+
+  const briefText = meeting?.brief || "The team aligned on making AI the centerpiece of the Q2 roadmap for Roam's virtual office. Discussion covered three pillars: Magic Minutes as the flagship AI feature (auto-summaries, action items, private Q&A), smart notifications that understand spatial and collaboration context, and an AI coaching dashboard for enterprise. The group agreed on a hybrid architecture — on-device transcription for privacy with cloud-based summarization — and identified competitive differentiation through deeply integrated spatial AI rather than bolt-on features.";
+
+  const defaultNextSteps = [
+    "Ship Magic Minutes beta with auto-summaries and action item extraction to internal dogfood group by end of April. 00:12",
+    "Finalize hybrid AI architecture — on-device Whisper transcription paired with cloud summarization — and complete security review. 01:59",
+    "Build smart notification system that respects spatial context (room type, focus mode, collaboration signals). 02:34",
+    "Chelsea to spec the AI features tier: Magic Minutes hero, smart notifications foundation, coaching dashboard enterprise upsell. 03:40",
+    "Schedule mid-May check-in to assess progress against Q2 OKRs and adjust resourcing if enterprise pilots accelerate. 03:40",
+    "Coordinate with marketing on AI messaging and competitive positioning vs. Zoom/Teams bolt-on approach. 02:34",
+  ];
+  const nextSteps = meeting?.nextSteps?.length ? meeting.nextSteps : defaultNextSteps;
+  const transcript = meeting?.transcript?.length ? meeting.transcript : TRANSCRIPT;
+
+  const defaultSpeakers = [
+    { name: 'Lexi Bohonnon',    role: 'Engineering',     color: '#46d08f', bars: KLAS_BARS },
+    { name: 'Howard Lerman',    role: 'CEO, Roam',       color: '#4dd0e1', bars: HOWARD_BARS },
+    { name: 'Grace Sutherland', role: 'Chief of People', color: '#ffb74d', bars: [
+        { left: '3%', width: '8%' }, { left: '18%', width: '5%' }, { left: '30%', width: '10%' },
+        { left: '48%', width: '4%' }, { left: '60%', width: '12%' }, { left: '82%', width: '6%' },
+      ] },
+    { name: 'Chelsea Turbin',   role: 'Product',         color: '#b39ddb', bars: [
+        { left: '5%', width: '4%' }, { left: '14%', width: '6%' }, { left: '27%', width: '3%' },
+        { left: '42%', width: '9%' }, { left: '58%', width: '5%' }, { left: '70%', width: '8%' },
+        { left: '88%', width: '7%' },
+      ] },
+  ];
+  const speakers = meeting?.speakers?.length ? meeting.speakers : defaultSpeakers;
+
+  const handleDragStart = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const startX = e.clientX;
+    const startHandleX = handleX;
+    const container = timelineRef.current;
+    const onMove = (ev) => {
+      const dx = ev.clientX - startX;
+      let next = startHandleX + dx;
+      if (container) {
+        const max = container.clientWidth - 16;
+        if (next < 0) next = 0;
+        if (next > max) next = max;
+      }
+      setHandleX(next);
+    };
+    const onUp = () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
   };
 
   return (
-    <div
-      className={`mm-win ${!win.isFocused ? 'mm-win-unfocused' : ''} ${closing ? 'mm-win-closing' : ''}`}
-      style={{ left: win.position.x, top: win.position.y, zIndex: win.zIndex }}
-      onMouseDown={() => win.focus()}
-    >
-      {/* Header */}
-      <div className="mm-header" onMouseDown={onDrag}>
-        <div className="mm-lights">
-          <div className="mm-light mm-light-close" onClick={(e) => { e.stopPropagation(); handleClose(); }} />
-          <div className="mm-light mm-light-min" />
-          <div className="mm-light mm-light-max" />
-        </div>
-
-        <div className="mm-header-center">
-          <div className="mm-search">
-            <img src="/icons/mm-search.svg" alt="" width="16" height="16" />
-            <span>Search</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Body */}
-      <div className="mm-body">
+    <div className={`mm-body ${audioOnly ? 'mm-body-audio-only' : ''}`}>
         {/* Left panel — Summary */}
         <div className="mm-left">
           <div className="mm-left-header">
             <div className="mm-left-header-left">
-              <span className="mm-left-title">Q2 Roadmap</span>
+              <span className="mm-left-title">{title}</span>
             </div>
             <div className="mm-left-tabs">
               <div
@@ -269,23 +292,21 @@ export default function MagicMinutes({ win, onDrag }) {
               <div className="mm-meta">
                 <div className="mm-meta-row">
                   <span className="mm-meta-icon"><img src="/icons/mm-clock.svg" alt="" width="16" height="16" /></span>
-                  <span>11:30 AM - 12:00 PM</span>
+                  <span>{whenLabel}</span>
                 </div>
                 <div className="mm-meta-row">
                   <span className="mm-meta-icon"><img src="/icons/mm-calendar.svg" alt="" width="16" height="16" /></span>
-                  <span>Maps Standup</span>
+                  <span>{calendarLabel}</span>
                 </div>
                 <div className="mm-meta-row">
                   <span className="mm-meta-icon"><img src="/icons/mm-location.svg" alt="" width="16" height="16" /></span>
-                  <span>Walt Disney</span>
+                  <span>{locationLabel}</span>
                 </div>
               </div>
 
               <div>
                 <p className="mm-brief-title">Call Brief</p>
-                <p className="mm-brief-text">
-                  The team aligned on making AI the centerpiece of the Q2 roadmap for Roam's virtual office. Discussion covered three pillars: Magic Minutes as the flagship AI feature (auto-summaries, action items, private Q&A), smart notifications that understand spatial and collaboration context, and an AI coaching dashboard for enterprise. The group agreed on a hybrid architecture — on-device transcription for privacy with cloud-based summarization — and identified competitive differentiation through deeply integrated spatial AI rather than bolt-on features.
-                </p>
+                <p className="mm-brief-text">{briefText}</p>
               </div>
 
               <div className="mm-separator" />
@@ -293,12 +314,9 @@ export default function MagicMinutes({ win, onDrag }) {
               <div>
                 <p className="mm-steps-title">Next Steps</p>
                 <ul className="mm-steps-list">
-                  <li>Ship Magic Minutes beta with auto-summaries and action item extraction to internal dogfood group by end of April. 00:12</li>
-                  <li>Finalize hybrid AI architecture — on-device Whisper transcription paired with cloud summarization — and complete security review. 01:59</li>
-                  <li>Build smart notification system that respects spatial context (room type, focus mode, collaboration signals). 02:34</li>
-                  <li>Chelsea to spec the AI features tier: Magic Minutes hero, smart notifications foundation, coaching dashboard enterprise upsell. 03:40</li>
-                  <li>Schedule mid-May check-in to assess progress against Q2 OKRs and adjust resourcing if enterprise pilots accelerate. 03:40</li>
-                  <li>Coordinate with marketing on AI messaging and competitive positioning vs. Zoom/Teams bolt-on approach. 02:34</li>
+                  {nextSteps.map((step, i) => (
+                    <li key={i}>{step}</li>
+                  ))}
                 </ul>
               </div>
             </div>
@@ -306,7 +324,7 @@ export default function MagicMinutes({ win, onDrag }) {
 
           {activeTab === 'transcript' && (
             <div className="mm-transcript">
-              {TRANSCRIPT.map((entry, i) => (
+              {transcript.map((entry, i) => (
                 <div key={i} className={`mm-transcript-entry ${entry.active ? 'mm-transcript-entry-active' : ''}`}>
                   <img src={entry.avatar} alt="" className="mm-transcript-avatar" />
                   <div className="mm-transcript-content">
@@ -331,12 +349,24 @@ export default function MagicMinutes({ win, onDrag }) {
 
         {/* Right panel — Recording */}
         <div className="mm-right">
-          <div className="mm-video-area">
-            <img src="/icons/mm-video-placeholder.png" alt="" className="mm-video-placeholder" />
-            <div className="mm-play-btn">
-              <PlayIcon />
+          {!audioOnly && (
+            <div className="mm-video-area">
+              {meeting?.gridFaces?.length ? (
+                <div className="mm-video-grid" data-count={meeting.gridFaces.length}>
+                  {meeting.gridFaces.map((src, k) => (
+                    <div key={k} className="mm-video-grid-cell">
+                      <img src={src} alt="" />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <img src="/icons/mm-video-placeholder.png" alt="" className="mm-video-placeholder" />
+              )}
+              <div className="mm-play-btn">
+                <PlayIcon />
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="mm-controls">
             <div className="mm-controls-left">
@@ -354,95 +384,70 @@ export default function MagicMinutes({ win, onDrag }) {
             </div>
           </div>
 
-          <div className="mm-timeline-section">
-            <div className="mm-timeline-handle">
-              <img src="/icons/mm-handle.svg" alt="" width="16" />
+          <div className="mm-timeline-section" ref={timelineRef}>
+            <div
+              className="mm-timeline-handle"
+              style={{ left: handleX }}
+              onMouseDown={handleDragStart}
+            >
+              <img src="/icons/mm-handle.svg" alt="" width="16" draggable={false} />
               <div className="mm-timeline-handle-line" />
             </div>
             <Ruler />
             <div className="mm-speakers">
-              {/* Lexi Bohonnon — green */}
-              <div className="mm-speaker">
-                <div className="mm-speaker-header">
-                  <div className="mm-speaker-dot-wrap">
-                    <div className="mm-speaker-dot" style={{ background: '#46d08f' }} />
+              {speakers.map((s, idx) => (
+                <div key={idx} className="mm-speaker">
+                  <div className="mm-speaker-header">
+                    <div className="mm-speaker-dot-wrap">
+                      <div className="mm-speaker-dot" style={{ background: s.color }} />
+                    </div>
+                    <span className="mm-speaker-name">{s.name}</span>
+                    <span className="mm-speaker-role">{s.role}</span>
                   </div>
-                  <span className="mm-speaker-name">Lexi Bohonnon</span>
-                  <span className="mm-speaker-role">Engineering</span>
-                </div>
-                <div className="mm-speaker-track">
-                  {KLAS_BARS.map((b, i) => (
-                    <div key={i} className="mm-speaker-bar" style={{ left: b.left, width: b.width, background: '#46d08f' }} />
-                  ))}
-                </div>
-              </div>
-
-              {/* Howard Lerman — cyan */}
-              <div className="mm-speaker">
-                <div className="mm-speaker-header">
-                  <div className="mm-speaker-dot-wrap">
-                    <div className="mm-speaker-dot" style={{ background: '#4dd0e1' }} />
+                  <div className="mm-speaker-track">
+                    {s.bars.map((b, i) => (
+                      <div key={i} className="mm-speaker-bar" style={{ left: b.left, width: b.width, background: s.color }} />
+                    ))}
                   </div>
-                  <span className="mm-speaker-name">Howard Lerman</span>
-                  <span className="mm-speaker-role">CEO, Roam</span>
                 </div>
-                <div className="mm-speaker-track">
-                  {HOWARD_BARS.map((b, i) => (
-                    <div key={i} className="mm-speaker-bar" style={{ left: b.left, width: b.width, background: '#4dd0e1' }} />
-                  ))}
-                </div>
-              </div>
-
-              {/* Grace Sutherland — orange */}
-              <div className="mm-speaker">
-                <div className="mm-speaker-header">
-                  <div className="mm-speaker-dot-wrap">
-                    <div className="mm-speaker-dot" style={{ background: '#ffb74d' }} />
-                  </div>
-                  <span className="mm-speaker-name">Grace Sutherland</span>
-                  <span className="mm-speaker-role">Chief of People</span>
-                </div>
-                <div className="mm-speaker-track">
-                  {[
-                    { left: '3%', width: '8%' },
-                    { left: '18%', width: '5%' },
-                    { left: '30%', width: '10%' },
-                    { left: '48%', width: '4%' },
-                    { left: '60%', width: '12%' },
-                    { left: '82%', width: '6%' },
-                  ].map((b, i) => (
-                    <div key={i} className="mm-speaker-bar" style={{ left: b.left, width: b.width, background: '#ffb74d' }} />
-                  ))}
-                </div>
-              </div>
-
-              {/* Chelsea Turbin — purple */}
-              <div className="mm-speaker">
-                <div className="mm-speaker-header">
-                  <div className="mm-speaker-dot-wrap">
-                    <div className="mm-speaker-dot" style={{ background: '#b39ddb' }} />
-                  </div>
-                  <span className="mm-speaker-name">Chelsea Turbin</span>
-                  <span className="mm-speaker-role">Product</span>
-                </div>
-                <div className="mm-speaker-track">
-                  {[
-                    { left: '5%', width: '4%' },
-                    { left: '14%', width: '6%' },
-                    { left: '27%', width: '3%' },
-                    { left: '42%', width: '9%' },
-                    { left: '58%', width: '5%' },
-                    { left: '70%', width: '8%' },
-                    { left: '88%', width: '7%' },
-                  ].map((b, i) => (
-                    <div key={i} className="mm-speaker-bar" style={{ left: b.left, width: b.width, background: '#b39ddb' }} />
-                  ))}
-                </div>
-              </div>
+              ))}
             </div>
           </div>
         </div>
       </div>
+  );
+}
+
+export default function MagicMinutes({ win, onDrag, meeting }) {
+  const [closing, setClosing] = useState(false);
+
+  const handleClose = () => {
+    setClosing(true);
+    setTimeout(() => win.close(), 200);
+  };
+
+  return (
+    <div
+      className={`mm-win ${!win.isFocused ? 'mm-win-unfocused' : ''} ${closing ? 'mm-win-closing' : ''}`}
+      style={{ left: win.position.x, top: win.position.y, zIndex: win.zIndex }}
+      onMouseDown={() => win.focus()}
+    >
+      <div className="mm-header" onMouseDown={onDrag}>
+        <div className="mm-lights">
+          <div className="mm-light mm-light-close" onClick={(e) => { e.stopPropagation(); handleClose(); }} />
+          <div className="mm-light mm-light-min" />
+          <div className="mm-light mm-light-max" />
+        </div>
+
+        <div className="mm-header-center">
+          <div className="mm-search">
+            <img src="/icons/mm-search.svg" alt="" width="16" height="16" />
+            <span>Search</span>
+          </div>
+        </div>
+      </div>
+
+      <MagicMinutesBody meeting={meeting} />
     </div>
   );
 }

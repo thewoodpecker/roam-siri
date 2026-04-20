@@ -2471,9 +2471,6 @@
   line-height: 16px;
 }
 
-.sc-toolbar-pill-mm img {
-  filter: brightness(0) saturate(100%) invert(55%) sepia(67%) saturate(783%) hue-rotate(314deg) brightness(97%) contrast(90%);
-}
 
 .sc-toolbar-pill-mic {
   gap: 2px;
