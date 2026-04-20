@@ -10,6 +10,7 @@ import MeetingWindow from './MeetingWindow';
 import TheaterWindow from './TheaterWindow';
 import MagicMinutes from './MagicMinutes';
 import Recordings from './Recordings';
+import Lobby from './Lobby';
 import { ChatProvider } from './ChatContext';
 import { WindowManagerProvider, useWindow } from './WindowManager';
 import StoryViewer from './StoryViewer';
@@ -696,6 +697,7 @@ const INITIAL_WINDOWS = [
   { id: 'magicast', isOpen: false, position: { x: 40, y: 160 }, zIndex: 30 },
   { id: 'magicminutes', isOpen: false, position: { x: 60, y: 180 }, zIndex: 30 },
   { id: 'recordings', isOpen: false, position: { x: 80, y: 160 }, zIndex: 30 },
+  { id: 'lobby', isOpen: false, position: { x: 100, y: 140 }, zIndex: 30 },
 ];
 
 const SHELF_TOTAL = 12;
@@ -1070,6 +1072,7 @@ function ShowcaseMapInner() {
   const magicastWin = useWindow('magicast');
   const magicminutesWin = useWindow('magicminutes');
   const recordingsWin = useWindow('recordings');
+  const lobbyWin = useWindow('lobby');
   const [activeMeetingRoom, setActiveMeetingRoom] = useState(null);
   const [joinedRoomId, setJoinedRoomId] = useState(null);
   const [knockingRoom, setKnockingRoom] = useState(null);
@@ -1595,6 +1598,9 @@ function ShowcaseMapInner() {
               <div className="sc-toolbar-pill" data-tooltip="Recordings" onClick={() => recordingsWin.open()}>
                 <img src="/icons/recordings.svg" width="16" height="16" alt="" />
               </div>
+              <div className="sc-toolbar-pill" data-tooltip="Lobby" onClick={() => lobbyWin.open()}>
+                <img src="/icons/lobby.svg" width="16" height="16" alt="" />
+              </div>
               <div className="sc-toolbar-pill" data-tooltip="On-Air" onClick={() => onairWin.open()}>
                 <img src="/icons/on-air.svg" width="16" height="16" alt="" />
               </div>
@@ -1621,6 +1627,7 @@ function ShowcaseMapInner() {
       {magicastWin.isOpen && <div className="mc-recording-border" />}
       {magicminutesWin.isOpen && <MagicMinutes win={magicminutesWin} onDrag={makeDragHandler(magicminutesWin)} />}
       {recordingsWin.isOpen && <Recordings win={recordingsWin} onDrag={makeDragHandler(recordingsWin)} />}
+      {lobbyWin.isOpen && <Lobby win={lobbyWin} onDrag={makeDragHandler(lobbyWin)} />}
       {/* Product features bar — inside miniRoamOS, pinned to bottom */}
       {/* Handwritten annotation pointing to the product bar */}
       <Hint portal={false} text="Product Tour" blob="peaks" arrow="swoop-right" visible={hintVisible} style={{ ...(introHintStyle || { top: 190, left: 90 }), ...(HIDE_CHROME ? { display: 'none' } : {}) }} />
@@ -1630,7 +1637,7 @@ function ShowcaseMapInner() {
             {i > 0 && <div className="sc-products-dot" />}
             <ProductItem
               name={item.name}
-              onClick={item.name === 'AInbox' ? () => ainboxWin.open() : item.name === 'On-Air' ? () => onairWin.open() : item.name === 'Theater' ? () => theaterWin.open() : item.name === 'Magicast' ? () => magicastWin.open() : item.name === 'Magic Minutes' ? () => magicminutesWin.open() : item.name === 'Virtual Office' ? pulseMapWindow : item.name === 'Drop-In Meetings' ? knockOnHoward : undefined}
+              onClick={item.name === 'AInbox' ? () => ainboxWin.open() : item.name === 'On-Air' ? () => onairWin.open() : item.name === 'Theater' ? () => theaterWin.open() : item.name === 'Magicast' ? () => magicastWin.open() : item.name === 'Magic Minutes' ? () => magicminutesWin.open() : item.name === 'Lobby' ? () => lobbyWin.open() : item.name === 'Virtual Office' ? pulseMapWindow : item.name === 'Drop-In Meetings' ? knockOnHoward : undefined}
               onMouseEnter={() => setHintVisible(false)}
             />
           </React.Fragment>
@@ -1770,30 +1777,46 @@ function ShowcaseMapInner() {
         </div>
       </div>
 
-      {/* Feature section — Magicast */}
+      {/* Feature section — Lobby / Scheduling */}
       <div className="sc-feature-section sc-feature-section-reverse">
         <div className="sc-section-grid">
-          <MagicastFeatureVisual theme={theme} className="sc-feature-visual-left" />
+          <div className="sc-feature-visual sc-feature-visual-left">
+            <div className="sc-feature-wallpaper" style={{ backgroundImage: `url(/wallpaper-${theme}.png)` }}>
+              <Lobby win={{ position: { x: 0, y: 0 }, zIndex: 1, isFocused: true, focus: () => {}, close: () => {}, open: () => {} }} onDrag={() => {}} />
+            </div>
+          </div>
           <div className="sc-feature-text sc-feature-text-right">
-            <h2 className="sc-feature-title">AI SCREEN RECORDER</h2>
-            <p className="sc-feature-desc">Record sales demos, investor updates, product releases, announcements or anything else you need right from your desktop with Roam Magicast. Record your screen and add your video or audio picture-in-picture to create a captivating presentation right in Roam. Easily share via AInbox or a link with someone externally. They'll get your Magicast and its transcription.</p>
-            <a href="#" className="sc-feature-link">Learn about Magicast →</a>
+            <h2 className="sc-feature-title">SCHEDULING</h2>
+            <p className="sc-feature-desc">Send your Lobby link to guests to book time with you on your calendar. Configure different links with custom time and availability settings depending on context. Tailor your Lobby to look like your company. Best of all, you can allow your guests to &ldquo;Drop-In&rdquo; which appears automatically if you&rsquo;re available.</p>
+            <a href="#" className="sc-feature-link">Learn about Lobby →</a>
           </div>
         </div>
       </div>
 
-      {/* Feature section — On-Air */}
+      {/* Feature section — Magicast */}
       <div className="sc-feature-section">
         <div className="sc-section-grid">
           <div className="sc-feature-text">
-            <h2 className="sc-feature-title">ON-AIR</h2>
-            <p className="sc-feature-desc">Now anyone can host Immersive Events for the Creator-Era</p>
-            <a href="#" className="sc-feature-link">Learn about On-Air →</a>
+            <h2 className="sc-feature-title">AI SCREEN RECORDER</h2>
+            <p className="sc-feature-desc">Record sales demos, investor updates, product releases, announcements or anything else you need right from your desktop with Roam Magicast. Record your screen and add your video or audio picture-in-picture to create a captivating presentation right in Roam. Easily share via AInbox or a link with someone externally. They'll get your Magicast and its transcription.</p>
+            <a href="#" className="sc-feature-link">Learn about Magicast →</a>
           </div>
-          <div className="sc-feature-visual">
+          <MagicastFeatureVisual theme={theme} />
+        </div>
+      </div>
+
+      {/* Feature section — On-Air */}
+      <div className="sc-feature-section sc-feature-section-reverse">
+        <div className="sc-section-grid">
+          <div className="sc-feature-visual sc-feature-visual-left">
             <div className="sc-feature-wallpaper" style={{ backgroundImage: `url(/wallpaper-${theme}.png)` }}>
               <OnAir win={{ position: { x: 0, y: 0 }, zIndex: 1, isFocused: true, focus: () => {}, close: () => {}, open: () => {} }} onDrag={() => {}} demo />
             </div>
+          </div>
+          <div className="sc-feature-text sc-feature-text-right">
+            <h2 className="sc-feature-title">ON-AIR</h2>
+            <p className="sc-feature-desc">Now anyone can host Immersive Events for the Creator-Era</p>
+            <a href="#" className="sc-feature-link">Learn about On-Air →</a>
           </div>
         </div>
       </div>

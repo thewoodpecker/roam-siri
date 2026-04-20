@@ -730,11 +730,7 @@
   font-size: 16px;
   line-height: 24px;
   font-weight: 500;
-  background: linear-gradient(90deg, #ffe1b4 2%, #ffbd59 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  color: transparent;
+  color: var(--text-accent);
   text-decoration: none;
   transition: opacity 0.15s ease;
   width: fit-content;
@@ -742,12 +738,6 @@
 
 .sc-feature-link:hover {
   opacity: 0.85;
-}
-
-.sc-viewport[data-theme="light"] .sc-feature-link {
-  background: linear-gradient(90deg, #c8880a 2%, #b87300 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
 }
 
 .sc-feature-visual {
@@ -846,6 +836,17 @@
 .sc-feature-visual .ainbox-window {
   position: relative !important;
   left: auto !important;
+  bottom: auto !important;
+  width: 100% !important;
+  height: 100% !important;
+  animation: none !important;
+  pointer-events: auto;
+}
+
+.sc-feature-visual .lb-win {
+  position: relative !important;
+  left: auto !important;
+  top: auto !important;
   bottom: auto !important;
   width: 100% !important;
   height: 100% !important;
