@@ -805,6 +805,16 @@
   display: block;
 }
 
+.sc-feature-visual .mm-win {
+  position: relative !important;
+  left: auto !important;
+  bottom: auto !important;
+  width: 100% !important;
+  height: 100% !important;
+  animation: none !important;
+  pointer-events: auto;
+}
+
 .sc-feature-visual .ainbox-window {
   position: relative !important;
   left: auto !important;
@@ -2461,6 +2471,10 @@
   line-height: 16px;
 }
 
+.sc-toolbar-pill-mm img {
+  filter: brightness(0) saturate(100%) invert(55%) sepia(67%) saturate(783%) hue-rotate(314deg) brightness(97%) contrast(90%);
+}
+
 .sc-toolbar-pill-mic {
   gap: 2px;
 }
@@ -2957,9 +2971,14 @@
   top: 50%;
   width: 96px;
   height: 96px;
-  border-radius: 50%;
   object-fit: cover;
   transition: left 100ms ease-out, top 100ms ease-out;
+}
+
+.mc-win-preview-avatar-square {
+  border-radius: 17%;
+  corner-shape: superellipse(1.6);
+  overflow: hidden;
 }
 
 .mc-win-row {
@@ -3041,7 +3060,7 @@
   position: fixed;
   inset: 0;
   box-shadow: inset 0 0 0 6px var(--text-warning);
-  z-index: 99999;
+  z-index: 997;
   pointer-events: none;
   animation: mc-recording-border-in 400ms ease-out;
 }
@@ -3055,7 +3074,7 @@
 .mc-bubble {
   position: absolute;
   aspect-ratio: 1;
-  z-index: 99990;
+  z-index: 998;
   background: none;
   cursor: grab;
   animation: mc-bubble-in 400ms cubic-bezier(0.22, 1, 0.36, 1);

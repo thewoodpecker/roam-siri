@@ -910,7 +910,7 @@ function PinnedToolbar({ items }) {
 /* ———————————————————————————————————————
    Meeting timeline
 ——————————————————————————————————————— */
-function MeetingTimeline({ timeline }) {
+function MeetingTimeline({ timeline, label }) {
   if (!timeline) return null;
   // Build the dot/tick ruler: groups of 4 dots separated by ticks
   const ticks = [];
@@ -922,6 +922,7 @@ function MeetingTimeline({ timeline }) {
   }
   return (
     <div className="ainbox-timeline">
+      {label && <span className="ainbox-timeline-hover-label">{label}</span>}
       <div className="ainbox-timeline-ruler">{ticks}</div>
       <div className="ainbox-timeline-track">
         <div className="ainbox-timeline-line" />
@@ -1056,7 +1057,7 @@ const THREAD_REACTIONS = [
   { emoji: '🤪', count: 5, active: true }, { emoji: '😡', count: 12 }, { emoji: '🚀', count: 4 },
 ];
 
-export default function AInbox({ win, onDrag }) {
+export default function AInbox({ win, onDrag, onOpenMagicMinutes }) {
   const [selectedChat, setSelectedChat] = useState('design');
   const [collapsedSections, setCollapsedSections] = useState({});
   const [inputText, setInputText] = useState('');
@@ -1386,10 +1387,7 @@ export default function AInbox({ win, onDrag }) {
           <div className="ainbox-light ainbox-light-maximize" />
         </div>
         <div className="ainbox-search">
-          <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
-            <path d="M7 12C9.76142 12 12 9.76142 12 7C12 4.23858 9.76142 2 7 2C4.23858 2 2 4.23858 2 7C2 9.76142 4.23858 12 7 12Z" stroke="currentColor" strokeWidth="1.5" />
-            <path d="M10.5 10.5L14 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-          </svg>
+          <img src="/icons/mm-search.svg" alt="" width="16" height="16" />
           <span>Search</span>
         </div>
       </div>
@@ -1588,7 +1586,7 @@ export default function AInbox({ win, onDrag }) {
               {/* Pinned toolbar */}
               {convo.pinnedItems && <PinnedToolbar items={convo.pinnedItems} />}
               {/* Meeting timeline */}
-              {convo.timeline && <div className="ainbox-timeline-wrap"><MeetingTimeline timeline={convo.timeline} /></div>}
+              {convo.timeline && <div className="ainbox-timeline-wrap ainbox-timeline-clickable" onClick={onOpenMagicMinutes}><MeetingTimeline timeline={convo.timeline} label="Open Timeline" /></div>}
               {/* Group messages */}
               <div className="ainbox-detail-messages ainbox-group-messages" ref={messagesRef}>
                 {convo.messages.map(msg => (

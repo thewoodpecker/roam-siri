@@ -8,6 +8,7 @@ import MiniChat, { getChatIdForAvatar } from './MiniChat';
 import OnAir from './OnAir';
 import MeetingWindow from './MeetingWindow';
 import TheaterWindow from './TheaterWindow';
+import MagicMinutes from './MagicMinutes';
 import { ChatProvider } from './ChatContext';
 import { WindowManagerProvider, useWindow } from './WindowManager';
 import StoryViewer from './StoryViewer';
@@ -504,10 +505,10 @@ const MAGICAST_SHAPES = [
   { id: 'square', mask: '/magicast/squareMask.svg' },
 ];
 
-function MagicastBubble({ onPositionChange, closing, initialSize = 260, initialPos = { x: 820, y: 340 } }) {
+function MagicastBubble({ onPositionChange, closing, initialSize = 260, initialPos = { x: 820, y: 340 }, shape, onShapeChange }) {
   const [size, setSize] = useState(initialSize);
   const [pos, setPos] = useState(null);
-  const [shape, setShape] = useState('circle');
+  const setShape = onShapeChange;
   const [hovered, setHovered] = useState(false);
   const resizing = useRef(null);
   const dragging = useRef(null);
@@ -610,7 +611,8 @@ function MagicastBubble({ onPositionChange, closing, initialSize = 260, initialP
   );
 }
 
-function MagicastWindow({ win, onDrag, pipPos }) {
+function MagicastWindow({ win, onDrag, pipPos, shape = 'circle' }) {
+  const maskUrl = MAGICAST_SHAPES.find(s => s.id === shape)?.mask || MAGICAST_SHAPES[0].mask;
   const [closing, setClosing] = useState(false);
   const handleClose = () => {
     setClosing(true);
@@ -634,7 +636,7 @@ function MagicastWindow({ win, onDrag, pipPos }) {
         <div className="mc-win-preview">
           <img className="mc-win-preview-bg" src="/magicast/preview.png" alt="" />
           <div className="mc-win-preview-overlay" />
-          <video className="mc-win-preview-avatar" src="/meeting-room/man-01.mp4" autoPlay loop muted playsInline style={pipPos ? { left: `${pipPos.x * 100}%`, top: `${pipPos.y * 100}%` } : undefined} />
+          <video className={`mc-win-preview-avatar ${shape === 'square' ? 'mc-win-preview-avatar-square' : ''}`} src="/meeting-room/man-01.mp4" autoPlay loop muted playsInline style={{ ...(pipPos ? { left: `${pipPos.x * 100}%`, top: `${pipPos.y * 100}%` } : {}), ...(shape !== 'square' ? { WebkitMaskImage: `url(${maskUrl})`, maskImage: `url(${maskUrl})`, WebkitMaskRepeat: 'no-repeat', maskRepeat: 'no-repeat', WebkitMaskPosition: 'center', maskPosition: 'center', WebkitMaskSize: '100%', maskSize: '100%' } : {}) }} />
         </div>
         <div className="mc-win-row">
           <span className="mc-win-row-icon" style={{ WebkitMaskImage: 'url(/magicast/video.svg)', maskImage: 'url(/magicast/video.svg)' }} />
@@ -670,6 +672,18 @@ function MagicastWindow({ win, onDrag, pipPos }) {
   );
 }
 
+function MagicastFeatureVisual({ theme, className }) {
+  const [shape, setShape] = useState('circle');
+  return (
+    <div className={`sc-feature-visual${className ? ' ' + className : ''}`} style={{ position: 'relative' }}>
+      <div className="sc-feature-wallpaper" style={{ backgroundImage: `url(/wallpaper-${theme}.png)` }}>
+        <MagicastWindow win={{ position: { x: 0, y: 0 }, zIndex: 1, isFocused: true, focus: () => {}, close: () => {}, open: () => {} }} onDrag={() => {}} shape={shape} />
+      </div>
+      <MagicastBubble initialSize={240} initialPos={{ x: 530, y: 420 }} shape={shape} onShapeChange={setShape} />
+    </div>
+  );
+}
+
 
 const INITIAL_WINDOWS = [
   { id: 'map', isOpen: true, position: { x: 0, y: 0 }, zIndex: 25 },
@@ -679,6 +693,7 @@ const INITIAL_WINDOWS = [
   { id: 'theater', isOpen: false, position: { x: 70, y: 220 }, zIndex: 30 },
   { id: 'shelf', isOpen: false, position: { x: 120, y: 280 }, zIndex: 30 },
   { id: 'magicast', isOpen: false, position: { x: 40, y: 160 }, zIndex: 30 },
+  { id: 'magicminutes', isOpen: false, position: { x: 60, y: 180 }, zIndex: 30 },
 ];
 
 const SHELF_TOTAL = 12;
@@ -1051,6 +1066,7 @@ function ShowcaseMapInner() {
   const theaterWin = useWindow('theater');
   const shelfWin = useWindow('shelf');
   const magicastWin = useWindow('magicast');
+  const magicminutesWin = useWindow('magicminutes');
   const [activeMeetingRoom, setActiveMeetingRoom] = useState(null);
   const [joinedRoomId, setJoinedRoomId] = useState(null);
   const [knockingRoom, setKnockingRoom] = useState(null);
@@ -1073,6 +1089,7 @@ function ShowcaseMapInner() {
   }, [activeFloor, knockingRoom, joinedRoomId, meetingWin, theaterWin]);
   const [shelfOpen, setShelfOpen] = useState(false);
   const [pipPos, setPipPos] = useState(null);
+  const [magicastShape, setMagicastShape] = useState('circle');
   const [shelfClosing, setShelfClosing] = useState(false);
   const [mapPulse, setMapPulse] = useState(false);
   const [hintVisible, setHintVisible] = useState(true);
@@ -1304,7 +1321,7 @@ function ShowcaseMapInner() {
       {/* Website navbar */}
       <div className="sc-navbar-wrap" data-logo-visible={navLogoVisible} style={HIDE_CHROME ? { display: 'none' } : undefined}>
         <div className="sc-platform-badge" aria-hidden={navLogoVisible}>
-          <span className="sc-platform-badge-text">VIRTUAL OFFICE PLATFORM</span>
+          <span className="sc-platform-badge-text">INTELLIGENT VIRTUAL OFFICE</span>
         </div>
         <Navbar />
       </div>
@@ -1314,7 +1331,7 @@ function ShowcaseMapInner() {
         <div className="sc-wallpaper sc-wallpaper-light" style={{ opacity: theme === 'light' && wallpaperLoaded ? 1 : 0 }} />
       <div className={`sc-window ${!mapWin.isFocused ? 'sc-window-unfocused' : ''} ${mapMounted ? 'sc-window-mounted' : ''} ${mapPulse ? 'sc-window-pulse' : ''}`} ref={windowRef} style={{ transform: `translate(${mapWin.position.x}px, ${mapWin.position.y}px)`, zIndex: mapWin.zIndex }} onMouseDown={() => mapWin.focus()}>
         {/* Mac window title bar */}
-        <div className="sc-titlebar" onMouseDown={makeDragHandler(mapWin)}>
+        <div className="sc-titlebar" onMouseDown={(e) => { setHintVisible(false); makeDragHandler(mapWin)(e); }}>
           <div className="sc-traffic-lights">
             <div className="sc-light sc-light-close" />
             <div className="sc-light sc-light-minimize" />
@@ -1542,7 +1559,7 @@ function ShowcaseMapInner() {
             <div className="sc-toolbar-pill" data-tooltip="Screenshare" onClick={() => setShareOpen(true)}>
               <img src="/icons/screenshare.svg" width="16" height="16" alt="" />
             </div>
-            <div className="sc-toolbar-pill" data-tooltip="Magic Minutes">
+            <div className="sc-toolbar-pill sc-toolbar-pill-mm" data-tooltip="Magic Minutes">
               <img src="/icons/magic-quill.svg" width="16" height="16" alt="" />
             </div>
             {joinedRoomId && (
@@ -1591,14 +1608,15 @@ function ShowcaseMapInner() {
       {miniChats.map(mc => (
         <MiniChat key={mc.chatId} {...mc} onClose={() => closeMiniChat(mc.chatId)} />
       ))}
-      {ainboxWin.isOpen && <AInbox win={ainboxWin} onDrag={makeDragHandler(ainboxWin)} />}
+      {ainboxWin.isOpen && <AInbox win={ainboxWin} onDrag={makeDragHandler(ainboxWin)} onOpenMagicMinutes={() => magicminutesWin.open()} />}
       {onairWin.isOpen && <OnAir win={onairWin} onDrag={makeDragHandler(onairWin)} demo />}
       {meetingWin.isOpen && activeMeetingRoom && <MeetingWindow win={meetingWin} onDrag={makeDragHandler(meetingWin)} roomName={activeMeetingRoom.name} people={activeMeetingRoom.people} onOpenChat={() => ainboxWin.open()} onOpenOnAir={() => onairWin.open()} />}
       {theaterWin.isOpen && <TheaterWindow win={theaterWin} onDrag={makeDragHandler(theaterWin)} speakers={theaterSpeakers} audience={SHOWCASE_PEOPLE} me={JOE} onOpenChat={() => ainboxWin.open()} />}
       {shelfWin.isOpen && <ShelfWindow win={shelfWin} onDrag={makeDragHandler(shelfWin)} photoIdx={shelfPhotoIdx} direction={shelfDir} onPrev={prevShelfPhoto} onNext={nextShelfPhoto} />}
-      {magicastWin.isOpen && <MagicastWindow win={magicastWin} onDrag={makeDragHandler(magicastWin)} pipPos={pipPos} />}
-      {magicastWin.isOpen && <MagicastBubble onPositionChange={setPipPos} />}
+      {magicastWin.isOpen && <MagicastWindow win={magicastWin} onDrag={makeDragHandler(magicastWin)} pipPos={pipPos} shape={magicastShape} />}
+      {magicastWin.isOpen && <MagicastBubble onPositionChange={setPipPos} shape={magicastShape} onShapeChange={setMagicastShape} />}
       {magicastWin.isOpen && <div className="mc-recording-border" />}
+      {magicminutesWin.isOpen && <MagicMinutes win={magicminutesWin} onDrag={makeDragHandler(magicminutesWin)} />}
       {/* Product features bar — inside miniRoamOS, pinned to bottom */}
       {/* Handwritten annotation pointing to the product bar */}
       <Hint portal={false} text="Product Tour" blob="peaks" arrow="swoop-right" visible={hintVisible} style={{ ...(introHintStyle || { top: 150, left: 90 }), ...(HIDE_CHROME ? { display: 'none' } : {}) }} />
@@ -1608,7 +1626,7 @@ function ShowcaseMapInner() {
             {i > 0 && <div className="sc-products-dot" />}
             <ProductItem
               name={item.name}
-              onClick={item.name === 'AInbox' ? () => ainboxWin.open() : item.name === 'On-Air' ? () => onairWin.open() : item.name === 'Theater' ? () => theaterWin.open() : item.name === 'Magicast' ? () => magicastWin.open() : item.name === 'Virtual Office' ? pulseMapWindow : item.name === 'Drop-In Meetings' ? knockOnHoward : undefined}
+              onClick={item.name === 'AInbox' ? () => ainboxWin.open() : item.name === 'On-Air' ? () => onairWin.open() : item.name === 'Theater' ? () => theaterWin.open() : item.name === 'Magicast' ? () => magicastWin.open() : item.name === 'Magic Minutes' ? () => magicminutesWin.open() : item.name === 'Virtual Office' ? pulseMapWindow : item.name === 'Drop-In Meetings' ? knockOnHoward : undefined}
               onMouseEnter={() => setHintVisible(false)}
             />
           </React.Fragment>
@@ -1664,56 +1682,10 @@ function ShowcaseMapInner() {
         </div>
       </div>
 
-      {/* Feature section — AInbox */}
-      <div className="sc-feature-section">
-        <div className="sc-section-grid">
-        <div className="sc-feature-text">
-          <h2 className="sc-feature-title">GROUP CHAT</h2>
-          <p className="sc-feature-desc">Send Direct Messages, Group Chats, or Confidential Chats with AInbox. Set up your own custom groups. Tailor for your own bespoke workflow with custom folders, pinned chats, bookmarks, scheduled messages, and drag-and-drop reordering. Search your entire history. Give out guest badges to chat with people outside your organization, free!</p>
-          <div className="sc-feature-buttons">
-            <button className="sc-feature-btn">Free Trial</button>
-            <button className="sc-feature-btn">Book Demo</button>
-          </div>
-        </div>
-        <div className="sc-feature-visual">
-          <div className="sc-feature-wallpaper" style={{ backgroundImage: `url(/wallpaper-${theme}.png)` }}>
-            <AInbox win={{ position: { x: 0, y: 0 }, zIndex: 1, isFocused: true, focus: () => {}, close: () => {}, open: () => {} }} onDrag={() => {}} />
-          </div>
-        </div>
-        </div>
-      </div>
-
-      {/* Feature section — On-Air */}
+      {/* Feature section — Meeting Room */}
       <div className="sc-feature-section sc-feature-section-reverse">
         <div className="sc-section-grid">
           <div className="sc-feature-visual sc-feature-visual-left">
-            <div className="sc-feature-wallpaper" style={{ backgroundImage: `url(/wallpaper-${theme}.png)` }}>
-              <OnAir win={{ position: { x: 0, y: 0 }, zIndex: 1, isFocused: true, focus: () => {}, close: () => {}, open: () => {} }} onDrag={() => {}} demo />
-            </div>
-          </div>
-          <div className="sc-feature-text sc-feature-text-right">
-            <h2 className="sc-feature-title">ON-AIR</h2>
-            <p className="sc-feature-desc">Now anyone can host Immersive Events for the Creator-Era</p>
-            <div className="sc-feature-buttons">
-              <button className="sc-feature-btn">Free Trial</button>
-              <button className="sc-feature-btn">Book Demo</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Feature section — Meeting Room */}
-      <div className="sc-feature-section">
-        <div className="sc-section-grid">
-          <div className="sc-feature-text">
-            <h2 className="sc-feature-title">VIDEO CONFERENCING</h2>
-            <p className="sc-feature-desc">Jump into a Meeting Room for video conferencing when you need to collaborate. When you're done, you're done! Includes high resolution screensharing and whiteboard as well. No more back-to-back video meetings filling out all day. Just meet when you need to, and when you're done, back to work.</p>
-            <div className="sc-feature-buttons">
-              <button className="sc-feature-btn">Free Trial</button>
-              <button className="sc-feature-btn">Book Demo</button>
-            </div>
-          </div>
-          <div className="sc-feature-visual">
             <div className="sc-feature-wallpaper" style={{ backgroundImage: `url(/wallpaper-${theme}.png)` }}>
               <MeetingWindow
                 win={{ position: { x: 0, y: 0 }, zIndex: 1, isFocused: true, focus: () => {}, close: () => {}, open: () => {} }}
@@ -1728,13 +1700,29 @@ function ShowcaseMapInner() {
               />
             </div>
           </div>
+          <div className="sc-feature-text sc-feature-text-right">
+            <h2 className="sc-feature-title">VIDEO CONFERENCING</h2>
+            <p className="sc-feature-desc">Jump into a Meeting Room for video conferencing when you need to collaborate. When you're done, you're done! Includes high resolution screensharing and whiteboard as well. No more back-to-back video meetings filling out all day. Just meet when you need to, and when you're done, back to work.</p>
+            <div className="sc-feature-buttons">
+              <button className="sc-feature-btn">Free Trial</button>
+              <button className="sc-feature-btn">Book Demo</button>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Feature section — Theater */}
-      <div className="sc-feature-section sc-feature-section-reverse">
+      <div className="sc-feature-section">
         <div className="sc-section-grid">
-          <div className="sc-feature-visual sc-feature-visual-left">
+          <div className="sc-feature-text">
+            <h2 className="sc-feature-title">THEATER</h2>
+            <p className="sc-feature-desc">Take your presentations to the next level with a unique new Theater format for all-hands. Your audience sits in rows where they can whisper to each other. There's a backstage, Q&amp;A microphone, and stadium mode for 100+ people. All the world's a stage!</p>
+            <div className="sc-feature-buttons">
+              <button className="sc-feature-btn">Free Trial</button>
+              <button className="sc-feature-btn">Book Demo</button>
+            </div>
+          </div>
+          <div className="sc-feature-visual">
             <div className="sc-feature-wallpaper" style={{ backgroundImage: `url(/wallpaper-${theme}.png)` }}>
               <TheaterWindow
                 win={{ position: { x: 0, y: 0 }, zIndex: 1, isFocused: true, focus: () => {}, close: () => {}, open: () => {} }}
@@ -1746,9 +1734,20 @@ function ShowcaseMapInner() {
               />
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Feature section — AInbox */}
+      <div className="sc-feature-section sc-feature-section-reverse">
+        <div className="sc-section-grid">
+          <div className="sc-feature-visual sc-feature-visual-left">
+            <div className="sc-feature-wallpaper" style={{ backgroundImage: `url(/wallpaper-${theme}.png)` }}>
+              <AInbox win={{ position: { x: 0, y: 0 }, zIndex: 1, isFocused: true, focus: () => {}, close: () => {}, open: () => {} }} onDrag={() => {}} />
+            </div>
+          </div>
           <div className="sc-feature-text sc-feature-text-right">
-            <h2 className="sc-feature-title">THEATER</h2>
-            <p className="sc-feature-desc">Take your presentations to the next level with a unique new Theater format for all-hands. Your audience sits in rows where they can whisper to each other. There's a backstage, Q&amp;A microphone, and stadium mode for 100+ people. All the world's a stage!</p>
+            <h2 className="sc-feature-title">GROUP CHAT</h2>
+            <p className="sc-feature-desc">Send Direct Messages, Group Chats, or Confidential Chats with AInbox. Set up your own custom groups. Tailor for your own bespoke workflow with custom folders, pinned chats, bookmarks, scheduled messages, and drag-and-drop reordering. Search your entire history. Give out guest badges to chat with people outside your organization, free!</p>
             <div className="sc-feature-buttons">
               <button className="sc-feature-btn">Free Trial</button>
               <button className="sc-feature-btn">Book Demo</button>
@@ -1757,10 +1756,33 @@ function ShowcaseMapInner() {
         </div>
       </div>
 
-      {/* Feature section — Magicast */}
+      {/* Feature section — Magic Minutes */}
       <div className="sc-feature-section">
         <div className="sc-section-grid">
           <div className="sc-feature-text">
+            <h2 className="sc-feature-title">AI-POWERED MEETING SUMMARIES</h2>
+            <p className="sc-feature-desc">When you turn on Magic Minutes in a meeting, all participants will get a transcription and AI-summary of the meeting in a group chat that everyone's in. Best of all, you can prompt the minutes right in the group chat - asking questions and getting answers about certain parts of the meeting. If you're late to a meeting, you'll get an automated AI-catch-me-up. And, you can get AI summaries of any chat thread or PDF simply by prompting @MagicMinutes!</p>
+            <div className="sc-feature-buttons">
+              <button className="sc-feature-btn">Free Trial</button>
+              <button className="sc-feature-btn">Book Demo</button>
+            </div>
+          </div>
+          <div className="sc-feature-visual">
+            <div className="sc-feature-wallpaper" style={{ backgroundImage: `url(/wallpaper-${theme}.png)` }}>
+              <MagicMinutes
+                win={{ position: { x: 0, y: 0 }, zIndex: 1, isFocused: true, focus: () => {}, close: () => {}, open: () => {} }}
+                onDrag={() => {}}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Feature section — Magicast */}
+      <div className="sc-feature-section sc-feature-section-reverse">
+        <div className="sc-section-grid">
+          <MagicastFeatureVisual theme={theme} className="sc-feature-visual-left" />
+          <div className="sc-feature-text sc-feature-text-right">
             <h2 className="sc-feature-title">AI SCREEN RECORDER</h2>
             <p className="sc-feature-desc">Record sales demos, investor updates, product releases, announcements or anything else you need right from your desktop with Roam Magicast. Record your screen and add your video or audio picture-in-picture to create a captivating presentation right in Roam. Easily share via AInbox or a link with someone externally. They'll get your Magicast and its transcription.</p>
             <div className="sc-feature-buttons">
@@ -1768,11 +1790,24 @@ function ShowcaseMapInner() {
               <button className="sc-feature-btn">Book Demo</button>
             </div>
           </div>
-          <div className="sc-feature-visual" style={{ position: 'relative' }}>
-            <div className="sc-feature-wallpaper" style={{ backgroundImage: `url(/wallpaper-${theme}.png)` }}>
-              <MagicastWindow win={{ position: { x: 0, y: 0 }, zIndex: 1, isFocused: true, focus: () => {}, close: () => {}, open: () => {} }} onDrag={() => {}} />
+        </div>
+      </div>
+
+      {/* Feature section — On-Air */}
+      <div className="sc-feature-section">
+        <div className="sc-section-grid">
+          <div className="sc-feature-text">
+            <h2 className="sc-feature-title">ON-AIR</h2>
+            <p className="sc-feature-desc">Now anyone can host Immersive Events for the Creator-Era</p>
+            <div className="sc-feature-buttons">
+              <button className="sc-feature-btn">Free Trial</button>
+              <button className="sc-feature-btn">Book Demo</button>
             </div>
-            <MagicastBubble initialSize={240} initialPos={{ x: 530, y: 420 }} />
+          </div>
+          <div className="sc-feature-visual">
+            <div className="sc-feature-wallpaper" style={{ backgroundImage: `url(/wallpaper-${theme}.png)` }}>
+              <OnAir win={{ position: { x: 0, y: 0 }, zIndex: 1, isFocused: true, focus: () => {}, close: () => {}, open: () => {} }} onDrag={() => {}} demo />
+            </div>
           </div>
         </div>
       </div>
