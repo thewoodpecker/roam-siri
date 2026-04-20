@@ -1707,10 +1707,7 @@ function ShowcaseMapInner() {
           <div className="sc-feature-text sc-feature-text-right">
             <h2 className="sc-feature-title">VIDEO CONFERENCING</h2>
             <p className="sc-feature-desc">Jump into a Meeting Room for video conferencing when you need to collaborate. When you're done, you're done! Includes high resolution screensharing and whiteboard as well. No more back-to-back video meetings filling out all day. Just meet when you need to, and when you're done, back to work.</p>
-            <div className="sc-feature-buttons">
-              <button className="sc-feature-btn">Free Trial</button>
-              <button className="sc-feature-btn">Book Demo</button>
-            </div>
+            <a href="#" className="sc-feature-link">Learn about video conferencing →</a>
           </div>
         </div>
       </div>
@@ -1721,10 +1718,7 @@ function ShowcaseMapInner() {
           <div className="sc-feature-text">
             <h2 className="sc-feature-title">THEATER</h2>
             <p className="sc-feature-desc">Take your presentations to the next level with a unique new Theater format for all-hands. Your audience sits in rows where they can whisper to each other. There's a backstage, Q&amp;A microphone, and stadium mode for 100+ people. All the world's a stage!</p>
-            <div className="sc-feature-buttons">
-              <button className="sc-feature-btn">Free Trial</button>
-              <button className="sc-feature-btn">Book Demo</button>
-            </div>
+            <a href="#" className="sc-feature-link">Learn about Theater →</a>
           </div>
           <div className="sc-feature-visual">
             <div className="sc-feature-wallpaper" style={{ backgroundImage: `url(/wallpaper-${theme}.png)` }}>
@@ -1752,10 +1746,7 @@ function ShowcaseMapInner() {
           <div className="sc-feature-text sc-feature-text-right">
             <h2 className="sc-feature-title">GROUP CHAT</h2>
             <p className="sc-feature-desc">Send Direct Messages, Group Chats, or Confidential Chats with AInbox. Set up your own custom groups. Tailor for your own bespoke workflow with custom folders, pinned chats, bookmarks, scheduled messages, and drag-and-drop reordering. Search your entire history. Give out guest badges to chat with people outside your organization, free!</p>
-            <div className="sc-feature-buttons">
-              <button className="sc-feature-btn">Free Trial</button>
-              <button className="sc-feature-btn">Book Demo</button>
-            </div>
+            <a href="#" className="sc-feature-link">Learn about AInbox →</a>
           </div>
         </div>
       </div>
@@ -1766,10 +1757,7 @@ function ShowcaseMapInner() {
           <div className="sc-feature-text">
             <h2 className="sc-feature-title">AI-POWERED MEETING SUMMARIES</h2>
             <p className="sc-feature-desc">When you turn on Magic Minutes in a meeting, all participants will get a transcription and AI-summary of the meeting in a group chat that everyone's in. Best of all, you can prompt the minutes right in the group chat - asking questions and getting answers about certain parts of the meeting. If you're late to a meeting, you'll get an automated AI-catch-me-up. And, you can get AI summaries of any chat thread or PDF simply by prompting @MagicMinutes!</p>
-            <div className="sc-feature-buttons">
-              <button className="sc-feature-btn">Free Trial</button>
-              <button className="sc-feature-btn">Book Demo</button>
-            </div>
+            <a href="#" className="sc-feature-link">Learn about Magic Minutes →</a>
           </div>
           <div className="sc-feature-visual">
             <div className="sc-feature-wallpaper" style={{ backgroundImage: `url(/wallpaper-${theme}.png)` }}>
@@ -1789,10 +1777,7 @@ function ShowcaseMapInner() {
           <div className="sc-feature-text sc-feature-text-right">
             <h2 className="sc-feature-title">AI SCREEN RECORDER</h2>
             <p className="sc-feature-desc">Record sales demos, investor updates, product releases, announcements or anything else you need right from your desktop with Roam Magicast. Record your screen and add your video or audio picture-in-picture to create a captivating presentation right in Roam. Easily share via AInbox or a link with someone externally. They'll get your Magicast and its transcription.</p>
-            <div className="sc-feature-buttons">
-              <button className="sc-feature-btn">Free Trial</button>
-              <button className="sc-feature-btn">Book Demo</button>
-            </div>
+            <a href="#" className="sc-feature-link">Learn about Magicast →</a>
           </div>
         </div>
       </div>
@@ -1803,10 +1788,7 @@ function ShowcaseMapInner() {
           <div className="sc-feature-text">
             <h2 className="sc-feature-title">ON-AIR</h2>
             <p className="sc-feature-desc">Now anyone can host Immersive Events for the Creator-Era</p>
-            <div className="sc-feature-buttons">
-              <button className="sc-feature-btn">Free Trial</button>
-              <button className="sc-feature-btn">Book Demo</button>
-            </div>
+            <a href="#" className="sc-feature-link">Learn about On-Air →</a>
           </div>
           <div className="sc-feature-visual">
             <div className="sc-feature-wallpaper" style={{ backgroundImage: `url(/wallpaper-${theme}.png)` }}>

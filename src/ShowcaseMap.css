@@ -722,6 +722,34 @@
   background: rgba(255, 255, 255, 0.1);
 }
 
+.sc-feature-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 500;
+  background: linear-gradient(90deg, #ffe1b4 2%, #ffbd59 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  text-decoration: none;
+  transition: opacity 0.15s ease;
+  width: fit-content;
+}
+
+.sc-feature-link:hover {
+  opacity: 0.85;
+}
+
+.sc-viewport[data-theme="light"] .sc-feature-link {
+  background: linear-gradient(90deg, #c8880a 2%, #b87300 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
 .sc-feature-visual {
   grid-column: 5 / span 8;
   position: relative;
