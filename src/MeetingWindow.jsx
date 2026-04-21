@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import ShareDialog from './ShareDialog';
 import './MeetingWindow.css';
 
@@ -43,6 +43,17 @@ function RoamojiGhost({ emoji, avatar, id, onDone, startX }) {
   );
 }
 
+const STOCK_VIDEOS = [
+  '/videos/Female/ashley_brooks.mp4',
+  '/videos/Female/emily_carter.mp4',
+  '/videos/Female/grace_thompson.mp4',
+  '/videos/Female/hannah_bennett.mp4',
+  '/videos/Female/jessica_hall.mp4',
+  '/videos/Female/olivia_sanders.mp4',
+  '/videos/Male/daniel_russell.mp4',
+  '/videos/Male/ethan_bishop.mp4',
+];
+
 const VIEW_ICONS = {
   dynamic: <img src="/icons/sparkle-double.svg" alt="" className="meeting-win-view-svg" />,
   gallery: <img src="/icons/gallery.svg" alt="" className="meeting-win-view-svg" />,
@@ -55,7 +66,8 @@ const VIEW_MODES = [
   { id: 'speaker', label: 'Active Speaker' },
 ];
 
-export default function MeetingWindow({ win, onDrag, roomName, people, onOpenChat, onOpenOnAir }) {
+export default function MeetingWindow({ win, onDrag, roomName, people: allPeople, onOpenChat, onOpenOnAir }) {
+  const people = useMemo(() => (allPeople || []).filter(p => p?.video), [allPeople]);
   const [closing, setClosing] = useState(false);
   const [activeSpeaker, setActiveSpeaker] = useState(0);
   const [viewMode, setViewMode] = useState('gallery');
@@ -134,11 +146,13 @@ export default function MeetingWindow({ win, onDrag, roomName, people, onOpenCha
 
   // Auto-reactions from other participants — sometimes burst multiple
   useEffect(() => {
+    if (!people.length) return;
     const timers = [];
     const scheduleReaction = () => {
       const delay = 1000 + Math.random() * 3000;
       const t = setTimeout(() => {
         const person = people[Math.floor(Math.random() * people.length)];
+        if (!person) return;
         const emoji = ROAMOJIS[Math.floor(Math.random() * ROAMOJIS.length)];
         const burstCount = Math.random() < 0.4 ? 1 : Math.random() < 0.6 ? 2 + Math.floor(Math.random() * 3) : 4 + Math.floor(Math.random() * 4);
         for (let b = 0; b < burstCount; b++) {
@@ -175,22 +189,10 @@ export default function MeetingWindow({ win, onDrag, roomName, people, onOpenCha
   }, [viewMenuOpen]);
 
   // Stock videos — fill every tile; rotate per-room so each meeting room gets a different order
-  const STOCK_VIDEOS = [
-    '/videos/call-library.mp4',
-    '/videos/call-smile.mp4',
-    '/videos/call-cafe.mp4',
-    '/videos/call-earbuds.mp4',
-    '/videos/call-selfie.mp4',
-    '/videos/call-window.mp4',
-    '/videos/call-meditation.mp4',
-    '/videos/call-bedroom.mp4',
-  ];
-  const roomHash = (roomName || '').split('').reduce((a, c) => a + c.charCodeAt(0), 0);
-  const videoMap = {};
-  people.forEach((_, i) => {
-    videoMap[i] = STOCK_VIDEOS[(roomHash + i) % STOCK_VIDEOS.length];
-  });
-  const videoOff = new Set();
+  const videoMap = useMemo(() => {
+    const roomHash = (roomName || '').split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+    return people.map((p) => p?.video || null);
+  }, [roomName, people.length]);
 
   // Rotate active speaker with variable timing
   useEffect(() => {
@@ -207,7 +209,7 @@ export default function MeetingWindow({ win, onDrag, roomName, people, onOpenCha
 
   // Grid layout: 1 person = 1x1, 2 = 2x1, 3-4 = 2x2, 5-6 = 3x2, 7+ = 3x3
   const cols = people.length <= 1 ? 1 : people.length <= 4 ? 2 : 3;
-  const rows = people.length <= 2 ? 1 : people.length <= 6 ? 2 : 3;
+  const rows = Math.max(1, Math.ceil(people.length / cols));
   // Double the grid tracks so an underfilled last row can be centered (half-column precision)
   const virtualCols = cols * 2;
   const lastRowStart = (rows - 1) * cols;
@@ -255,17 +257,13 @@ export default function MeetingWindow({ win, onDrag, roomName, people, onOpenCha
         <div className="meeting-win-grid" style={{ gridTemplateColumns: `repeat(${virtualCols}, 1fr)`, gridTemplateRows: `repeat(${rows}, 1fr)` }}>
           {people.map((person, i) => {
             const isLastRow = i >= lastRowStart;
-            const tileStyle = { gridColumn: 'span 2' };
-            if (centerLastRow && isLastRow && i === lastRowStart) {
-              tileStyle.gridColumnStart = 1 + (cols - lastRowCount);
+            const tileStyle = { gridColumnEnd: 'span 2' };
+            if (centerLastRow && isLastRow) {
+              tileStyle.gridColumnStart = 1 + (cols - lastRowCount) + (i - lastRowStart) * 2;
             }
             return (
-            <div key={person.name + i} style={tileStyle} className={`meeting-win-tile ${i === activeSpeaker ? 'meeting-win-tile-active' : ''} ${videoOff.has(i) ? 'meeting-win-tile-off' : ''}`}>
-              {videoOff.has(i) ? (
-                <div className="meeting-win-avatar-wrap">
-                  <img src={person.avatar} alt="" className="meeting-win-avatar" />
-                </div>
-              ) : (
+            <div key={person.name + i} style={tileStyle} className={`meeting-win-tile ${i === activeSpeaker ? 'meeting-win-tile-active' : ''} ${!videoMap[i] ? 'meeting-win-tile-off' : ''}`}>
+              {videoMap[i] ? (
                 <video
                   className="meeting-win-video"
                   src={videoMap[i]}
@@ -274,6 +272,10 @@ export default function MeetingWindow({ win, onDrag, roomName, people, onOpenCha
                   muted
                   playsInline
                 />
+              ) : (
+                <div className="meeting-win-avatar-wrap">
+                  <img className="meeting-win-avatar" src={person.avatar} alt="" />
+                </div>
               )}
               <div className="meeting-win-name">
                 <span>{person.fullName || person.name}</span>

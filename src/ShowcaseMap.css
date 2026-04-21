@@ -583,6 +583,10 @@
   position: relative;
 }
 
+.sc-products-item-active {
+  color: var(--text-primary);
+}
+
 .sc-products-item:nth-child(1) { animation-delay: 0.8s; }
 .sc-products-item:nth-child(3) { animation-delay: 0.9s; }
 .sc-products-item:nth-child(5) { animation-delay: 1.0s; }
@@ -659,6 +663,8 @@
 .sc-feature-section {
   width: 100%;
   flex-shrink: 0;
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 720px;
 }
 
 .sc-feature-section .sc-section-grid {
@@ -1288,6 +1294,168 @@
 
 .sc-viewport[data-theme="light"] .sc-theme-capsule-icon.active {
   color: var(--solid-white);
+}
+
+/* v1/v2 layout toggle — sits below the theme capsule */
+.sc-layout-capsule {
+  width: 32px;
+  height: 60px;
+  border-radius: 16px;
+  background: var(--background-primary);
+  border: 0.5px solid var(--border);
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0;
+}
+
+.sc-layout-capsule-label {
+  color: var(--text-disabled);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 20px;
+  width: 20px;
+  text-align: center;
+  z-index: 1;
+  transition: color 0.3s ease;
+  letter-spacing: 0.2px;
+}
+
+.sc-layout-capsule-label.active {
+  color: var(--text-primary);
+}
+
+.sc-layout-capsule-knob {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--background-primary);
+  border: 0.5px solid var(--border);
+  top: 4px;
+  left: 4px;
+  transition: top 0.3s ease;
+}
+
+.sc-layout-capsule-knob.bottom {
+  top: 32px;
+}
+
+.sc-viewport[data-theme="light"] .sc-layout-capsule-label.active {
+  color: var(--solid-white);
+}
+
+/* ---------- Layout v2: hero above a peeking map window ---------- */
+.sc-viewport[data-layout="v2"] .miniRoamOS {
+  min-height: auto;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  padding-top: 152px;
+  padding-bottom: 48px;
+  gap: 0;
+}
+
+.sc-viewport[data-layout="v2"] .miniRoamOS .sc-window {
+  margin-top: 48px;
+}
+
+.sc-v2-hero {
+  width: 100%;
+  max-width: 720px;
+  min-height: calc(100vh - 152px - 320px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  text-align: center;
+  position: relative;
+  z-index: 2;
+  padding: 0 var(--grid-margin);
+  box-sizing: border-box;
+}
+
+.sc-v2-hero-icon {
+  width: 84px;
+  height: 84px;
+  border-radius: 20px;
+  object-fit: contain;
+  filter: drop-shadow(0 24px 48px rgba(0, 0, 0, 0.25));
+  margin-bottom: 8px;
+}
+
+.sc-v2-hero-title {
+  font-family: 'Possibility', serif;
+  font-size: clamp(28px, 3.5vw, 48px);
+  font-weight: 700;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: -2px;
+  line-height: 1;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.sc-v2-hero-subtitle {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  max-width: 480px;
+  line-height: 1.5;
+  margin: 0;
+  letter-spacing: -0.15px;
+}
+
+.sc-v2-hero-buttons {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.sc-v2-hero-marquee {
+  width: calc(100% - 2 * var(--grid-margin));
+  max-width: calc(var(--grid-max-width) - 2 * var(--grid-margin));
+  align-self: center;
+  margin-top: 32px;
+  z-index: 2;
+}
+
+.sc-viewport[data-layout="v2"] .miniRoamOS .sc-window {
+  z-index: 2;
+}
+
+/* Push floating windows down into the map area in v2 (still draggable vertically) */
+.sc-viewport[data-layout="v2"] .miniRoamOS .ainbox-window,
+.sc-viewport[data-layout="v2"] .miniRoamOS .onair-window,
+.sc-viewport[data-layout="v2"] .miniRoamOS .meeting-win,
+.sc-viewport[data-layout="v2"] .miniRoamOS .theater-win,
+.sc-viewport[data-layout="v2"] .miniRoamOS .mc-win,
+.sc-viewport[data-layout="v2"] .miniRoamOS .mc-window,
+.sc-viewport[data-layout="v2"] .miniRoamOS .mc-bubble,
+.sc-viewport[data-layout="v2"] .miniRoamOS .shelf-win,
+.sc-viewport[data-layout="v2"] .miniRoamOS .mm-win,
+.sc-viewport[data-layout="v2"] .miniRoamOS .rec-win,
+.sc-viewport[data-layout="v2"] .miniRoamOS .lb-win {
+  translate: 0 calc(100vh - 400px);
+}
+
+.sc-viewport[data-layout="v2"] .sc-products-bar {
+  position: relative;
+  top: auto;
+  bottom: auto;
+  left: auto;
+  right: auto;
+  transform: none;
+  margin-top: 56px;
+}
+
+.sc-viewport[data-layout="v2"] .sc-platform-badge {
+  display: none;
 }
 
 
@@ -2108,6 +2276,14 @@
   height: auto !important;
   aspect-ratio: 1 !important;
   transition: transform 400ms ease-in-out !important;
+}
+
+/* Let avatars fill available width in room cards — more per row on wider cards */
+.sc-room-card .meeting-room-people {
+  display: flex;
+  flex-wrap: wrap;
+  grid-template-columns: none;
+  width: 100%;
 }
 
 .sc-viewport .sc-room-card {

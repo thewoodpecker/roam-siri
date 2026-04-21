@@ -50,6 +50,10 @@ export default function OnAir({ win, onDrag, demo }) {
     setTimeout(() => win.close(), 200);
   };
 
+  useEffect(() => {
+    if (win.closeRequestId) handleClose();
+  }, [win.closeRequestId]);
+
   const [selectedColor, setSelectedColor] = useState(0);
   // Demo mode — cycle through events with typewriter effect
   const [demoActive, setDemoActive] = useState(false);

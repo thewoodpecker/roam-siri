@@ -33,7 +33,7 @@ function wmReducer(state, action) {
         topZIndex: state.topZIndex + 1,
         windows: {
           ...state.windows,
-          [action.id]: { ...win, isOpen: true, zIndex: state.topZIndex + 1 },
+          [action.id]: { ...win, isOpen: true, closeRequestId: 0, zIndex: state.topZIndex + 1 },
         },
       };
 
@@ -42,7 +42,17 @@ function wmReducer(state, action) {
         ...state,
         windows: {
           ...state.windows,
-          [action.id]: { ...win, isOpen: false },
+          [action.id]: { ...win, isOpen: false, closeRequestId: 0 },
+        },
+      };
+
+    case 'REQUEST_CLOSE':
+      if (!win || !win.isOpen) return state;
+      return {
+        ...state,
+        windows: {
+          ...state.windows,
+          [action.id]: { ...win, closeRequestId: (win.closeRequestId || 0) + 1 },
         },
       };
 
@@ -89,13 +99,14 @@ export function WindowManagerProvider({ children, initialWindows }) {
 
   const open = useCallback((id) => dispatch({ type: 'OPEN', id }), []);
   const close = useCallback((id) => dispatch({ type: 'CLOSE', id }), []);
+  const requestClose = useCallback((id) => dispatch({ type: 'REQUEST_CLOSE', id }), []);
   const focus = useCallback((id) => dispatch({ type: 'FOCUS', id }), []);
   const move = useCallback((id, position) => dispatch({ type: 'MOVE', id, position }), []);
   const register = useCallback((id, position) => dispatch({ type: 'REGISTER', id, position }), []);
   const unregister = useCallback((id) => dispatch({ type: 'UNREGISTER', id }), []);
 
   return (
-    <WindowManagerContext.Provider value={{ state, open, close, focus, move, register, unregister }}>
+    <WindowManagerContext.Provider value={{ state, open, close, requestClose, focus, move, register, unregister }}>
       {children}
     </WindowManagerContext.Provider>
   );
@@ -106,7 +117,7 @@ export function useWindowManager() {
 }
 
 export function useWindow(id) {
-  const { state, open, close, focus, move } = useWindowManager();
+  const { state, open, close, requestClose, focus, move } = useWindowManager();
   const win = state.windows[id];
   const isFocused = win?.zIndex === state.topZIndex;
   return {
@@ -114,6 +125,7 @@ export function useWindow(id) {
     isFocused,
     open: () => open(id),
     close: () => close(id),
+    requestClose: () => requestClose(id),
     focus: () => focus(id),
     move: (pos) => move(id, pos),
   };

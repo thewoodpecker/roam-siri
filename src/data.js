@@ -24,6 +24,53 @@ export const offices = [
   { id: 25, name: 'Sean M.', size: 'small', people: [{ name: 'Sean MacIsaac', avatar: '/headshots/sean-macisaac.jpg' }] },
   { id: 27, name: 'Thomas G.', size: 'small', people: [{ name: 'Thomas Grapperon', avatar: '/headshots/thomas-grapperon.jpg' }] },
   { id: 28, name: 'Tom D.', size: 'small', people: [{ name: 'Tom Dixon', avatar: '/headshots/tom-dixon.jpg' }] },
+  // Video-talent roster
+  { id: 101, name: 'Ashley B.', size: 'small', people: [{ name: 'Ashley Brooks', avatar: '/videos/Female/ashley_brooks.png', video: '/videos/Female/ashley_brooks.mp4' }] },
+  { id: 102, name: 'Brooke F.', size: 'small', people: [{ name: 'Brooke Foster', avatar: '/videos/Female/brooke_foster.png', video: '/videos/Female/brooke_foster.mp4' }] },
+  { id: 103, name: 'Camila T.', size: 'small', people: [{ name: 'Camila Torres', avatar: '/videos/Female/camila_torres.png', video: '/videos/Female/camila_torres.mp4' }] },
+  { id: 104, name: 'Chloe P.', size: 'small', people: [{ name: 'Chloe Peterson', avatar: '/videos/Female/chloe_peterson.png', video: '/videos/Female/chloe_peterson.mp4' }] },
+  { id: 105, name: 'Emily C.', size: 'small', people: [{ name: 'Emily Carter', avatar: '/videos/Female/emily_carter.png', video: '/videos/Female/emily_carter.mp4' }] },
+  { id: 106, name: 'Grace T.', size: 'small', people: [{ name: 'Grace Thompson', avatar: '/videos/Female/grace_thompson.png', video: '/videos/Female/grace_thompson.mp4' }] },
+  { id: 107, name: 'Hannah B.', size: 'small', people: [{ name: 'Hannah Bennett', avatar: '/videos/Female/hannah_bennett.png', video: '/videos/Female/hannah_bennett.mp4' }] },
+  { id: 108, name: 'Isabella M.', size: 'small', people: [{ name: 'Isabella Morgan', avatar: '/videos/Female/isabella_morgan.png', video: '/videos/Female/isabella_morgan.mp4' }] },
+  { id: 109, name: 'Jessica H.', size: 'small', people: [{ name: 'Jessica Hall', avatar: '/videos/Female/jessica_hall.png', video: '/videos/Female/jessica_hall.mp4' }] },
+  { id: 110, name: 'Lauren H.', size: 'small', people: [{ name: 'Lauren Hayes', avatar: '/videos/Female/lauren_hayes.png', video: '/videos/Female/lauren_hayes.mp4' }] },
+  { id: 111, name: 'Madison R.', size: 'small', people: [{ name: 'Madison Reed', avatar: '/videos/Female/madison_reed.png', video: '/videos/Female/madison_reed.mp4' }] },
+  { id: 112, name: 'Megan T.', size: 'small', people: [{ name: 'Megan Taylor', avatar: '/videos/Female/megan_taylor.png', video: '/videos/Female/megan_taylor.mp4' }] },
+  { id: 113, name: 'Mia C.', size: 'small', people: [{ name: 'Mia Chen', avatar: '/videos/Female/mia_chen.png', video: '/videos/Female/mia_chen.mp4' }] },
+  { id: 114, name: 'Natalie W.', size: 'small', people: [{ name: 'Natalie Wilson', avatar: '/videos/Female/natalie_wilson.png', video: '/videos/Female/natalie_wilson.mp4' }] },
+  { id: 115, name: 'Olivia S.', size: 'small', people: [{ name: 'Olivia Sanders', avatar: '/videos/Female/olivia_sanders.png', video: '/videos/Female/olivia_sanders.mp4' }] },
+  { id: 116, name: 'Rachel C.', size: 'small', people: [{ name: 'Rachel Cooper', avatar: '/videos/Female/rachel_cooper.png', video: '/videos/Female/rachel_cooper.mp4' }] },
+  { id: 117, name: 'Sarah M.', size: 'small', people: [{ name: 'Sarah Mitchell', avatar: '/videos/Female/sarah_mitchell.png', video: '/videos/Female/sarah_mitchell.mp4' }] },
+  { id: 118, name: 'Sophia R.', size: 'small', people: [{ name: 'Sophia Ramirez', avatar: '/videos/Female/sophia_ramirez.png', video: '/videos/Female/sophia_ramirez.mp4' }] },
+  { id: 119, name: 'Daniel R.', size: 'small', people: [{ name: 'Daniel Russell', avatar: '/videos/Male/daniel_russell.png', video: '/videos/Male/daniel_russell.mp4' }] },
+  { id: 120, name: 'Ethan B.', size: 'small', people: [{ name: 'Ethan Bishop', avatar: '/videos/Male/ethan_bishop.png', video: '/videos/Male/ethan_bishop.mp4' }] },
+  { id: 121, name: 'Michael S.', size: 'small', people: [{ name: 'Michael Stevens', avatar: '/videos/Male/michael_stevens.png', video: '/videos/Male/michael_stevens.mp4' }] },
+];
+
+// Shared video-talent roster for meeting-room/theater crowds
+export const VIDEO_PEOPLE = [
+  { name: 'Ashley Brooks', avatar: '/videos/Female/ashley_brooks.png', video: '/videos/Female/ashley_brooks.mp4' },
+  { name: 'Brooke Foster', avatar: '/videos/Female/brooke_foster.png', video: '/videos/Female/brooke_foster.mp4' },
+  { name: 'Camila Torres', avatar: '/videos/Female/camila_torres.png', video: '/videos/Female/camila_torres.mp4' },
+  { name: 'Chloe Peterson', avatar: '/videos/Female/chloe_peterson.png', video: '/videos/Female/chloe_peterson.mp4' },
+  { name: 'Emily Carter', avatar: '/videos/Female/emily_carter.png', video: '/videos/Female/emily_carter.mp4' },
+  { name: 'Grace Thompson', avatar: '/videos/Female/grace_thompson.png', video: '/videos/Female/grace_thompson.mp4' },
+  { name: 'Hannah Bennett', avatar: '/videos/Female/hannah_bennett.png', video: '/videos/Female/hannah_bennett.mp4' },
+  { name: 'Isabella Morgan', avatar: '/videos/Female/isabella_morgan.png', video: '/videos/Female/isabella_morgan.mp4' },
+  { name: 'Jessica Hall', avatar: '/videos/Female/jessica_hall.png', video: '/videos/Female/jessica_hall.mp4' },
+  { name: 'Lauren Hayes', avatar: '/videos/Female/lauren_hayes.png', video: '/videos/Female/lauren_hayes.mp4' },
+  { name: 'Madison Reed', avatar: '/videos/Female/madison_reed.png', video: '/videos/Female/madison_reed.mp4' },
+  { name: 'Megan Taylor', avatar: '/videos/Female/megan_taylor.png', video: '/videos/Female/megan_taylor.mp4' },
+  { name: 'Mia Chen', avatar: '/videos/Female/mia_chen.png', video: '/videos/Female/mia_chen.mp4' },
+  { name: 'Natalie Wilson', avatar: '/videos/Female/natalie_wilson.png', video: '/videos/Female/natalie_wilson.mp4' },
+  { name: 'Olivia Sanders', avatar: '/videos/Female/olivia_sanders.png', video: '/videos/Female/olivia_sanders.mp4' },
+  { name: 'Rachel Cooper', avatar: '/videos/Female/rachel_cooper.png', video: '/videos/Female/rachel_cooper.mp4' },
+  { name: 'Sarah Mitchell', avatar: '/videos/Female/sarah_mitchell.png', video: '/videos/Female/sarah_mitchell.mp4' },
+  { name: 'Sophia Ramirez', avatar: '/videos/Female/sophia_ramirez.png', video: '/videos/Female/sophia_ramirez.mp4' },
+  { name: 'Daniel Russell', avatar: '/videos/Male/daniel_russell.png', video: '/videos/Male/daniel_russell.mp4' },
+  { name: 'Ethan Bishop', avatar: '/videos/Male/ethan_bishop.png', video: '/videos/Male/ethan_bishop.mp4' },
+  { name: 'Michael Stevens', avatar: '/videos/Male/michael_stevens.png', video: '/videos/Male/michael_stevens.mp4' },
 ];
 
 export const meetingRooms = [
@@ -75,6 +122,7 @@ export const meetingRooms = [
         { name: 'Thomas Grapperon', avatar: '/headshots/thomas-grapperon.jpg' },
         { name: 'Tom Dixon', avatar: '/headshots/tom-dixon.jpg' },
         { name: 'Will Hou', avatar: '/headshots/will-hou.jpg' },
+        ...VIDEO_PEOPLE,
       ];
       return Array.from({ length: 200 }, (_, i) => ({
         ...people[i % people.length],
@@ -119,6 +167,7 @@ export const meetingRooms = [
         { name: 'Thomas Grapperon', avatar: '/headshots/thomas-grapperon.jpg' },
         { name: 'Tom Dixon', avatar: '/headshots/tom-dixon.jpg' },
         { name: 'Will Hou', avatar: '/headshots/will-hou.jpg' },
+        ...VIDEO_PEOPLE,
       ];
       return Array.from({ length: 500 }, (_, i) => ({
         ...people[i % people.length],

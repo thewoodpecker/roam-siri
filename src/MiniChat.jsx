@@ -31,6 +31,28 @@ const AVATAR_TO_CHAT = {
   '/headshots/john-huffsmith.jpg': 'huffsmith-mini',
   '/headshots/john-beutner.jpg': 'beutner-mini',
   '/headshots/joe-woodward.jpg': 'joe-mini',
+  /* Video-talent roster — startup/tech/AI DMs */
+  '/videos/Female/ashley_brooks.png': 'ashley-brooks',
+  '/videos/Female/brooke_foster.png': 'brooke-foster',
+  '/videos/Female/camila_torres.png': 'camila-torres',
+  '/videos/Female/chloe_peterson.png': 'chloe-peterson',
+  '/videos/Female/emily_carter.png': 'emily-carter',
+  '/videos/Female/grace_thompson.png': 'grace-thompson',
+  '/videos/Female/hannah_bennett.png': 'hannah-bennett',
+  '/videos/Female/isabella_morgan.png': 'isabella-morgan',
+  '/videos/Female/jessica_hall.png': 'jessica-hall',
+  '/videos/Female/lauren_hayes.png': 'lauren-hayes',
+  '/videos/Female/madison_reed.png': 'madison-reed',
+  '/videos/Female/megan_taylor.png': 'megan-taylor',
+  '/videos/Female/mia_chen.png': 'mia-chen',
+  '/videos/Female/natalie_wilson.png': 'natalie-wilson',
+  '/videos/Female/olivia_sanders.png': 'olivia-sanders',
+  '/videos/Female/rachel_cooper.png': 'rachel-cooper',
+  '/videos/Female/sarah_mitchell.png': 'sarah-mitchell',
+  '/videos/Female/sophia_ramirez.png': 'sophia-ramirez',
+  '/videos/Male/daniel_russell.png': 'daniel-russell',
+  '/videos/Male/ethan_bishop.png': 'ethan-bishop',
+  '/videos/Male/michael_stevens.png': 'michael-stevens',
 };
 
 export function getChatIdForAvatar(avatar) {

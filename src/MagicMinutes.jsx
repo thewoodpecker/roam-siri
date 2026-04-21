@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './MagicMinutes.css';
 
 const VIDEO_PEOPLE = [
@@ -425,6 +425,10 @@ export default function MagicMinutes({ win, onDrag, meeting }) {
     setClosing(true);
     setTimeout(() => win.close(), 200);
   };
+
+  useEffect(() => {
+    if (win.closeRequestId) handleClose();
+  }, [win.closeRequestId]);
 
   return (
     <div

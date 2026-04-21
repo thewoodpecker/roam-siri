@@ -953,8 +953,15 @@
 }
 
 .ainbox-timeline-clickable:hover .ainbox-timeline {
-  background: var(--bg-surface-elevated-primary);
+  background: var(--graphite-500);
   box-shadow: var(--shadow-4);
+  transition: none !important;
+}
+
+/* Light mode keeps the elevated-primary surface for hover */
+:root[data-theme="light"] .ainbox-timeline-clickable:hover .ainbox-timeline,
+.sc-viewport[data-theme="light"] .ainbox-timeline-clickable:hover .ainbox-timeline {
+  background: var(--bg-surface-elevated-primary);
 }
 
 .ainbox-timeline-hover-label {
@@ -971,10 +978,14 @@
   color: var(--text-secondary);
   pointer-events: none;
   opacity: 0;
-  transition: opacity 200ms ease;
   white-space: nowrap;
   z-index: 1;
   padding: 0 8px;
+  background: var(--graphite-500);
+}
+
+:root[data-theme="light"] .ainbox-timeline-hover-label,
+.sc-viewport[data-theme="light"] .ainbox-timeline-hover-label {
   background: var(--bg-surface-elevated-primary);
 }
 
@@ -990,7 +1001,7 @@
   box-shadow: var(--shadow-2);
   width: 100%;
   position: relative;
-  transition: background 50ms ease, box-shadow 50ms ease;
+  transition: none !important;
 }
 
 .ainbox-timeline-ruler {

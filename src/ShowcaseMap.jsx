@@ -51,6 +51,28 @@ const SHOWCASE_PEOPLE = [
   { name: 'Michael M.', avatar: '/headshots/michael-miller.jpg' },
   { name: 'Garima K.', avatar: '/headshots/garima-kewlani.jpg' },
   { name: 'Ava L.', fullName: 'Ava Lee', avatar: '/headshots/ava-lee.jpg' },
+  // Video-talent roster — avatars + video clips for live/recorded streams
+  { name: 'Ashley B.', fullName: 'Ashley Brooks', avatar: '/videos/Female/ashley_brooks.png', video: '/videos/Female/ashley_brooks.mp4', gender: 'female' },
+  { name: 'Brooke F.', fullName: 'Brooke Foster', avatar: '/videos/Female/brooke_foster.png', video: '/videos/Female/brooke_foster.mp4', gender: 'female' },
+  { name: 'Camila T.', fullName: 'Camila Torres', avatar: '/videos/Female/camila_torres.png', video: '/videos/Female/camila_torres.mp4', gender: 'female' },
+  { name: 'Chloe P.', fullName: 'Chloe Peterson', avatar: '/videos/Female/chloe_peterson.png', video: '/videos/Female/chloe_peterson.mp4', gender: 'female' },
+  { name: 'Emily C.', fullName: 'Emily Carter', avatar: '/videos/Female/emily_carter.png', video: '/videos/Female/emily_carter.mp4', gender: 'female' },
+  { name: 'Grace T.', fullName: 'Grace Thompson', avatar: '/videos/Female/grace_thompson.png', video: '/videos/Female/grace_thompson.mp4', gender: 'female' },
+  { name: 'Hannah B.', fullName: 'Hannah Bennett', avatar: '/videos/Female/hannah_bennett.png', video: '/videos/Female/hannah_bennett.mp4', gender: 'female' },
+  { name: 'Isabella M.', fullName: 'Isabella Morgan', avatar: '/videos/Female/isabella_morgan.png', video: '/videos/Female/isabella_morgan.mp4', gender: 'female' },
+  { name: 'Jessica H.', fullName: 'Jessica Hall', avatar: '/videos/Female/jessica_hall.png', video: '/videos/Female/jessica_hall.mp4', gender: 'female' },
+  { name: 'Lauren H.', fullName: 'Lauren Hayes', avatar: '/videos/Female/lauren_hayes.png', video: '/videos/Female/lauren_hayes.mp4', gender: 'female' },
+  { name: 'Madison R.', fullName: 'Madison Reed', avatar: '/videos/Female/madison_reed.png', video: '/videos/Female/madison_reed.mp4', gender: 'female' },
+  { name: 'Megan T.', fullName: 'Megan Taylor', avatar: '/videos/Female/megan_taylor.png', video: '/videos/Female/megan_taylor.mp4', gender: 'female' },
+  { name: 'Mia C.', fullName: 'Mia Chen', avatar: '/videos/Female/mia_chen.png', video: '/videos/Female/mia_chen.mp4', gender: 'female' },
+  { name: 'Natalie W.', fullName: 'Natalie Wilson', avatar: '/videos/Female/natalie_wilson.png', video: '/videos/Female/natalie_wilson.mp4', gender: 'female' },
+  { name: 'Olivia S.', fullName: 'Olivia Sanders', avatar: '/videos/Female/olivia_sanders.png', video: '/videos/Female/olivia_sanders.mp4', gender: 'female' },
+  { name: 'Rachel C.', fullName: 'Rachel Cooper', avatar: '/videos/Female/rachel_cooper.png', video: '/videos/Female/rachel_cooper.mp4', gender: 'female' },
+  { name: 'Sarah M.', fullName: 'Sarah Mitchell', avatar: '/videos/Female/sarah_mitchell.png', video: '/videos/Female/sarah_mitchell.mp4', gender: 'female' },
+  { name: 'Sophia R.', fullName: 'Sophia Ramirez', avatar: '/videos/Female/sophia_ramirez.png', video: '/videos/Female/sophia_ramirez.mp4', gender: 'female' },
+  { name: 'Daniel R.', fullName: 'Daniel Russell', avatar: '/videos/Male/daniel_russell.png', video: '/videos/Male/daniel_russell.mp4', gender: 'male' },
+  { name: 'Ethan B.', fullName: 'Ethan Bishop', avatar: '/videos/Male/ethan_bishop.png', video: '/videos/Male/ethan_bishop.mp4', gender: 'male' },
+  { name: 'Michael S.', fullName: 'Michael Stevens', avatar: '/videos/Male/michael_stevens.png', video: '/videos/Male/michael_stevens.mp4', gender: 'male' },
 ];
 
 const p = (name) => SHOWCASE_PEOPLE.find(p => p.name === name) || SHOWCASE_PEOPLE[0];
@@ -75,12 +97,12 @@ const FLOORS = {
     { id: 'r14b', type: 'private', name: 'Joe W.', people: [p('Joe W.')], pos: { col: 5, row: 2 }, span: 1 },
     { id: 'r15', type: 'private', name: 'Aaron W.', people: [p('Aaron W.')], pos: { col: 0, row: 3 }, span: 1 },
     { id: 'r16', type: 'game', name: 'Game Room', people: [], pos: { col: 1, row: 3 }, span: 1 },
-    { id: 'alan-kay', type: 'meeting', name: 'Meeting Room', people: [p('Grace S.'), p('Chelsea T.'), p('Lexi B.')], pos: { col: 2, row: 3 }, colSpan: 2, rowSpan: 2 },
-    { id: 'standup', type: 'meeting', name: 'Daily Standup', people: [p('Lexi B.'), p('Grace S.'), p('Chelsea T.'), p('Garima K.'), p('Ava L.')], pos: { col: 4, row: 3 }, colSpan: 2, rowSpan: 2 },
+    { id: 'alan-kay', type: 'meeting', name: 'Meeting Room', people: [p('Grace S.'), p('Chelsea T.'), p('Lexi B.'), p('Ashley B.'), p('Hannah B.'), p('Daniel R.')], pos: { col: 2, row: 3 }, colSpan: 2, rowSpan: 2 },
+    { id: 'standup', type: 'meeting', name: 'Daily Standup', people: [p('Lexi B.'), p('Grace S.'), p('Chelsea T.'), p('Garima K.'), p('Ava L.'), p('Mia C.'), p('Sarah M.'), p('Ethan B.')], pos: { col: 4, row: 3 }, colSpan: 2, rowSpan: 2 },
   ],
   'Commercial': [
     // Large lobby spanning top-left
-    { id: 'c-lobby', type: 'meeting', name: 'Sales Floor', people: [p('Lexi B.'), p('Will H.'), p('Peter L.'), p('Sean M.'), p('Chelsea T.'), p('Garima K.'), p('Joe W.')], pos: { col: 0, row: 0 }, colSpan: 3, rowSpan: 2 },
+    { id: 'c-lobby', type: 'meeting', name: 'Sales Floor', people: [p('Lexi B.'), p('Will H.'), p('Peter L.'), p('Sean M.'), p('Chelsea T.'), p('Garima K.'), p('Joe W.'), p('Brooke F.'), p('Camila T.'), p('Isabella M.'), p('Michael S.')], pos: { col: 0, row: 0 }, colSpan: 3, rowSpan: 2 },
     { id: 'c1', type: 'private', name: 'Arnav B.', people: [p('Arnav B.')], pos: { col: 3, row: 0 }, span: 1, story: '/stories/story-3.jpg' },
     { id: 'c2', type: 'private', name: 'Aaron W.', people: [p('Aaron W.')], pos: { col: 4, row: 0 }, span: 1 },
     { id: 'c3', type: 'private', name: 'Tom D.', people: [], pos: { col: 5, row: 0 }, span: 1 },
@@ -106,8 +128,8 @@ const FLOORS = {
     { id: 'm4', type: 'private', name: 'John M.', people: [p('John M.')], pos: { col: 5, row: 0 }, span: 1 },
     // Row 2 — meeting room in the center
     { id: 'm5', type: 'private', name: 'Lexi B.', people: [p('Lexi B.')], pos: { col: 0, row: 1 }, span: 1, story: '/stories/story-4.jpg' },
-    { id: 'm-brand', type: 'meeting', name: 'Brand Review', people: [p('Ava L.'), p('Derek C.'), p('Arnav B.'), p('Aaron W.')], pos: { col: 1, row: 1 }, colSpan: 2, rowSpan: 2 },
-    { id: 'm-content', type: 'meeting', name: 'Content Sync', people: [p('Rob F.'), p('Joe W.')], pos: { col: 3, row: 1 }, colSpan: 2, rowSpan: 2 },
+    { id: 'm-brand', type: 'meeting', name: 'Brand Review', people: [p('Ava L.'), p('Derek C.'), p('Arnav B.'), p('Aaron W.'), p('Chloe P.'), p('Emily C.'), p('Grace T.'), p('Jessica H.')], pos: { col: 1, row: 1 }, colSpan: 2, rowSpan: 2 },
+    { id: 'm-content', type: 'meeting', name: 'Content Sync', people: [p('Rob F.'), p('Joe W.'), p('Lauren H.'), p('Madison R.'), p('Megan T.'), p('Natalie W.')], pos: { col: 3, row: 1 }, colSpan: 2, rowSpan: 2 },
     { id: 'm6', type: 'private', name: 'Mattias L.', people: [p('Mattias L.')], pos: { col: 5, row: 1 }, span: 1 },
     // Row 3 — sparse
     { id: 'm7', type: 'private', name: 'Will H.', people: [p('Will H.')], pos: { col: 0, row: 2 }, span: 1 },
@@ -126,7 +148,7 @@ const FLOORS = {
   ],
   'Executive': [
     // Large boardroom center
-    { id: 'e-board', type: 'meeting', name: 'Boardroom', people: [p('Keegan L.'), p('Thomas G.'), p('Klas L.'), p('Will H.'), p('Arnav B.')], pos: { col: 1, row: 0 }, colSpan: 4, rowSpan: 2 },
+    { id: 'e-board', type: 'meeting', name: 'Boardroom', people: [p('Keegan L.'), p('Thomas G.'), p('Klas L.'), p('Will H.'), p('Arnav B.'), p('Olivia S.'), p('Rachel C.'), p('Sophia R.')], pos: { col: 1, row: 0 }, colSpan: 4, rowSpan: 2 },
     { id: 'e1', type: 'private', name: 'Howard L.', people: [], pos: { col: 0, row: 0 }, span: 1 },
     { id: 'e2', type: 'private', name: 'Joe W.', people: [p('Joe W.')], pos: { col: 5, row: 0 }, span: 1 },
     { id: 'e3', type: 'private', name: 'Peter L.', people: [p('Peter L.')], pos: { col: 0, row: 1 }, span: 1 },
@@ -425,7 +447,7 @@ function MeetingRoomCardShowcase({ room, onPersonClick, onRoomClick }) {
             <img src="/icons/video.svg" className="sc-room-video-icon" width="16" height="16" alt="" />
           </div>
           <div className="meeting-room-people">
-            {room.people.map((person, i) => (
+            {room.people.filter(p => p?.video).map((person, i) => (
               <div key={person.name + i} className={`person meeting-room-person ${person._new ? 'sc-person-arriving' : ''} ${person.isJoining ? 'sc-joining' : ''}`} onClick={(e) => { e.stopPropagation(); onPersonClick && onPersonClick(person, e); }} style={{ cursor: getChatIdForAvatar(person.avatar) ? 'pointer' : 'default' }}>
                 <img className="avatar" src={person.avatar} alt={person.name} />
                 <div className={`avatar-inner-glow ${talking[person.name] ? 'sc-talking' : 'glow-off'}`} />
@@ -584,7 +606,7 @@ function MagicastBubble({ onPositionChange, closing, initialSize = 260, initialP
         className={`mc-bubble-masked ${shape === 'square' ? 'mc-bubble-masked-square' : ''}`}
         style={shape !== 'square' ? { WebkitMaskImage: `url(${maskUrl})`, maskImage: `url(${maskUrl})` } : undefined}
       >
-        <video className="mc-bubble-video" src="/videos/call-cafe.mp4" autoPlay loop muted playsInline />
+        <video className="mc-bubble-video" src="/videos/Female/sophia_ramirez.mp4" autoPlay loop muted playsInline />
       </div>
       <div className={`mc-bubble-hover-ui ${hovered ? 'mc-bubble-hover-visible' : ''}`}>
         <img className="mc-bubble-outline" src="/magicast/outline.svg" alt="" />
@@ -620,6 +642,9 @@ function MagicastWindow({ win, onDrag, pipPos, shape = 'circle' }) {
     setClosing(true);
     setTimeout(() => win.close(), 180);
   };
+  useEffect(() => {
+    if (win.closeRequestId) handleClose();
+  }, [win.closeRequestId]);
   return (
     <div
       className={`mc-win ${!win.isFocused ? 'mc-win-unfocused' : ''} ${closing ? 'mc-win-closing' : ''}`}
@@ -638,7 +663,7 @@ function MagicastWindow({ win, onDrag, pipPos, shape = 'circle' }) {
         <div className="mc-win-preview">
           <img className="mc-win-preview-bg" src="/magicast/preview.png" alt="" />
           <div className="mc-win-preview-overlay" />
-          <video className={`mc-win-preview-avatar ${shape === 'square' ? 'mc-win-preview-avatar-square' : ''}`} src="/videos/call-cafe.mp4" autoPlay loop muted playsInline style={{ ...(pipPos ? { left: `${pipPos.x * 100}%`, top: `${pipPos.y * 100}%` } : {}), ...(shape !== 'square' ? { WebkitMaskImage: `url(${maskUrl})`, maskImage: `url(${maskUrl})`, WebkitMaskRepeat: 'no-repeat', maskRepeat: 'no-repeat', WebkitMaskPosition: 'center', maskPosition: 'center', WebkitMaskSize: '100%', maskSize: '100%' } : {}) }} />
+          <video className={`mc-win-preview-avatar ${shape === 'square' ? 'mc-win-preview-avatar-square' : ''}`} src="/videos/Female/sophia_ramirez.mp4" autoPlay loop muted playsInline style={{ ...(pipPos ? { left: `${pipPos.x * 100}%`, top: `${pipPos.y * 100}%` } : {}), ...(shape !== 'square' ? { WebkitMaskImage: `url(${maskUrl})`, maskImage: `url(${maskUrl})`, WebkitMaskRepeat: 'no-repeat', maskRepeat: 'no-repeat', WebkitMaskPosition: 'center', maskPosition: 'center', WebkitMaskSize: '100%', maskSize: '100%' } : {}) }} />
         </div>
         <div className="mc-win-row">
           <span className="mc-win-row-icon" style={{ WebkitMaskImage: 'url(/magicast/video.svg)', maskImage: 'url(/magicast/video.svg)' }} />
@@ -764,10 +789,10 @@ export default function ShowcaseMap() {
   );
 }
 
-function ProductItem({ name, onClick, onMouseEnter, onMouseLeave }) {
+function ProductItem({ name, active, onClick, onMouseEnter, onMouseLeave }) {
   return (
     <span
-      className="sc-products-item"
+      className={`sc-products-item ${active ? 'sc-products-item-active' : ''}`}
       data-label={name}
       onClick={onClick}
       onMouseEnter={onMouseEnter}
@@ -925,6 +950,7 @@ function useTargetHintStyle(targetRef, active, offset = { top: -30, left: 'cente
 
 function ShowcaseMapInner() {
   const [theme, setTheme] = useState('dark');
+  const [layout, setLayout] = useState('v1');
   const [activeFloor, setActiveFloor] = useState('R&D');
   const [floorTransition, setFloorTransition] = useState('visible'); // 'visible' | 'out' | 'in'
 
@@ -1046,7 +1072,7 @@ function ShowcaseMapInner() {
     });
   }, [activeFloor, movements]);
 
-  const theaterSpeakers = useMemo(() => [p('Grace S.'), p('Chelsea T.')], []);
+  const theaterSpeakers = useMemo(() => [p('Emily C.'), p('Lauren H.')], []);
   const speakerStories = {};
 
   const allStoryRooms = useMemo(() => {
@@ -1082,8 +1108,13 @@ function ShowcaseMapInner() {
   const knockOnHoward = useCallback(() => {
     const howardRoom = FLOORS['R&D'].find(r => r.id === 'r4');
     if (!howardRoom) return;
+    if (knockingRoom) {
+      clearTimeout(knockTimerRef.current);
+      setKnockingRoom(null);
+      return;
+    }
     if (activeFloor !== 'R&D') setActiveFloor('R&D');
-    if (knockingRoom || joinedRoomId === howardRoom.id) return;
+    if (joinedRoomId === howardRoom.id) return;
     setKnockingRoom(howardRoom);
     knockTimerRef.current = setTimeout(() => {
       setKnockingRoom(null);
@@ -1106,14 +1137,22 @@ function ShowcaseMapInner() {
       const wRect = windowRef.current.getBoundingClientRect();
       const mRect = miniRoamRef.current.getBoundingClientRect();
       setIntroHintStyle({
-        top: wRect.top - mRect.top - 50,
+        top: wRect.top - mRect.top + 22,
         left: wRect.left - mRect.left - 60,
       });
     };
     update();
+    const raf = requestAnimationFrame(update);
     window.addEventListener('resize', update);
-    return () => window.removeEventListener('resize', update);
-  }, [mapWin.position.x, mapWin.position.y]);
+    const ro = new ResizeObserver(update);
+    if (miniRoamRef.current) ro.observe(miniRoamRef.current);
+    if (windowRef.current) ro.observe(windowRef.current);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener('resize', update);
+      ro.disconnect();
+    };
+  }, [mapWin.position.x, mapWin.position.y, layout]);
   const [mapMounted, setMapMounted] = useState(false);
   const [wallpaperLoaded, setWallpaperLoaded] = useState(false);
   useEffect(() => {
@@ -1318,8 +1357,43 @@ function ShowcaseMapInner() {
     return () => viewport.removeEventListener('scroll', onScroll);
   }, []);
 
+  const marqueeLogos = [
+    { src: '/marquee/logo-wistia.svg', alt: 'Wistia', w: 110, h: 24 },
+    { src: '/marquee/logo-omni.svg', alt: 'Omni Analytics', w: 71, h: 28 },
+    { src: '/marquee/logo-customer-io.svg', alt: 'Customer.io', w: 174, h: 24 },
+    { src: '/marquee/logo-deepgram.svg', alt: 'Deepgram', w: 130, h: 30 },
+    { src: '/marquee/logo-flex.svg', alt: 'Flex', w: 63, h: 24 },
+    { src: '/marquee/logo-givecampus.svg', alt: 'GiveCampus', w: 149, h: 17 },
+    { src: '/marquee/logo-pulley.svg', alt: 'Pulley', w: 90, h: 28 },
+    { src: '/marquee/logo-keep.svg', alt: 'Keep', w: 84, h: 24 },
+    { src: '/marquee/logo-real.svg', alt: 'Real', w: 71, h: 30 },
+    { src: '/marquee/logo-sonsie.svg', alt: 'Sonsie', w: 98, h: 24 },
+    { src: '/marquee/logo-nofraud.svg', alt: 'NoFraud', w: 128, h: 24 },
+    { src: '/marquee/logo-mpire.svg', alt: 'Mpire Financial', w: 81, h: 40 },
+    { src: '/marquee/logo-frida.svg', alt: 'Fridababy', w: 70, h: 28 },
+  ];
+  const marqueeEl = (
+    <div className="sc-marquee">
+      <div className="sc-marquee-track">
+        {Array.from({ length: 2 }).map((_, copy) => (
+          <div key={copy} className="sc-marquee-group" aria-hidden={copy === 1 ? 'true' : undefined}>
+            {marqueeLogos.map(l => (
+              <span
+                key={l.src}
+                className="sc-marquee-logo"
+                role="img"
+                aria-label={l.alt}
+                style={{ width: l.w, height: l.h, WebkitMaskImage: `url(${l.src})`, maskImage: `url(${l.src})` }}
+              />
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
   return (
-    <div className="sc-viewport" data-theme={theme} ref={viewportRef}>
+    <div className="sc-viewport" data-theme={theme} data-layout={layout} ref={viewportRef}>
       {/* Debug grid overlay */}
       {showGrid && <div className="sc-grid-debug">
         {Array.from({ length: 12 }).map((_, i) => <div key={i} className="sc-grid-debug-col" />)}
@@ -1335,6 +1409,20 @@ function ShowcaseMapInner() {
       <div className="miniRoamOS" ref={miniRoamRef} onClick={() => hintVisible && setHintVisible(false)}>
         <div className="sc-wallpaper sc-wallpaper-dark" style={{ opacity: theme === 'dark' && wallpaperLoaded ? 1 : 0 }} />
         <div className="sc-wallpaper sc-wallpaper-light" style={{ opacity: theme === 'light' && wallpaperLoaded ? 1 : 0 }} />
+        {layout === 'v2' && (
+          <div className="sc-v2-hero">
+            <img className="sc-v2-hero-icon" src="/icons/roam-gold-icon.png" alt="Roam" />
+            <h1 className="sc-v2-hero-title">THE OFFICE THAT THINKS</h1>
+            <p className="sc-v2-hero-subtitle">Roam is a Virtual Office Platform where remote work happens in the open and every action makes your company smarter.</p>
+            <div className="sc-v2-hero-buttons">
+              <button className="sc-promo-btn">Book Demo</button>
+              <button className="sc-promo-btn">Free Trial</button>
+            </div>
+          </div>
+        )}
+        {layout === 'v2' && (
+          <div className="sc-v2-hero-marquee">{marqueeEl}</div>
+        )}
       <div className={`sc-window ${!mapWin.isFocused ? 'sc-window-unfocused' : ''} ${mapMounted ? 'sc-window-mounted' : ''} ${mapPulse ? 'sc-window-pulse' : ''}`} ref={windowRef} style={{ transform: `translate(${mapWin.position.x}px, ${mapWin.position.y}px)`, zIndex: mapWin.zIndex }} onMouseDown={() => mapWin.focus()}>
         {/* Mac window title bar */}
         <div className="sc-titlebar" onMouseDown={(e) => { setHintVisible(false); makeDragHandler(mapWin)(e); }}>
@@ -1632,66 +1720,53 @@ function ShowcaseMapInner() {
       {/* Handwritten annotation pointing to the product bar */}
       <Hint portal={false} text="Product Tour" blob="peaks" arrow="swoop-right" visible={hintVisible} style={{ ...(introHintStyle || { top: 190, left: 90 }), ...(HIDE_CHROME ? { display: 'none' } : {}) }} />
       <div className="sc-products-bar" ref={productsBarRef} style={HIDE_CHROME ? { display: 'none' } : undefined}>
-        {PRODUCTS.map((item, i) => (
-          <React.Fragment key={item.name}>
-            {i > 0 && <div className="sc-products-dot" />}
-            <ProductItem
-              name={item.name}
-              onClick={item.name === 'AInbox' ? () => ainboxWin.open() : item.name === 'On-Air' ? () => onairWin.open() : item.name === 'Theater' ? () => theaterWin.open() : item.name === 'Magicast' ? () => magicastWin.open() : item.name === 'Magic Minutes' ? () => magicminutesWin.open() : item.name === 'Lobby' ? () => lobbyWin.open() : item.name === 'Virtual Office' ? pulseMapWindow : item.name === 'Drop-In Meetings' ? knockOnHoward : undefined}
-              onMouseEnter={() => setHintVisible(false)}
-            />
-          </React.Fragment>
-        ))}
+        {PRODUCTS.map((item, i) => {
+          const winByName = {
+            'AInbox': ainboxWin,
+            'On-Air': onairWin,
+            'Theater': theaterWin,
+            'Magicast': magicastWin,
+            'Magic Minutes': magicminutesWin,
+            'Lobby': lobbyWin,
+          };
+          const w = winByName[item.name];
+          const isActive = w?.isOpen || false;
+          const handleClick = w
+            ? () => { if (w.isOpen) w.requestClose(); else w.open(); }
+            : item.name === 'Virtual Office' ? pulseMapWindow
+            : item.name === 'Drop-In Meetings' ? knockOnHoward
+            : undefined;
+          return (
+            <React.Fragment key={item.name}>
+              {i > 0 && <div className="sc-products-dot" />}
+              <ProductItem
+                name={item.name}
+                active={isActive}
+                onClick={handleClick}
+                onMouseEnter={() => setHintVisible(false)}
+              />
+            </React.Fragment>
+          );
+        })}
       </div>
       </div>
 
-      {/* Promo section */}
-      <div className="sc-section">
-        <div className="sc-section-grid">
-          <div className="sc-promo-content">
-            <h2 className="sc-promo-title">THE OFFICE THAT THINKS</h2>
-            <p className="sc-promo-subtitle">Roam is a Virtual Office Platform where remote work happens in the open and every action makes your company smarter.</p>
-            <div className="sc-promo-buttons">
-              <button className="sc-promo-btn">Book Demo</button>
-              <button className="sc-promo-btn">Free Trial</button>
+      {/* Promo section — v1 only */}
+      {layout !== 'v2' && (
+        <div className="sc-section sc-section-promo">
+          <div className="sc-section-grid">
+            <div className="sc-promo-content">
+              <h2 className="sc-promo-title">THE OFFICE THAT THINKS</h2>
+              <p className="sc-promo-subtitle">Roam is a Virtual Office Platform where remote work happens in the open and every action makes your company smarter.</p>
+              <div className="sc-promo-buttons">
+                <button className="sc-promo-btn">Book Demo</button>
+                <button className="sc-promo-btn">Free Trial</button>
+              </div>
             </div>
-          </div>
-          <div className="sc-marquee">
-            <div className="sc-marquee-track">
-              {Array.from({ length: 2 }).map((_, copy) => {
-                const logos = [
-                  { src: '/marquee/logo-wistia.svg', alt: 'Wistia', w: 110, h: 24 },
-                  { src: '/marquee/logo-omni.svg', alt: 'Omni Analytics', w: 71, h: 28 },
-                  { src: '/marquee/logo-customer-io.svg', alt: 'Customer.io', w: 174, h: 24 },
-                  { src: '/marquee/logo-deepgram.svg', alt: 'Deepgram', w: 130, h: 30 },
-                  { src: '/marquee/logo-flex.svg', alt: 'Flex', w: 63, h: 24 },
-                  { src: '/marquee/logo-givecampus.svg', alt: 'GiveCampus', w: 149, h: 17 },
-                  { src: '/marquee/logo-pulley.svg', alt: 'Pulley', w: 90, h: 28 },
-                  { src: '/marquee/logo-keep.svg', alt: 'Keep', w: 84, h: 24 },
-                  { src: '/marquee/logo-real.svg', alt: 'Real', w: 71, h: 30 },
-                  { src: '/marquee/logo-sonsie.svg', alt: 'Sonsie', w: 98, h: 24 },
-                  { src: '/marquee/logo-nofraud.svg', alt: 'NoFraud', w: 128, h: 24 },
-                  { src: '/marquee/logo-mpire.svg', alt: 'Mpire Financial', w: 81, h: 40 },
-                  { src: '/marquee/logo-frida.svg', alt: 'Fridababy', w: 70, h: 28 },
-                ];
-                return (
-                  <div key={copy} className="sc-marquee-group" aria-hidden={copy === 1 ? 'true' : undefined}>
-                    {logos.map(l => (
-                      <span
-                        key={l.src}
-                        className="sc-marquee-logo"
-                        role="img"
-                        aria-label={l.alt}
-                        style={{ width: l.w, height: l.h, WebkitMaskImage: `url(${l.src})`, maskImage: `url(${l.src})` }}
-                      />
-                    ))}
-                  </div>
-                );
-              })}
-            </div>
+            {marqueeEl}
           </div>
         </div>
-      </div>
+      )}
 
       {/* Feature section — Meeting Room */}
       <div className="sc-feature-section sc-feature-section-reverse">
@@ -1703,10 +1778,12 @@ function ShowcaseMapInner() {
                 onDrag={() => {}}
                 roomName="Daily Standup"
                 people={[
-                  { name: 'Grace S.', fullName: 'Grace Sutherland', avatar: '/headshots/grace-sutherland.jpg' },
-                  { name: 'Lexi B.', fullName: 'Lexi Bohonnon', avatar: '/headshots/lexi-bohonnon.jpg' },
-                  { name: 'Chelsea T.', fullName: 'Chelsea Turbin', avatar: '/headshots/chelsea-turbin.jpg' },
-                  { name: 'Garima K.', fullName: 'Garima Kewlani', avatar: '/headshots/garima-kewlani.jpg' },
+                  p('Ashley B.'),
+                  p('Emily C.'),
+                  p('Hannah B.'),
+                  p('Mia C.'),
+                  p('Ethan B.'),
+                  p('Sarah M.'),
                 ]}
               />
             </div>
@@ -1714,7 +1791,7 @@ function ShowcaseMapInner() {
           <div className="sc-feature-text sc-feature-text-right">
             <h2 className="sc-feature-title">VIDEO CONFERENCING</h2>
             <p className="sc-feature-desc">Jump into a Meeting Room for video conferencing when you need to collaborate. When you're done, you're done! Includes high resolution screensharing and whiteboard as well. No more back-to-back video meetings filling out all day. Just meet when you need to, and when you're done, back to work.</p>
-            <a href="#" className="sc-feature-link">Learn about video conferencing →</a>
+            <a href="#" className="sc-feature-link">Learn about Video Conferencing →</a>
           </div>
         </div>
       </div>
@@ -1831,6 +1908,11 @@ function ShowcaseMapInner() {
           <div className={`sc-theme-capsule-icon ${theme === 'light' ? 'active' : ''}`}>
             <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="3" stroke="currentColor" strokeWidth="1.3" /><path d="M8 2V3.5M8 12.5V14M2 8H3.5M12.5 8H14M3.8 3.8L4.8 4.8M11.2 11.2L12.2 12.2M3.8 12.2L4.8 11.2M11.2 4.8L12.2 3.8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" /></svg>
           </div>
+        </div>
+        <div className="sc-layout-capsule" onClick={() => setLayout(l => l === 'v1' ? 'v2' : 'v1')}>
+          <div className={`sc-layout-capsule-knob ${layout === 'v2' ? 'bottom' : ''}`} />
+          <div className={`sc-layout-capsule-label ${layout === 'v1' ? 'active' : ''}`}>v1</div>
+          <div className={`sc-layout-capsule-label ${layout === 'v2' ? 'active' : ''}`}>v2</div>
         </div>
       </div>
 

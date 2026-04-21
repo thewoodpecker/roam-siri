@@ -216,13 +216,6 @@ export default function LobbyInsights() {
         <StatCard label="Cancelled"          value="12"  change="▼ 15% from last period" changeColor="red" />
       </div>
 
-      <div className="lbi-section-label">Performance</div>
-      <div className="lbi-row">
-        <PerfCard label="No-Show (Host)"  value="2"  valueColor={RED}    subtitle="1.2% of completed" />
-        <PerfCard label="No-Show (Guest)" value="10" valueColor={YELLOW} subtitle="6.2% of completed" />
-        <PerfCard label="Drop-Ins"        value="64" valueColor={GREEN}  subtitle="74 attempted · 86% accepted" />
-      </div>
-
       <div className="lbi-card">
         <div className="lbi-card-header">
           <span className="lbi-mono-label">Event Trends</span>

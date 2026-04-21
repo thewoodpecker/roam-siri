@@ -97,7 +97,7 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  background: var(--background-primary);
+  background: var(--bg-overlay-secondary);
   padding: 4px 8px;
   border-radius: 8px;
 }
@@ -105,7 +105,7 @@
 .theater-win-tile-name span {
   font-size: 14px;
   font-weight: 400;
-  color: var(--text-primary);
+  color: #fff;
   line-height: 20px;
   letter-spacing: -0.15px;
   white-space: nowrap;

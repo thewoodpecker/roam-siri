@@ -251,6 +251,10 @@ export default function Lobby({ win, onDrag }) {
     setTimeout(() => win.close(), 200);
   };
 
+  useEffect(() => {
+    if (win.closeRequestId) handleClose();
+  }, [win.closeRequestId]);
+
   const toggleLink = (id) => {
     setLinks((prev) => prev.map((l) => (l.id === id ? { ...l, active: !l.active } : l)));
   };

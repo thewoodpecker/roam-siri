@@ -27,14 +27,14 @@ function SoundButton({ emoji, level, onClick }) {
 }
 
 const STAGE_VIDEOS = [
-  '/videos/call-library.mp4',
-  '/videos/call-smile.mp4',
-  '/videos/call-cafe.mp4',
-  '/videos/call-earbuds.mp4',
-  '/videos/call-selfie.mp4',
-  '/videos/call-window.mp4',
-  '/videos/call-meditation.mp4',
-  '/videos/call-bedroom.mp4',
+  '/videos/Female/ashley_brooks.mp4',
+  '/videos/Female/emily_carter.mp4',
+  '/videos/Female/grace_thompson.mp4',
+  '/videos/Female/hannah_bennett.mp4',
+  '/videos/Female/jessica_hall.mp4',
+  '/videos/Female/olivia_sanders.mp4',
+  '/videos/Male/daniel_russell.mp4',
+  '/videos/Male/ethan_bishop.mp4',
 ];
 
 // Build a 4x5 grid of benches; each bench holds 5 slots with some empty.
@@ -65,7 +65,9 @@ const BENCH_PATTERNS = [
 
 const BENCH_ROWS = 3;
 
-export default function TheaterWindow({ win, onDrag, speakers = [], audience = [], me, onOpenChat }) {
+export default function TheaterWindow({ win, onDrag, speakers: rawSpeakers = [], audience: rawAudience = [], me, onOpenChat }) {
+  const speakers = rawSpeakers.filter(p => p?.video);
+  const audience = rawAudience.filter(p => p?.video);
   const [closing, setClosing] = useState(false);
   const [roamojiOpen, setRoamojiOpen] = useState(true);
   const [roamojiClosing, setRoamojiClosing] = useState(false);
@@ -194,14 +196,13 @@ export default function TheaterWindow({ win, onDrag, speakers = [], audience = [
     setTimeout(() => win.close(), 200);
   };
 
+  useEffect(() => {
+    if (win.closeRequestId) handleClose();
+  }, [win.closeRequestId]);
+
   // Stage speakers only — no padding from audience
   const stageTiles = speakers.slice(0, 3);
-  const videoFor = (person, i) => {
-    if (i === 1) return '/videos/call-smile.mp4';
-    const name = person.fullName || person.name || '';
-    const nameHash = name.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
-    return STAGE_VIDEOS[(nameHash + i) % STAGE_VIDEOS.length];
-  };
+  const videoFor = (person) => person?.video || null;
 
   const pos = win.position || { x: 70, y: 220 };
   return (
