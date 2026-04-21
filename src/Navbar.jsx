@@ -484,7 +484,7 @@ export default function Navbar() {
                 ))}
               </div>
               <div className="flex items-center justify-center">
-                <img src="/roam-logo.png" alt="Roam" style={{ width: 109, height: 32, objectFit: 'contain' }} />
+                <img src="/icons/roam-logo.png" alt="Roam" style={{ width: 109, height: 32, objectFit: 'contain' }} />
               </div>
               <div className="flex items-center justify-end gap-2">
                 <button onMouseEnter={() => handleMouseEnter("Existing Members", true)} onClick={() => setActiveMenu(activeMenu === "Existing Members" ? null : "Existing Members")} className={`flex items-center gap-1.5 px-4 py-2 text-sm font-normal leading-5 tracking-[-0.15px] transition-colors duration-200 ${activeMenu === "Existing Members" ? "text-white" : "text-white/50 hover:text-white"}`}>
@@ -547,7 +547,7 @@ export default function Navbar() {
             ))}
           </div>
           <div className="flex items-center justify-center">
-            <img src="/roam-logo.png" alt="Roam" style={{ width: 109, height: 32, objectFit: 'contain' }} />
+            <img src="/icons/roam-logo.png" alt="Roam" style={{ width: 109, height: 32, objectFit: 'contain' }} />
           </div>
           <div className="flex items-center justify-end gap-2">
             <button onMouseEnter={() => handleMouseEnter("Existing Members", true)} onClick={() => setActiveMenu(activeMenu === "Existing Members" ? null : "Existing Members")} className={`flex items-center gap-1.5 px-4 py-2 text-sm font-normal leading-5 tracking-[-0.15px] transition-colors duration-200 ${activeMenu === "Existing Members" ? "text-white" : "text-white/50 hover:text-white"}`}>
@@ -571,7 +571,7 @@ export default function Navbar() {
         }}
       >
         {/* Logo */}
-        <img src="/roam-logo.png" alt="Roam" style={{ width: 90, height: 26, objectFit: 'contain' }} />
+        <img src="/icons/roam-logo.png" alt="Roam" style={{ width: 90, height: 26, objectFit: 'contain' }} />
 
         {/* Hamburger / Close button */}
         <button

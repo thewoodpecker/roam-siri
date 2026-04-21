@@ -174,17 +174,23 @@ export default function MeetingWindow({ win, onDrag, roomName, people, onOpenCha
     return () => document.removeEventListener('mousedown', handler);
   }, [viewMenuOpen]);
 
-  // Match video feeds to people by gender
-  const WOMEN = ['Grace', 'Chelsea', 'Lexi', 'Garima', 'Ava'];
+  // Stock videos — fill every tile; rotate per-room so each meeting room gets a different order
+  const STOCK_VIDEOS = [
+    '/videos/call-library.mp4',
+    '/videos/call-smile.mp4',
+    '/videos/call-cafe.mp4',
+    '/videos/call-earbuds.mp4',
+    '/videos/call-selfie.mp4',
+    '/videos/call-window.mp4',
+    '/videos/call-meditation.mp4',
+    '/videos/call-bedroom.mp4',
+  ];
+  const roomHash = (roomName || '').split('').reduce((a, c) => a + c.charCodeAt(0), 0);
   const videoMap = {};
-  let womanUsed = false, manUsed = false;
-  people.forEach((p, i) => {
-    const name = p.fullName || p.name;
-    const isWoman = WOMEN.some(w => name.includes(w));
-    if (isWoman && !womanUsed) { videoMap[i] = '/meeting-room/woman-01.mp4'; womanUsed = true; }
-    else if (!isWoman && !manUsed) { videoMap[i] = '/meeting-room/man-01.mp4'; manUsed = true; }
+  people.forEach((_, i) => {
+    videoMap[i] = STOCK_VIDEOS[(roomHash + i) % STOCK_VIDEOS.length];
   });
-  const videoOff = new Set(people.map((_, i) => i).filter(i => !videoMap[i]));
+  const videoOff = new Set();
 
   // Rotate active speaker with variable timing
   useEffect(() => {
@@ -202,6 +208,11 @@ export default function MeetingWindow({ win, onDrag, roomName, people, onOpenCha
   // Grid layout: 1 person = 1x1, 2 = 2x1, 3-4 = 2x2, 5-6 = 3x2, 7+ = 3x3
   const cols = people.length <= 1 ? 1 : people.length <= 4 ? 2 : 3;
   const rows = people.length <= 2 ? 1 : people.length <= 6 ? 2 : 3;
+  // Double the grid tracks so an underfilled last row can be centered (half-column precision)
+  const virtualCols = cols * 2;
+  const lastRowStart = (rows - 1) * cols;
+  const lastRowCount = people.length - lastRowStart;
+  const centerLastRow = lastRowCount > 0 && lastRowCount < cols;
 
   return (
     <div
@@ -241,9 +252,15 @@ export default function MeetingWindow({ win, onDrag, roomName, people, onOpenCha
 
       {/* Video grid */}
       <div className="meeting-win-body">
-        <div className="meeting-win-grid" style={{ gridTemplateColumns: `repeat(${cols}, 1fr)`, gridTemplateRows: `repeat(${rows}, 1fr)` }}>
-          {people.map((person, i) => (
-            <div key={person.name + i} className={`meeting-win-tile ${i === activeSpeaker ? 'meeting-win-tile-active' : ''} ${videoOff.has(i) ? 'meeting-win-tile-off' : ''}`}>
+        <div className="meeting-win-grid" style={{ gridTemplateColumns: `repeat(${virtualCols}, 1fr)`, gridTemplateRows: `repeat(${rows}, 1fr)` }}>
+          {people.map((person, i) => {
+            const isLastRow = i >= lastRowStart;
+            const tileStyle = { gridColumn: 'span 2' };
+            if (centerLastRow && isLastRow && i === lastRowStart) {
+              tileStyle.gridColumnStart = 1 + (cols - lastRowCount);
+            }
+            return (
+            <div key={person.name + i} style={tileStyle} className={`meeting-win-tile ${i === activeSpeaker ? 'meeting-win-tile-active' : ''} ${videoOff.has(i) ? 'meeting-win-tile-off' : ''}`}>
               {videoOff.has(i) ? (
                 <div className="meeting-win-avatar-wrap">
                   <img src={person.avatar} alt="" className="meeting-win-avatar" />
@@ -262,7 +279,8 @@ export default function MeetingWindow({ win, onDrag, roomName, people, onOpenCha
                 <span>{person.fullName || person.name}</span>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Roamoji ghosts */}

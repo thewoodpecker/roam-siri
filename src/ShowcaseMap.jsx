@@ -61,7 +61,7 @@ const FLOORS = {
     { id: 'r1', type: 'private', name: 'Klas L.', people: [], pos: { col: 0, row: 0 }, span: 1 },
     { id: 'r2', type: 'private', name: 'Derek C.', people: [p('Derek C.'), p('Michael M.')], pos: { col: 1, row: 0 }, span: 1 },
     { id: 'r3', type: 'private', name: 'John M.', people: [p('John M.')], pos: { col: 2, row: 0 }, span: 1 },
-    { id: 'r4', type: 'private', name: 'Howard L.', people: [p('Howard L.')], pos: { col: 3, row: 0 }, span: 1, story: '/story-1.png' },
+    { id: 'r4', type: 'private', name: 'Howard L.', people: [p('Howard L.')], pos: { col: 3, row: 0 }, span: 1, story: '/stories/story-1.png' },
     { id: 'r5', type: 'private', name: 'Keegan L.', people: [p('Keegan L.')], pos: { col: 4, row: 0 }, span: 1 },
     { id: 'r5b', type: 'private', name: 'Jon B.', people: [p('Jon B.')], pos: { col: 5, row: 0 }, span: 1 },
     { id: 'r6', type: 'private', name: 'Grace S.', people: [p('Grace S.')], pos: { col: 0, row: 1 }, span: 1 },
@@ -75,13 +75,13 @@ const FLOORS = {
     { id: 'r14b', type: 'private', name: 'Joe W.', people: [p('Joe W.')], pos: { col: 5, row: 2 }, span: 1 },
     { id: 'r15', type: 'private', name: 'Aaron W.', people: [p('Aaron W.')], pos: { col: 0, row: 3 }, span: 1 },
     { id: 'r16', type: 'game', name: 'Game Room', people: [], pos: { col: 1, row: 3 }, span: 1 },
-    { id: 'alan-kay', type: 'meeting', name: 'Meeting Room', people: [p('Thomas G.'), p('John H.'), p('Garima K.'), p('John B.')], pos: { col: 2, row: 3 }, colSpan: 2, rowSpan: 2 },
-    { id: 'standup', type: 'meeting', name: 'Daily Standup', people: [p('Lexi B.'), p('Will H.'), p('Arnav B.'), p('Mattias L.')], pos: { col: 4, row: 3 }, colSpan: 2, rowSpan: 2 },
+    { id: 'alan-kay', type: 'meeting', name: 'Meeting Room', people: [p('Grace S.'), p('Chelsea T.'), p('Lexi B.')], pos: { col: 2, row: 3 }, colSpan: 2, rowSpan: 2 },
+    { id: 'standup', type: 'meeting', name: 'Daily Standup', people: [p('Lexi B.'), p('Grace S.'), p('Chelsea T.'), p('Garima K.'), p('Ava L.')], pos: { col: 4, row: 3 }, colSpan: 2, rowSpan: 2 },
   ],
   'Commercial': [
     // Large lobby spanning top-left
     { id: 'c-lobby', type: 'meeting', name: 'Sales Floor', people: [p('Lexi B.'), p('Will H.'), p('Peter L.'), p('Sean M.'), p('Chelsea T.'), p('Garima K.'), p('Joe W.')], pos: { col: 0, row: 0 }, colSpan: 3, rowSpan: 2 },
-    { id: 'c1', type: 'private', name: 'Arnav B.', people: [p('Arnav B.')], pos: { col: 3, row: 0 }, span: 1, story: '/story-3.jpg' },
+    { id: 'c1', type: 'private', name: 'Arnav B.', people: [p('Arnav B.')], pos: { col: 3, row: 0 }, span: 1, story: '/stories/story-3.jpg' },
     { id: 'c2', type: 'private', name: 'Aaron W.', people: [p('Aaron W.')], pos: { col: 4, row: 0 }, span: 1 },
     { id: 'c3', type: 'private', name: 'Tom D.', people: [], pos: { col: 5, row: 0 }, span: 1 },
     // Row 2 — right side offices
@@ -101,11 +101,11 @@ const FLOORS = {
   'Marketing': [
     // Row 1 — offices with a gap in the middle
     { id: 'm1', type: 'private', name: 'Grace S.', people: [p('Grace S.')], pos: { col: 0, row: 0 }, span: 1 },
-    { id: 'm2', type: 'private', name: 'Chelsea T.', people: [p('Chelsea T.')], pos: { col: 1, row: 0 }, span: 1, story: '/story-2.png' },
+    { id: 'm2', type: 'private', name: 'Chelsea T.', people: [p('Chelsea T.')], pos: { col: 1, row: 0 }, span: 1, story: '/stories/story-2.png' },
     { id: 'm3', type: 'private', name: 'Keegan L.', people: [p('Keegan L.')], pos: { col: 4, row: 0 }, span: 1 },
     { id: 'm4', type: 'private', name: 'John M.', people: [p('John M.')], pos: { col: 5, row: 0 }, span: 1 },
     // Row 2 — meeting room in the center
-    { id: 'm5', type: 'private', name: 'Lexi B.', people: [p('Lexi B.')], pos: { col: 0, row: 1 }, span: 1, story: '/story-4.jpg' },
+    { id: 'm5', type: 'private', name: 'Lexi B.', people: [p('Lexi B.')], pos: { col: 0, row: 1 }, span: 1, story: '/stories/story-4.jpg' },
     { id: 'm-brand', type: 'meeting', name: 'Brand Review', people: [p('Ava L.'), p('Derek C.'), p('Arnav B.'), p('Aaron W.')], pos: { col: 1, row: 1 }, colSpan: 2, rowSpan: 2 },
     { id: 'm-content', type: 'meeting', name: 'Content Sync', people: [p('Rob F.'), p('Joe W.')], pos: { col: 3, row: 1 }, colSpan: 2, rowSpan: 2 },
     { id: 'm6', type: 'private', name: 'Mattias L.', people: [p('Mattias L.')], pos: { col: 5, row: 1 }, span: 1 },
@@ -584,7 +584,7 @@ function MagicastBubble({ onPositionChange, closing, initialSize = 260, initialP
         className={`mc-bubble-masked ${shape === 'square' ? 'mc-bubble-masked-square' : ''}`}
         style={shape !== 'square' ? { WebkitMaskImage: `url(${maskUrl})`, maskImage: `url(${maskUrl})` } : undefined}
       >
-        <video className="mc-bubble-video" src="/meeting-room/man-01.mp4" autoPlay loop muted playsInline />
+        <video className="mc-bubble-video" src="/videos/call-cafe.mp4" autoPlay loop muted playsInline />
       </div>
       <div className={`mc-bubble-hover-ui ${hovered ? 'mc-bubble-hover-visible' : ''}`}>
         <img className="mc-bubble-outline" src="/magicast/outline.svg" alt="" />
@@ -638,7 +638,7 @@ function MagicastWindow({ win, onDrag, pipPos, shape = 'circle' }) {
         <div className="mc-win-preview">
           <img className="mc-win-preview-bg" src="/magicast/preview.png" alt="" />
           <div className="mc-win-preview-overlay" />
-          <video className={`mc-win-preview-avatar ${shape === 'square' ? 'mc-win-preview-avatar-square' : ''}`} src="/meeting-room/man-01.mp4" autoPlay loop muted playsInline style={{ ...(pipPos ? { left: `${pipPos.x * 100}%`, top: `${pipPos.y * 100}%` } : {}), ...(shape !== 'square' ? { WebkitMaskImage: `url(${maskUrl})`, maskImage: `url(${maskUrl})`, WebkitMaskRepeat: 'no-repeat', maskRepeat: 'no-repeat', WebkitMaskPosition: 'center', maskPosition: 'center', WebkitMaskSize: '100%', maskSize: '100%' } : {}) }} />
+          <video className={`mc-win-preview-avatar ${shape === 'square' ? 'mc-win-preview-avatar-square' : ''}`} src="/videos/call-cafe.mp4" autoPlay loop muted playsInline style={{ ...(pipPos ? { left: `${pipPos.x * 100}%`, top: `${pipPos.y * 100}%` } : {}), ...(shape !== 'square' ? { WebkitMaskImage: `url(${maskUrl})`, maskImage: `url(${maskUrl})`, WebkitMaskRepeat: 'no-repeat', maskRepeat: 'no-repeat', WebkitMaskPosition: 'center', maskPosition: 'center', WebkitMaskSize: '100%', maskSize: '100%' } : {}) }} />
         </div>
         <div className="mc-win-row">
           <span className="mc-win-row-icon" style={{ WebkitMaskImage: 'url(/magicast/video.svg)', maskImage: 'url(/magicast/video.svg)' }} />
@@ -678,7 +678,7 @@ function MagicastFeatureVisual({ theme, className }) {
   const [shape, setShape] = useState('circle');
   return (
     <div className={`sc-feature-visual${className ? ' ' + className : ''}`} style={{ position: 'relative' }}>
-      <div className="sc-feature-wallpaper" style={{ backgroundImage: `url(/wallpaper-${theme}.png)` }}>
+      <div className="sc-feature-wallpaper" style={{ backgroundImage: `url(/wallpapers/wallpaper-${theme}.png)` }}>
         <MagicastWindow win={{ position: { x: 0, y: 0 }, zIndex: 1, isFocused: true, focus: () => {}, close: () => {}, open: () => {} }} onDrag={() => {}} shape={shape} />
       </div>
       <MagicastBubble initialSize={240} initialPos={{ x: 530, y: 420 }} shape={shape} onShapeChange={setShape} />
@@ -1046,7 +1046,7 @@ function ShowcaseMapInner() {
     });
   }, [activeFloor, movements]);
 
-  const theaterSpeakers = useMemo(() => [p('Tom D.'), p('Klas L.')], []);
+  const theaterSpeakers = useMemo(() => [p('Grace S.'), p('Chelsea T.')], []);
   const speakerStories = {};
 
   const allStoryRooms = useMemo(() => {
@@ -1121,7 +1121,7 @@ function ShowcaseMapInner() {
     return () => clearTimeout(t);
   }, []);
   useEffect(() => {
-    const src = theme === 'light' ? '/wallpaper-light.png' : '/wallpaper-dark.png';
+    const src = theme === 'light' ? '/wallpapers/wallpaper-light.png' : '/wallpapers/wallpaper-dark.png';
     const img = new Image();
     img.onload = () => setWallpaperLoaded(true);
     img.src = src;
@@ -1213,7 +1213,7 @@ function ShowcaseMapInner() {
       imgs.push(img);
     }
   }, [shelfWin.isOpen]);
-  const JOE = { name: 'Joe W.', fullName: 'Joe Woodward', avatar: '/headshots/joe-woodward.jpg' };
+  const JOE = { name: 'Ava L.', fullName: 'Ava Lee', avatar: '/headshots/joe-woodward.jpg' };
 
   const makeDragHandler = (win) => (e) => {
     if (e.target.closest('.sc-traffic-lights') || e.target.closest('.ainbox-traffic-lights') || e.target.closest('.sc-theme-toggle')) return;
@@ -1343,7 +1343,7 @@ function ShowcaseMapInner() {
             <div className="sc-light sc-light-minimize" />
             <div className="sc-light sc-light-maximize" />
           </div>
-          <img className="sc-titlebar-logo" src="/roam-logo.png" alt="roam" />
+          <img className="sc-titlebar-logo" src="/icons/roam-logo.png" alt="roam" />
           <div className="sc-titlebar-spacer" />
         </div>
 
@@ -1697,16 +1697,16 @@ function ShowcaseMapInner() {
       <div className="sc-feature-section sc-feature-section-reverse">
         <div className="sc-section-grid">
           <div className="sc-feature-visual sc-feature-visual-left">
-            <div className="sc-feature-wallpaper" style={{ backgroundImage: `url(/wallpaper-${theme}.png)` }}>
+            <div className="sc-feature-wallpaper" style={{ backgroundImage: `url(/wallpapers/wallpaper-${theme}.png)` }}>
               <MeetingWindow
                 win={{ position: { x: 0, y: 0 }, zIndex: 1, isFocused: true, focus: () => {}, close: () => {}, open: () => {} }}
                 onDrag={() => {}}
                 roomName="Daily Standup"
                 people={[
-                  { name: 'Howard L.', fullName: 'Howard Lerman', avatar: '/headshots/howard-lerman.jpg' },
                   { name: 'Grace S.', fullName: 'Grace Sutherland', avatar: '/headshots/grace-sutherland.jpg' },
-                  { name: 'Derek C.', fullName: 'Derek Cicerone', avatar: '/headshots/derek-cicerone.jpg' },
-                  { name: 'Joe W.', fullName: 'Joe Woodward', avatar: '/headshots/joe-woodward.jpg' },
+                  { name: 'Lexi B.', fullName: 'Lexi Bohonnon', avatar: '/headshots/lexi-bohonnon.jpg' },
+                  { name: 'Chelsea T.', fullName: 'Chelsea Turbin', avatar: '/headshots/chelsea-turbin.jpg' },
+                  { name: 'Garima K.', fullName: 'Garima Kewlani', avatar: '/headshots/garima-kewlani.jpg' },
                 ]}
               />
             </div>
@@ -1728,7 +1728,7 @@ function ShowcaseMapInner() {
             <a href="#" className="sc-feature-link">Learn about Theater →</a>
           </div>
           <div className="sc-feature-visual">
-            <div className="sc-feature-wallpaper" style={{ backgroundImage: `url(/wallpaper-${theme}.png)` }}>
+            <div className="sc-feature-wallpaper" style={{ backgroundImage: `url(/wallpapers/wallpaper-${theme}.png)` }}>
               <TheaterWindow
                 win={{ position: { x: 0, y: 0 }, zIndex: 1, isFocused: true, focus: () => {}, close: () => {}, open: () => {} }}
                 onDrag={() => {}}
@@ -1746,7 +1746,7 @@ function ShowcaseMapInner() {
       <div className="sc-feature-section sc-feature-section-reverse">
         <div className="sc-section-grid">
           <div className="sc-feature-visual sc-feature-visual-left">
-            <div className="sc-feature-wallpaper" style={{ backgroundImage: `url(/wallpaper-${theme}.png)` }}>
+            <div className="sc-feature-wallpaper" style={{ backgroundImage: `url(/wallpapers/wallpaper-${theme}.png)` }}>
               <AInbox win={{ position: { x: 0, y: 0 }, zIndex: 1, isFocused: true, focus: () => {}, close: () => {}, open: () => {} }} onDrag={() => {}} />
             </div>
           </div>
@@ -1767,7 +1767,7 @@ function ShowcaseMapInner() {
             <a href="#" className="sc-feature-link">Learn about Magic Minutes →</a>
           </div>
           <div className="sc-feature-visual">
-            <div className="sc-feature-wallpaper" style={{ backgroundImage: `url(/wallpaper-${theme}.png)` }}>
+            <div className="sc-feature-wallpaper" style={{ backgroundImage: `url(/wallpapers/wallpaper-${theme}.png)` }}>
               <MagicMinutes
                 win={{ position: { x: 0, y: 0 }, zIndex: 1, isFocused: true, focus: () => {}, close: () => {}, open: () => {} }}
                 onDrag={() => {}}
@@ -1781,7 +1781,7 @@ function ShowcaseMapInner() {
       <div className="sc-feature-section sc-feature-section-reverse">
         <div className="sc-section-grid">
           <div className="sc-feature-visual sc-feature-visual-left">
-            <div className="sc-feature-wallpaper" style={{ backgroundImage: `url(/wallpaper-${theme}.png)` }}>
+            <div className="sc-feature-wallpaper" style={{ backgroundImage: `url(/wallpapers/wallpaper-${theme}.png)` }}>
               <Lobby win={{ position: { x: 0, y: 0 }, zIndex: 1, isFocused: true, focus: () => {}, close: () => {}, open: () => {} }} onDrag={() => {}} />
             </div>
           </div>
@@ -1809,7 +1809,7 @@ function ShowcaseMapInner() {
       <div className="sc-feature-section sc-feature-section-reverse">
         <div className="sc-section-grid">
           <div className="sc-feature-visual sc-feature-visual-left">
-            <div className="sc-feature-wallpaper" style={{ backgroundImage: `url(/wallpaper-${theme}.png)` }}>
+            <div className="sc-feature-wallpaper" style={{ backgroundImage: `url(/wallpapers/wallpaper-${theme}.png)` }}>
               <OnAir win={{ position: { x: 0, y: 0 }, zIndex: 1, isFocused: true, focus: () => {}, close: () => {}, open: () => {} }} onDrag={() => {}} demo />
             </div>
           </div>

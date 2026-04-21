@@ -454,8 +454,8 @@ export const INITIAL_CONVERSATIONS = {
     groupImg: '/groups/Group Design.png',
     avatars: ['/headshots/grace-sutherland.jpg', '/headshots/tom-dixon.jpg', '/headshots/joe-woodward.jpg'],
     pinnedItems: [
-      { label: "It's Nice That", emoji: null, avatar: '/favicon-design-1.png' },
-      { label: 'Dribbble', emoji: null, avatar: '/favicon-design-dribbble.png' },
+      { label: "It's Nice That", emoji: null, avatar: '/icons/favicons/favicon-design-1.png' },
+      { label: 'Dribbble', emoji: null, avatar: '/icons/favicons/favicon-design-dribbble.png' },
     ],
     typingAvatars: ['/headshots/will-hou.jpg'],
     messages: [

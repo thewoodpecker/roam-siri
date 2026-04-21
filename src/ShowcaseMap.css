@@ -990,11 +990,11 @@
 }
 
 .sc-wallpaper-dark {
-  background-image: url('/wallpaper-dark.png');
+  background-image: url('/wallpapers/wallpaper-dark.png');
 }
 
 .sc-wallpaper-light {
-  background-image: url('/wallpaper-light.png');
+  background-image: url('/wallpapers/wallpaper-light.png');
 }
 
 .miniRoamOS::after {

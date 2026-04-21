@@ -26,8 +26,16 @@ function SoundButton({ emoji, level, onClick }) {
   );
 }
 
-const WOMEN_KEYS = ['Grace', 'Chelsea', 'Lexi', 'Garima', 'Ava'];
-const NO_VIDEO_KEYS = ['Tom'];
+const STAGE_VIDEOS = [
+  '/videos/call-library.mp4',
+  '/videos/call-smile.mp4',
+  '/videos/call-cafe.mp4',
+  '/videos/call-earbuds.mp4',
+  '/videos/call-selfie.mp4',
+  '/videos/call-window.mp4',
+  '/videos/call-meditation.mp4',
+  '/videos/call-bedroom.mp4',
+];
 
 // Build a 4x5 grid of benches; each bench holds 5 slots with some empty.
 // Pattern describes which slot indices in each bench are filled (0-4).
@@ -188,11 +196,11 @@ export default function TheaterWindow({ win, onDrag, speakers = [], audience = [
 
   // Stage speakers only — no padding from audience
   const stageTiles = speakers.slice(0, 3);
-  const videoFor = (person) => {
+  const videoFor = (person, i) => {
+    if (i === 1) return '/videos/call-smile.mp4';
     const name = person.fullName || person.name || '';
-    if (NO_VIDEO_KEYS.some(k => name.includes(k))) return null;
-    const isWoman = WOMEN_KEYS.some(w => name.includes(w));
-    return isWoman ? '/meeting-room/woman-01.mp4' : '/meeting-room/man-01.mp4';
+    const nameHash = name.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+    return STAGE_VIDEOS[(nameHash + i) % STAGE_VIDEOS.length];
   };
 
   const pos = win.position || { x: 70, y: 220 };
@@ -220,7 +228,7 @@ export default function TheaterWindow({ win, onDrag, speakers = [], audience = [
         {/* Stage — 3 video tiles */}
         <div className="theater-win-stage">
           {stageTiles.map((person, i) => {
-            const videoSrc = videoFor(person);
+            const videoSrc = videoFor(person, i);
             return (
               <div key={(person.name || 'x') + i} className="theater-win-tile">
                 {videoSrc ? (
