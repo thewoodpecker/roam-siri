@@ -147,7 +147,7 @@
 }
 
 .mc-msg-bubble-self p {
-  color: var(--text-on-accented);
+  color: var(--text-primary-on-light);
 }
 
 .mc-translate-btn {

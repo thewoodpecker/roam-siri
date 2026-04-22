@@ -1497,24 +1497,358 @@ function DmMessage({ msg, isFirstInGroup, isLastInGroup }) {
 /* ———————————————————————————————————————
    Default reactions for thread original msg
 ——————————————————————————————————————— */
+// Sidebar view dropdown — icons sourced from the Roam desktop app.
+const SIDEBAR_VIEW_ITEMS = [
+  { id: 'inbox', label: 'AInbox', icon: '/icons/menu/IconChatSmall.svg' },
+  { id: 'activity', label: 'Activity', icon: '/icons/menu/IconLightningSmall.svg' },
+  { id: 'dms', label: 'DMs', icon: '/icons/menu/IconChatOneOnOneSmall.svg' },
+  { id: 'groups', label: 'Groups', icon: '/icons/menu/IconPerson2.svg' },
+  { id: 'threads', label: 'Threads', icon: '/icons/menu/IconArrowTurnUpLeftSmall.svg' },
+  { id: 'meetings', label: 'Meetings', icon: '/icons/menu/IconVideoCameraSparkle.svg' },
+  { id: 'guests', label: 'Guests', icon: '/icons/menu/IconPersonPass.svg' },
+  { id: 'bookmarks', label: 'Bookmarks', icon: '/icons/menu/IconBookmark.svg' },
+  'divider',
+  { id: 'actions', label: 'My Action Items', icon: '/icons/menu/IconChecklistSmall.svg' },
+];
+
+const SIDEBAR_VIEW_LABELS = SIDEBAR_VIEW_ITEMS.reduce((acc, v) => {
+  if (v !== 'divider') acc[v.id] = v.label;
+  return acc;
+}, {});
+
+// ──────────────────────────────────────────────────────────────────────
+// Activity view — matches the Figma (node 39541:34085). A featured-users
+// strip at the top and a chronological list of activity rows below.
+// ──────────────────────────────────────────────────────────────────────
+const ACTIVITY_FEATURED = [
+  { name: 'Will', avatar: '/headshots/will-hou.jpg', tooltip: 'What happened on this call before' },
+  { name: 'Howard', avatar: '/headshots/howard-lerman.jpg' },
+  { name: 'Design', groupImg: '/groups/Group Design.png', cornerAvatar: '/headshots/grace-sutherland.jpg', tooltip: 'Can we do this' },
+];
+
+const ACTIVITY_ITEMS = [
+  { kind: 'row', chatId: 'act-bugs', icon: '/groups/Group Bug Report.png', name: 'Bug Reports', sub: 'Roam Bug Reports: New bug from the',
+    chat: { type: 'group', name: 'Bug Reports', memberCount: 4, groupImg: '/groups/Group Bug Report.png', avatars: ['/headshots/derek-cicerone.jpg', '/headshots/keegan-lanzillotta.jpg', '/headshots/rob-figueiredo.jpg'],
+      messages: [
+        { id: 1, sender: 'Roam Bug Reports', avatar: '/groups/Group Bug Report.png', time: 'Today 9:41 AM', text: 'New bug from Chelsea: AInbox thread typing indicator shows two avatars at once when a reply lands mid-typing. Repro in the linked issue.' },
+        { id: 2, sender: 'Derek Cicerone', avatar: '/headshots/derek-cicerone.jpg', time: '9:44 AM', text: "On it. Smells like a state reset that's not firing after sendMessage." },
+        { id: 3, sender: 'Keegan Lanzillotta', avatar: '/headshots/keegan-lanzillotta.jpg', time: '9:48 AM', text: 'Another one: Drop-In audio cuts for ~200ms on Bluetooth handoff. iPhone 15 Pro + AirPods Pro 2.' },
+        { id: 4, sender: 'Rob Figueiredo', avatar: '/headshots/rob-figueiredo.jpg', time: '9:52 AM', text: "Reproduced on my end. I'll file it under audio-routing — feels like a regression from the CoreAudio refactor." },
+        { id: 5, sender: 'Derek Cicerone', avatar: '/headshots/derek-cicerone.jpg', time: '10:01 AM', text: 'Typing bug fix up for review: https://github.com/roam/app/pull/4812 — should land today.' },
+        { id: 6, sender: 'Roam Bug Reports', avatar: '/groups/Group Bug Report.png', time: '10:14 AM', text: 'New bug from Will: Theater reactions double-counting when two people react within the same animation frame.' },
+        { id: 7, sender: 'Keegan Lanzillotta', avatar: '/headshots/keegan-lanzillotta.jpg', time: '10:18 AM', text: 'Seen that one before. Likely the reducer coalesce — I can take it.' },
+      ] } },
+  { kind: 'row', chatId: 'act-klas', avatar: '/headshots/klas-leino.jpg', online: true, name: 'Klas Leino', sub: "Running the new Claude Opus 4.7 against our eval set — first numbers are in and they're wild.",
+    chat: { type: 'dm', name: 'Klas Leino', subtitle: 'Active now', avatar: '/headshots/klas-leino.jpg',
+      messages: [
+        { id: 1, self: false, text: "Running the new Claude Opus 4.7 against our eval set — first numbers are in and they're wild." },
+        { id: 2, self: true, text: 'how does it compare to 4.6?' },
+        { id: 3, self: false, text: '40% fewer hallucinations on the multi-thread condensation benchmark. And faster — median 1.8s vs 2.3s.' },
+        { id: 4, self: true, text: 'wait, on the long-meeting Magic Minutes set too?' },
+        { id: 5, self: false, text: "Yeah. Extended thinking on a 90-min transcript and it nails the action items — no more merging two people's asks into one." },
+        { id: 6, self: true, text: 'huge. any regressions?' },
+        { id: 7, self: false, text: "Slight uptick in verbosity on short DMs. I'm tuning the system prompt to pull it back." },
+        { id: 8, self: true, text: 'ok. ship to staging?' },
+        { id: 9, self: false, text: "Rolling it out tonight. If the numbers hold through the week we flip the default for everyone Monday." },
+      ] } },
+  { kind: 'row', chatId: 'act-hkm', avatars: ['/headshots/howard-lerman.jpg', '/headshots/klas-leino.jpg', '/headshots/michael-miller.jpg'], name: 'Howard, Klas & Michael', sub: "Hey there! I just finished working on a new logo design for a client, and I'm really excited about how it turned out.",
+    chat: { type: 'group', name: 'Howard, Klas & Michael', memberCount: 3, groupImg: '/headshots/howard-lerman.jpg', avatars: ['/headshots/howard-lerman.jpg', '/headshots/klas-leino.jpg', '/headshots/michael-miller.jpg'],
+      messages: [
+        { id: 1, sender: 'Klas Leino', avatar: '/headshots/klas-leino.jpg', time: 'Today 10:02 AM', text: "Just finished the first pass of the new logo direction. Want a quick look before I send it wider?" },
+        { id: 2, sender: 'Howard Lerman', avatar: '/headshots/howard-lerman.jpg', time: '10:04 AM', text: 'Yes, drop it.' },
+        { id: 3, sender: 'Michael Miller', avatar: '/headshots/michael-miller.jpg', time: '10:06 AM', text: 'Same. I can review in the next 20 min.' },
+        { id: 4, sender: 'Klas Leino', avatar: '/headshots/klas-leino.jpg', time: '10:09 AM', text: "Three concepts: (1) the classic Roam circle tightened up, (2) a typography-first treatment, (3) an abstract door motif." },
+        { id: 5, sender: 'Howard Lerman', avatar: '/headshots/howard-lerman.jpg', time: '10:12 AM', text: '(3) instantly. The door is the story.' },
+        { id: 6, sender: 'Michael Miller', avatar: '/headshots/michael-miller.jpg', time: '10:14 AM', text: 'Agree on (3). The motif scales down to the favicon way better than (2).' },
+        { id: 7, sender: 'Klas Leino', avatar: '/headshots/klas-leino.jpg', time: '10:18 AM', text: "Perfect. I'll refine (3) and post variants tomorrow morning." },
+        { id: 8, sender: 'Howard Lerman', avatar: '/headshots/howard-lerman.jpg', time: '10:19 AM', text: 'Thanks team. This feels right.' },
+      ] } },
+  { kind: 'row', chatId: 'act-derek', avatar: '/headshots/derek-cicerone.jpg', unread: true, emphasis: true, name: 'Derek Cicerone', sub: 'I attended a design conference yesterday, and it was incredibly inspiring',
+    chat: { type: 'dm', name: 'Derek Cicerone', subtitle: 'Active now', avatar: '/headshots/derek-cicerone.jpg',
+      messages: [
+        { id: 1, self: false, text: 'I attended a design conference yesterday, and it was incredibly inspiring.' },
+        { id: 2, self: false, text: 'Tons of ideas I want to try on the AInbox composer.' },
+      ] } },
+  { kind: 'row', chatId: 'act-michael', avatar: '/headshots/michael-miller.jpg', unread: true, emphasis: true, name: 'Michael Miller', sub: 'I recently discovered a fantastic design tool that has revolutionized my workflow. Its intuitive interface and powerful features make creating prototypes a breeze',
+    chat: { type: 'dm', name: 'Michael Miller', subtitle: 'Active now', avatar: '/headshots/michael-miller.jpg',
+      messages: [
+        { id: 1, self: false, text: 'I recently discovered a fantastic design tool that has revolutionized my workflow. Intuitive, fast, and the prototypes feel real.' },
+      ] } },
+  { kind: 'row', chatId: 'act-features', icon: '/groups/Group Features.png', name: 'New Feature Requests', sub: "Frank Cork: Would love multi-cursor collaboration in Magicast",
+    chat: { type: 'group', name: 'New Feature Requests', memberCount: 12, groupImg: '/groups/Group Features.png', avatars: ['/headshots/chelsea-turbin.jpg', '/headshots/jon-brod.jpg', '/headshots/grace-sutherland.jpg'],
+      messages: [
+        { id: 1, sender: 'Frank Cork', avatar: '/headshots/john-beutner.jpg', time: 'Today 11:12 AM', text: "Request from a big account: multi-cursor collaboration in Magicast. They want two people trimming a recording together." },
+        { id: 2, sender: 'Chelsea Turbin', avatar: '/headshots/chelsea-turbin.jpg', time: '11:14 AM', text: "+1 from customer success. We've heard this from at least four orgs this quarter." },
+        { id: 3, sender: 'Jon Brod', avatar: '/headshots/jon-brod.jpg', time: '11:17 AM', text: 'Parking for Q3 unless it becomes a deal-breaker.' },
+        { id: 4, sender: 'Grace Sutherland', avatar: '/headshots/grace-sutherland.jpg', time: '11:20 AM', text: "Another ask: custom emoji reactions in Theater. I'd pair it with the reaction tray redesign we already have queued." },
+        { id: 5, sender: 'Frank Cork', avatar: '/headshots/john-beutner.jpg', time: '11:24 AM', text: 'Also — dark-mode for the guest landing page. Customers keep screenshotting it mismatched with their dashboards.' },
+        { id: 6, sender: 'Chelsea Turbin', avatar: '/headshots/chelsea-turbin.jpg', time: '11:31 AM', text: 'Noted. Adding all three to the triage doc and flagging for the Q3 planning thread.' },
+      ] } },
+  { kind: 'row', chatId: 'act-tom', avatar: '/headshots/tom-dixon.jpg', name: 'Tom Dixon', sub: 'Pushed the new onboarding flow to staging',
+    chat: { type: 'dm', name: 'Tom Dixon', subtitle: 'Active now', avatar: '/headshots/tom-dixon.jpg',
+      messages: [
+        { id: 1, self: false, text: "Pushed the new onboarding flow to staging — three screens, no friction. Try it when you get a minute." },
+        { id: 2, self: true, text: 'Just poked at it. The progress indicator at the top feels like the star of the show.' },
+        { id: 3, self: false, text: 'Ha, that was Grace insisting. I fought her for five minutes and she was right.' },
+        { id: 4, self: true, text: 'Also: the empty state on screen 2 — any chance we can swap the illustration for something more office-y?' },
+        { id: 5, self: false, text: "Already thinking it. I'll pair with Klas tomorrow." },
+      ] } },
+  { kind: 'row', chatId: 'act-computer', icon: '/groups/Group Computer.png', name: 'Computer People', sub: 'Jeff Grossman: M4 Max benchmarks are nuts',
+    chat: { type: 'group', name: 'Computer People', memberCount: 6, groupImg: '/groups/Group Computer.png', avatars: ['/headshots/jeff-grossman.jpg', '/headshots/klas-leino.jpg'],
+      messages: [
+        { id: 1, sender: 'Jeff Grossman', avatar: '/headshots/jeff-grossman.jpg', time: 'Today 12:04 PM', text: "M4 Max benchmarks are out and they're nuts. Geekbench 6 ST is hitting 3,900." },
+        { id: 2, sender: 'Klas Leino', avatar: '/headshots/klas-leino.jpg', time: '12:06 PM', text: 'Unified memory at 128GB is the real story for us. Finally enough headroom to run bigger local models during dev.' },
+        { id: 3, sender: 'Rob Figueiredo', avatar: '/headshots/rob-figueiredo.jpg', time: '12:09 PM', text: 'Meanwhile my Framework 16 just arrived. Linux and I are about to become very close again.' },
+        { id: 4, sender: 'Jeff Grossman', avatar: '/headshots/jeff-grossman.jpg', time: '12:11 PM', text: 'lol welcome back. bring snacks for the kernel-update meetings.' },
+        { id: 5, sender: 'Michael Miller', avatar: '/headshots/michael-miller.jpg', time: '12:14 PM', text: "Anyone else tried the new ARM Windows build on Snapdragon X Elite? Battery's actually respectable now." },
+        { id: 6, sender: 'Klas Leino', avatar: '/headshots/klas-leino.jpg', time: '12:17 PM', text: "Yeah — still some Electron pain, but it's within a day of shipping Roam natively on ARM Windows." },
+        { id: 7, sender: 'Jeff Grossman', avatar: '/headshots/jeff-grossman.jpg', time: '12:19 PM', text: 'Ok giving Dell the benefit of the doubt one more time this year 😤' },
+      ] } },
+  { kind: 'header', label: 'Yesterday' },
+  { kind: 'row', chatId: 'act-apple', icon: '/groups/Group Apple.png', active: true, name: 'Apple', sub: 'Tim Apple: The new iOS is the best',
+    chat: { type: 'group', name: 'Apple', memberCount: 5, groupImg: '/groups/Group Apple.png', avatars: ['/headshots/howard-lerman.jpg'],
+      messages: [
+        { id: 1, sender: 'Tim Apple', avatar: '/groups/Group Apple.png', time: 'Yesterday 3:14 PM', text: 'The new iOS is the best.' },
+      ] } },
+  { kind: 'row', chatId: 'act-robert', avatar: '/headshots/rob-figueiredo.jpg', name: 'Robert Fox', sub: 'Just booked flights for Lisbon. Five days in May.',
+    chat: { type: 'dm', name: 'Robert Fox', subtitle: 'Last active yesterday', avatar: '/headshots/rob-figueiredo.jpg',
+      messages: [
+        { id: 1, self: false, text: 'Just booked flights for Lisbon. Five days in May — taking the family. 🇵🇹' },
+        { id: 2, self: true, text: 'Amazing. Staying in Alfama?' },
+        { id: 3, self: false, text: "Yeah, that little airbnb near the miradouro I told you about. Kid's already asking about pastéis." },
+        { id: 4, self: true, text: 'Lol. Do the day trip to Sintra if you can. Pena Palace is a whole thing.' },
+        { id: 5, self: false, text: "Already on the list. Any food spots I shouldn't miss?" },
+        { id: 6, self: true, text: 'Cervejaria Ramiro for seafood. Non-negotiable.' },
+      ] } },
+  { kind: 'row', chatId: 'act-brooklyn', avatar: '/headshots/chelsea-turbin.jpg', name: 'Brooklyn Simmons', sub: 'Venue locked in! June 15th, Hudson Valley.',
+    chat: { type: 'dm', name: 'Brooklyn Simmons', subtitle: 'Last active yesterday', avatar: '/headshots/chelsea-turbin.jpg',
+      messages: [
+        { id: 1, self: false, text: 'Venue locked in! June 15th, Hudson Valley. 💍' },
+        { id: 2, self: true, text: 'Congrats!! That timeline moved fast.' },
+        { id: 3, self: false, text: "I know. Once we saw it we didn't want to wait. Outdoor ceremony, then dinner in the barn." },
+        { id: 4, self: true, text: 'The photos are going to be unreal.' },
+        { id: 5, self: false, text: "Save the dates go out next week. Don't even think about skipping it 😂" },
+        { id: 6, self: true, text: "I'll be there front row." },
+      ] } },
+  { kind: 'row', chatId: 'act-jenny', avatar: '/headshots/lexi-bohonnon.jpg', name: 'Jenny Wilson', sub: 'Finally finished the sourdough starter',
+    chat: { type: 'dm', name: 'Jenny Wilson', subtitle: 'Last active yesterday', avatar: '/headshots/lexi-bohonnon.jpg',
+      messages: [
+        { id: 1, self: false, text: 'Finally finished the sourdough starter. Day 7. She lives.' },
+        { id: 2, self: false, text: 'I named her Bubbles.' },
+        { id: 3, self: true, text: 'Lmao. Did the first loaf come out good?' },
+        { id: 4, self: false, text: "Crumb is perfect. Crust is almost right — I need a hotter dutch oven." },
+        { id: 5, self: true, text: 'Drop a slice by the office and I will personally validate.' },
+        { id: 6, self: false, text: "Deal. Friday I'll bring a whole one." },
+      ] } },
+  { kind: 'row', chatId: 'act-leslie', avatar: '/headshots/aaron-wadhwa.jpg', name: 'Leslie Alexander', sub: 'First 10k on Sunday. I might actually die.',
+    chat: { type: 'dm', name: 'Leslie Alexander', subtitle: 'Last active yesterday', avatar: '/headshots/aaron-wadhwa.jpg',
+      messages: [
+        { id: 1, self: false, text: 'First 10k on Sunday. I might actually die.' },
+        { id: 2, self: true, text: "You're not going to die. You've been training for what, 12 weeks?" },
+        { id: 3, self: false, text: '14. Longest run was 8.5 a week ago.' },
+        { id: 4, self: true, text: "You're in. Just go out slow, finish strong. Pace chart is your friend." },
+        { id: 5, self: false, text: "Spectators wanted. I'll need someone holding a sign with my face on it at the 8k mark." },
+        { id: 6, self: true, text: "I will personally laminate it." },
+      ] } },
+];
+
+function ActivityRow({ item, selected, onSelect }) {
+  return (
+    <div
+      className={`ainbox-activity-row ${selected ? 'ainbox-activity-row-active' : ''}`}
+      onClick={onSelect}
+    >
+      {item.unread && <div className="ainbox-activity-row-unread" />}
+      <div className="ainbox-activity-row-avatar">
+        {item.avatars ? (
+          <div className="ainbox-activity-row-stack">
+            {item.avatars.map((src, i) => (
+              <img key={i} src={src} alt="" className={`ainbox-activity-row-stack-img ainbox-activity-row-stack-${i}`} />
+            ))}
+          </div>
+        ) : item.icon ? (
+          <img src={item.icon} alt="" className="ainbox-activity-row-img" />
+        ) : (
+          <img src={item.avatar} alt="" className="ainbox-activity-row-img" />
+        )}
+        {item.online && <div className="ainbox-activity-row-online" />}
+      </div>
+      <div className="ainbox-activity-row-labels">
+        <div className={`ainbox-activity-row-name ${item.emphasis ? 'ainbox-activity-row-name-bold' : ''}`}>{item.name}</div>
+        <div className="ainbox-activity-row-sub">{item.sub}</div>
+      </div>
+    </div>
+  );
+}
+
+const INJECTABLE_ACTIVITY = [
+  { kind: 'row', chatId: 'inj-mattias', avatar: '/headshots/mattias-leino.jpg', unread: true, emphasis: true, name: 'Mattias Leino', sub: 'New evals just landed — the agent is hitting 94% on the multi-step planning set.',
+    chat: { type: 'dm', name: 'Mattias Leino', subtitle: 'Active now', avatar: '/headshots/mattias-leino.jpg',
+      messages: [
+        { id: 1, self: false, text: 'New evals just landed — the agent is hitting 94% on the multi-step planning set.' },
+        { id: 2, self: true, text: 'wait, 94? what was the last baseline?' },
+        { id: 3, self: false, text: '81. The chain-of-thought prompt rewrite did most of it — bigger gain than the model swap.' },
+        { id: 4, self: true, text: "that's a huge jump. where does it still fall over?" },
+        { id: 5, self: false, text: 'Long-horizon tasks with 10+ tool calls. Drifts on state midway. I think we need a scratchpad memory.' },
+        { id: 6, self: true, text: "makes sense. let's spec it tomorrow?" },
+        { id: 7, self: false, text: "Perfect, that works for me." },
+      ] } },
+  { kind: 'row', chatId: 'inj-chelsea', avatar: '/headshots/chelsea-turbin.jpg', unread: true, emphasis: true, name: 'Chelsea Turbin', sub: 'Customer wants Magic Minutes to summarize their last 30 meetings into one doc. Can we?',
+    chat: { type: 'dm', name: 'Chelsea Turbin', subtitle: 'Active now', avatar: '/headshots/chelsea-turbin.jpg',
+      messages: [
+        { id: 1, self: false, text: 'Customer wants Magic Minutes to summarize their last 30 meetings into one doc. Can we?' },
+        { id: 2, self: true, text: 'which customer?' },
+        { id: 3, self: false, text: "Linear. They're using Roam for weekly product reviews and want a Q1 recap doc pulled from the transcripts." },
+        { id: 4, self: true, text: "that's actually a killer use case. we can chain Magic Minutes summaries into a rollup." },
+        { id: 5, self: false, text: 'Yeah exactly. Want me to write it up as a feature request?' },
+        { id: 6, self: true, text: 'yes — tag it "multi-meeting rollup" and cc Klas' },
+        { id: 7, self: false, text: 'On it 🚀' },
+      ] } },
+  { kind: 'row', chatId: 'inj-grace', avatar: '/headshots/grace-sutherland.jpg', unread: true, emphasis: true, name: 'Grace Sutherland', sub: 'Wrote the entire launch script with the AInbox composer — it nailed the voice on the first pass 👀',
+    chat: { type: 'dm', name: 'Grace Sutherland', subtitle: 'Active now', avatar: '/headshots/grace-sutherland.jpg',
+      messages: [
+        { id: 1, self: false, text: 'Wrote the entire launch script with the AInbox composer — it nailed the voice on the first pass 👀' },
+        { id: 2, self: true, text: 'no way. which prompt?' },
+        { id: 3, self: false, text: "Just fed it the last three launch posts and said 'match this energy'. One-shot." },
+        { id: 4, self: true, text: "that's wild. how's the VO read?" },
+        { id: 5, self: false, text: "Tight. I trimmed like 4 lines. Otherwise the rhythm was already there." },
+        { id: 6, self: true, text: 'send me the cut when it renders' },
+        { id: 7, self: false, text: 'ETA 20 min 🎬' },
+      ] } },
+  { kind: 'row', chatId: 'inj-jeff', avatar: '/headshots/jeff-grossman.jpg', unread: true, emphasis: true, name: 'Jeff Grossman', sub: 'Local inference on the M4 Max is running 3x faster than the cloud baseline. Unreal.',
+    chat: { type: 'dm', name: 'Jeff Grossman', subtitle: 'Active now', avatar: '/headshots/jeff-grossman.jpg',
+      messages: [
+        { id: 1, self: false, text: 'Local inference on the M4 Max is running 3x faster than the cloud baseline. Unreal.' },
+        { id: 2, self: true, text: 'on which model?' },
+        { id: 3, self: false, text: "The quantized 70B we've been testing. Token throughput is hitting 42/s on-device." },
+        { id: 4, self: true, text: "ok that changes the story for offline mode." },
+        { id: 5, self: false, text: 'Exactly what I was thinking. We could ship full AInbox summarization without a round-trip.' },
+        { id: 6, self: true, text: "let's demo it at next week's all-hands" },
+        { id: 7, self: false, text: '👍 building the demo now.' },
+      ] } },
+];
+
+function InjectedRow({ item, selected, onSelect }) {
+  const [entered, setEntered] = useState(false);
+  useEffect(() => {
+    const raf1 = requestAnimationFrame(() => {
+      const raf2 = requestAnimationFrame(() => setEntered(true));
+      return () => cancelAnimationFrame(raf2);
+    });
+    return () => cancelAnimationFrame(raf1);
+  }, []);
+  return (
+    <div className={`ainbox-activity-row-wrap ${entered ? 'ainbox-activity-row-wrap-entered' : ''}`}>
+      <ActivityRow item={item} selected={selected} onSelect={onSelect} />
+    </div>
+  );
+}
+
+function ActivityView({ selectedChat, onSelect, injected = [] }) {
+  return (
+    <div className="ainbox-activity">
+      <div className="ainbox-favorites">
+        {ACTIVITY_FEATURED.map(f => (
+          <div key={f.name} className="ainbox-fav-item">
+            {f.groupImg ? (
+              <img src={f.groupImg} alt="" className="ainbox-fav-avatar" />
+            ) : (
+              <img src={f.avatar} alt="" className="ainbox-fav-avatar" />
+            )}
+            <span className="ainbox-fav-name">{f.name}</span>
+          </div>
+        ))}
+      </div>
+      <div className="ainbox-activity-list">
+        {injected.map((it) => (
+          <InjectedRow
+            key={it.chatId}
+            item={it}
+            selected={selectedChat === it.chatId}
+            onSelect={() => onSelect(it)}
+          />
+        ))}
+        {ACTIVITY_ITEMS.map((it, i) => {
+          if (it.kind === 'header') {
+            return (
+              <div key={`h-${i}`} className="ainbox-activity-section">
+                <div className="ainbox-activity-section-sep" />
+                <div className="ainbox-activity-section-label">{it.label}</div>
+              </div>
+            );
+          }
+          return (
+            <ActivityRow
+              key={it.chatId}
+              item={it}
+              selected={selectedChat === it.chatId}
+              onSelect={() => onSelect(it)}
+            />
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 const THREAD_REACTIONS = [
   { emoji: '👍', count: 6 }, { emoji: '✅', count: 4 },
   { emoji: '🔥', count: 3, active: true }, { emoji: '🚀', count: 5 }, { emoji: '💯', count: 2 },
 ];
 
-export default function AInbox({ win, onDrag, onOpenMagicMinutes, initialThreadView = null, initialChatId = null, initialSearchActive = false, initialSearchQuery = '', sidebarScrollToBottom = false, staticMode = false, autoAddFolders = false, favoritesOverride = null, sectionsOverride = null, messagesOverride = null, mmAutoPrompt = false }) {
+export default function AInbox({ win, onDrag, onOpenMagicMinutes, initialThreadView = null, initialChatId = null, initialSearchActive = false, initialSearchQuery = '', sidebarScrollToBottom = false, staticMode = false, autoAddFolders = false, favoritesOverride = null, sectionsOverride = null, messagesOverride = null, mmAutoPrompt = false, mmPrompts = null, initialSidebarView = 'inbox' }) {
   const favorites = favoritesOverride || FAVORITES;
   const sidebarSections = sectionsOverride || SIDEBAR_SECTIONS;
   const defaultSelected = sidebarSections[0]?.items?.[0]?.id || 'design';
   const [selectedChat, setSelectedChat] = useState(initialChatId || initialThreadView?.chatId || (sectionsOverride ? defaultSelected : 'design'));
   const [collapsedSections, setCollapsedSections] = useState({});
   const [inputText, setInputText] = useState('');
+  const [sidebarView, setSidebarView] = useState(initialSidebarView);
+  const [sidebarMenuOpen, setSidebarMenuOpen] = useState(false);
   const chatCtx = useChat();
   const pickRandom = chatCtx.pickRandom;
   const getReply = chatCtx.getReply;
-  const [overrideMessages, setOverrideMessages] = useState(messagesOverride);
+  const [overrideMessages, setOverrideMessages] = useState(() => {
+    if (!messagesOverride) return messagesOverride;
+    if (initialChatId && initialChatId.startsWith('act-')) {
+      const item = ACTIVITY_ITEMS.find(it => it.chatId === initialChatId);
+      if (item?.chat && !messagesOverride[initialChatId]) {
+        return { ...messagesOverride, [initialChatId]: item.chat };
+      }
+    }
+    return messagesOverride;
+  });
   const messages = messagesOverride ? overrideMessages : chatCtx.messages;
   const setMessages = messagesOverride ? setOverrideMessages : chatCtx.setMessages;
+  const [injectedActivity, setInjectedActivity] = useState([]);
+  const [activityInView, setActivityInView] = useState(false);
+  const rootRef = useRef(null);
+  useEffect(() => {
+    if (sidebarView !== 'activity' || activityInView) return;
+    const el = rootRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver((entries) => {
+      for (const e of entries) {
+        if (e.isIntersecting && e.intersectionRatio >= 0.35) {
+          setActivityInView(true);
+          io.disconnect();
+          break;
+        }
+      }
+    }, { threshold: [0, 0.35, 0.6, 1] });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [sidebarView, activityInView]);
+  useEffect(() => {
+    if (sidebarView !== 'activity' || !activityInView) return;
+    let i = 0;
+    const id = setInterval(() => {
+      if (i >= INJECTABLE_ACTIVITY.length) { clearInterval(id); return; }
+      const next = INJECTABLE_ACTIVITY[i++];
+      setInjectedActivity(prev => (prev.some(p => p.chatId === next.chatId) ? prev : [next, ...prev]));
+    }, 3500);
+    return () => clearInterval(id);
+  }, [sidebarView, activityInView]);
   const [closing, setClosing] = useState(false);
   // threadView: null or { chatId, messageId }
   const [threadView, setThreadView] = useState(initialThreadView);
@@ -2137,7 +2471,7 @@ export default function AInbox({ win, onDrag, onOpenMagicMinutes, initialThreadV
   // questions and injects MM replies directly into the active thread.
   useEffect(() => {
     if (!mmAutoPrompt || !threadView) return;
-    const PROMPTS = [
+    const DEFAULT_PROMPTS = [
       {
         q: "@MagicMinutes please summarize this thread for me",
         a: "Q2 Planning in a nutshell: three priorities locked — AInbox redesign ships Friday, Magic Minutes becomes the demo headline, and enterprise onboarding gets tightened. Revenue is 18% ahead of plan and pipeline has 4x'd since the relaunch. Next review is Tuesday 10am with the execs.",
@@ -2159,6 +2493,7 @@ export default function AInbox({ win, onDrag, onOpenMagicMinutes, initialThreadV
         a: "Tuesday 10am with the exec team. Scope: decide whether to push the AInbox rollout from 10% to 100%, and lock the Magic Minutes positioning for the spring push. Calendar invite already went out.",
       },
     ];
+    const PROMPTS = mmPrompts && mmPrompts.length ? mmPrompts : DEFAULT_PROMPTS;
 
     let cancelled = false;
     let timers = [];
@@ -2249,7 +2584,7 @@ export default function AInbox({ win, onDrag, onOpenMagicMinutes, initialThreadV
       cancelled = true;
       timers.forEach(t => clearTimeout(t));
     };
-  }, [mmAutoPrompt, threadView?.chatId, threadView?.messageId]);
+  }, [mmAutoPrompt, threadView?.chatId, threadView?.messageId, mmPrompts]);
 
   const convo = messages[selectedChat];
 
@@ -2315,6 +2650,7 @@ export default function AInbox({ win, onDrag, onOpenMagicMinutes, initialThreadV
 
   return (
     <div
+      ref={rootRef}
       className={`ainbox-window ${!win.isFocused ? 'ainbox-unfocused' : ''} ${closing ? 'ainbox-closing' : ''}`}
       style={{ left: win.position.x, top: win.position.y, zIndex: win.zIndex }}
       onMouseDown={() => { win.focus(); if (!mmAutoPrompt) setTimeout(() => composerInputRef.current?.focus({ preventScroll: true }), 50); }}
@@ -2416,15 +2752,64 @@ export default function AInbox({ win, onDrag, onOpenMagicMinutes, initialThreadV
         <div className="ainbox-sidebar">
           {/* Sidebar header */}
           <div className="ainbox-sidebar-header">
-            <div className="ainbox-sidebar-header-left">
-              <span className="ainbox-sidebar-title">AInbox</span>
-              <ChevronDown open={true} />
+            <div
+              className="ainbox-sidebar-header-left ainbox-view-pill"
+              onClick={(e) => { e.stopPropagation(); setSidebarMenuOpen(o => !o); }}
+            >
+              <span className="ainbox-sidebar-title">{SIDEBAR_VIEW_LABELS[sidebarView] || 'AInbox'}</span>
+              <svg
+                className={`ainbox-view-pill-chevron ${sidebarMenuOpen ? 'ainbox-view-pill-chevron-open' : ''}`}
+                width="12" height="12" viewBox="0 0 12 12" fill="none"
+              >
+                <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
             </div>
             <img src="/icons/compose.svg" alt="" className="ainbox-compose-icon" />
+            {sidebarMenuOpen && (
+              <>
+                <div className="ainbox-view-menu-backdrop" onClick={() => setSidebarMenuOpen(false)} />
+                <div className="ainbox-view-menu" onClick={(e) => e.stopPropagation()}>
+                  {SIDEBAR_VIEW_ITEMS.map((item, i) => {
+                    if (item === 'divider') return <div key={`d-${i}`} className="ainbox-view-menu-divider" />;
+                    const isActive = sidebarView === item.id;
+                    return (
+                      <div
+                        key={item.id}
+                        className={`ainbox-view-menu-item ${isActive ? 'ainbox-view-menu-item-active' : ''}`}
+                        onClick={() => { setSidebarView(item.id); setSidebarMenuOpen(false); }}
+                      >
+                        <span
+                          className="ainbox-view-menu-icon"
+                          aria-hidden="true"
+                          style={{ WebkitMaskImage: `url(${item.icon})`, maskImage: `url(${item.icon})` }}
+                        />
+                        <span className="ainbox-view-menu-label">{item.label}</span>
+                        {item.badge != null && <span className="ainbox-view-menu-badge">{item.badge}</span>}
+                        {isActive && (
+                          <svg className="ainbox-view-menu-check" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6L5 9L10 3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
           </div>
 
           {/* Scrollable sections */}
           <div className="ainbox-sections" ref={sidebarSectionsRef}>
+            {sidebarView === 'activity' ? (
+              <ActivityView
+                selectedChat={selectedChat}
+                injected={injectedActivity}
+                onSelect={(it) => {
+                  setMessages(prev => prev[it.chatId] ? prev : { ...prev, [it.chatId]: it.chat });
+                  setSelectedChat(it.chatId);
+                  setThreadView(null);
+                }}
+              />
+            ) : (
+              <>
             {/* Favorites row */}
             <div className="ainbox-favorites">
               {favorites.map(fav => (
@@ -2502,8 +2887,11 @@ export default function AInbox({ win, onDrag, onOpenMagicMinutes, initialThreadV
                 </div>
               </div>
             ))}
+              </>
+            )}
           </div>
           {/* Add Folder — pinned to bottom of sidebar, outside the scroll area */}
+          {sidebarView !== 'activity' && (
           <div className="ainbox-section-item ainbox-add-folder">
             <span className="ainbox-add-folder-icon">
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 3V13M3 8H13" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>
@@ -2525,6 +2913,7 @@ export default function AInbox({ win, onDrag, onOpenMagicMinutes, initialThreadV
               }}
             />
           </div>
+          )}
         </div>
 
         {/* ——— Detail pane ——— */}
@@ -2568,7 +2957,26 @@ export default function AInbox({ win, onDrag, onOpenMagicMinutes, initialThreadV
                     </div>
                   </div>
                   <p className="ainbox-thread-original-text">{threadMsg.text}</p>
-                  <Reactions reactions={THREAD_REACTIONS} />
+                  {threadMsg.attachment?.type === 'pdf' && (
+                    <div className="ainbox-pdf-attachment">
+                      <div className="ainbox-pdf-icon-box">
+                        <span className="ainbox-pdf-icon" aria-hidden="true" />
+                      </div>
+                      <div className="ainbox-pdf-meta">
+                        <div className="ainbox-pdf-name">{(threadMsg.attachment.name || '').replace(/\.pdf$/i, '')}</div>
+                        <div className="ainbox-pdf-ext">PDF</div>
+                      </div>
+                      <div className="ainbox-pdf-menu">
+                        <button className="ainbox-pdf-menu-btn" aria-label="Download">
+                          <img src="/icons/mm-download.svg" alt="" width="16" height="16" />
+                        </button>
+                        <button className="ainbox-pdf-menu-btn" aria-label="Send">
+                          <img src="/icons/mm-send-to.svg" alt="" width="16" height="16" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  <Reactions reactions={threadMsg.reactions || THREAD_REACTIONS} />
                 </div>
                 {/* Replies — scroll under the pinned original */}
                 <div className="ainbox-detail-messages ainbox-thread-messages" ref={messagesRef}>

@@ -98,8 +98,8 @@ function TheaterPreview() {
 }
 
 const AINBOX_AH_FAVORITES = [
-  { id: 'jon', name: 'Jon', avatar: '/headshots/jon-brod.jpg', type: 'dm' },
-  { id: 'mattias', name: 'Mattias', avatar: '/headshots/mattias-leino.jpg', type: 'dm' },
+  { id: 'howard', name: 'Howard', avatar: '/headshots/howard-lerman.jpg', type: 'dm' },
+  { id: 'grace', name: 'Grace', avatar: '/headshots/grace-sutherland.jpg', type: 'dm' },
   { id: 'all-hands', name: 'All-Hands', avatar: '/groups/Group Roam.png', type: 'group' },
 ];
 
@@ -108,11 +108,12 @@ const AINBOX_AH_SECTIONS = [
     id: 'dms', label: 'Direct Messages',
     items: [
       { id: 'howard', name: 'Howard Lerman', avatar: '/headshots/howard-lerman.jpg', type: 'dm' },
+      { id: 'grace', name: 'Grace Sutherland', avatar: '/headshots/grace-sutherland.jpg', type: 'dm' },
+      { id: 'klas', name: 'Klas Leino', avatar: '/headshots/klas-leino.jpg', type: 'dm' },
+      { id: 'chelsea', name: 'Chelsea Turbin', avatar: '/headshots/chelsea-turbin.jpg', type: 'dm' },
+      { id: 'derek', name: 'Derek Cicerone', avatar: '/headshots/derek-cicerone.jpg', type: 'dm' },
+      { id: 'will', name: 'Will Houseberry', avatar: '/headshots/will-hou.jpg', type: 'dm' },
       { id: 'jeff', name: 'Jeff Grossman', avatar: '/headshots/jeff-grossman.jpg', type: 'dm' },
-      { id: 'jon', name: 'Jon Brod', avatar: '/headshots/jon-brod.jpg', type: 'dm' },
-      { id: 'peter', name: 'Peter Lerman', avatar: '/headshots/peter-lerman.jpg', type: 'dm' },
-      { id: 'tom', name: 'Tom Dixon', avatar: '/headshots/tom-dixon.jpg', type: 'dm' },
-      { id: 'john-b', name: 'John Beutner', avatar: '/headshots/john-beutner.jpg', type: 'dm' },
     ],
   },
   {
@@ -200,13 +201,46 @@ const AINBOX_AH_MESSAGES = {
     ],
   },
 
+  features: {
+    type: 'group', name: 'Product', memberCount: 8,
+    groupImg: '/groups/Group Features.png',
+    avatars: ['/headshots/chelsea-turbin.jpg', '/headshots/jon-brod.jpg', '/headshots/grace-sutherland.jpg'],
+    messages: [
+      {
+        id: 1, sender: 'Chelsea Turbin', avatar: '/headshots/chelsea-turbin.jpg', time: 'Today 2:14 PM',
+        text: "Final Q2 board deck — please review before Thursday. Feedback welcome.",
+        attachment: {
+          type: 'pdf',
+          name: 'Roam — Q2 Board Deck.pdf',
+          pages: 24,
+          size: '3.8 MB',
+        },
+        reactions: [
+          { emoji: '📊', count: 6, active: true },
+          { emoji: '📈', count: 4 },
+          { emoji: '👀', count: 5 },
+          { emoji: '🎯', count: 3 },
+          { emoji: '💼', count: 2 },
+        ],
+        thread: {
+          count: 3, lastReply: 'today 2:40 PM',
+          replies: [
+            { id: 'r1', sender: 'Jon Brod', avatar: '/headshots/jon-brod.jpg', text: "Thanks Chelsea. Took a first pass — the growth chart on slide 6 is the right hero. Let's open with it." },
+            { id: 'r2', sender: 'Grace Sutherland', avatar: '/headshots/grace-sutherland.jpg', text: "Agree. Slide 11 could use a tighter customer quote — I'll swap in the Vercel one by tonight." },
+            { id: 'r3', sender: 'Howard Lerman', avatar: '/headshots/howard-lerman.jpg', text: "Looks strong. Add a 'what we're betting on in Q3' closer before we walk in." },
+          ],
+        },
+      },
+    ],
+  },
+
   'meet-q2': {
     type: 'meeting', name: 'Q2 Planning', memberCount: 8,
     groupImg: '/icons/magic-quill.svg',
     avatars: ['/headshots/howard-lerman.jpg', '/headshots/jon-brod.jpg', '/headshots/grace-sutherland.jpg'],
     messages: [
       {
-        id: 1, sender: 'Magic Minutes', avatar: '/icons/magic-quill.svg', time: 'Today 10:42 AM',
+        id: 1, sender: 'Howard Lerman', avatar: '/headshots/howard-lerman.jpg', time: 'Today 10:42 AM',
         text: "Q2 Planning — AInbox ships Friday behind a 10% feature flag. Brand refresh and demo day lock for Friday. Next review Tuesday 10am.",
         thread: {
           count: 6, lastReply: 'today 11:04 AM',
@@ -269,9 +303,9 @@ const AINBOX_FOLDER_SECTIONS = [
     id: 'customers', label: 'Top Customers',
     items: [
       { id: 'cust-cx', name: 'Customer Experience', groupImg: '/groups/Group CX.png', type: 'group', memberCount: 6 },
-      { id: 'cust-1', name: 'Linear — Karri', avatar: '/headshots/john-huffsmith.jpg', type: 'dm' },
-      { id: 'cust-2', name: 'Vercel — Guillermo', avatar: '/headshots/keegan-lanzillotta.jpg', type: 'dm' },
-      { id: 'cust-3', name: 'Notion — Akshay', avatar: '/headshots/derek-cicerone.jpg', type: 'dm' },
+      { id: 'cust-1', name: 'Ramp', avatar: '/headshots/john-huffsmith.jpg', type: 'dm' },
+      { id: 'cust-2', name: 'Vercel', avatar: '/headshots/keegan-lanzillotta.jpg', type: 'dm' },
+      { id: 'cust-3', name: 'Notion', avatar: '/headshots/derek-cicerone.jpg', type: 'dm' },
       { id: 'meet-onsite', name: 'Onsite — Stripe HQ', type: 'meeting' },
     ],
   },
@@ -378,6 +412,16 @@ const CONFIDENTIAL_REPLIES = [
   "delete this chat after you read it lol",
   "you did NOT just tell me that",
   "this stays between us forever",
+  "ok but who else saw this? be honest",
+  "i need a minute. that's a LOT",
+  "HR is going to have a field day monday",
+  "did anyone catch it on video??",
+  "i will take this to my grave",
+  "this is the best gossip i've had all year",
+  "wait there's MORE??",
+  "omg please spill",
+  "i'm never going to look at derek the same way",
+  "ok new rule: christmas party in february next year. cooling off period needed",
 ];
 
 const JEFF_REPLIES = [
@@ -390,6 +434,17 @@ const JEFF_REPLIES = [
   "this is going to dominate every tech podcast for a month",
   "yeah I'm here for it. change is good",
   "fair. Ternus is underrated imo",
+  "also the board must have been planning this for months, no way it was sudden",
+  "true. the succession playbook has been obvious for a while honestly",
+  "WWDC is going to be insane this year btw",
+  "yeah. first keynote under a new CEO always hits different",
+  "i bet they announce the vision pro 2 price cut too",
+  "ok that would be huge",
+  "what's the over/under on a stage appearance from tim",
+  "i say he opens the keynote. passes the torch on stage.",
+  "would be so on-brand. goosebumps moment",
+  "ok i'm definitely watching live this year",
+  "same. making it a proper event with snacks 🍿",
 ];
 
 function MiniChatPreview({ personName, personAvatar, messages, variant = 'default', replies = JEFF_REPLIES }) {
@@ -409,12 +464,24 @@ function MiniChatPreview({ personName, personAvatar, messages, variant = 'defaul
   useEffect(() => {
     let t1, t2;
     if (scriptIdxRef.current >= messages.length) {
-      // End of script — pause, then loop back to the start.
-      t1 = setTimeout(() => {
-        scriptIdxRef.current = 1;
-        setConvo([messages[0]]);
-      }, 3500);
-      return () => clearTimeout(t1);
+      // End of script — keep the conversation going with alternating
+      // reply-pool messages. Never reset.
+      const lastSelf = convo[convo.length - 1]?.self ?? false;
+      const nextSelf = !lastSelf;
+      const text = replies[replyIdxRef.current % replies.length];
+      replyIdxRef.current += 1;
+      if (!nextSelf) {
+        t1 = setTimeout(() => setTyping(true), 900);
+        t2 = setTimeout(() => {
+          setTyping(false);
+          setConvo(c => [...c, { id: `p-${Date.now()}-${Math.random()}`, self: false, text }]);
+        }, 2400);
+      } else {
+        t2 = setTimeout(() => {
+          setConvo(c => [...c, { id: `p-${Date.now()}-${Math.random()}`, self: true, text }]);
+        }, 1600);
+      }
+      return () => { clearTimeout(t1); clearTimeout(t2); };
     }
     const next = messages[scriptIdxRef.current];
     const otherTurn = !next.self;
@@ -432,12 +499,12 @@ function MiniChatPreview({ personName, personAvatar, messages, variant = 'defaul
       }, 1400);
     }
     return () => { clearTimeout(t1); clearTimeout(t2); };
-  }, [convo.length, messages]);
+  }, [convo.length, messages, replies]);
 
   useEffect(() => {
-    if (messagesRef.current) {
-      messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
-    }
+    const el = messagesRef.current;
+    if (!el) return;
+    el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
   }, [convo.length, typing]);
 
   useEffect(() => () => clearReplyTimers(), []);
@@ -699,9 +766,9 @@ function MagicMinutesThreadPreview() {
   );
 }
 
-function AInboxPreview({ overrides = false, view = 'thread', chatId = null, mmAutoPrompt = false, threadView = null } = {}) {
+function AInboxPreview({ overrides = false, view = 'thread', chatId = null, mmAutoPrompt = false, threadView = null, mmPrompts = null, initialSidebarView = 'inbox' } = {}) {
   if (overrides) {
-    const dmChatId = view === 'dm' ? (chatId || 'howard') : null;
+    const dmChatId = view === 'dm' ? (chatId || 'howard') : view === 'activity' ? (chatId || null) : null;
     const defaultThread = view === 'thread' ? { chatId: 'all-hands', messageId: 1 } : null;
     return (
       <AInbox
@@ -715,10 +782,12 @@ function AInboxPreview({ overrides = false, view = 'thread', chatId = null, mmAu
         sectionsOverride={AINBOX_AH_SECTIONS}
         messagesOverride={AINBOX_AH_MESSAGES}
         mmAutoPrompt={mmAutoPrompt}
+        mmPrompts={mmPrompts}
+        initialSidebarView={initialSidebarView}
       />
     );
   }
-  return <AInbox win={noopWin('ainbox')} onDrag={() => {}} />;
+  return <AInbox win={noopWin('ainbox')} onDrag={() => {}} initialSidebarView={initialSidebarView} />;
 }
 
 function MagicMinutesPreview() {
@@ -733,10 +802,10 @@ function OnAirPreview() {
   return <OnAir win={noopWin('onair')} onDrag={() => {}} demo />;
 }
 
-function MapPreview() {
+function MapPreview({ spotifyAlwaysOpen = false, githubAlwaysOpen = false } = {}) {
   return (
     <div className="fp-map-preview">
-      <ShowcaseMap initialFloor="Preview" />
+      <ShowcaseMap initialFloor="Preview" spotifyAlwaysOpen={spotifyAlwaysOpen} githubAlwaysOpen={githubAlwaysOpen} />
     </div>
   );
 }
@@ -901,6 +970,81 @@ export const FEATURES = {
         desc: 'You can use AI to prompt any thread right in the group with the Magic Minutes handle. Imagine a thread with dozens of replies that will take you forever to read. Simply say "@MagicMinutes please summarize this thread for me" or ask any other question you like.',
         visual: <AInboxPreview overrides view="thread" mmAutoPrompt threadView={{ chatId: 'meet-q2', messageId: 1 }} />,
       },
+      {
+        title: 'AI-Promptable PDFs',
+        desc: 'Simply upload a PDF into your chat and you’ll be able to prompt its contents.',
+        visual: (
+          <AInboxPreview
+            overrides
+            view="thread"
+            mmAutoPrompt
+            threadView={{ chatId: 'features', messageId: 1 }}
+            mmPrompts={[
+              {
+                q: "@MagicMinutes summarize the Q2 board deck for me",
+                a: "It's a 24-slide narrative: open on the 3x DAU growth, walk through revenue 18% ahead of plan, highlight Drop-Ins + AInbox as the drivers, preview Magic Minutes as the Q3 headline, and close with the raise plan and ask.",
+              },
+              {
+                q: "@MagicMinutes what are the key numbers in the deck?",
+                a: "DAUs: 50,245 (+3.1x YoY). ARR: $24.6M, tracking 18% over plan. Net retention: 142%. NPS: +72 (up from +58 last quarter). Pipeline: $51M, 4x the Dec baseline. Enterprise ACV: $140K average.",
+              },
+              {
+                q: "@MagicMinutes what's the ask on the closing slide?",
+                a: "Slide 23 asks the board to approve a $15M Series B bridge at flat valuation, extending runway to 28 months. Use of funds: doubling the go-to-market team, Magic Minutes AI infra, and opening a second EU office.",
+              },
+              {
+                q: "@MagicMinutes any risks the deck flags?",
+                a: "Three risks called out on slide 21: enterprise sales cycle lengthening (avg 62 → 74 days), competitive pressure from incumbent collaboration tools, and Magic Minutes AI infra cost curve if model prices don't drop. Mitigations for each are on slide 22.",
+              },
+              {
+                q: "@MagicMinutes pull the three customer quotes from the deck",
+                a: "Slide 11: 'Roam replaced Slack, Zoom, and Notion for us — it's the first tool that actually feels like an office.' (Series-B dev-tools co). Slide 12: 'Magic Minutes saved us ~6 hours per week per engineer.' (Series-C fintech). Slide 13: 'We signed up for Drop-Ins. We stayed for the AInbox.' (public collaboration co).",
+              },
+            ]}
+          />
+        ),
+      },
+      {
+        title: 'Activity View',
+        desc: 'If you prefer a more traditional chronological "Inbox" based view of your messages, simply switch and you\'ll see all of your messages in the order you like. This is how Gmail or iMessage is organized. Whatever suits your fancy!',
+        visual: <AInboxPreview overrides view="activity" chatId="act-klas" initialSidebarView="activity" />,
+      },
+      {
+        icons: [
+          '/icons/integrations/zapier.svg',
+          '/icons/integrations/figma.svg',
+          '/icons/integrations/github.svg',
+          '/icons/integrations/spotify.svg',
+          '/icons/integrations/google.svg',
+          '/icons/integrations/microsoft.svg',
+          '/icons/integrations/claude.svg',
+          '/icons/integrations/codex.svg',
+        ],
+        title: 'Integrations',
+        desc: 'Integrates with your favorite apps via Zapier or the Roam developer API. Native integrations with GitHub & Spotify.',
+        visual: <MapPreview spotifyAlwaysOpen />,
+      },
+      {
+        variant: 'additional',
+        title: 'Additional Features in your AI-Powered Virtual Office',
+        desc: (
+          <>
+            Your Roam Virtual Office includes, at no additional cost, company visualization, drop-in meetings, video conferencing, AI meeting summarization, &amp; AI Agents -{' '}
+            <span className="fp-section-desc-strong">all for just $19.50/month</span>{' '}
+            per active member.
+          </>
+        ),
+      },
+      {
+        title: 'Company Visualization',
+        desc: 'Roam gives everyone a complete visualization of everything happening right now at the company - who is at HQ, who is in which physical office, who is talking to who, who is on external calls. It’s like your whole company is together under one roof.',
+        visual: <MapPreview />,
+      },
+      {
+        title: 'Ship Faster with GitHub on the Map',
+        desc: 'Cut code review times. When you have an outstanding PR from a fellow engineer, a GitHub icon appears next to their office on the map linking to it. At a glance, you know what you owe. You and your team will appreciate this context signal. We cut our own internal PR time by 42%. Ship faster!',
+        visual: <MapPreview githubAlwaysOpen />,
+      },
     ],
   },
   'magic-minutes': {
@@ -1015,13 +1159,29 @@ export const FEATURE_ORDER = [
   'on-air',
 ];
 
-function FeatureSection({ eyebrow, title, desc, visual }) {
+function FeatureSection({ eyebrow, title, desc, visual, icons, variant }) {
   return (
-    <section className="fp-section">
+    <section className={`fp-section ${variant ? `fp-section-${variant}` : ''}`}>
       <div className="fp-section-text">
         {eyebrow && <div className="fp-section-eyebrow">{eyebrow}</div>}
         <h2 className="fp-section-title">{title}</h2>
         <p className="fp-section-desc">{desc}</p>
+        {icons && icons.length > 0 && (
+          <div className="fp-section-icons">
+            {icons.map((src, i) => (
+              src.endsWith('github.svg') ? (
+                <span
+                  key={i}
+                  className="fp-section-icon fp-section-icon-mask"
+                  style={{ WebkitMaskImage: `url(${src})`, maskImage: `url(${src})` }}
+                  aria-hidden="true"
+                />
+              ) : (
+                <img key={i} src={src} alt="" className="fp-section-icon" />
+              )
+            ))}
+          </div>
+        )}
       </div>
       {visual && <div className="fp-section-visual">{visual}</div>}
     </section>

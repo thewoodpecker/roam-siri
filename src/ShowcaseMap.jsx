@@ -85,7 +85,7 @@ const FLOORS = {
     { id: 'r3', type: 'private', name: 'John M.', people: [p('John M.')], pos: { col: 2, row: 0 }, span: 1 },
     { id: 'r4', type: 'private', name: 'Howard L.', people: [p('Howard L.')], pos: { col: 3, row: 0 }, span: 1, story: '/stories/story-1.png' },
     { id: 'r5', type: 'private', name: 'Keegan L.', people: [p('Keegan L.')], pos: { col: 4, row: 0 }, span: 1 },
-    { id: 'r5b', type: 'private', name: 'Jon B.', people: [p('Jon B.')], pos: { col: 5, row: 0 }, span: 1 },
+    { id: 'r5b', type: 'private', name: 'Jon B.', people: [p('Jon B.')], pos: { col: 5, row: 0 }, span: 1, spotify: { song: 'Some Might Say', artist: 'Oasis', art: '/spotify/oasis-some-might-say.png' } },
     { id: 'r6', type: 'private', name: 'Grace S.', people: [p('Grace S.')], pos: { col: 0, row: 1 }, span: 1 },
     { id: 'r7', type: 'private', name: 'Michael W.', people: [p('Michael W.')], pos: { col: 1, row: 1 }, span: 1 },
     { id: 'theater', type: 'theater', name: 'Theater', people: [], pos: { col: 2, row: 1 }, colSpan: 2, rowSpan: 2 },
@@ -220,21 +220,21 @@ const FLOORS = {
     { id: 'di26', type: 'private', name: 'Chloe P.', people: [p('Chloe P.')], pos: { col: 5, row: 4 }, span: 1 },
   ],
   'Preview': [
-    { id: 'pv1', type: 'private', name: 'Arnav B.', people: [p('Arnav B.')], pos: { col: 0, row: 0 }, span: 1 },
+    { id: 'pv1', type: 'private', name: 'Arnav B.', people: [p('Arnav B.')], pos: { col: 0, row: 0 }, span: 1, spotify: { song: 'Some Might Say', artist: 'Oasis', art: '/spotify/oasis-some-might-say.png' } },
     { id: 'pv2', type: 'private', name: 'Tom D.', people: [p('Tom D.')], pos: { col: 1, row: 0 }, span: 1 },
-    { id: 'pv3', type: 'private', name: 'Will H.', people: [p('Will H.')], pos: { col: 2, row: 0 }, span: 1 },
+    { id: 'pv3', type: 'private', name: 'Will H.', people: [p('Will H.')], pos: { col: 2, row: 0 }, span: 1, github: { repo: 'roam/app', number: 4812, title: 'Fix AInbox typing indicator ghost state', branch: 'fix/typing-ghost' } },
     { id: 'pv4', type: 'private', name: 'John H.', people: [p('John H.')], pos: { col: 3, row: 0 }, span: 1 },
-    { id: 'pv5', type: 'private', name: 'Mattias L.', people: [p('Mattias L.')], pos: { col: 4, row: 0 }, span: 1 },
-    { id: 'pv6', type: 'private', name: 'Thomas G.', people: [p('Thomas G.')], pos: { col: 5, row: 0 }, span: 1 },
-    { id: 'pv7', type: 'private', name: 'Michael M.', people: [p('Michael M.')], pos: { col: 0, row: 1 }, span: 1 },
+    { id: 'pv5', type: 'private', name: 'Mattias L.', people: [p('Mattias L.')], pos: { col: 4, row: 0 }, span: 1, github: { repo: 'roam/app', number: 4830, title: 'Evals harness: parallel runs + retries', branch: 'mattias/evals-parallel' } },
+    { id: 'pv6', type: 'private', name: 'Thomas G.', people: [p('Thomas G.')], pos: { col: 5, row: 0 }, span: 1, spotify: { song: 'Ne Me Quitte Pas', artist: 'Jacques Brel', art: '/spotify/jacques-brel-ne-me-quitte-pas.png' } },
+    { id: 'pv7', type: 'private', name: 'Michael M.', people: [p('Michael M.')], pos: { col: 0, row: 1 }, span: 1, github: { repo: 'roam/app', number: 4825, title: 'Meeting card layout polish', branch: 'mm/meeting-cards' } },
     { id: 'pv8', type: 'private', name: 'Ava L.', people: [p('Ava L.')], pos: { col: 1, row: 1 }, span: 1 },
     { id: 'pv-sprint', type: 'meeting', name: 'Sprint Planning', people: [p('Derek C.'), p('Michael M.'), p('John M.'), p('Arnav B.'), p('Olivia S.'), p('Sophia R.')], pos: { col: 2, row: 1 }, colSpan: 2, rowSpan: 2 },
     { id: 'pv9', type: 'private', name: 'Howard L.', people: [p('Howard L.')], pos: { col: 4, row: 1 }, span: 1 },
     { id: 'pv10', type: 'private', name: 'Garima K.', people: [p('Garima K.')], pos: { col: 5, row: 1 }, span: 1 },
-    { id: 'pv11', type: 'private', name: 'Lexi B.', people: [p('Lexi B.')], pos: { col: 0, row: 2 }, span: 1 },
-    { id: 'pv12', type: 'private', name: 'John B.', people: [p('John B.')], pos: { col: 1, row: 2 }, span: 1 },
-    { id: 'pv13', type: 'private', name: 'Klas L.', people: [p('Klas L.')], pos: { col: 4, row: 2 }, span: 1 },
-    { id: 'pv14', type: 'private', name: 'Derek C.', people: [p('Derek C.')], pos: { col: 5, row: 2 }, span: 1 },
+    { id: 'pv11', type: 'private', name: 'Lexi B.', people: [p('Lexi B.')], pos: { col: 0, row: 2 }, span: 1, spotify: { song: 'Redbone', artist: 'Childish Gambino', art: '/spotify/childish-gambino-redbone.png' } },
+    { id: 'pv12', type: 'private', name: 'John B.', people: [p('John B.')], pos: { col: 1, row: 2 }, span: 1, github: { repo: 'roam/app', number: 4821, title: 'Spotify badge a11y + keyboard nav', branch: 'jb/spotify-a11y' } },
+    { id: 'pv13', type: 'private', name: 'Klas L.', people: [p('Klas L.')], pos: { col: 4, row: 2 }, span: 1, github: { repo: 'roam/app', number: 4834, title: 'Opus 4.7 rollout — staging flag', branch: 'klas/opus-47-staging' } },
+    { id: 'pv14', type: 'private', name: 'Derek C.', people: [p('Derek C.')], pos: { col: 5, row: 2 }, span: 1, spotify: { song: 'Midnight City', artist: 'M83', art: '/spotify/m83-midnight-city.png' } },
     { id: 'pv15', type: 'private', name: 'Joe W.', people: [p('Joe W.')], pos: { col: 0, row: 3 }, span: 1 },
     { id: 'pv16', type: 'game', name: 'Break Room', people: [], pos: { col: 1, row: 3 }, span: 1 },
     { id: 'pv-design', type: 'meeting', name: 'Design Critique', people: [p('Chelsea T.'), p('Grace S.'), p('Camila T.'), p('Emily C.'), p('Isabella M.'), p('Madison R.')], pos: { col: 2, row: 3 }, colSpan: 2, rowSpan: 2 },
@@ -328,8 +328,133 @@ function SimpleStoryBubble({ image, delay = 0, onClick }) {
   );
 }
 
+// Small "now playing" badge shown in the top-right of an occupied office.
+// Hovering reveals a compact Spotify-style tooltip with song + artist.
+function SpotifyBadge({ spotify, alwaysOpen = false, visible = true }) {
+  const [hovered, setHovered] = useState(false);
+  const showTooltip = visible && (alwaysOpen || hovered);
+
+  // Icon lifecycle — phase is 'in' or 'out'; null means not yet in DOM.
+  const [iconPhase, setIconPhase] = useState(null);
+  useEffect(() => {
+    if (visible) {
+      setIconPhase('in');
+    } else if (iconPhase !== null) {
+      setIconPhase('out');
+      const t = setTimeout(() => setIconPhase(null), 280);
+      return () => clearTimeout(t);
+    }
+  }, [visible]);
+
+  // Tooltip lifecycle — same pattern.
+  const [tipPhase, setTipPhase] = useState(null);
+  useEffect(() => {
+    if (showTooltip) {
+      setTipPhase('in');
+    } else if (tipPhase !== null) {
+      setTipPhase('out');
+      const t = setTimeout(() => setTipPhase(null), 280);
+      return () => clearTimeout(t);
+    }
+  }, [showTooltip]);
+
+  if (iconPhase === null) return null;
+
+  return (
+    <div
+      className={`sc-spotify-badge sc-spotify-badge-${iconPhase}`}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <img src="/icons/spotify.svg" alt="" className="sc-spotify-icon" />
+      {tipPhase !== null && (
+        <div
+          className={`sc-spotify-tooltip sc-spotify-tooltip-${tipPhase}`}
+          role="tooltip"
+        >
+          <div className="sc-spotify-tooltip-art" style={{ background: spotify.gradient }}>
+            {spotify.art && <img src={spotify.art} alt="" />}
+          </div>
+          <div className="sc-spotify-tooltip-text">
+            <p className="sc-spotify-tooltip-song">{spotify.song}</p>
+            <p className="sc-spotify-tooltip-artist">{spotify.artist}</p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// GitHub "pending PR" badge — same shape / lifecycle as SpotifyBadge.
+function GitHubBadge({ github, alwaysOpen = false, visible = true }) {
+  const [hovered, setHovered] = useState(false);
+  const showTooltip = visible && (alwaysOpen || hovered);
+
+  const [iconPhase, setIconPhase] = useState(null);
+  useEffect(() => {
+    if (visible) {
+      setIconPhase('in');
+    } else if (iconPhase !== null) {
+      setIconPhase('out');
+      const t = setTimeout(() => setIconPhase(null), 280);
+      return () => clearTimeout(t);
+    }
+  }, [visible]);
+
+  const [tipPhase, setTipPhase] = useState(null);
+  useEffect(() => {
+    if (showTooltip) {
+      setTipPhase('in');
+    } else if (tipPhase !== null) {
+      setTipPhase('out');
+      const t = setTimeout(() => setTipPhase(null), 280);
+      return () => clearTimeout(t);
+    }
+  }, [showTooltip]);
+
+  if (iconPhase === null) return null;
+
+  return (
+    <div
+      className={`sc-github-badge sc-github-badge-${iconPhase}`}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <span
+        className="sc-github-icon"
+        aria-hidden="true"
+        style={{
+          WebkitMaskImage: 'url(/icons/integrations/github.svg)',
+          maskImage: 'url(/icons/integrations/github.svg)',
+        }}
+      />
+      {tipPhase !== null && (
+        <div
+          className={`sc-github-tooltip sc-github-tooltip-${tipPhase}`}
+          role="tooltip"
+        >
+          <span
+            className="sc-github-tooltip-icon"
+            aria-hidden="true"
+            style={{
+              WebkitMaskImage: 'url(/icons/integrations/branch-request.svg)',
+              maskImage: 'url(/icons/integrations/branch-request.svg)',
+            }}
+          />
+          <div className="sc-github-tooltip-text">
+            <p className="sc-github-tooltip-title">{github.title}</p>
+            <p className="sc-github-tooltip-meta">{github.repo} #{github.number}</p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // Private office room card — uses the same markup as mapv3
-function PrivateRoomCard({ room, storyBubble, onPersonClick, onRoomClick }) {
+function PrivateRoomCard({ room, storyBubble, onPersonClick, onRoomClick, spotifyAlwaysOpen = false, githubAlwaysOpen = false }) {
   const [talking, setTalking] = useState({});
   const hasTalk = room.people.length > 1;
 
@@ -401,6 +526,8 @@ function PrivateRoomCard({ room, storyBubble, onPersonClick, onRoomClick }) {
             {activeVibe === 'claude' && <img className="sc-ai-icon" src="/icons/claude.svg" alt="" />}
             {activeVibe === 'codex' && <img className="sc-ai-icon" src="/icons/codex-white.svg" alt="" />}
             {activeVibe === 'both' && <img className="sc-ai-icon sc-ai-icon-combo" src="/icons/vibe-combo.svg" alt="" />}
+            {!isEmpty && room.spotify && <SpotifyBadge spotify={room.spotify} alwaysOpen={spotifyAlwaysOpen} visible={!activeVibe} />}
+            {!isEmpty && room.github && <GitHubBadge github={room.github} alwaysOpen={githubAlwaysOpen} visible={!activeVibe} />}
           </div>
           {room.people.length > 0 && (
             <div className="private-office-seat">
@@ -966,11 +1093,11 @@ function ShelfWindow({ win, onDrag, photoIdx, direction, onPrev, onNext }) {
 }
 
 // Main showcase component
-export default function ShowcaseMap({ initialFloor = 'R&D', embedded = false, autoKnock = false } = {}) {
+export default function ShowcaseMap({ initialFloor = 'R&D', embedded = false, autoKnock = false, spotifyAlwaysOpen = false, githubAlwaysOpen = false } = {}) {
   return (
     <ChatProvider>
       <WindowManagerProvider initialWindows={INITIAL_WINDOWS}>
-        <ShowcaseMapInner initialFloor={initialFloor} embedded={embedded} autoKnock={autoKnock} />
+        <ShowcaseMapInner initialFloor={initialFloor} embedded={embedded} autoKnock={autoKnock} spotifyAlwaysOpen={spotifyAlwaysOpen} githubAlwaysOpen={githubAlwaysOpen} />
       </WindowManagerProvider>
     </ChatProvider>
   );
@@ -1134,7 +1261,7 @@ function useTargetHintStyle(targetRef, active, offset = { top: -30, left: 'cente
   return style;
 }
 
-function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = false }) {
+function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = false, spotifyAlwaysOpen = false, githubAlwaysOpen = false }) {
   const [theme, setTheme] = useState('dark');
   const [layout, setLayout] = useState('v2');
   const [activeFloor, setActiveFloor] = useState(initialFloor);
@@ -1585,6 +1712,7 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
 
   // Randomly cycle vibe coding — spread across private rooms all over the floor
   useEffect(() => {
+    if (spotifyAlwaysOpen || githubAlwaysOpen) return; // feature-preview maps: no vibes
     const privateRooms = currentFloorRooms.filter(
       r => r.type === 'private' && r.people.length === 1
     );
@@ -1793,6 +1921,8 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
                       <CommandCenterCard room={room} />
                     ) : (
                       <PrivateRoomCard
+                        spotifyAlwaysOpen={spotifyAlwaysOpen}
+                        githubAlwaysOpen={githubAlwaysOpen}
                         onPersonClick={openMiniChat}
                         onRoomClick={room.people.length === 0 ? undefined : (r) => {
                           if (joinedRoomId === r.id) return;
