@@ -163,6 +163,83 @@ const FLOORS = {
     { id: 'e9', type: 'private', name: 'Chelsea T.', people: [p('Chelsea T.')], pos: { col: 4, row: 3 }, span: 1 },
     { id: 'e10', type: 'theater', name: 'Theater', people: [], pos: { col: 5, row: 3 }, rowSpan: 2 },
   ],
+  'Homepage': [
+    { id: 'hp1', type: 'private', name: 'Arnav B.', people: [p('Arnav B.')], pos: { col: 0, row: 0 }, span: 1, story: '/stories/story-3.jpg' },
+    { id: 'hp-huddle', type: 'meeting', name: 'Design Huddle', people: [p('Derek C.'), p('Michael W.'), p('Keegan L.'), p('Jon B.'), p('Jeff G.'), p('Will H.'), p('John M.'), p('Michael M.'), p('Hannah B.'), p('Isabella M.'), p('Mia C.'), p('Natalie W.'), p('Rachel C.')], pos: { col: 1, row: 0 }, colSpan: 2, rowSpan: 1 },
+    { id: 'hp2', type: 'private', name: 'Klas L.', people: [p('Klas L.'), p('Chelsea T.')], pos: { col: 3, row: 0 }, span: 1 },
+    { id: 'hp3', type: 'private', name: 'Tom D.', people: [], pos: { col: 4, row: 0 }, span: 1 },
+    { id: 'hp4', type: 'private', name: 'Thomas G.', people: [p('Thomas G.')], pos: { col: 5, row: 0 }, span: 1 },
+    { id: 'hp5', type: 'private', name: 'Mattias L.', people: [p('Mattias L.')], pos: { col: 0, row: 1 }, span: 1 },
+    { id: 'hp6', type: 'private', name: 'John H.', people: [p('John H.')], pos: { col: 1, row: 1 }, span: 1 },
+    { id: 'hp-pods', type: 'meeting', name: 'Engineering Pods', people: [p('Emily C.'), p('Daniel R.'), p('Ethan B.'), p('Michael S.'), p('Sophia R.')], pos: { col: 2, row: 1 }, colSpan: 2, rowSpan: 2 },
+    { id: 'hp7', type: 'private', name: 'Howard L.', people: [p('Howard L.')], pos: { col: 4, row: 1 }, span: 1 },
+    { id: 'hp8', type: 'private', name: 'John B.', people: [p('John B.')], pos: { col: 5, row: 1 }, span: 1, story: '/stories/story-1.png' },
+    { id: 'hp9', type: 'private', name: 'Lauren H.', people: [p('Lauren H.')], pos: { col: 0, row: 2 }, span: 1 },
+    { id: 'hp10', type: 'private', name: 'Jessica H.', people: [p('Jessica H.'), p('Grace T.')], pos: { col: 1, row: 2 }, span: 1 },
+    { id: 'hp11', type: 'private', name: 'Ava L.', people: [p('Ava L.')], pos: { col: 4, row: 2 }, span: 1, story: '/stories/story-2.png' },
+    { id: 'hp12', type: 'private', name: 'Garima K.', people: [p('Garima K.'), p('Chloe P.')], pos: { col: 5, row: 2 }, span: 1 },
+    { id: 'hp-theater', type: 'theater', name: 'Theater', people: [], pos: { col: 0, row: 3 }, colSpan: 2, rowSpan: 2 },
+    { id: 'hp13', type: 'private', name: 'Peter L.', people: [p('Peter L.'), p('Grace S.')], pos: { col: 2, row: 3 }, span: 1 },
+    { id: 'hp14', type: 'private', name: 'Sean M.', people: [p('Sean M.')], pos: { col: 3, row: 3 }, span: 1, story: '/stories/story-4.jpg' },
+    { id: 'hp-demo', type: 'meeting', name: 'Demo Day', people: [p('Joe W.'), p('Lexi B.'), p('Ashley B.'), p('Brooke F.'), p('Olivia S.'), p('Sarah M.')], pos: { col: 4, row: 3 }, colSpan: 2, rowSpan: 2 },
+    { id: 'hp15', type: 'private', name: 'Aaron W.', people: [p('Aaron W.'), p('Madison R.')], pos: { col: 2, row: 4 }, span: 1 },
+    { id: 'hp16', type: 'private', name: 'Rob F.', people: [p('Rob F.')], pos: { col: 3, row: 4 }, span: 1 },
+  ],
+  'DropIn': [
+    // Row 0 — leadership row
+    { id: 'di1', type: 'private', name: 'Howard L.', people: [p('Howard L.')], pos: { col: 0, row: 0 }, span: 1 },
+    { id: 'di2', type: 'private', name: 'Jon B.', people: [p('Jon B.')], pos: { col: 1, row: 0 }, span: 1 },
+    { id: 'di3', type: 'private', name: 'Derek C.', people: [p('Derek C.')], pos: { col: 2, row: 0 }, span: 1 },
+    { id: 'di4', type: 'private', name: 'Keegan L.', people: [p('Keegan L.')], pos: { col: 3, row: 0 }, span: 1 },
+    { id: 'di5', type: 'private', name: 'Michael W.', people: [p('Michael W.')], pos: { col: 4, row: 0 }, span: 1 },
+    { id: 'di6', type: 'private', name: 'Will H.', people: [p('Will H.')], pos: { col: 5, row: 0 }, span: 1 },
+    // Row 1
+    { id: 'di7', type: 'private', name: 'Joe W.', people: [p('Joe W.')], pos: { col: 0, row: 1 }, span: 1 },
+    { id: 'di8', type: 'private', name: 'Chelsea T.', people: [p('Chelsea T.')], pos: { col: 1, row: 1 }, span: 1 },
+    { id: 'di9', type: 'private', name: 'Grace S.', people: [p('Grace S.')], pos: { col: 2, row: 1 }, span: 1 },
+    { id: 'di10', type: 'private', name: 'Lexi B.', people: [p('Lexi B.')], pos: { col: 3, row: 1 }, span: 1 },
+    { id: 'di11', type: 'private', name: 'John M.', people: [p('John M.')], pos: { col: 4, row: 1 }, span: 1 },
+    { id: 'di12', type: 'private', name: 'Jeff G.', people: [p('Jeff G.')], pos: { col: 5, row: 1 }, span: 1 },
+    // Row 2 — café + 4 offices
+    { id: 'di-cafe', type: 'game', name: 'Café', people: [p('Ashley B.'), p('Brooke F.')], pos: { col: 0, row: 2 }, colSpan: 2, rowSpan: 2 },
+    { id: 'di13', type: 'private', name: 'Olivia S.', people: [p('Olivia S.')], pos: { col: 2, row: 2 }, span: 1 },
+    { id: 'di14', type: 'private', name: 'Ethan B.', people: [p('Ethan B.')], pos: { col: 3, row: 2 }, span: 1 },
+    { id: 'di15', type: 'private', name: 'Sarah M.', people: [p('Sarah M.')], pos: { col: 4, row: 2 }, span: 1 },
+    { id: 'di16', type: 'private', name: 'Daniel R.', people: [p('Daniel R.')], pos: { col: 5, row: 2 }, span: 1 },
+    // Row 3
+    { id: 'di17', type: 'private', name: 'Sophia R.', people: [p('Sophia R.')], pos: { col: 2, row: 3 }, span: 1 },
+    { id: 'di18', type: 'private', name: 'Hannah B.', people: [p('Hannah B.')], pos: { col: 3, row: 3 }, span: 1 },
+    { id: 'di19', type: 'private', name: 'Mia C.', people: [p('Mia C.')], pos: { col: 4, row: 3 }, span: 1 },
+    { id: 'di20', type: 'private', name: 'Camila T.', people: [p('Camila T.')], pos: { col: 5, row: 3 }, span: 1 },
+    // Row 4
+    { id: 'di21', type: 'private', name: 'Isabella M.', people: [p('Isabella M.')], pos: { col: 0, row: 4 }, span: 1 },
+    { id: 'di22', type: 'private', name: 'Natalie W.', people: [p('Natalie W.')], pos: { col: 1, row: 4 }, span: 1 },
+    { id: 'di23', type: 'private', name: 'Megan T.', people: [p('Megan T.')], pos: { col: 2, row: 4 }, span: 1 },
+    { id: 'di24', type: 'private', name: 'Madison R.', people: [p('Madison R.')], pos: { col: 3, row: 4 }, span: 1 },
+    { id: 'di25', type: 'private', name: 'Rachel C.', people: [p('Rachel C.')], pos: { col: 4, row: 4 }, span: 1 },
+    { id: 'di26', type: 'private', name: 'Chloe P.', people: [p('Chloe P.')], pos: { col: 5, row: 4 }, span: 1 },
+  ],
+  'Preview': [
+    { id: 'pv1', type: 'private', name: 'Arnav B.', people: [p('Arnav B.')], pos: { col: 0, row: 0 }, span: 1 },
+    { id: 'pv2', type: 'private', name: 'Tom D.', people: [p('Tom D.')], pos: { col: 1, row: 0 }, span: 1 },
+    { id: 'pv3', type: 'private', name: 'Will H.', people: [p('Will H.')], pos: { col: 2, row: 0 }, span: 1 },
+    { id: 'pv4', type: 'private', name: 'John H.', people: [p('John H.')], pos: { col: 3, row: 0 }, span: 1 },
+    { id: 'pv5', type: 'private', name: 'Mattias L.', people: [p('Mattias L.')], pos: { col: 4, row: 0 }, span: 1 },
+    { id: 'pv6', type: 'private', name: 'Thomas G.', people: [p('Thomas G.')], pos: { col: 5, row: 0 }, span: 1 },
+    { id: 'pv7', type: 'private', name: 'Michael M.', people: [p('Michael M.')], pos: { col: 0, row: 1 }, span: 1 },
+    { id: 'pv8', type: 'private', name: 'Ava L.', people: [p('Ava L.')], pos: { col: 1, row: 1 }, span: 1 },
+    { id: 'pv-sprint', type: 'meeting', name: 'Sprint Planning', people: [p('Derek C.'), p('Michael M.'), p('John M.'), p('Arnav B.'), p('Olivia S.'), p('Sophia R.')], pos: { col: 2, row: 1 }, colSpan: 2, rowSpan: 2 },
+    { id: 'pv9', type: 'private', name: 'Howard L.', people: [p('Howard L.')], pos: { col: 4, row: 1 }, span: 1 },
+    { id: 'pv10', type: 'private', name: 'Garima K.', people: [p('Garima K.')], pos: { col: 5, row: 1 }, span: 1 },
+    { id: 'pv11', type: 'private', name: 'Lexi B.', people: [p('Lexi B.')], pos: { col: 0, row: 2 }, span: 1 },
+    { id: 'pv12', type: 'private', name: 'John B.', people: [p('John B.')], pos: { col: 1, row: 2 }, span: 1 },
+    { id: 'pv13', type: 'private', name: 'Klas L.', people: [p('Klas L.')], pos: { col: 4, row: 2 }, span: 1 },
+    { id: 'pv14', type: 'private', name: 'Derek C.', people: [p('Derek C.')], pos: { col: 5, row: 2 }, span: 1 },
+    { id: 'pv15', type: 'private', name: 'Joe W.', people: [p('Joe W.')], pos: { col: 0, row: 3 }, span: 1 },
+    { id: 'pv16', type: 'game', name: 'Break Room', people: [], pos: { col: 1, row: 3 }, span: 1 },
+    { id: 'pv-design', type: 'meeting', name: 'Design Critique', people: [p('Chelsea T.'), p('Grace S.'), p('Camila T.'), p('Emily C.'), p('Isabella M.'), p('Madison R.')], pos: { col: 2, row: 3 }, colSpan: 2, rowSpan: 2 },
+    { id: 'pv-roadmap', type: 'meeting', name: 'Roadmap Review', people: [p('Jon B.'), p('Keegan L.'), p('Peter L.'), p('Sean M.'), p('Ethan B.'), p('Daniel R.'), p('Natalie W.'), p('Rachel C.')], pos: { col: 4, row: 3 }, colSpan: 2, rowSpan: 2 },
+  ],
   'Support': [
     // Row 1 — help desk spanning top
     { id: 's-help', type: 'meeting', name: 'Help Desk', people: [p('Garima K.'), p('Lexi B.'), p('Will H.')], pos: { col: 0, row: 0 }, colSpan: 2, rowSpan: 1 },
@@ -186,7 +263,7 @@ const FLOORS = {
   ],
 };
 
-const FLOOR_NAMES = Object.keys(FLOORS);
+const FLOOR_NAMES = Object.keys(FLOORS).filter(n => n !== 'Preview' && n !== 'Homepage');
 
 // Sidebar rooms
 
@@ -699,6 +776,116 @@ function MagicastWindow({ win, onDrag, pipPos, shape = 'circle' }) {
   );
 }
 
+// Custom AInbox data for the Group Chat feature embed — looks like an engineer's inbox
+const AINBOX_ENG_FAVORITES = [
+  { id: 'jon-fav', name: 'Jon', avatar: '/headshots/jon-brod.jpg', type: 'dm' },
+  { id: 'klas-fav', name: 'Klas', avatar: '/headshots/klas-leino.jpg', type: 'dm' },
+  { id: 'engineering', name: 'Engineering', avatar: '/groups/Group Computer.png', type: 'group' },
+];
+
+const AINBOX_ENG_SECTIONS = [
+  {
+    id: 'dms', label: 'Direct Messages',
+    items: [
+      { id: 'rob', name: 'Rob Figueiredo', avatar: '/headshots/rob-figueiredo.jpg', type: 'dm' },
+      { id: 'arnav', name: 'Arnav Bansal', avatar: '/headshots/arnav-bansal.jpg', type: 'dm' },
+      { id: 'mattias', name: 'Mattias Leino', avatar: '/headshots/mattias-leino.jpg', type: 'dm' },
+      { id: 'thomas-eng', name: 'Thomas Grapperon', avatar: '/headshots/thomas-grapperon.jpg', type: 'dm' },
+    ],
+  },
+  {
+    id: 'meetings', label: 'Meetings',
+    items: [
+      { id: 'meet-api', name: 'API Refactor Sync', type: 'meeting' },
+      { id: 'meet-retro', name: 'Sprint Retro', type: 'meeting' },
+    ],
+  },
+  {
+    id: 'groups', label: 'My Groups',
+    items: [
+      { id: 'engineering', name: 'Engineering', groupImg: '/groups/Group Computer.png', type: 'group', memberCount: 14 },
+      { id: 'backend', name: 'Backend', groupImg: '/groups/Group Features.png', type: 'group', memberCount: 7 },
+      { id: 'infra', name: 'Infra', groupImg: '/groups/Group Roam.png', type: 'group', memberCount: 5 },
+      { id: 'mobile', name: 'Mobile', groupImg: '/groups/Group Apple.png', type: 'group', memberCount: 6 },
+      { id: 'web', name: 'Web', groupImg: '/groups/Group Android.png', type: 'group', memberCount: 8 },
+    ],
+  },
+  {
+    id: 'threads', label: 'Threads',
+    items: [
+      { id: 'eng-thread-1', name: 'Auth migration looks clean...', type: 'thread', threadRef: { chatId: 'engineering', messageId: 2 } },
+    ],
+  },
+];
+
+const AINBOX_ENG_MESSAGES = {
+  engineering: {
+    type: 'group', name: 'Engineering', memberCount: 14,
+    groupImg: '/groups/Group Computer.png',
+    avatars: ['/headshots/rob-figueiredo.jpg', '/headshots/arnav-bansal.jpg', '/headshots/mattias-leino.jpg'],
+    pinnedItems: [
+      { label: 'GitHub', emoji: null, avatar: '/icons/favicons/favicon-design-1.png' },
+      { label: 'Linear', emoji: null, avatar: '/icons/favicons/favicon-design-dribbble.png' },
+    ],
+    typingAvatars: ['/headshots/thomas-grapperon.jpg'],
+    messages: [
+      {
+        id: 1, sender: 'Rob Figueiredo', avatar: '/headshots/rob-figueiredo.jpg', time: 'Weds 9:14 AM',
+        text: "Heads up — kicking off the auth service migration this morning. Going to roll all clients over to the new identity provider in a feature flag.",
+      },
+      {
+        id: 2, sender: 'Mattias Leino', avatar: '/headshots/mattias-leino.jpg', time: 'Weds 11:42 AM',
+        text: "Just landed the migration to the new auth service. All endpoints are now hitting the new identity provider behind the flag — let me know if you spot any 401s in your local environments.",
+        thread: {
+          count: 4, lastReply: 'today 10:45 AM',
+          replies: [
+            { id: 'r1', sender: 'Arnav Bansal', avatar: '/headshots/arnav-bansal.jpg', text: "Smooth migration on my end — ran the iOS suite against staging, no regressions." },
+            { id: 'r2', sender: 'Thomas Grapperon', avatar: '/headshots/thomas-grapperon.jpg', text: "All clear on Android too. The token refresh is noticeably faster, ~80ms shaved off cold start." },
+            { id: 'r3', sender: 'Klas Leino', avatar: '/headshots/klas-leino.jpg', text: "Backend's looking good. Latency is down ~30ms on /me calls. Did you also wire up the rotating refresh tokens?" },
+            { id: 'r4', sender: 'Mattias Leino', avatar: '/headshots/mattias-leino.jpg', text: "Yep — refresh rotation is live. TTL is 15m on access tokens, 30 days sliding on refresh. We can dial it down if SSO complains." },
+          ],
+        },
+      },
+      {
+        id: 3, sender: 'Jon Brod', avatar: '/headshots/jon-brod.jpg', time: 'Thu 8:30 AM',
+        text: "Reminder: Sprint planning today at 2 PM. Please make sure your Linear tickets are estimated by then.",
+      },
+      {
+        id: 4, sender: 'Arnav Bansal', avatar: '/headshots/arnav-bansal.jpg', time: 'Thu 2:11 PM',
+        text: "Pushed a fix for the websocket reconnect storm — backoff is now exponential with jitter. Memory pressure on the gateway dropped by ~40%.",
+      },
+      {
+        id: 5, sender: 'Thomas Grapperon', avatar: '/headshots/thomas-grapperon.jpg', time: 'Fri 10:08 AM',
+        text: "FYI the new room-state diff format is in main. Payloads are about 60% smaller on average — big win for cellular clients.",
+      },
+    ],
+  },
+};
+
+function MapFeatureVisual({ theme, className }) {
+  return (
+    <div className={`sc-feature-visual sc-feature-visual-left sc-feature-visual-map${className ? ' ' + className : ''}`}>
+      <div className="sc-feature-wallpaper sc-feature-wallpaper-map" style={{ backgroundImage: `url(/wallpapers/wallpaper-${theme}.png)` }}>
+        <div className="sc-map-feature-window-host">
+          <ShowcaseMap embedded initialFloor="Homepage" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DropInFeatureVisual({ theme, className }) {
+  return (
+    <div className={`sc-feature-visual sc-feature-visual-map${className ? ' ' + className : ''}`}>
+      <div className="sc-feature-wallpaper sc-feature-wallpaper-map" style={{ backgroundImage: `url(/wallpapers/wallpaper-${theme}.png)` }}>
+        <div className="sc-map-feature-window-host">
+          <ShowcaseMap embedded autoKnock initialFloor="DropIn" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function MagicastFeatureVisual({ theme, className }) {
   const [shape, setShape] = useState('circle');
   return (
@@ -779,11 +966,11 @@ function ShelfWindow({ win, onDrag, photoIdx, direction, onPrev, onNext }) {
 }
 
 // Main showcase component
-export default function ShowcaseMap() {
+export default function ShowcaseMap({ initialFloor = 'R&D', embedded = false, autoKnock = false } = {}) {
   return (
     <ChatProvider>
       <WindowManagerProvider initialWindows={INITIAL_WINDOWS}>
-        <ShowcaseMapInner />
+        <ShowcaseMapInner initialFloor={initialFloor} embedded={embedded} autoKnock={autoKnock} />
       </WindowManagerProvider>
     </ChatProvider>
   );
@@ -864,8 +1051,7 @@ const HINT_ARROWS = {
     height: 48,
     viewBox: '0 0 26 24',
     paths: [
-      'M0.5 0.5C0.5 1.10328 0.544312 3.24437 0.688794 6.30285C0.77452 8.11753 1.72307 9.86621 2.92831 11.9357C3.85566 13.528 5.29435 14.5162 6.80665 15.5605C7.59915 16.1078 8.51603 16.5798 9.86801 17.1722C11.22 17.7646 12.9981 18.4349 14.6709 18.9034C16.3438 19.3719 17.8574 19.6182 18.9634 19.7564C20.7218 19.9172 22.1702 19.8408 23.4813 19.6461C24.0162 19.551 24.2862 19.4634 24.6812 19.334',
-      'M22.1592 18.2471C22.1554 18.2471 22.1515 18.2471 22.9036 18.2471C23.6557 18.2471 25.1639 18.2471 25.3384 18.9961C25.5129 19.7451 24.3079 21.2432 23.0665 22.7866',
+      'M0.5 0.5C0.5 1.10328 0.544312 3.24437 0.688794 6.30285C0.77452 8.11753 1.72307 9.86621 2.92831 11.9357C3.85566 13.528 5.29435 14.5162 6.80665 15.5605C7.59915 16.1078 8.51603 16.5798 9.86801 17.1722C11.22 17.7646 12.9981 18.4349 14.6709 18.9034C16.3438 19.3719 17.8574 19.6182 18.9634 19.7564C20.7218 19.9172 22.1702 19.8408 23.4813 19.6461C24.0162 19.551 24.2862 19.4634 24.6812 19.334L22.1592 18.2471C22.1554 18.2471 22.1515 18.2471 22.9036 18.2471C23.6557 18.2471 25.1639 18.2471 25.3384 18.9961C25.5129 19.7451 24.3079 21.2432 23.0665 22.7866',
     ],
   },
 };
@@ -901,7 +1087,7 @@ function Hint({ text, blob, arrow, visible = true, className = '', style, portal
             <path
               ref={pathRef}
               d={blobDef.d}
-              stroke="black"
+              stroke="var(--bg-surface-secondary)"
               strokeWidth={blobDef.strokeWidth}
               strokeLinecap="round"
               vectorEffect="non-scaling-stroke"
@@ -913,7 +1099,7 @@ function Hint({ text, blob, arrow, visible = true, className = '', style, portal
         {arrowDef && (
           <svg className="sc-hint-arrow" width={arrowDef.width} height={arrowDef.height} viewBox={arrowDef.viewBox} fill="none">
             {arrowDef.paths.map((d, i) => (
-              <path key={i} d={d} stroke="white" strokeLinecap="round" />
+              <path key={i} d={d} stroke="var(--bg-surface-secondary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             ))}
           </svg>
         )}
@@ -948,10 +1134,10 @@ function useTargetHintStyle(targetRef, active, offset = { top: -30, left: 'cente
   return style;
 }
 
-function ShowcaseMapInner() {
+function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = false }) {
   const [theme, setTheme] = useState('dark');
-  const [layout, setLayout] = useState('v1');
-  const [activeFloor, setActiveFloor] = useState('R&D');
+  const [layout, setLayout] = useState('v2');
+  const [activeFloor, setActiveFloor] = useState(initialFloor);
   const [floorTransition, setFloorTransition] = useState('visible'); // 'visible' | 'out' | 'in'
 
   const switchFloor = (floorName) => {
@@ -968,11 +1154,21 @@ function ShowcaseMapInner() {
     }, 200);
   };
   const [navLogoVisible, setNavLogoVisible] = useState(false);
-  const [showGrid, setShowGrid] = useState(false);
+  const [showGrid, setShowGrid] = useState(() => {
+    try { return localStorage.getItem('showGrid') === 'true'; } catch { return false; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem('showGrid', showGrid); } catch {}
+  }, [showGrid]);
   useEffect(() => {
     const handler = () => setShowGrid(g => !g);
+    const syncHandler = (e) => { if (e.key === 'showGrid') setShowGrid(e.newValue === 'true'); };
     window.addEventListener('toggle-grid', handler);
-    return () => window.removeEventListener('toggle-grid', handler);
+    window.addEventListener('storage', syncHandler);
+    return () => {
+      window.removeEventListener('toggle-grid', handler);
+      window.removeEventListener('storage', syncHandler);
+    };
   }, []);
   const [activeVibes, setActiveVibes] = useState({});
   const miniRoamRef = useRef(null);
@@ -1018,6 +1214,7 @@ function ShowcaseMapInner() {
   };
 
   useEffect(() => {
+    if (autoKnock) return;
     const floor = FLOORS[activeFloor];
     const privateRooms = floor.filter(r => r.type === 'private' && r.people.length === 1 && !r.story);
     const meetingRooms = floor.filter(r => r.type === 'meeting' && r.people.length > 0);
@@ -1025,54 +1222,169 @@ function ShowcaseMapInner() {
     const timers = [];
     const t = (fn, ms) => { const id = setTimeout(fn, ms); timers.push(id); };
 
+    const mergeAnim = (updates) => setMovements(prev => ({ ...prev, anim: { ...prev.anim, ...updates } }));
+    const mergeRemovedAdded = (removed, added) => setMovements(prev => ({
+      ...prev,
+      removed: { ...prev.removed, ...removed },
+      added: { ...prev.added, ...added },
+    }));
+    const clearKeys = (animKeys = [], removedKeys = [], addedKeys = []) => setMovements(prev => {
+      const anim = { ...prev.anim };
+      const removed = { ...prev.removed };
+      const added = { ...prev.added };
+      animKeys.forEach(k => delete anim[k]);
+      removedKeys.forEach(k => delete removed[k]);
+      addedKeys.forEach(k => delete added[k]);
+      return { anim, removed, added };
+    });
+
+    const inUse = new Set();
     const tick = () => {
-      const srcRoom = privateRooms[Math.floor(Math.random() * privateRooms.length)];
-      const dstRoom = meetingRooms[Math.floor(Math.random() * meetingRooms.length)];
+      const availableSources = privateRooms.filter(r => !inUse.has(r.id));
+      const availableDests = meetingRooms.filter(r => !inUse.has(r.id));
+      if (availableSources.length === 0 || availableDests.length === 0) return;
+      const srcRoom = availableSources[Math.floor(Math.random() * availableSources.length)];
+      const dstRoom = availableDests[Math.floor(Math.random() * availableDests.length)];
       const person = srcRoom.people[0];
+      inUse.add(srcRoom.id);
+      inUse.add(dstRoom.id);
 
-      // 1. Leaving: show person with leaving animation
-      setMovements({ removed: {}, added: {}, anim: { [srcRoom.id]: 'leaving' } });
-
-      // 2. After leave anim, remove person and add to destination with arriving animation
+      // 1. Leaving source
+      mergeAnim({ [srcRoom.id]: 'leaving' });
       t(() => {
-        setMovements({ removed: { [srcRoom.id]: true }, added: { [dstRoom.id]: person }, anim: { [dstRoom.id]: 'arriving' } });
-
-        // 3. After arrive anim, clear animation state
+        // 2. Remove from source, add to dest with arriving animation
+        mergeRemovedAdded({ [srcRoom.id]: true }, { [dstRoom.id]: person });
+        clearKeys([srcRoom.id]);
+        mergeAnim({ [dstRoom.id]: 'arriving' });
         t(() => {
-          setMovements({ removed: { [srcRoom.id]: true }, added: { [dstRoom.id]: person }, anim: {} });
-
-          // 4. After a while, return: leaving animation on destination
+          clearKeys([dstRoom.id]);
           t(() => {
-            setMovements({ removed: { [srcRoom.id]: true }, added: { [dstRoom.id]: person }, anim: { [dstRoom.id]: 'leaving-added' } });
-
-            // 5. Remove from destination, restore source with arriving animation
+            // 4. Leave destination
+            mergeAnim({ [dstRoom.id]: 'leaving-added' });
             t(() => {
-              setMovements({ removed: {}, added: {}, anim: { [srcRoom.id]: 'arriving' } });
-
-              // 6. Clear
-              t(() => setMovements({ removed: {}, added: {}, anim: {} }), 400);
+              // 5. Remove from dest, restore source with arriving animation
+              clearKeys([dstRoom.id], [srcRoom.id], [dstRoom.id]);
+              mergeAnim({ [srcRoom.id]: 'arriving' });
+              t(() => {
+                clearKeys([srcRoom.id]);
+                inUse.delete(srcRoom.id);
+                inUse.delete(dstRoom.id);
+              }, 400);
             }, 300);
-          }, 8000 + Math.random() * 7000);
+          }, 6000 + Math.random() * 6000);
         }, 400);
       }, 300);
     };
 
-    const interval = setInterval(tick, 15000 + Math.random() * 10000);
-    t(tick, 5000);
-    return () => { clearInterval(interval); timers.forEach(clearTimeout); };
-  }, [activeFloor]);
+    // Fire frequently so many people are in motion at once
+    const interval = setInterval(tick, 2500 + Math.random() * 1500);
+    t(tick, 500);
+    t(tick, 1800);
+    t(tick, 3200);
+    t(tick, 4600);
+
+    // Group tick: batch of people enter/leave Morning Huddle together
+    const groupTargets = meetingRooms.filter(r => /huddle/i.test(r.name));
+    const groupTick = () => {
+      if (groupTargets.length === 0) return;
+      const dstRoom = groupTargets[Math.floor(Math.random() * groupTargets.length)];
+      if (inUse.has(dstRoom.id)) return;
+      const availableSources = privateRooms.filter(r => !inUse.has(r.id));
+      if (availableSources.length < 3) return;
+      const groupSize = Math.min(availableSources.length, 3 + Math.floor(Math.random() * 3));
+      const shuffled = [...availableSources].sort(() => Math.random() - 0.5).slice(0, groupSize);
+      const people = shuffled.map(r => r.people[0]);
+      shuffled.forEach(r => inUse.add(r.id));
+      inUse.add(dstRoom.id);
+
+      // 1. All sources leave simultaneously
+      const leavingAnim = {};
+      shuffled.forEach(r => { leavingAnim[r.id] = 'leaving'; });
+      mergeAnim(leavingAnim);
+
+      t(() => {
+        // 2. Remove from sources, add all to destination, destination plays arriving
+        const removed = {};
+        shuffled.forEach(r => { removed[r.id] = true; });
+        mergeRemovedAdded(removed, { [dstRoom.id]: people });
+        clearKeys(shuffled.map(r => r.id));
+        mergeAnim({ [dstRoom.id]: 'arriving' });
+        t(() => {
+          clearKeys([dstRoom.id]);
+          t(() => {
+            // 4. Leave destination
+            mergeAnim({ [dstRoom.id]: 'leaving-added' });
+            t(() => {
+              // 5. Remove from dest, restore all sources simultaneously
+              clearKeys([dstRoom.id], shuffled.map(r => r.id), [dstRoom.id]);
+              const arrivingAnim = {};
+              shuffled.forEach(r => { arrivingAnim[r.id] = 'arriving'; });
+              mergeAnim(arrivingAnim);
+              t(() => {
+                clearKeys(shuffled.map(r => r.id));
+                shuffled.forEach(r => inUse.delete(r.id));
+                inUse.delete(dstRoom.id);
+              }, 400);
+            }, 300);
+          }, 7000 + Math.random() * 5000);
+        }, 400);
+      }, 300);
+    };
+
+    const groupInterval = setInterval(groupTick, 10000 + Math.random() * 4000);
+    t(groupTick, 2500);
+    return () => { clearInterval(interval); clearInterval(groupInterval); timers.forEach(clearTimeout); };
+  }, [activeFloor, autoKnock]);
+
+  // Auto-knock cycle: rotates through private offices showing the knock dialog
+  useEffect(() => {
+    if (!autoKnock) return;
+    const floor = FLOORS[activeFloor];
+    const privateRooms = floor.filter(r => r.type === 'private' && r.people.length === 1);
+    if (privateRooms.length === 0) return;
+    const timers = [];
+    let lastIdx = -1;
+    const cycle = () => {
+      let idx;
+      do { idx = Math.floor(Math.random() * privateRooms.length); } while (idx === lastIdx && privateRooms.length > 1);
+      lastIdx = idx;
+      const room = privateRooms[idx];
+      setKnockingRoom(room);
+      // Hold the knock dialog
+      timers.push(setTimeout(() => {
+        setKnockingRoom(null);
+        // Briefly enter the room (highlights it as joined)
+        setJoinedRoomId(room.id);
+        timers.push(setTimeout(() => {
+          setJoinedRoomId(null);
+          // Wait, then knock on the next person
+          timers.push(setTimeout(cycle, 1200));
+        }, 2200));
+      }, 2400));
+    };
+    const startId = setTimeout(cycle, 800);
+    timers.push(startId);
+    return () => {
+      timers.forEach(clearTimeout);
+      setKnockingRoom(null);
+      setJoinedRoomId(null);
+    };
+  }, [autoKnock, activeFloor]);
 
   // Apply movements to get the current floor rooms
   const currentFloorRooms = useMemo(() => {
     return FLOORS[activeFloor].map(room => {
       let people = room.people;
       if (movements.removed[room.id]) people = [];
-      if (movements.added[room.id]) people = [...room.people, { ...movements.added[room.id], _new: true }];
+      if (movements.added[room.id]) {
+        const incoming = Array.isArray(movements.added[room.id]) ? movements.added[room.id] : [movements.added[room.id]];
+        people = [...people, ...incoming.map(p => ({ ...p, _new: true }))];
+      }
       return { ...room, people, _anim: movements.anim[room.id] || null };
     });
   }, [activeFloor, movements]);
 
-  const theaterSpeakers = useMemo(() => [p('Emily C.'), p('Lauren H.')], []);
+  const theaterSpeakers = useMemo(() => [p('Camila T.'), p('Megan T.')], []);
   const speakerStories = {};
 
   const allStoryRooms = useMemo(() => {
@@ -1412,7 +1724,7 @@ function ShowcaseMapInner() {
         {layout === 'v2' && (
           <div className="sc-v2-hero">
             <img className="sc-v2-hero-icon" src="/icons/roam-gold-icon.png" alt="Roam" />
-            <h1 className="sc-v2-hero-title">THE OFFICE THAT THINKS</h1>
+            <h1 className="sc-v2-hero-title">Virtual Office that Thinks</h1>
             <p className="sc-v2-hero-subtitle">Roam is a Virtual Office Platform where remote work happens in the open and every action makes your company smarter.</p>
             <div className="sc-v2-hero-buttons">
               <button className="sc-promo-btn">Book Demo</button>
@@ -1451,7 +1763,7 @@ function ShowcaseMapInner() {
                 return (
                   <div
                     key={room.id}
-                    className={`sc-grid-cell ${room._anim ? `sc-move-${room._anim}` : ''}`}
+                    className={`sc-grid-cell ${room._anim ? `sc-move-${room._anim}` : ''} ${autoKnock && joinedRoomId === room.id ? 'sc-room-joined-pulse' : ''} ${joinedRoomId === room.id && room.type === 'private' && room.people.some(p => p.avatar === JOE.avatar) ? 'sc-room-own-office' : ''}`}
                     data-room-type={room.type}
                     data-room-name={room.name}
                     style={{ gridColumn, gridRow }}
@@ -1718,8 +2030,8 @@ function ShowcaseMapInner() {
       {lobbyWin.isOpen && <Lobby win={lobbyWin} onDrag={makeDragHandler(lobbyWin)} />}
       {/* Product features bar — inside miniRoamOS, pinned to bottom */}
       {/* Handwritten annotation pointing to the product bar */}
-      <Hint portal={false} text="Product Tour" blob="peaks" arrow="swoop-right" visible={hintVisible} style={{ ...(introHintStyle || { top: 190, left: 90 }), ...(HIDE_CHROME ? { display: 'none' } : {}) }} />
-      <div className="sc-products-bar" ref={productsBarRef} style={HIDE_CHROME ? { display: 'none' } : undefined}>
+      <Hint portal={false} text="Product Tour" blob="peaks" arrow="swoop-right" visible={hintVisible} style={{ ...(introHintStyle || { top: 190, left: 90 }), display: 'none' }} />
+      <div className="sc-products-bar" ref={productsBarRef}>
         {PRODUCTS.map((item, i) => {
           const winByName = {
             'AInbox': ainboxWin,
@@ -1768,6 +2080,30 @@ function ShowcaseMapInner() {
         </div>
       )}
 
+      {!embedded && (<>
+      {/* Feature section — Virtual Office */}
+      <div className="sc-feature-section sc-feature-section-reverse">
+        <div className="sc-section-grid">
+          <MapFeatureVisual theme={theme} />
+          <div className="sc-feature-text sc-feature-text-right">
+            <h2 className="sc-feature-title">VIRTUAL OFFICE</h2>
+            <p className="sc-feature-desc">Company Visualization with Live Presence on the Map. A live view of who's in the office, who's meeting with who, who's talking, 3D chats as they happen, music people are listening to, and much more. A shared view that makes your whole company feel as if everyone's in one room. Click on anyone's head to chat with them, or click on an empty seat to enter a room with them.</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Feature section — Drop-In Meetings */}
+      <div className="sc-feature-section">
+        <div className="sc-section-grid">
+          <div className="sc-feature-text">
+            <h2 className="sc-feature-title">DROP-IN MEETINGS</h2>
+            <p className="sc-feature-desc">Knock on an empty seat in someone's private office to start an audio-only Drop-In Meeting. If they want to talk, they'll accept your knock. When you're in their office, you can also see their shelf, which shows the pictures, books, music and other things they want to showcase.</p>
+            <a href="#/feature/drop-in-meetings" className="sc-feature-link">Learn about Drop-In Meetings →</a>
+          </div>
+          <DropInFeatureVisual theme={theme} />
+        </div>
+      </div>
+
       {/* Feature section — Meeting Room */}
       <div className="sc-feature-section sc-feature-section-reverse">
         <div className="sc-section-grid">
@@ -1791,7 +2127,7 @@ function ShowcaseMapInner() {
           <div className="sc-feature-text sc-feature-text-right">
             <h2 className="sc-feature-title">VIDEO CONFERENCING</h2>
             <p className="sc-feature-desc">Jump into a Meeting Room for video conferencing when you need to collaborate. When you're done, you're done! Includes high resolution screensharing and whiteboard as well. No more back-to-back video meetings filling out all day. Just meet when you need to, and when you're done, back to work.</p>
-            <a href="#" className="sc-feature-link">Learn about Video Conferencing →</a>
+            <a href="#/feature/video-conferencing" className="sc-feature-link">Learn about Video Conferencing →</a>
           </div>
         </div>
       </div>
@@ -1802,7 +2138,7 @@ function ShowcaseMapInner() {
           <div className="sc-feature-text">
             <h2 className="sc-feature-title">THEATER</h2>
             <p className="sc-feature-desc">Take your presentations to the next level with a unique new Theater format for all-hands. Your audience sits in rows where they can whisper to each other. There's a backstage, Q&amp;A microphone, and stadium mode for 100+ people. All the world's a stage!</p>
-            <a href="#" className="sc-feature-link">Learn about Theater →</a>
+            <a href="#/feature/theater" className="sc-feature-link">Learn about Theater →</a>
           </div>
           <div className="sc-feature-visual">
             <div className="sc-feature-wallpaper" style={{ backgroundImage: `url(/wallpapers/wallpaper-${theme}.png)` }}>
@@ -1824,13 +2160,20 @@ function ShowcaseMapInner() {
         <div className="sc-section-grid">
           <div className="sc-feature-visual sc-feature-visual-left">
             <div className="sc-feature-wallpaper" style={{ backgroundImage: `url(/wallpapers/wallpaper-${theme}.png)` }}>
-              <AInbox win={{ position: { x: 0, y: 0 }, zIndex: 1, isFocused: true, focus: () => {}, close: () => {}, open: () => {} }} onDrag={() => {}} />
+              <AInbox
+                win={{ position: { x: 0, y: 0 }, zIndex: 1, isFocused: true, focus: () => {}, close: () => {}, open: () => {} }}
+                onDrag={() => {}}
+                initialThreadView={{ chatId: 'engineering', messageId: 2 }}
+                favoritesOverride={AINBOX_ENG_FAVORITES}
+                sectionsOverride={AINBOX_ENG_SECTIONS}
+                messagesOverride={AINBOX_ENG_MESSAGES}
+              />
             </div>
           </div>
           <div className="sc-feature-text sc-feature-text-right">
             <h2 className="sc-feature-title">GROUP CHAT</h2>
             <p className="sc-feature-desc">Send Direct Messages, Group Chats, or Confidential Chats with AInbox. Set up your own custom groups. Tailor for your own bespoke workflow with custom folders, pinned chats, bookmarks, scheduled messages, and drag-and-drop reordering. Search your entire history. Give out guest badges to chat with people outside your organization, free!</p>
-            <a href="#" className="sc-feature-link">Learn about AInbox →</a>
+            <a href="#/feature/ainbox" className="sc-feature-link">Learn about AInbox →</a>
           </div>
         </div>
       </div>
@@ -1841,7 +2184,7 @@ function ShowcaseMapInner() {
           <div className="sc-feature-text">
             <h2 className="sc-feature-title">AI-POWERED MEETING SUMMARIES</h2>
             <p className="sc-feature-desc">When you turn on Magic Minutes in a meeting, all participants will get a transcription and AI-summary of the meeting in a group chat that everyone's in. Best of all, you can prompt the minutes right in the group chat - asking questions and getting answers about certain parts of the meeting. If you're late to a meeting, you'll get an automated AI-catch-me-up. And, you can get AI summaries of any chat thread or PDF simply by prompting @MagicMinutes!</p>
-            <a href="#" className="sc-feature-link">Learn about Magic Minutes →</a>
+            <a href="#/feature/magic-minutes" className="sc-feature-link">Learn about Magic Minutes →</a>
           </div>
           <div className="sc-feature-visual">
             <div className="sc-feature-wallpaper" style={{ backgroundImage: `url(/wallpapers/wallpaper-${theme}.png)` }}>
@@ -1865,7 +2208,7 @@ function ShowcaseMapInner() {
           <div className="sc-feature-text sc-feature-text-right">
             <h2 className="sc-feature-title">SCHEDULING</h2>
             <p className="sc-feature-desc">Send your Lobby link to guests to book time with you on your calendar. Configure different links with custom time and availability settings depending on context. Tailor your Lobby to look like your company. Best of all, you can allow your guests to &ldquo;Drop-In&rdquo; which appears automatically if you&rsquo;re available.</p>
-            <a href="#" className="sc-feature-link">Learn about Lobby →</a>
+            <a href="#/feature/lobby" className="sc-feature-link">Learn about Lobby →</a>
           </div>
         </div>
       </div>
@@ -1876,7 +2219,7 @@ function ShowcaseMapInner() {
           <div className="sc-feature-text">
             <h2 className="sc-feature-title">AI SCREEN RECORDER</h2>
             <p className="sc-feature-desc">Record sales demos, investor updates, product releases, announcements or anything else you need right from your desktop with Roam Magicast. Record your screen and add your video or audio picture-in-picture to create a captivating presentation right in Roam. Easily share via AInbox or a link with someone externally. They'll get your Magicast and its transcription.</p>
-            <a href="#" className="sc-feature-link">Learn about Magicast →</a>
+            <a href="#/feature/magicast" className="sc-feature-link">Learn about Magicast →</a>
           </div>
           <MagicastFeatureVisual theme={theme} />
         </div>
@@ -1893,10 +2236,11 @@ function ShowcaseMapInner() {
           <div className="sc-feature-text sc-feature-text-right">
             <h2 className="sc-feature-title">ON-AIR</h2>
             <p className="sc-feature-desc">Now anyone can host Immersive Events for the Creator-Era</p>
-            <a href="#" className="sc-feature-link">Learn about On-Air →</a>
+            <a href="#/feature/on-air" className="sc-feature-link">Learn about On-Air →</a>
           </div>
         </div>
       </div>
+      </>)}
 
       {/* Theme capsule + grid toggle — pinned to right side */}
       <div className="sc-right-controls" style={HIDE_CHROME ? { display: 'none' } : undefined}>
@@ -1907,6 +2251,15 @@ function ShowcaseMapInner() {
           </div>
           <div className={`sc-theme-capsule-icon ${theme === 'light' ? 'active' : ''}`}>
             <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="3" stroke="currentColor" strokeWidth="1.3" /><path d="M8 2V3.5M8 12.5V14M2 8H3.5M12.5 8H14M3.8 3.8L4.8 4.8M11.2 11.2L12.2 12.2M3.8 12.2L4.8 11.2M11.2 4.8L12.2 3.8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" /></svg>
+          </div>
+        </div>
+        <div className="sc-grid-capsule" onClick={() => setShowGrid(g => !g)} title="Toggle 12-column grid">
+          <div className={`sc-grid-capsule-knob ${showGrid ? 'on' : ''}`} />
+          <div className={`sc-grid-capsule-icon ${!showGrid ? 'active' : ''}`}>
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="2.5" y="2.5" width="11" height="11" stroke="currentColor" strokeWidth="1.3" rx="1.5" /></svg>
+          </div>
+          <div className={`sc-grid-capsule-icon ${showGrid ? 'active' : ''}`}>
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="2.5" y="2.5" width="11" height="11" stroke="currentColor" strokeWidth="1.3" rx="1.5" /><path d="M6 2.5V13.5M10 2.5V13.5M2.5 6H13.5M2.5 10H13.5" stroke="currentColor" strokeWidth="1" /></svg>
           </div>
         </div>
         <div className="sc-layout-capsule" onClick={() => setLayout(l => l === 'v1' ? 'v2' : 'v1')}>

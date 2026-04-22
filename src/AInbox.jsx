@@ -1498,21 +1498,190 @@ function DmMessage({ msg, isFirstInGroup, isLastInGroup }) {
    Default reactions for thread original msg
 ——————————————————————————————————————— */
 const THREAD_REACTIONS = [
-  { emoji: '👍', count: 1 }, { emoji: '😂', count: 3 },
-  { emoji: '🤪', count: 5, active: true }, { emoji: '😡', count: 12 }, { emoji: '🚀', count: 4 },
+  { emoji: '👍', count: 6 }, { emoji: '✅', count: 4 },
+  { emoji: '🔥', count: 3, active: true }, { emoji: '🚀', count: 5 }, { emoji: '💯', count: 2 },
 ];
 
-export default function AInbox({ win, onDrag, onOpenMagicMinutes }) {
-  const [selectedChat, setSelectedChat] = useState('design');
+export default function AInbox({ win, onDrag, onOpenMagicMinutes, initialThreadView = null, initialChatId = null, initialSearchActive = false, initialSearchQuery = '', sidebarScrollToBottom = false, staticMode = false, autoAddFolders = false, favoritesOverride = null, sectionsOverride = null, messagesOverride = null, mmAutoPrompt = false }) {
+  const favorites = favoritesOverride || FAVORITES;
+  const sidebarSections = sectionsOverride || SIDEBAR_SECTIONS;
+  const defaultSelected = sidebarSections[0]?.items?.[0]?.id || 'design';
+  const [selectedChat, setSelectedChat] = useState(initialChatId || initialThreadView?.chatId || (sectionsOverride ? defaultSelected : 'design'));
   const [collapsedSections, setCollapsedSections] = useState({});
   const [inputText, setInputText] = useState('');
-  const { messages, setMessages, pickRandom, getReply } = useChat();
+  const chatCtx = useChat();
+  const pickRandom = chatCtx.pickRandom;
+  const getReply = chatCtx.getReply;
+  const [overrideMessages, setOverrideMessages] = useState(messagesOverride);
+  const messages = messagesOverride ? overrideMessages : chatCtx.messages;
+  const setMessages = messagesOverride ? setOverrideMessages : chatCtx.setMessages;
   const [closing, setClosing] = useState(false);
   // threadView: null or { chatId, messageId }
-  const [threadView, setThreadView] = useState(null);
+  const [threadView, setThreadView] = useState(initialThreadView);
   const messagesRef = useRef(null);
   const composerInputRef = useRef(null);
+  const [composerFocused, setComposerFocused] = useState(false);
   const shouldScroll = useRef(false);
+  const sidebarSectionsRef = useRef(null);
+
+  useEffect(() => {
+    if (!sidebarScrollToBottom) return;
+    const el = sidebarSectionsRef.current;
+    if (!el) return;
+    el.scrollTop = el.scrollHeight;
+  }, [sidebarScrollToBottom, sectionsOverride]);
+
+  // Add-folder state
+  const [addFolderName, setAddFolderName] = useState('');
+  const [addedFolders, setAddedFolders] = useState([]);
+  const addFolderInputRef = useRef(null);
+
+  useEffect(() => {
+    addFolderInputRef.current?.focus({ preventScroll: true });
+  }, []);
+
+  // Keep a stable ref to handleAddFolder for the auto-typer effect
+  const handleAddFolderRef = useRef(null);
+  handleAddFolderRef.current = (name) => {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    const POOL = [
+      { id: 'p-howard', name: 'Howard Lerman', avatar: '/headshots/howard-lerman.jpg', type: 'dm' },
+      { id: 'p-jon', name: 'Jon Brod', avatar: '/headshots/jon-brod.jpg', type: 'dm' },
+      { id: 'p-grace', name: 'Grace Sutherland', avatar: '/headshots/grace-sutherland.jpg', type: 'dm' },
+      { id: 'p-derek', name: 'Derek Cicerone', avatar: '/headshots/derek-cicerone.jpg', type: 'dm' },
+      { id: 'p-klas', name: 'Klas Leino', avatar: '/headshots/klas-leino.jpg', type: 'dm' },
+      { id: 'p-mattias', name: 'Mattias Leino', avatar: '/headshots/mattias-leino.jpg', type: 'dm' },
+      { id: 'p-chelsea', name: 'Chelsea Turbin', avatar: '/headshots/chelsea-turbin.jpg', type: 'dm' },
+      { id: 'p-tom', name: 'Tom Dixon', avatar: '/headshots/tom-dixon.jpg', type: 'dm' },
+      { id: 'p-lexi', name: 'Lexi Bohonnon', avatar: '/headshots/lexi-bohonnon.jpg', type: 'dm' },
+      { id: 'p-will', name: 'Will Houseberry', avatar: '/headshots/will-hou.jpg', type: 'dm' },
+      { id: 'p-rob', name: 'Rob Figueiredo', avatar: '/headshots/rob-figueiredo.jpg', type: 'dm' },
+      { id: 'p-peter', name: 'Peter Lerman', avatar: '/headshots/peter-lerman.jpg', type: 'dm' },
+      { id: 'g-design', name: 'Design', groupImg: '/groups/Group Design.png', type: 'group', memberCount: 35 },
+      { id: 'g-eng', name: 'Engineering', groupImg: '/groups/Group Computer.png', type: 'group', memberCount: 12 },
+      { id: 'g-roam', name: 'All-Hands', groupImg: '/groups/Group Roam.png', type: 'group', memberCount: 45 },
+      { id: 'g-cx', name: 'Customer Experience', groupImg: '/groups/Group CX.png', type: 'group', memberCount: 6 },
+      { id: 'g-gtm', name: 'GTM', groupImg: '/groups/Group GTM.png', type: 'group', memberCount: 9 },
+      { id: 'g-exec', name: 'Exec', groupImg: '/groups/Group Exec.png', type: 'group', memberCount: 7 },
+    ];
+    const count = 3 + Math.floor(Math.random() * 3);
+    const shuffled = [...POOL].sort(() => Math.random() - 0.5).slice(0, count);
+    const folderId = 'added-' + Date.now() + '-' + Math.random();
+    const items = shuffled.map((it, i) => ({ ...it, id: it.id + '-' + folderId + '-' + i }));
+    setAddedFolders(prev => [...prev, { id: folderId, label: trimmed, items }]);
+    setAddFolderName('');
+    requestAnimationFrame(() => {
+      const el = sidebarSectionsRef.current;
+      if (el) el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+    });
+  };
+
+  // Auto-add folders with typewriter effect
+  useEffect(() => {
+    if (!autoAddFolders) return;
+    const NAMES = [
+      'Q3 Launch', 'Sprint Retro', 'Design Reviews', 'Demo Day',
+      'Coffee Buddies', 'Book Club', 'Hiring Loop', 'Customer Wins',
+      'Ship-It Friday', 'Brand Refresh', 'Roadmap Q4', 'Lunch Crew',
+      'Birthday Squad', 'Off-site Plan', 'Onboarding Buddies', 'Wellness',
+    ];
+    const shuffled = [...NAMES].sort(() => Math.random() - 0.5);
+    let idx = 0;
+    let cancelled = false;
+    let timers = [];
+
+    const runCycle = () => {
+      if (cancelled) return;
+      const name = shuffled[idx % shuffled.length];
+      idx++;
+      let charIdx = 0;
+      const typeInterval = setInterval(() => {
+        if (cancelled) { clearInterval(typeInterval); return; }
+        charIdx++;
+        setAddFolderName(name.slice(0, charIdx));
+        if (charIdx >= name.length) {
+          clearInterval(typeInterval);
+          const submitT = setTimeout(() => {
+            if (cancelled) return;
+            handleAddFolderRef.current?.(name);
+            const nextT = setTimeout(runCycle, 3000);
+            timers.push(nextT);
+          }, 600);
+          timers.push(submitT);
+        }
+      }, 70);
+      timers.push(typeInterval);
+    };
+
+    const startT = setTimeout(runCycle, 1500);
+    timers.push(startT);
+
+    return () => {
+      cancelled = true;
+      timers.forEach(t => { clearTimeout(t); clearInterval(t); });
+    };
+  }, [autoAddFolders]);
+
+  const handleAddFolder = (nameOverride) => {
+    const name = (nameOverride ?? addFolderName).trim();
+    if (!name) return;
+    const POOL = [
+      { id: 'p-howard', name: 'Howard Lerman', avatar: '/headshots/howard-lerman.jpg', type: 'dm' },
+      { id: 'p-jon', name: 'Jon Brod', avatar: '/headshots/jon-brod.jpg', type: 'dm' },
+      { id: 'p-grace', name: 'Grace Sutherland', avatar: '/headshots/grace-sutherland.jpg', type: 'dm' },
+      { id: 'p-derek', name: 'Derek Cicerone', avatar: '/headshots/derek-cicerone.jpg', type: 'dm' },
+      { id: 'p-klas', name: 'Klas Leino', avatar: '/headshots/klas-leino.jpg', type: 'dm' },
+      { id: 'p-mattias', name: 'Mattias Leino', avatar: '/headshots/mattias-leino.jpg', type: 'dm' },
+      { id: 'p-chelsea', name: 'Chelsea Turbin', avatar: '/headshots/chelsea-turbin.jpg', type: 'dm' },
+      { id: 'p-tom', name: 'Tom Dixon', avatar: '/headshots/tom-dixon.jpg', type: 'dm' },
+      { id: 'p-lexi', name: 'Lexi Bohonnon', avatar: '/headshots/lexi-bohonnon.jpg', type: 'dm' },
+      { id: 'p-will', name: 'Will Houseberry', avatar: '/headshots/will-hou.jpg', type: 'dm' },
+      { id: 'p-rob', name: 'Rob Figueiredo', avatar: '/headshots/rob-figueiredo.jpg', type: 'dm' },
+      { id: 'p-peter', name: 'Peter Lerman', avatar: '/headshots/peter-lerman.jpg', type: 'dm' },
+      { id: 'g-design', name: 'Design', groupImg: '/groups/Group Design.png', type: 'group', memberCount: 35 },
+      { id: 'g-eng', name: 'Engineering', groupImg: '/groups/Group Computer.png', type: 'group', memberCount: 12 },
+      { id: 'g-roam', name: 'All-Hands', groupImg: '/groups/Group Roam.png', type: 'group', memberCount: 45 },
+      { id: 'g-cx', name: 'Customer Experience', groupImg: '/groups/Group CX.png', type: 'group', memberCount: 6 },
+      { id: 'g-gtm', name: 'GTM', groupImg: '/groups/Group GTM.png', type: 'group', memberCount: 9 },
+      { id: 'g-exec', name: 'Exec', groupImg: '/groups/Group Exec.png', type: 'group', memberCount: 7 },
+      { id: 'm-1', name: 'Friday review', type: 'meeting' },
+      { id: 'm-2', name: 'Standup', type: 'meeting' },
+    ];
+    const count = 3 + Math.floor(Math.random() * 3); // 3-5
+    const shuffled = [...POOL].sort(() => Math.random() - 0.5).slice(0, count);
+    const folderId = 'added-' + Date.now();
+    const items = shuffled.map((it, i) => ({ ...it, id: it.id + '-' + folderId + '-' + i }));
+    setAddedFolders(prev => [...prev, { id: folderId, label: name, items }]);
+    setAddFolderName('');
+    // Keep the input focused so the user can keep adding folders
+    setTimeout(() => addFolderInputRef.current?.focus({ preventScroll: true }), 0);
+    // Scroll the sidebar to the bottom so the new folder is visible
+    requestAnimationFrame(() => {
+      const el = sidebarSectionsRef.current;
+      if (el) el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+    });
+  };
+
+  // Search state
+  const [searchFocused, setSearchFocused] = useState(false);
+  const [searchActive, setSearchActive] = useState(initialSearchActive);
+  const [searchQuery, setSearchQuery] = useState(initialSearchQuery || (initialSearchActive ? 'messages tab' : ''));
+  const [searchActiveTab, setSearchActiveTab] = useState('messages');
+  const searchInputRef = useRef(null);
+  const SEARCH_RECENTS = ['Howard Lerman', 'Design', 'Klas Leino', 'Figma Slides'];
+  const runSearch = (q) => {
+    setSearchQuery(q || 'messages tab');
+    setSearchActive(true);
+    setSearchFocused(false);
+    setTimeout(() => searchInputRef.current?.blur(), 0);
+  };
+  const exitSearch = () => {
+    setSearchActive(false);
+    setSearchFocused(false);
+    setSearchQuery('');
+    setTimeout(() => searchInputRef.current?.blur(), 0);
+  };
 
   const handleClose = () => {
     setClosing(true);
@@ -1570,6 +1739,7 @@ export default function AInbox({ win, onDrag, onOpenMagicMinutes }) {
   // Auto-type in DMs when opening a conversation
   const dmAutoTypeRef = useRef(null);
   useEffect(() => {
+    if (staticMode) return;
     if (dmAutoTypeRef.current) clearTimeout(dmAutoTypeRef.current);
     const convoData = messages[selectedChat];
     if (!convoData || convoData.type !== 'dm') return;
@@ -1598,8 +1768,211 @@ export default function AInbox({ win, onDrag, onOpenMagicMinutes }) {
     return () => { if (dmAutoTypeRef.current) clearTimeout(dmAutoTypeRef.current); };
   }, [selectedChat]);
 
+  // Continuous typing + new replies inside the open thread
+  useEffect(() => {
+    if (staticMode) return;
+    if (mmAutoPrompt) return;
+    if (!threadView) return;
+    const THREAD_PEOPLE = [
+      { name: 'Aaron Wadhwa', avatar: '/headshots/aaron-wadhwa.jpg' },
+      { name: 'John Beutner', avatar: '/headshots/john-beutner.jpg' },
+      { name: 'John Huffsmith', avatar: '/headshots/john-huffsmith.jpg' },
+      { name: 'Sean MacIsaac', avatar: '/headshots/sean-macisaac.jpg' },
+      { name: 'Lexi Bohonnon', avatar: '/headshots/lexi-bohonnon.jpg' },
+      { name: 'Garima Kewlani', avatar: '/headshots/garima-kewlani.jpg' },
+      { name: 'Ava Lee', avatar: '/headshots/ava-lee.jpg' },
+      { name: 'Michael Walrath', avatar: '/headshots/michael-walrath.jpg' },
+      { name: 'Jeff Grossman', avatar: '/headshots/jeff-grossman.jpg' },
+      { name: 'Tom Dixon', avatar: '/headshots/tom-dixon.jpg' },
+      { name: 'Arnav Bansal', avatar: '/headshots/arnav-bansal.jpg' },
+      { name: 'Thomas Grapperon', avatar: '/headshots/thomas-grapperon.jpg' },
+    ];
+    const THREAD_REPLIES = [
+      "Incredible quarter — let's keep the foot on the gas.",
+      "Customers love it. Pipeline has never looked stronger.",
+      "Proud of this team. So much more to come.",
+      "The energy in the office today is unreal 🚀",
+      "Thank you to everyone who shipped this quarter.",
+      "Just signed another logo this morning. Q2 is going to be wild.",
+      "Honored to be part of this. Onward.",
+      "This is just the beginning.",
+      "Best team I've ever worked with. 🙌",
+      "The product is finally clicking with everyone we demo to.",
+      "Inbound has 4x'd. Sales — get ready.",
+      "So much momentum. Let's not lose it.",
+      "Massive shoutout to the platform team — infra didn't blink.",
+      "Onboarding conversion is up across every cohort.",
+      "Let's go. 🚀🚀🚀",
+    ];
+
+    let timers = [];
+    let typing = false;
+    let cancelled = false;
+
+    const scheduleNext = (delay) => {
+      const t = setTimeout(() => {
+        if (cancelled || typing) return;
+        const person = THREAD_PEOPLE[Math.floor(Math.random() * THREAD_PEOPLE.length)];
+        typing = true;
+        setMessages(prev => {
+          const c = prev[threadView.chatId];
+          if (!c) return prev;
+          const tt = { ...(c.threadTypingAvatars || {}) };
+          tt[threadView.messageId] = [person.avatar];
+          return { ...prev, [threadView.chatId]: { ...c, threadTypingAvatars: tt } };
+        });
+        const sendT = setTimeout(() => {
+          if (cancelled) return;
+          typing = false;
+          setMessages(prev => {
+            const c = prev[threadView.chatId];
+            if (!c) return prev;
+            const reply = {
+              id: 'r-auto-' + Date.now() + '-' + Math.random(),
+              sender: person.name,
+              avatar: person.avatar,
+              text: THREAD_REPLIES[Math.floor(Math.random() * THREAD_REPLIES.length)],
+            };
+            const newMsgs = c.messages.map(m => {
+              if (m.id !== threadView.messageId) return m;
+              const t0 = m.thread || { count: 0, replies: [] };
+              return {
+                ...m,
+                thread: {
+                  ...t0,
+                  count: (t0.count || 0) + 1,
+                  lastReply: 'just now',
+                  replies: [...(t0.replies || []), reply],
+                },
+              };
+            });
+            const tt = { ...(c.threadTypingAvatars || {}) };
+            delete tt[threadView.messageId];
+            return { ...prev, [threadView.chatId]: { ...c, messages: newMsgs, threadTypingAvatars: tt } };
+          });
+          shouldScroll.current = true;
+          scheduleNext(2200 + Math.random() * 3500);
+        }, 1800 + Math.random() * 2200);
+        timers.push(sendT);
+      }, delay);
+      timers.push(t);
+    };
+
+    scheduleNext(2500);
+
+    return () => {
+      cancelled = true;
+      timers.forEach(t => clearTimeout(t));
+      // Clear typing for this thread on cleanup
+      setMessages(prev => {
+        const c = prev[threadView.chatId];
+        if (!c || !c.threadTypingAvatars) return prev;
+        const tt = { ...c.threadTypingAvatars };
+        delete tt[threadView.messageId];
+        return { ...prev, [threadView.chatId]: { ...c, threadTypingAvatars: tt } };
+      });
+    };
+  }, [threadView?.chatId, threadView?.messageId, mmAutoPrompt]);
+
+  // Continuous DM back-and-forth (only in override mode, only when DM is selected, no thread open)
+  useEffect(() => {
+    if (staticMode) return;
+    if (!messagesOverride) return;
+    if (threadView) return;
+    const convoData = messages[selectedChat];
+    if (!convoData || convoData.type !== 'dm') return;
+
+    const PARTNER_LINES = {
+      howard: [
+        "Quick thought — what if we shipped the AI summary as a separate card under the meeting? Less noise, more scannable.",
+        "Did you see the email from the SF team? They want to do a Roam-on-Roam case study.",
+        "Heads up — board call moved to 3pm Thursday.",
+        "Loved the Drop-In demo on the all-hands. People were stunned.",
+        "Can we get the Magic Minutes share-to-Slack link into next sprint?",
+        "I'm hearing great things from the design team. Whatever you're doing — keep doing it.",
+      ],
+    };
+    const SELF_LINES = {
+      howard: [
+        "Yeah I think that's cleaner. I'll mock it up tomorrow.",
+        "Just saw it. I'll forward to Grace — she's the right one to drive that.",
+        "Got it, I'll move my conflict.",
+        "Thank you 🙏 the team worked hard on that one.",
+        "Already in — Rob picked it up this morning.",
+        "Will do. Pulling together a doc this afternoon.",
+      ],
+    };
+    const partnerLines = PARTNER_LINES[selectedChat];
+    const selfLines = SELF_LINES[selectedChat];
+    if (!partnerLines || !selfLines) return;
+
+    const chatId = selectedChat;
+    let timers = [];
+    let cancelled = false;
+    let turn = 0;
+
+    const sendPartnerMessage = () => {
+      if (cancelled) return;
+      // Show typing indicator
+      setMessages(prev => {
+        const c = prev[chatId];
+        if (!c) return prev;
+        return { ...prev, [chatId]: { ...c, typingAvatars: [c.avatar] } };
+      });
+      const sendT = setTimeout(() => {
+        if (cancelled) return;
+        setMessages(prev => {
+          const c = prev[chatId];
+          if (!c) return prev;
+          const text = partnerLines[Math.floor(Math.random() * partnerLines.length)];
+          const reply = { id: 'auto-p-' + Date.now() + '-' + Math.random(), self: false, text };
+          return { ...prev, [chatId]: { ...c, typingAvatars: null, messages: [...c.messages, reply] } };
+        });
+        const nextT = setTimeout(scheduleTurn, 2200 + Math.random() * 2000);
+        timers.push(nextT);
+      }, 1800 + Math.random() * 1800);
+      timers.push(sendT);
+    };
+
+    const sendSelfMessage = () => {
+      if (cancelled) return;
+      setMessages(prev => {
+        const c = prev[chatId];
+        if (!c) return prev;
+        const text = selfLines[Math.floor(Math.random() * selfLines.length)];
+        const reply = { id: 'auto-s-' + Date.now() + '-' + Math.random(), self: true, text };
+        return { ...prev, [chatId]: { ...c, messages: [...c.messages, reply] } };
+      });
+      const nextT = setTimeout(scheduleTurn, 1800 + Math.random() * 1800);
+      timers.push(nextT);
+    };
+
+    const scheduleTurn = () => {
+      if (cancelled) return;
+      // Alternate: even turn = partner types and sends, odd turn = self sends
+      if (turn % 2 === 0) sendPartnerMessage();
+      else sendSelfMessage();
+      turn++;
+    };
+
+    const startT = setTimeout(scheduleTurn, 2500);
+    timers.push(startT);
+
+    return () => {
+      cancelled = true;
+      timers.forEach(t => clearTimeout(t));
+      setMessages(prev => {
+        const c = prev[chatId];
+        if (!c || !c.typingAvatars) return prev;
+        return { ...prev, [chatId]: { ...c, typingAvatars: null } };
+      });
+    };
+  }, [selectedChat, threadView, messagesOverride]);
+
   // Continuous auto-chat across all group conversations
   useEffect(() => {
+    if (staticMode) return;
+    if (messagesOverride) return;
     const AUTO_PEOPLE = {
       design: [
         { name: 'Will Houseberry', avatar: '/headshots/will-hou.jpg' },
@@ -1758,7 +2131,125 @@ export default function AInbox({ win, onDrag, onOpenMagicMinutes }) {
     });
 
     return () => timers.forEach(t => clearTimeout(t));
-  }, []);
+  }, [staticMode, messagesOverride]);
+
+  // Magic Minutes auto-prompt loop — drives the composer with typewriter
+  // questions and injects MM replies directly into the active thread.
+  useEffect(() => {
+    if (!mmAutoPrompt || !threadView) return;
+    const PROMPTS = [
+      {
+        q: "@MagicMinutes please summarize this thread for me",
+        a: "Q2 Planning in a nutshell: three priorities locked — AInbox redesign ships Friday, Magic Minutes becomes the demo headline, and enterprise onboarding gets tightened. Revenue is 18% ahead of plan and pipeline has 4x'd since the relaunch. Next review is Tuesday 10am with the execs.",
+      },
+      {
+        q: "@MagicMinutes what action items came out of this meeting?",
+        a: "Four: (1) Grace wraps the icon pass by Thursday EOD. (2) Derek flips the AInbox feature flag Friday morning — 10% rollout. (3) Jon drafts the customer-facing release note. (4) Chelsea sends a heads-up email to accounts still on the old API.",
+      },
+      {
+        q: "@MagicMinutes what did Howard actually commit to?",
+        a: "Howard committed to running the Friday all-hands demo personally, posting the launch note in #wins the moment it's live, and pinging the top 10 enterprise accounts individually over the weekend.",
+      },
+      {
+        q: "@MagicMinutes any risks flagged in the meeting?",
+        a: "Two: Klas flagged potential read-latency spikes on the new search index during rollout — infra is pre-warming caches to mitigate. Chelsea flagged that accounts on the old API will see a deprecation warning — CS is drafting a heads-up email.",
+      },
+      {
+        q: "@MagicMinutes when is the next review?",
+        a: "Tuesday 10am with the exec team. Scope: decide whether to push the AInbox rollout from 10% to 100%, and lock the Magic Minutes positioning for the spring push. Calendar invite already went out.",
+      },
+    ];
+
+    let cancelled = false;
+    let timers = [];
+    let promptIdx = 0;
+    let scheduled = false;
+
+    const push = (t) => timers.push(t);
+
+    const runCycle = () => {
+      if (cancelled) return;
+      const { q, a } = PROMPTS[promptIdx % PROMPTS.length];
+      promptIdx += 1;
+      setInputText('');
+
+      // Typewriter the question into the composer
+      let i = 0;
+      const typeStep = () => {
+        if (cancelled) return;
+        i += 1;
+        setInputText(q.slice(0, i));
+        if (i < q.length) {
+          push(setTimeout(typeStep, 18 + Math.random() * 18));
+        } else {
+          // Hold briefly, then "send": clear composer + inject the user's
+          // question into the thread, then wait for Magic Minutes to reply.
+          push(setTimeout(() => {
+            if (cancelled) return;
+            setInputText('');
+            shouldScroll.current = true;
+            setMessages(prev => {
+              const c = prev[threadView.chatId];
+              if (!c) return prev;
+              const newMsgs = c.messages.map(m => {
+                if (m.id !== threadView.messageId) return m;
+                const existing = m.thread?.replies || [];
+                const newReply = {
+                  id: `mm-u-${Date.now()}`,
+                  sender: 'You',
+                  avatar: '/headshots/joe-woodward.jpg',
+                  text: q,
+                  isMention: true,
+                };
+                return {
+                  ...m,
+                  thread: { ...(m.thread || {}), replies: [...existing, newReply], count: existing.length + 1 },
+                };
+              });
+              return { ...prev, [threadView.chatId]: { ...c, messages: newMsgs } };
+            });
+
+            // MM reply after a pause
+            push(setTimeout(() => {
+              if (cancelled) return;
+              shouldScroll.current = true;
+              setMessages(prev => {
+                const c = prev[threadView.chatId];
+                if (!c) return prev;
+                const newMsgs = c.messages.map(m => {
+                  if (m.id !== threadView.messageId) return m;
+                  const existing = m.thread?.replies || [];
+                  const newReply = {
+                    id: `mm-a-${Date.now()}`,
+                    sender: 'Magic Minutes',
+                    isMM: true,
+                    text: a,
+                  };
+                  return {
+                    ...m,
+                    thread: { ...(m.thread || {}), replies: [...existing, newReply], count: existing.length + 1 },
+                  };
+                });
+                return { ...prev, [threadView.chatId]: { ...c, messages: newMsgs } };
+              });
+
+              // Hold briefly, then start the next cycle — leave the Q/A pair in place.
+              push(setTimeout(runCycle, 1500));
+            }, 800));
+          }, 300));
+        }
+      };
+      push(setTimeout(typeStep, 300));
+    };
+
+    const startT = setTimeout(runCycle, 500);
+    timers.push(startT);
+
+    return () => {
+      cancelled = true;
+      timers.forEach(t => clearTimeout(t));
+    };
+  }, [mmAutoPrompt, threadView?.chatId, threadView?.messageId]);
 
   const convo = messages[selectedChat];
 
@@ -1826,7 +2317,7 @@ export default function AInbox({ win, onDrag, onOpenMagicMinutes }) {
     <div
       className={`ainbox-window ${!win.isFocused ? 'ainbox-unfocused' : ''} ${closing ? 'ainbox-closing' : ''}`}
       style={{ left: win.position.x, top: win.position.y, zIndex: win.zIndex }}
-      onMouseDown={() => { win.focus(); setTimeout(() => composerInputRef.current?.focus({ preventScroll: true }), 50); }}
+      onMouseDown={() => { win.focus(); if (!mmAutoPrompt) setTimeout(() => composerInputRef.current?.focus({ preventScroll: true }), 50); }}
     >
       {/* ——— Title bar ——— */}
       <div className="ainbox-titlebar" onMouseDown={onDrag}>
@@ -1835,9 +2326,86 @@ export default function AInbox({ win, onDrag, onOpenMagicMinutes }) {
           <div className="ainbox-light ainbox-light-minimize" />
           <div className="ainbox-light ainbox-light-maximize" />
         </div>
-        <div className="ainbox-search">
-          <img src="/icons/mm-search.svg" alt="" width="16" height="16" />
-          <span>Search</span>
+        {searchActive && (
+          <button
+            className="ainbox-back-btn"
+            onClick={(e) => { e.stopPropagation(); exitSearch(); }}
+            onMouseDown={(e) => e.stopPropagation()}
+            title="Back"
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M10 3L5 8L10 13" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+        )}
+        <div
+          className={`ainbox-search ${searchFocused ? 'ainbox-search-focused' : ''} ${searchActive ? 'ainbox-search-pill' : ''}`}
+          onMouseDown={(e) => e.stopPropagation()}
+          onClick={() => { if (!searchActive) searchInputRef.current?.focus(); }}
+          style={!searchActive ? { cursor: 'text' } : undefined}
+        >
+          <img src="/icons/mm-search.svg" alt="" width="16" height="16" className="ainbox-search-leading-icon" />
+          {searchActive ? (
+            <>
+              <span className="ainbox-search-pill-label">{searchQuery || 'messages tab'}</span>
+              <div className="ainbox-search-pill-actions">
+                <button
+                  type="button"
+                  className="ainbox-search-pill-btn"
+                  onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                  onClick={(e) => { e.stopPropagation(); exitSearch(); }}
+                  title="Clear search"
+                >
+                  <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="6" fill="currentColor" opacity="0.35"/><path d="M4.5 4.5L8.5 8.5M8.5 4.5L4.5 8.5" stroke="var(--bg-surface-elevated-primary, #1d1e20)" strokeWidth="1.2" strokeLinecap="round"/></svg>
+                </button>
+                <button
+                  type="button"
+                  className="ainbox-search-pill-btn"
+                  onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                  onClick={(e) => e.stopPropagation()}
+                  title="Filter"
+                >
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 3.5h10M3.5 7h7M5 10.5h4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>
+                </button>
+              </div>
+            </>
+          ) : (
+            <input
+              ref={searchInputRef}
+              type="text"
+              className="ainbox-search-input"
+              placeholder="Search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={() => setSearchFocused(true)}
+              onBlur={() => setTimeout(() => setSearchFocused(false), 180)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') { runSearch(searchQuery); }
+                if (e.key === 'Escape') { exitSearch(); }
+              }}
+            />
+          )}
+          {searchFocused && !searchActive && (
+            <div className="ainbox-search-dropdown" onMouseDown={(e) => e.preventDefault()}>
+              <div className="ainbox-search-dropdown-list">
+                <div className="ainbox-search-dropdown-item" onClick={() => runSearch('')}>
+                  <SearchClockIcon />
+                  <span>New Chat</span>
+                </div>
+                {SEARCH_RECENTS.map((r) => (
+                  <div key={r} className="ainbox-search-dropdown-item" onClick={() => runSearch(r)}>
+                    <SearchClockIcon />
+                    <span>{r}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="ainbox-search-dropdown-separator" />
+              <div className="ainbox-search-dropdown-item ainbox-search-dropdown-advanced" onClick={() => runSearch('messages tab')}>
+                <SearchSettingsIcon />
+                <span>Advanced search...</span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -1856,14 +2424,18 @@ export default function AInbox({ win, onDrag, onOpenMagicMinutes }) {
           </div>
 
           {/* Scrollable sections */}
-          <div className="ainbox-sections">
+          <div className="ainbox-sections" ref={sidebarSectionsRef}>
             {/* Favorites row */}
             <div className="ainbox-favorites">
-              {FAVORITES.map(fav => (
+              {favorites.map(fav => (
                 <div
                   key={fav.id}
                   className={`ainbox-fav-item ${selectedChat === fav.id ? 'ainbox-fav-active' : ''}`}
-                  onClick={() => { setSelectedChat(fav.id); setThreadView(null); }}
+                  onClick={() => {
+                    if (!messages[fav.id]) return;
+                    setSelectedChat(fav.id);
+                    setThreadView(null);
+                  }}
                 >
                   {fav.avatars ? (
                     <div className="ainbox-fav-group-avatar">
@@ -1878,13 +2450,13 @@ export default function AInbox({ win, onDrag, onOpenMagicMinutes }) {
                 </div>
               ))}
             </div>
-            {SIDEBAR_SECTIONS.map(section => (
-              <div key={section.id} className="ainbox-section">
+            {[...sidebarSections, ...addedFolders].map(section => (
+              <div key={section.id} className={`ainbox-section ${section.id?.startsWith('added-') ? 'ainbox-section-new' : ''}`}>
                 <div className="ainbox-section-header" onClick={() => toggleSection(section.id)}>
                   <ChevronDown open={!collapsedSections[section.id]} className="ainbox-section-chevron" />
                   <span className="ainbox-section-label">{section.label}</span>
                 </div>
-                {!collapsedSections[section.id] && (
+                <div className={`ainbox-section-items-wrap ${collapsedSections[section.id] ? 'ainbox-section-items-collapsed' : ''}`}>
                   <div className="ainbox-section-items">
                     {section.items.map(item => (
                       <div
@@ -1927,14 +2499,31 @@ export default function AInbox({ win, onDrag, onOpenMagicMinutes }) {
                       </div>
                     )}
                   </div>
-                )}
+                </div>
               </div>
             ))}
-            {/* Add Folder */}
-            <div className="ainbox-section-item ainbox-add-folder">
+          </div>
+          {/* Add Folder — pinned to bottom of sidebar, outside the scroll area */}
+          <div className="ainbox-section-item ainbox-add-folder">
+            <span className="ainbox-add-folder-icon">
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 3V13M3 8H13" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>
-              <span className="ainbox-section-item-name">Add Folder</span>
-            </div>
+            </span>
+            <input
+              ref={addFolderInputRef}
+              type="text"
+              className="ainbox-add-folder-input"
+              placeholder="Add Folder"
+              value={addFolderName}
+              onMouseDown={(e) => e.stopPropagation()}
+              onClick={(e) => e.stopPropagation()}
+              onChange={(e) => setAddFolderName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleAddFolder();
+                }
+              }}
+            />
           </div>
         </div>
 
@@ -1969,29 +2558,42 @@ export default function AInbox({ win, onDrag, onOpenMagicMinutes }) {
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="3" r="1" fill="currentColor"/><circle cx="8" cy="8" r="1" fill="currentColor"/><circle cx="8" cy="13" r="1" fill="currentColor"/></svg>
                   </div>
                 </div>
-                {/* Thread conversation */}
-                <div className="ainbox-detail-messages ainbox-thread-messages" ref={messagesRef}>
-                  {/* Original message */}
-                  <div className="ainbox-thread-original">
-                    <div className="ainbox-thread-original-top">
-                      <img src={threadMsg.avatar} alt="" className="ainbox-group-msg-avatar" />
-                      <div className="ainbox-thread-original-info">
-                        <span className="ainbox-thread-original-name">{threadMsg.sender}</span>
-                        <span className="ainbox-thread-original-time">{threadMsg.time}</span>
-                      </div>
+                {/* Original message — pinned above the scrollable replies */}
+                <div className="ainbox-thread-original ainbox-thread-original-pinned">
+                  <div className="ainbox-thread-original-top">
+                    <img src={threadMsg.avatar} alt="" className="ainbox-group-msg-avatar" />
+                    <div className="ainbox-thread-original-info">
+                      <span className="ainbox-thread-original-name">{threadMsg.sender}</span>
+                      <span className="ainbox-thread-original-time">{threadMsg.time}</span>
                     </div>
-                    <p className="ainbox-thread-original-text">{threadMsg.text}</p>
-                    <Reactions reactions={THREAD_REACTIONS} />
                   </div>
-                  {/* Replies */}
+                  <p className="ainbox-thread-original-text">{threadMsg.text}</p>
+                  <Reactions reactions={THREAD_REACTIONS} />
+                </div>
+                {/* Replies — scroll under the pinned original */}
+                <div className="ainbox-detail-messages ainbox-thread-messages" ref={messagesRef}>
                   {threadMsg.thread.replies.map(reply => (
                     <div key={reply.id} className="ainbox-group-msg">
-                      <img className="ainbox-group-msg-avatar" src={reply.avatar} alt="" />
+                      {reply.isMM ? (
+                        <div className="mm-thread-avatar-circle">
+                          <img src="/icons/magic-quill.svg" alt="Magic Minutes" />
+                        </div>
+                      ) : (
+                        <img className="ainbox-group-msg-avatar" src={reply.avatar} alt="" />
+                      )}
                       <div className="ainbox-group-msg-body">
                         <div className="ainbox-group-msg-header">
                           <span className="ainbox-group-msg-name">{reply.sender}</span>
                         </div>
-                        <p className="ainbox-group-msg-text">{reply.text}</p>
+                        <p className="ainbox-group-msg-text">
+                          {reply.isMention
+                            ? reply.text.split(/(@MagicMinutes)/g).map((p, i) =>
+                                p === '@MagicMinutes'
+                                  ? <span key={i} className="mm-mention">@MagicMinutes</span>
+                                  : <span key={i}>{p}</span>
+                              )
+                            : reply.text}
+                        </p>
                       </div>
                     </div>
                   ))}
@@ -2070,18 +2672,35 @@ export default function AInbox({ win, onDrag, onOpenMagicMinutes }) {
 
           {/* Composer */}
           <div className="ainbox-composer">
-            {convo?.typingAvatars && (
-              <TypingIndicator avatars={convo.typingAvatars} />
-            )}
-            <div className="ainbox-composer-box">
-              <div className="ainbox-composer-field">
+            {threadView
+              ? convo?.threadTypingAvatars?.[threadView.messageId] && (
+                  <TypingIndicator avatars={convo.threadTypingAvatars[threadView.messageId]} />
+                )
+              : convo?.typingAvatars && (
+                  <TypingIndicator avatars={convo.typingAvatars} />
+                )}
+            <div className={`ainbox-composer-box ${composerFocused ? 'ainbox-composer-box-focused' : ''}`}>
+              <div className={`ainbox-composer-field ${inputText.includes('@MagicMinutes') ? 'ainbox-composer-field-mm' : ''}`}>
                 <input
                   ref={composerInputRef}
                   placeholder="Write a Message..."
                   value={inputText}
-                  onChange={(e) => setInputText(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') sendMessage(); }}
+                  readOnly={mmAutoPrompt}
+                  tabIndex={mmAutoPrompt ? -1 : 0}
+                  onChange={(e) => { if (!mmAutoPrompt) setInputText(e.target.value); }}
+                  onKeyDown={(e) => { if (!mmAutoPrompt && e.key === 'Enter') sendMessage(); }}
+                  onFocus={() => setComposerFocused(true)}
+                  onBlur={() => setComposerFocused(false)}
                 />
+                {inputText.includes('@MagicMinutes') && (
+                  <div className="ainbox-composer-mm-overlay" aria-hidden="true">
+                    {inputText.split(/(@MagicMinutes)/g).map((p, i) =>
+                      p === '@MagicMinutes'
+                        ? <span key={i} className="mm-mention">@MagicMinutes</span>
+                        : <span key={i}>{p}</span>
+                    )}
+                  </div>
+                )}
               </div>
               <div className="ainbox-composer-toolbar">
                 {/* Plus button */}
@@ -2110,13 +2729,172 @@ export default function AInbox({ win, onDrag, onOpenMagicMinutes }) {
                 <div className="ainbox-toolbar-spacer" />
                 {/* Right icons */}
                 <div className="ainbox-toolbar-group">
-                  <img src="/icons/composer/Send.svg" alt="" className={`ainbox-toolbar-img ainbox-send-icon ${inputText.trim() ? 'ainbox-send-active' : ''}`} title="Send" onClick={sendMessage} />
+                  <img src="/icons/composer/Send.svg" alt="" className={`ainbox-toolbar-img ainbox-send-icon ${inputText.trim() ? 'ainbox-send-active' : ''}`} title="Send" onClick={() => { if (!mmAutoPrompt) sendMessage(); }} />
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      {searchActive && (
+        <SearchOverlay
+          query={searchQuery || 'messages tab'}
+          activeTab={searchActiveTab}
+          onChangeTab={setSearchActiveTab}
+        />
+      )}
+    </div>
+  );
+}
+
+function SearchClockIcon() {
+  return <span className="ainbox-search-dropdown-icon ainbox-icon-clock" aria-hidden="true" />;
+}
+
+function SearchSettingsIcon() {
+  return <span className="ainbox-search-dropdown-icon ainbox-icon-settings" aria-hidden="true" />;
+}
+
+const SEARCH_HIGHLIGHT_RE_CACHE = {};
+function highlightText(text, query) {
+  if (!query) return text;
+  const tokens = query.trim().split(/\s+/).filter(Boolean);
+  if (!tokens.length) return text;
+  const pattern = tokens.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
+  let re = SEARCH_HIGHLIGHT_RE_CACHE[pattern];
+  if (!re) {
+    // match the full query first if multi-word, then fall back to individual words
+    const full = tokens.length > 1 ? tokens.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('\\s+') + '|' : '';
+    re = new RegExp('(' + full + pattern + ')', 'gi');
+    SEARCH_HIGHLIGHT_RE_CACHE[pattern] = re;
+  }
+  const parts = text.split(re);
+  return parts.map((p, i) => {
+    if (!p) return null;
+    if (re.test(p)) {
+      return <mark key={i} className="ainbox-search-mark">{p}</mark>;
+    }
+    return <span key={i}>{p}</span>;
+  });
+}
+
+const SEARCH_RESULTS = [
+  {
+    id: 'r1',
+    avatar: '/headshots/derek-cicerone.jpg',
+    name: 'Derek Cicerone',
+    date: 'June 15th',
+    text: 'The messages tab, a crucial component of our production system, is currently experiencing technical difficulties, rendering it inoperable. This unexpected issue has disrupted the seamless communication flow within our platform, hindering users from accessing vital messages. Our engineering team is diligently working to identify and rectify the problem, aiming to restore the functionality of the messages tab and ensure uninterrupted productivity for our users.',
+  },
+  {
+    id: 'r2',
+    avatar: '/headshots/klas-leino.jpg',
+    name: 'Klas Leino',
+    date: 'June 12th',
+    text: 'The reliability of the messages tab has been compromised, impacting the overall user experience. Users are unable to utilize the essential messaging functionality provided by the messages tab, causing inconvenience and hindering effective communication within our platform. Our team is working diligently to address this issue and restore the full functionality of the messages tab, ensuring a seamless and uninterrupted messaging experience for all users.',
+  },
+  {
+    id: 'r3',
+    avatar: '/headshots/will-hou.jpg',
+    name: 'Will Houseberry',
+    date: 'June 9th',
+    text: 'The messages tab is malfunctioning, impeding user communication. We are actively addressing the issue to restore its functionality swiftly, ensuring seamless messaging for all.',
+  },
+  {
+    id: 'r4',
+    avatar: '/headshots/michael-miller.jpg',
+    name: 'Michael Miller',
+    date: 'June 7th',
+    text: '...unexpected issue with the messages tab has disrupted the seamless communication flow within our platform, hindering users from accessing vital messages.',
+    attachment: { name: 'messages tab.png', sharedBy: 'Michael Miller', thumb: '/groups/Group Bug Report.png' },
+  },
+];
+
+const SEARCH_TABS = [
+  { id: 'messages', label: 'Messages' },
+  { id: 'dms', label: 'DMs', count: 0 },
+  { id: 'groups', label: 'Groups', count: 11 },
+  { id: 'meetings', label: 'Meetings', count: 4 },
+];
+
+const SEARCH_CHIPS = [
+  { label: 'Unread' },
+  { label: 'From', dropdown: true },
+  { label: 'In Group', dropdown: true },
+  { label: 'Date', dropdown: true },
+  { label: 'Has Attachment' },
+  { label: 'Mentioned' },
+  { label: 'Most Relevant', dropdown: true },
+];
+
+function ChipChevron() {
+  return (
+    <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+      <path d="M2.5 4L5 6.5L7.5 4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function SearchOverlay({ query, activeTab, onChangeTab }) {
+  return (
+    <div className="ainbox-search-overlay">
+      {/* Tabs */}
+      <div className="ainbox-search-tabs">
+        {SEARCH_TABS.map(t => (
+          <button
+            key={t.id}
+            className={`ainbox-search-tab ${activeTab === t.id ? 'ainbox-search-tab-active' : ''}`}
+            onClick={() => onChangeTab(t.id)}
+          >
+            <span>{t.label}</span>
+            {typeof t.count === 'number' && <span className="ainbox-search-tab-count">{t.count}</span>}
+          </button>
+        ))}
+      </div>
+
+      {/* Filter chips */}
+      <div className="ainbox-search-chips">
+        {SEARCH_CHIPS.map(chip => (
+          <div key={chip.label} className={`ainbox-search-chip ${chip.plain ? 'ainbox-search-chip-plain' : ''}`}>
+            {chip.icon === 'settings' && <span className="ainbox-search-chip-icon ainbox-icon-settings" aria-hidden="true" />}
+            <span>{chip.label}</span>
+            {chip.dropdown && <ChipChevron />}
+          </div>
+        ))}
+      </div>
+
+      {/* Results header */}
+      <div className="ainbox-search-results-header">
+        <span>Results From All</span>
+        <ChipChevron />
+      </div>
+
+      {/* Results list */}
+      <div className="ainbox-search-results-list">
+        {SEARCH_RESULTS.map(r => (
+          <div key={r.id} className="ainbox-search-result">
+            <div className="ainbox-search-result-row">
+              <img src={r.avatar} alt="" className="ainbox-search-result-avatar" />
+              <div className="ainbox-search-result-labels">
+                <span className="ainbox-search-result-date">{r.date}</span>
+                <span className="ainbox-search-result-name">{r.name}</span>
+              </div>
+            </div>
+            <p className="ainbox-search-result-text">{highlightText(r.text, query)}</p>
+            {r.attachment && (
+              <div className="ainbox-search-result-attachment">
+                <img src={r.attachment.thumb} alt="" className="ainbox-search-result-attachment-thumb" />
+                <div className="ainbox-search-result-attachment-meta">
+                  <span className="ainbox-search-result-attachment-name">{highlightText(r.attachment.name, query)}</span>
+                  <span className="ainbox-search-result-attachment-by">Shared by {r.attachment.sharedBy}</span>
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
     </div>
   );
 }

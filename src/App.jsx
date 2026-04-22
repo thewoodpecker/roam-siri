@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef, useMemo, useCallback } from 'react'
 import SiriGlow from './SiriGlow';
 import { offices as officeData, meetingRooms } from './data';
 import ShowcaseMap from './ShowcaseMap';
+import FeaturePage, { FEATURES } from './FeaturePage';
 import './App.css';
 
 // Flip to `false` to show the dev settings icon in the top-left
@@ -1343,7 +1344,7 @@ function TabSwitcher({ activeTab, onTabChange }) {
   ];
 
   return (
-    <div className="dev-settings-wrap" ref={menuRef} style={{ display: 'none' }}>
+    <div className="dev-settings-wrap" ref={menuRef}>
       <button className="dev-settings-btn" onClick={() => setOpen(!open)}>
         <img src="/icons/Settings.svg" alt="" width="16" height="16" className="dev-settings-icon" />
       </button>
@@ -3227,8 +3228,34 @@ function useHashTab() {
   return [tab, setActiveTab];
 }
 
+function useFeatureRoute() {
+  const getSlug = () => {
+    const m = window.location.hash.match(/^#\/feature\/([a-z0-9-]+)/i);
+    return m && FEATURES[m[1]] ? m[1] : null;
+  };
+  const [slug, setSlug] = useState(getSlug);
+  useEffect(() => {
+    const onHash = () => setSlug(getSlug());
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, []);
+  return slug;
+}
+
 export default function App() {
   const [activeTab, setActiveTab] = useHashTab();
+  const featureSlug = useFeatureRoute();
+
+  if (featureSlug) {
+    return (
+      <>
+        <FeaturePage slug={featureSlug} />
+        <div className="toolbar" style={HIDE_CHROME ? { display: 'none' } : undefined}>
+          <TabSwitcher activeTab={activeTab} onTabChange={setActiveTab} />
+        </div>
+      </>
+    );
+  }
 
   return (
     <div className="layout">

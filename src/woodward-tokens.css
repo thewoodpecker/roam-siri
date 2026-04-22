@@ -29,6 +29,7 @@
   /* ——— Semantic Backgrounds ——— */
   --bg-winner: rgba(70,208,143,0.2);
   --bg-loser: rgba(239,83,80,0.2);
+  --background-sensitive: var(--amber-500);
 
   /* ——— Text & Icon ——— */
   --text-primary: var(--graphite-50);
@@ -40,7 +41,9 @@
   --text-warning: var(--amber-500);
   --text-error: var(--red-300);
   --text-on-accented: var(--solid-black);
-  --text-primary-on-light: var(--solid-white);
+  --text-on-accented-secondary: var(--solid-black);
+  --icon-sensitive: var(--amber-500);
+  --text-primary-on-light: var(--solid-black);
   --text-secondary-on-light: var(--white-opacity-500);
 
   /* ——— Labels ——— */

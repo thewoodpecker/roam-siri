@@ -1,0 +1,460 @@
+/* ===== Feature Page — linear, centered, visual-first (cursor.com/product/tab vibe) ===== */
+
+.fp-page {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  background: var(--bg-surface-primary);
+  color: var(--text-primary);
+  padding: 0 0 120px;
+  overflow-x: hidden;
+  align-items: stretch;
+}
+
+.fp-page .sc-navbar-wrap {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 999;
+}
+
+.fp-back-link {
+  position: fixed;
+  top: 28px;
+  left: 32px;
+  z-index: 1000;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: color 0.2s ease, background 0.2s ease;
+}
+
+.fp-back-link:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.sc-viewport[data-theme="light"] .fp-back-link:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+/* ---- Hero (12-col grid, left-aligned) ---- */
+.fp-hero {
+  max-width: var(--grid-max-width);
+  margin: 0 auto;
+  padding: 180px var(--grid-margin) 48px;
+  display: grid;
+  grid-template-columns: repeat(var(--grid-columns), 1fr);
+  gap: var(--grid-gutter);
+}
+
+.fp-hero-inner {
+  grid-column: 1 / span 6;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  gap: 20px;
+}
+
+.fp-eyebrow {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+.fp-hero-title {
+  font-family: 'Possibility', serif;
+  font-size: clamp(20px, 2.4vw, 32px);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.8px;
+  color: var(--text-primary);
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.fp-hero-sub {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.55;
+  color: var(--text-secondary);
+  margin: 0;
+  max-width: 52ch;
+  letter-spacing: -0.2px;
+}
+
+.fp-cta-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+/* ---- Hero visual (aligned to 12-col grid, same container as other sections) ---- */
+.fp-hero-visual {
+  width: 100%;
+  max-width: var(--grid-max-width);
+  margin: 0 auto 96px;
+  padding: 0 var(--grid-margin);
+  box-sizing: border-box;
+}
+
+.fp-hero-stage {
+  position: relative;
+  width: 100%;
+  padding: 72px 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  background-image: url('/wallpapers/wallpaper-dark.png');
+  background-size: cover;
+  background-position: center;
+}
+
+.fp-hero-stage::after,
+.fp-section-visual::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 0.5px solid var(--border);
+  pointer-events: none;
+  z-index: 10;
+}
+
+[data-theme="light"] .fp-hero-stage {
+  background-image: url('/wallpapers/wallpaper-light.png');
+}
+
+.fp-hero-stage > *:not(.fp-section-visual-wallpaper),
+.fp-section-visual > *:not(.fp-section-visual-wallpaper) {
+  position: relative !important;
+  top: auto !important;
+  left: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  transform: none !important;
+}
+
+/* Nested product component previews span 10 of the 12 grid columns and center inside the stage */
+.fp-hero-stage .meeting-win,
+.fp-hero-stage .theater-win,
+.fp-hero-stage .ainbox-window,
+.fp-hero-stage .mm-win,
+.fp-hero-stage .lb-win,
+.fp-hero-stage .mc-win,
+.fp-hero-stage .onair-window,
+.fp-section-visual .meeting-win,
+.fp-section-visual .theater-win,
+.fp-section-visual .ainbox-window,
+.fp-section-visual .mm-win,
+.fp-section-visual .lb-win,
+.fp-section-visual .mc-win,
+.fp-section-visual .onair-window {
+  position: relative !important;
+  top: auto !important;
+  left: auto !important;
+  transform: none !important;
+  flex-shrink: 0;
+  width: calc(((100% - 11 * var(--grid-gutter)) / 12) * 10 + 9 * var(--grid-gutter)) !important;
+}
+
+/* ---- Feature sections (12-col grid, left-aligned) ---- */
+.fp-section {
+  width: 100%;
+  max-width: var(--grid-max-width);
+  margin: 0 auto;
+  padding: 96px var(--grid-margin);
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: repeat(var(--grid-columns), 1fr);
+  gap: var(--grid-gutter);
+  row-gap: 32px;
+  justify-items: start;
+}
+
+.fp-section-text {
+  grid-column: 1 / span 6;
+  justify-self: start;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  gap: 20px;
+}
+
+.fp-section-eyebrow {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+.fp-section-title {
+  font-family: 'Possibility', serif;
+  font-size: clamp(20px, 2vw, 28px);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.6px;
+  color: var(--text-primary);
+  margin: 0;
+  text-transform: uppercase;
+  text-align: left;
+  align-self: flex-start;
+}
+
+.fp-section-desc {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.55;
+  color: var(--text-secondary);
+  margin: 0;
+  max-width: 52ch;
+  letter-spacing: -0.2px;
+  text-align: left;
+  align-self: flex-start;
+}
+
+.fp-section .fp-cta-row {
+  margin-top: 8px;
+}
+
+.fp-section-visual {
+  grid-column: 1 / -1;
+  width: 100%;
+  position: relative;
+  padding: 72px 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  background-image: url('/wallpapers/wallpaper-dark.png');
+  background-size: cover;
+  background-position: center;
+}
+
+[data-theme="light"] .fp-section-visual {
+  background-image: url('/wallpapers/wallpaper-light.png');
+}
+
+/* ── Folders preview: AInbox scaled 2x, pinned bottom-left ─────────── */
+.fp-section-visual:has(.fp-folders-stage) {
+  padding: 0;
+  align-items: stretch;
+  justify-content: stretch;
+}
+
+.fp-folders-stage {
+  position: relative;
+  width: 100%;
+  height: 724px; /* matches a standard fp-section-visual: 580 ainbox + 72*2 padding */
+  overflow: hidden;
+}
+
+.fp-folders-window {
+  position: absolute;
+  bottom: 56px;
+  left: 56px;
+  width: 780px;
+  height: 580px;
+  transform: scale(1.5);
+  transform-origin: bottom left;
+}
+
+.fp-section-visual .fp-folders-window .ainbox-window {
+  position: relative !important;
+  top: auto !important;
+  left: auto !important;
+  width: 100% !important;
+  height: 100% !important;
+  transform: none !important;
+}
+
+.fp-folders-window .ainbox-typing { display: none !important; }
+
+/* Disable internal scroll in the folders graphic — keep it static */
+.fp-folders-window .ainbox-sections,
+.fp-folders-window .ainbox-detail-messages,
+.fp-folders-window .ainbox-group-messages,
+.fp-folders-window .ainbox-dm-messages,
+.fp-folders-window .ainbox-thread-messages,
+.fp-folders-window .ainbox-search-results-list {
+  overflow: hidden !important;
+}
+
+.fp-section-visual-wallpaper {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  pointer-events: none;
+}
+
+/* Map preview — scope ShowcaseMap into this container, show only the map window */
+.fp-map-preview {
+  position: relative;
+  width: calc(((100% - 11 * var(--grid-gutter)) / 12) * 10 + 9 * var(--grid-gutter));
+  aspect-ratio: 3 / 2;
+  overflow: hidden;
+  border-radius: 36px;
+  corner-shape: superellipse;
+  corner-shape: superellipse(1.6);
+  flex-shrink: 0;
+}
+
+.fp-map-preview .sc-viewport {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  display: block !important;
+}
+
+.fp-map-preview .miniRoamOS {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  min-width: 0 !important;
+  transform: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+}
+
+.fp-map-preview .miniRoamOS::after {
+  display: none !important;
+}
+
+.fp-map-preview .sc-window {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  transform: none !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  aspect-ratio: auto !important;
+  margin: 0 !important;
+  overflow: visible !important;
+  border-radius: 36px !important;
+  corner-shape: superellipse !important;
+  corner-shape: superellipse(1.6) !important;
+  border: 0.5px solid var(--border) !important;
+  box-shadow: 0 0 0 0.5px var(--border), var(--shadow-5) !important;
+}
+
+.fp-map-preview .sc-room-card,
+.fp-map-preview .sc-room-card .big-meeting-card-inner,
+.fp-map-preview .sc-room-card .meeting-room-card,
+.fp-map-preview .card-header {
+  overflow: visible !important;
+}
+
+/* Hide Claude/Codex vibe badges in compact map preview */
+.fp-map-preview .sc-ai-icon {
+  display: none !important;
+}
+
+
+/* Give the map grid some horizontal breathing room in the compact preview */
+.fp-map-preview .sc-map {
+  padding-left: 48px !important;
+  padding-right: 48px !important;
+}
+
+.fp-map-preview .sc-navbar-wrap,
+.fp-map-preview .sc-grid-debug,
+.fp-map-preview .sc-v2-hero,
+.fp-map-preview .sc-v2-hero-marquee,
+.fp-map-preview .sc-right-controls,
+.fp-map-preview .sc-platform-badge,
+.fp-map-preview .sc-bottom-bar,
+.fp-map-preview .sc-dock,
+.fp-map-preview .sc-hint,
+.fp-map-preview .toolbar,
+.fp-map-preview .meeting-win,
+.fp-map-preview .theater-win,
+.fp-map-preview .ainbox-window,
+.fp-map-preview .mm-win,
+.fp-map-preview .lb-win,
+.fp-map-preview .mc-win,
+.fp-map-preview .mc-window,
+.fp-map-preview .onair-window,
+.fp-map-preview .story-viewer,
+.fp-map-preview .sc-feature-section,
+.fp-map-preview .sc-feature-section-reverse,
+.fp-map-preview .sc-promo-section,
+.fp-map-preview .sc-footer,
+.fp-map-preview .sc-cta-section,
+.fp-map-preview .sc-sidebar {
+  display: none !important;
+}
+
+/* ---- Footer CTA band (12-col grid, left-aligned) ---- */
+.fp-footer-cta {
+  width: 100%;
+  max-width: var(--grid-max-width);
+  margin: 96px auto 0;
+  padding: 80px var(--grid-margin);
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: repeat(var(--grid-columns), 1fr);
+  gap: var(--grid-gutter);
+  justify-items: start;
+}
+
+.fp-footer-cta-inner {
+  grid-column: 1 / span 6;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  gap: 16px;
+}
+
+.fp-footer-cta-title {
+  font-family: 'Possibility', serif;
+  font-size: clamp(20px, 2vw, 28px);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.6px;
+  color: var(--text-primary);
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.fp-footer-cta-sub {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 15px;
+  color: var(--text-secondary);
+  margin: 0;
+  max-width: 52ch;
+  line-height: 1.5;
+}

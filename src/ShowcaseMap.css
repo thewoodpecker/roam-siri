@@ -69,6 +69,7 @@
   --text-primary: #1D1D1F;
   --text-secondary: rgba(0,0,0,0.5);
   --text-disabled: rgba(0,0,0,0.3);
+  --text-primary-on-light: var(--solid-white);
   --border: rgba(0,0,0,0.1);
   --border-secondary: rgba(0,0,0,0.15);
   --border-opaque: #E0E0E2;
@@ -511,7 +512,7 @@
   font-family: 'Caveat', cursive;
   font-size: 28px;
   font-weight: 700;
-  color: white;
+  color: var(--text-primary-on-light);
   white-space: nowrap;
   display: inline-block;
   position: relative;
@@ -764,6 +765,7 @@
   align-items: center;
   justify-content: center;
   padding: 32px;
+  box-shadow: 0 0 0 0.5px var(--border);
 }
 
 /* Disable internal sidebar scrolling in marketing AInbox instance */
@@ -837,6 +839,77 @@
   height: 100% !important;
   animation: none !important;
   pointer-events: auto;
+}
+
+/* Map feature visual — live embedded Roam OS map window at its natural size,
+   positioned so only its top-left peeks from the bottom-right of the frame. */
+.sc-feature-wallpaper-map {
+  position: relative;
+  overflow: hidden;
+}
+
+.sc-map-feature-window-host {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding: 32px 0 0 32px;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.sc-map-feature-window-host .sc-viewport,
+.sc-map-feature-window-host .miniRoamOS {
+  position: relative !important;
+  inset: auto !important;
+  width: auto !important;
+  height: auto !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  overflow: visible !important;
+  background: transparent !important;
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
+}
+
+.sc-map-feature-window-host .sc-window {
+  width: 1120px !important;
+  max-width: 1120px !important;
+  height: 630px !important;
+  max-height: 630px !important;
+  aspect-ratio: auto !important;
+  flex-shrink: 0 !important;
+  overflow: hidden !important;
+  margin: 0 !important;
+}
+
+.sc-map-feature-window-host .sc-content,
+.sc-map-feature-window-host .sc-map {
+  overflow: hidden !important;
+}
+
+.sc-map-feature-window-host .sc-products-bar {
+  display: none !important;
+}
+
+.sc-map-feature-window-host .miniRoamOS::after,
+.sc-map-feature-window-host .sc-wallpaper,
+.sc-map-feature-window-host .sc-navbar-wrap,
+.sc-map-feature-window-host .sc-bottom-bar,
+.sc-map-feature-window-host .sc-dock,
+.sc-map-feature-window-host .sc-hint,
+.sc-map-feature-window-host .sc-right-controls,
+.sc-map-feature-window-host .sc-platform-badge,
+.sc-map-feature-window-host .sc-sidebar,
+.sc-map-feature-window-host .sc-promo-section,
+.sc-map-feature-window-host .sc-v2-hero,
+.sc-map-feature-window-host .sc-v2-hero-marquee,
+.sc-map-feature-window-host .sc-cta-section,
+.sc-map-feature-window-host .sc-footer {
+  display: none !important;
 }
 
 .sc-feature-visual .mm-summary,
@@ -1116,7 +1189,7 @@
     var(--shadow-5);
   display: flex;
   flex-direction: column;
-  overflow: visible;
+  overflow: hidden !important;
   position: relative;
 }
 
@@ -1293,6 +1366,56 @@
 }
 
 .sc-viewport[data-theme="light"] .sc-theme-capsule-icon.active {
+  color: var(--solid-white);
+}
+
+.sc-grid-capsule {
+  width: 32px;
+  height: 60px;
+  border-radius: 16px;
+  background: var(--background-primary);
+  border: 0.5px solid var(--border);
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0;
+}
+
+.sc-grid-capsule-icon {
+  color: var(--text-disabled);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  z-index: 1;
+  transition: color 0.3s ease;
+}
+
+.sc-grid-capsule-icon.active {
+  color: var(--text-primary);
+}
+
+.sc-grid-capsule-knob {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--background-primary);
+  border: 0.5px solid var(--border);
+  top: 4px;
+  left: 4px;
+  transition: top 0.3s ease;
+}
+
+.sc-grid-capsule-knob.on {
+  top: 32px;
+}
+
+.sc-viewport[data-theme="light"] .sc-grid-capsule-icon.active {
   color: var(--solid-white);
 }
 
@@ -1691,6 +1814,20 @@
 @keyframes sc-story-ring-pulse {
   from { visibility: visible; transform: scale(1); opacity: 1; }
   to { visibility: hidden; transform: scale(2); opacity: 0; }
+}
+
+/* On feature page previews, keep the story rings pulsing continuously */
+.fp-map-preview .sc-story-ring,
+.fp-section-visual .sc-story-ring,
+.fp-hero-visual .sc-story-ring {
+  animation: sc-story-ring-pulse-loop 1.8s ease-out infinite;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+@keyframes sc-story-ring-pulse-loop {
+  0%   { visibility: visible; transform: scale(1);   opacity: 0.9; }
+  90%  { opacity: 0; }
+  100% { visibility: hidden; transform: scale(2.6); opacity: 0; }
 }
 
 .sc-story-circle {
@@ -2237,9 +2374,27 @@
 }
 
 /* People movement animations */
-.sc-move-leaving .seat-avatar,
-.sc-move-leaving-added .avatar {
+.sc-move-leaving .seat-avatar {
   animation: sc-person-leave 300ms ease-in forwards;
+}
+
+/* Drop-in: highlight + scale a room when entering it */
+.sc-room-joined-pulse {
+  animation: sc-room-join-pulse 1000ms ease-in-out;
+  transform-origin: center;
+  z-index: 5;
+  position: relative;
+}
+
+/* Inside my own office — 2px inset accent border on the card */
+.sc-grid-cell.sc-room-own-office .sc-room-card {
+  box-shadow: inset 0 0 0 2px var(--border-accent-secondary), var(--shadow-1);
+}
+
+@keyframes sc-room-join-pulse {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.10); }
+  100% { transform: scale(1); }
 }
 
 .sc-move-arriving .seat-avatar {
