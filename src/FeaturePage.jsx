@@ -1125,6 +1125,43 @@ export const FEATURES = {
           'Confidential Messages.',
         ],
       },
+      {
+        variant: 'compare',
+        left: {
+          title: 'Legacy Work',
+          subtitle: 'Manual, Not Integrated, $282/month',
+          rows: [
+            { name: 'Zoom', value: '$27/month', note: 'Endless 30-minute meetings' },
+            { name: 'Hopin', value: '$25/month', note: 'Outside your office' },
+            { name: 'Calendly', value: '$16/month', note: 'Can’t meet now' },
+            { name: 'Slack', value: '$32/month', note: 'No meetings' },
+            { name: 'Otter', value: '$29/month', note: 'Annoying bot' },
+            { name: 'Loom', value: '$20/month', note: 'Annoying extension' },
+            { name: 'Standalone AI Assistant', value: '$50/month', note: 'No office awareness' },
+            { name: 'Zoom Webinars', value: '$83/month', note: 'Yahoo-era webinars' },
+            { name: 'Cubicle', value: '$1,000/month', note: 'Commute, manual' },
+          ],
+          total: { label: 'Total', value: '$282/month', tone: 'negative' },
+        },
+        right: {
+          featured: true,
+          badge: 'Save 93%',
+          title: 'Virtual Office Super Bundle',
+          subtitle: 'AI-Powered, Integrated, $19.50/month',
+          rows: [
+            { name: 'Drop-In Meetings', href: '/drop-in-meetings', value: 'Included', note: '8-minute average' },
+            { name: 'Theater', href: '/theater', value: 'Included', note: 'In your office' },
+            { name: 'Lobby', href: '/lobby', value: 'Included', note: 'Meet now or later' },
+            { name: 'AInbox', href: '/ainbox', value: 'Included', note: 'Prompt your meetings' },
+            { name: 'Magic Minutes', href: '/magic-minutes', value: 'Included', note: 'No annoying bot' },
+            { name: 'Magicast', href: '/magicast', value: 'Included', note: 'No download' },
+            { name: 'On-It', href: '/on-it', value: 'Included', note: 'Office-aware AI' },
+            { name: 'On-Air', href: '/on-air', value: 'Included', note: 'Creator-era events' },
+            { name: 'Virtual Office', href: '/virtual-office', value: 'Included', note: 'Whole company, no commute' },
+          ],
+          total: { label: '9 products for the price of 1', value: '$19.50/month', tone: 'positive' },
+        },
+      },
     ],
   },
   'magic-minutes': {
@@ -1239,7 +1276,56 @@ export const FEATURE_ORDER = [
   'on-air',
 ];
 
-function FeatureSection({ eyebrow, title, desc, visual, icons, variant, cards, bullets }) {
+function CompareColumn({ side, data }) {
+  return (
+    <div className={`fp-compare-col fp-compare-col-${side}${data.featured ? ' fp-compare-col-featured' : ''}`}>
+      <div className="fp-compare-head">
+        {data.badge && <div className="fp-compare-badge">{data.badge}</div>}
+        <h3 className="fp-compare-col-title">{data.title}</h3>
+        <p className="fp-compare-col-sub">{data.subtitle}</p>
+      </div>
+      <ul className="fp-compare-rows">
+        {data.rows.map((r, i) => {
+          const content = (
+            <>
+              <span className="fp-compare-row-name">
+                {r.name}
+                {r.href && <span className="fp-compare-row-arrow" aria-hidden="true">↗</span>}
+              </span>
+              <span className="fp-compare-row-value">
+                <span className="fp-compare-row-price">{r.value}</span>
+                {r.note && <span className="fp-compare-row-note">{r.note}</span>}
+              </span>
+            </>
+          );
+          return (
+            <li key={i} className={`fp-compare-row${r.href ? ' fp-compare-row-link' : ''}`}>
+              {r.href ? (
+                <a className="fp-compare-row-anchor" href={r.href}>{content}</a>
+              ) : content}
+            </li>
+          );
+        })}
+        {data.total && (
+          <li className={`fp-compare-row fp-compare-row-total fp-compare-row-${data.total.tone || 'neutral'}`}>
+            <span className="fp-compare-row-name">{data.total.label}</span>
+            <span className="fp-compare-row-price">{data.total.value}</span>
+          </li>
+        )}
+      </ul>
+    </div>
+  );
+}
+
+function FeatureSection({ eyebrow, title, desc, visual, icons, variant, cards, bullets, left, right }) {
+  if (variant === 'compare' && left && right) {
+    return (
+      <section className="fp-section fp-section-compare">
+        <CompareColumn side="left" data={left} />
+        <CompareColumn side="right" data={right} />
+      </section>
+    );
+  }
   if (variant === 'split' && bullets && bullets.length > 0) {
     return (
       <section className="fp-section fp-section-split">

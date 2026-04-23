@@ -11,6 +11,7 @@ export default function StoryViewer({ stories, initialIndex = 0, onClose }) {
   const [offset, setOffset] = useState(0);
   const [loaded, setLoaded] = useState(false);
   const [closing, setClosing] = useState(false);
+  const [muted, setMuted] = useState(true);
 
   const handleClose = () => {
     setClosing(true);
@@ -133,7 +134,7 @@ export default function StoryViewer({ stories, initialIndex = 0, onClose }) {
                   className="sv-image"
                   src={story.image}
                   autoPlay={isCurrent}
-                  muted
+                  muted={isCurrent ? muted : true}
                   playsInline
                 />
               ) : (
@@ -158,6 +159,26 @@ export default function StoryViewer({ stories, initialIndex = 0, onClose }) {
                       <span className="sv-name">{current.name}</span>
                       <span className="sv-time">Just now</span>
                     </div>
+                    {isVideoSrc(current.image) && (
+                      <button
+                        className="sv-mute"
+                        onClick={(e) => { e.stopPropagation(); setMuted(m => !m); }}
+                        aria-label={muted ? 'Unmute' : 'Mute'}
+                      >
+                        {muted ? (
+                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M8 3L4.5 5.5H2V10.5H4.5L8 13V3Z" stroke="white" strokeWidth="1.5" strokeLinejoin="round" fill="none" />
+                            <path d="M11 6L14 9M14 6L11 9" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
+                          </svg>
+                        ) : (
+                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M8 3L4.5 5.5H2V10.5H4.5L8 13V3Z" stroke="white" strokeWidth="1.5" strokeLinejoin="round" fill="none" />
+                            <path d="M11 5.5C11.6 6.2 12 7.05 12 8C12 8.95 11.6 9.8 11 10.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+                            <path d="M12.5 3.5C13.75 4.75 14.5 6.3 14.5 8C14.5 9.7 13.75 11.25 12.5 12.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+                          </svg>
+                        )}
+                      </button>
+                    )}
                     <button className="sv-close" onClick={handleClose}>
                       <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                         <path d="M4 4L12 12M12 4L4 12" stroke="white" strokeWidth="1.5" strokeLinecap="round" />

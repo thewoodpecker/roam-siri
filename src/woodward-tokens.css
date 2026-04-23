@@ -42,7 +42,7 @@
   --text-error: var(--red-300);
   --text-on-accented: var(--solid-white);
   --text-on-accented-secondary: var(--solid-black);
-  --icon-sensitive: var(--amber-500);
+  --icon-sensitive: var(--amber-800);
   --icon-primary: var(--graphite-50);
   --icon-secondary: var(--white-opacity-500);
   --icon-primary-on-light: var(--solid-black);

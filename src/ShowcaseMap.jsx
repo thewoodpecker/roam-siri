@@ -12,6 +12,7 @@ import OnItTaskPane from './OnItTaskPane';
 import MagicMinutes from './MagicMinutes';
 import Recordings from './Recordings';
 import Lobby from './Lobby';
+import MobileWindow from './MobileWindow';
 import { ChatProvider, useChat } from './ChatContext';
 import { WindowManagerProvider, useWindow } from './WindowManager';
 import StoryViewer from './StoryViewer';
@@ -80,7 +81,7 @@ const SHOWCASE_PEOPLE = [
 const p = (name) => SHOWCASE_PEOPLE.find(p => p.name === name) || SHOWCASE_PEOPLE[0];
 
 // Floor layouts — each floor has its own rooms
-const FLOORS = {
+export const FLOORS = {
   'R&D': [
     { id: 'r1', type: 'private', name: 'Klas L.', people: [], pos: { col: 0, row: 0 }, span: 1 },
     { id: 'r2', type: 'private', name: 'Derek C.', people: [p('Derek C.'), p('Michael M.')], pos: { col: 1, row: 0 }, span: 1 },
@@ -89,7 +90,7 @@ const FLOORS = {
     { id: 'r5', type: 'private', name: 'Keegan L.', people: [p('Keegan L.')], pos: { col: 4, row: 0 }, span: 1 },
     { id: 'r5b', type: 'private', name: 'Jon B.', people: [p('Jon B.')], pos: { col: 5, row: 0 }, span: 1, spotify: { song: 'Some Might Say', artist: 'Oasis', art: '/spotify/oasis-some-might-say.png' } },
     { id: 'r6', type: 'private', name: 'Grace S.', people: [p('Grace S.')], pos: { col: 0, row: 1 }, span: 1 },
-    { id: 'r7', type: 'private', name: 'Michael W.', people: [p('Michael W.')], pos: { col: 1, row: 1 }, span: 1 },
+    { id: 'r7', type: 'private', name: 'Michael W.', people: [p('Michael W.')], pos: { col: 1, row: 1 }, span: 1, figma: { comment: 'Can we tighten the 24px gap to 16px?', file: 'Dock v3', author: 'Ava L.' } },
     { id: 'theater', type: 'theater', name: 'Theater', people: [], pos: { col: 2, row: 1 }, colSpan: 2, rowSpan: 2 },
     { id: 'r8', type: 'private', name: 'Rob F.', people: [p('Rob F.')], pos: { col: 4, row: 1 }, span: 1 },
     { id: 'r8b', type: 'private', name: 'Chelsea T.', people: [p('Chelsea T.')], pos: { col: 5, row: 1 }, span: 1 },
@@ -171,8 +172,8 @@ const FLOORS = {
     { id: 'hp2', type: 'private', name: 'Klas L.', people: [p('Klas L.'), p('Chelsea T.')], pos: { col: 3, row: 0 }, span: 1 },
     { id: 'hp3', type: 'private', name: 'Tom D.', people: [], pos: { col: 4, row: 0 }, span: 1 },
     { id: 'hp4', type: 'private', name: 'Thomas G.', people: [p('Thomas G.')], pos: { col: 5, row: 0 }, span: 1 },
-    { id: 'hp5', type: 'private', name: 'Mattias L.', people: [p('Mattias L.')], pos: { col: 0, row: 1 }, span: 1 },
-    { id: 'hp6', type: 'private', name: 'John H.', people: [p('John H.')], pos: { col: 1, row: 1 }, span: 1 },
+    { id: 'hp5', type: 'private', name: 'Mattias L.', people: [p('Mattias L.')], pos: { col: 0, row: 1 }, span: 1, github: { repo: 'roam/app', number: 4830, title: 'Evals harness: parallel runs + retries', branch: 'mattias/evals-parallel' } },
+    { id: 'hp6', type: 'private', name: 'John H.', people: [p('John H.')], pos: { col: 1, row: 1 }, span: 1, spotify: { song: 'Redbone', artist: 'Childish Gambino', art: '/spotify/childish-gambino-redbone.png' } },
     { id: 'hp-pods', type: 'meeting', name: 'Engineering Pods', people: [p('Emily C.'), p('Daniel R.'), p('Ethan B.'), p('Michael S.'), p('Sophia R.')], pos: { col: 2, row: 1 }, colSpan: 2, rowSpan: 2 },
     { id: 'hp7', type: 'private', name: 'Howard L.', people: [p('Howard L.')], pos: { col: 4, row: 1 }, span: 1 },
     { id: 'hp8', type: 'private', name: 'John B.', people: [p('John B.')], pos: { col: 5, row: 1 }, span: 1, story: '/stories/story-1.png' },
@@ -459,8 +460,98 @@ function GitHubBadge({ github, alwaysOpen = false, visible = true }) {
   );
 }
 
+// Figma "comment" badge — same shape / lifecycle as GitHubBadge.
+function FigmaBadge({ figma, alwaysOpen = false, visible = true }) {
+  const [hovered, setHovered] = useState(false);
+  const showTooltip = visible && (alwaysOpen || hovered);
+
+  const [iconPhase, setIconPhase] = useState(null);
+  useEffect(() => {
+    if (visible) {
+      setIconPhase('in');
+    } else if (iconPhase !== null) {
+      setIconPhase('out');
+      const t = setTimeout(() => setIconPhase(null), 280);
+      return () => clearTimeout(t);
+    }
+  }, [visible]);
+
+  const [tipPhase, setTipPhase] = useState(null);
+  useEffect(() => {
+    if (showTooltip) {
+      setTipPhase('in');
+    } else if (tipPhase !== null) {
+      setTipPhase('out');
+      const t = setTimeout(() => setTipPhase(null), 280);
+      return () => clearTimeout(t);
+    }
+  }, [showTooltip]);
+
+  if (iconPhase === null) return null;
+
+  return (
+    <div
+      className={`sc-figma-badge sc-figma-badge-${iconPhase}`}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <img src="/icons/integrations/figma.svg" alt="" className="sc-figma-icon" />
+      {tipPhase !== null && (
+        <div
+          className={`sc-figma-tooltip sc-figma-tooltip-${tipPhase}`}
+          role="tooltip"
+        >
+          <span
+            className="sc-figma-tooltip-icon"
+            aria-hidden="true"
+            style={{
+              WebkitMaskImage: 'url(/icons/integrations/figma-chat.svg)',
+              maskImage: 'url(/icons/integrations/figma-chat.svg)',
+            }}
+          />
+          <div className="sc-figma-tooltip-text">
+            <p className="sc-figma-tooltip-title">{figma.comment}</p>
+            <p className="sc-figma-tooltip-meta">{figma.file}{figma.author ? ` · ${figma.author}` : ''}</p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// AI vibe icon with a hover tooltip ("Clauding" / "Codex" / "Vibing").
+function AiVibeIcon({ src, label, combo = false }) {
+  const [hovered, setHovered] = useState(false);
+  const [tipPhase, setTipPhase] = useState(null);
+  useEffect(() => {
+    if (hovered) {
+      setTipPhase('in');
+    } else if (tipPhase !== null) {
+      setTipPhase('out');
+      const t = setTimeout(() => setTipPhase(null), 220);
+      return () => clearTimeout(t);
+    }
+  }, [hovered]);
+  return (
+    <div
+      className="sc-ai-icon-wrap"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <img className={`sc-ai-icon${combo ? ' sc-ai-icon-combo' : ''}`} src={src} alt="" />
+      {tipPhase !== null && (
+        <div className={`sc-ai-tooltip sc-ai-tooltip-${tipPhase}`} role="tooltip">
+          {label}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // Private office room card — uses the same markup as mapv3
-function PrivateRoomCard({ room, storyBubble, onPersonClick, onRoomClick, spotifyAlwaysOpen = false, githubAlwaysOpen = false }) {
+function PrivateRoomCard({ room, storyBubble, onPersonClick, onRoomClick, spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false }) {
   const [talking, setTalking] = useState({});
   const hasTalk = room.people.length > 1;
 
@@ -529,11 +620,12 @@ function PrivateRoomCard({ room, storyBubble, onPersonClick, onRoomClick, spotif
         <div className="meeting-room-card" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
           <div className="card-header" style={{ padding: '0 12px' }}>
             <h3 className={`office-name ${isEmpty ? 'sc-office-empty' : ''}`}>{room.name}</h3>
-            {activeVibe === 'claude' && <img className="sc-ai-icon" src="/icons/claude.svg" alt="" />}
-            {activeVibe === 'codex' && <img className="sc-ai-icon" src="/icons/codex-white.svg" alt="" />}
-            {activeVibe === 'both' && <img className="sc-ai-icon sc-ai-icon-combo" src="/icons/vibe-combo.svg" alt="" />}
+            {activeVibe === 'claude' && <AiVibeIcon src="/icons/claude.svg" label="Clauding" />}
+            {activeVibe === 'codex' && <AiVibeIcon src="/icons/codex-white.svg" label="Codex" />}
+            {activeVibe === 'both' && <AiVibeIcon src="/icons/vibe-combo.svg" label="Vibing" combo />}
             {room.spotify && <SpotifyBadge spotify={room.spotify} alwaysOpen={spotifyAlwaysOpen} visible={!isEmpty && !activeVibe} />}
             {room.github && <GitHubBadge github={room.github} alwaysOpen={githubAlwaysOpen} visible={!isEmpty && !activeVibe} />}
+            {room.figma && <FigmaBadge figma={room.figma} alwaysOpen={figmaAlwaysOpen} visible={!isEmpty && !activeVibe} />}
           </div>
           {room.people.length > 0 && (
             <div className="private-office-seat">
@@ -1194,6 +1286,7 @@ const INITIAL_WINDOWS = [
   { id: 'magicminutes', isOpen: false, position: { x: 60, y: 180 }, zIndex: 30 },
   { id: 'recordings', isOpen: false, position: { x: 80, y: 160 }, zIndex: 30 },
   { id: 'lobby', isOpen: false, position: { x: 100, y: 140 }, zIndex: 30 },
+  { id: 'mobile', isOpen: false, position: { x: 120, y: 80 }, zIndex: 30 },
 ];
 
 const SHELF_TOTAL = 12;
@@ -1732,6 +1825,7 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
   const magicminutesWin = useWindow('magicminutes');
   const recordingsWin = useWindow('recordings');
   const lobbyWin = useWindow('lobby');
+  const mobileWin = useWindow('mobile');
   const [activeMeetingRoom, setActiveMeetingRoom] = useState(null);
   const [joinedRoomId, setJoinedRoomId] = useState(null);
   const [knockingRoom, setKnockingRoom] = useState(null);
@@ -2388,6 +2482,14 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
       {magicminutesWin.isOpen && <MagicMinutes win={magicminutesWin} onDrag={makeDragHandler(magicminutesWin)} />}
       {recordingsWin.isOpen && <Recordings win={recordingsWin} onDrag={makeDragHandler(recordingsWin)} />}
       {lobbyWin.isOpen && <Lobby win={lobbyWin} onDrag={makeDragHandler(lobbyWin)} />}
+      {mobileWin.isOpen && <MobileWindow win={mobileWin} onDrag={makeDragHandler(mobileWin)} onOpenStories={() => {
+        if (allStoriesData.length > 0) {
+          const viewed = {};
+          allStoryRooms.forEach(r => { viewed[r.story] = true; });
+          setViewedStories(prev => ({ ...prev, ...viewed }));
+          setStoryViewer({ stories: allStoriesData, initialIndex: 0 });
+        }
+      }} />}
       {/* Product features bar — inside miniRoamOS, pinned to bottom */}
       {/* Handwritten annotation pointing to the product bar */}
       <Hint portal={false} text="Product Tour" blob="peaks" arrow="swoop-right" visible={hintVisible} style={introHintStyle || { top: 190, left: 90 }} />
@@ -2400,11 +2502,27 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
             'Magicast': magicastWin,
             'Magic Minutes': magicminutesWin,
             'Lobby': lobbyWin,
+            'Mobile': mobileWin,
           };
           const w = winByName[item.name];
           const isActive = w?.isOpen || false;
+          const openMobileAboveButton = () => {
+            if (mobileWin.isOpen) { mobileWin.requestClose(); return; }
+            const btn = miniRoamRef.current?.querySelector('[data-label="Mobile"]');
+            const container = miniRoamRef.current;
+            if (container) {
+              const cRect = container.getBoundingClientRect();
+              const windowHeight = 690;
+              const windowWidth = 300;
+              const x = cRect.width - windowWidth - 56;
+              const baseTop = btn ? (btn.getBoundingClientRect().top - cRect.top) : cRect.height;
+              const y = baseTop - windowHeight - 12;
+              mobileWin.move({ x: Math.max(8, x), y: Math.max(8, y) });
+            }
+            mobileWin.open();
+          };
           const handleClick = w
-            ? () => { if (w.isOpen) w.requestClose(); else w.open(); }
+            ? (item.name === 'Mobile' ? openMobileAboveButton : () => { if (w.isOpen) w.requestClose(); else w.open(); })
             : item.name === 'Virtual Office' ? pulseMapWindow
             : item.name === 'Drop-In Meetings' ? knockOnHoward
             : item.name === 'On-It' ? openOnItChat

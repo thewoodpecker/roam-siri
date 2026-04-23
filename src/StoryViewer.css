@@ -186,7 +186,8 @@
   color: rgba(255, 255, 255, 0.5);
 }
 
-.sv-close {
+.sv-close,
+.sv-mute {
   width: 28px;
   height: 28px;
   border-radius: 50%;
@@ -197,9 +198,11 @@
   justify-content: center;
   cursor: pointer;
   transition: background 0.15s ease;
+  padding: 0;
 }
 
-.sv-close:hover {
+.sv-close:hover,
+.sv-mute:hover {
   background: rgba(255, 255, 255, 0.2);
 }
 
