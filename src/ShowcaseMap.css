@@ -72,6 +72,7 @@
   --icon-primary: #1D1D1F;
   --icon-secondary: rgba(0,0,0,0.5);
   --text-primary-on-light: var(--solid-white);
+  --text-error: var(--red-500);
   --border: rgba(0,0,0,0.1);
   --border-secondary: rgba(0,0,0,0.15);
   --border-opaque: #E0E0E2;
@@ -904,6 +905,16 @@
 .sc-map-feature-window-host .sc-github-badge,
 .sc-map-feature-window-host .sc-figma-badge {
   pointer-events: auto;
+}
+
+/* Flip integration tooltips below the badge inside the feature map so
+   top-row rooms don't get clipped by the feature visual container. */
+.sc-map-feature-window-host .sc-spotify-tooltip,
+.sc-map-feature-window-host .sc-github-tooltip,
+.sc-map-feature-window-host .sc-figma-tooltip {
+  top: calc(100% + 6px);
+  bottom: auto;
+  transform-origin: 50% -14px;
 }
 
 .sc-map-feature-window-host .miniRoamOS::after,
@@ -1867,18 +1878,11 @@
   to { visibility: hidden; transform: scale(2); opacity: 0; }
 }
 
-/* On feature page previews, keep the story rings pulsing continuously */
+/* Feature page previews keep the story rings static — no continuous pulse. */
 .fp-map-preview .sc-story-ring,
 .fp-section-visual .sc-story-ring,
 .fp-hero-visual .sc-story-ring {
-  animation: sc-story-ring-pulse-loop 1.8s ease-out infinite;
-  border: 1px solid rgba(255, 255, 255, 0.6);
-}
-
-@keyframes sc-story-ring-pulse-loop {
-  0%   { visibility: visible; transform: scale(1);   opacity: 0.9; }
-  90%  { opacity: 0; }
-  100% { visibility: hidden; transform: scale(2.6); opacity: 0; }
+  animation: none;
 }
 
 .sc-story-circle {
@@ -2525,6 +2529,63 @@
   will-change: transform;
 }
 
+.sc-shelf-open .sc-shelf-item {
+  overflow: visible;
+}
+
+.sc-shelf-open .sc-shelf-item > img {
+  border-radius: 6px;
+}
+
+.sc-shelf-open-viewers {
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.sc-shelf-open-viewer {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid;
+  background: #000;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  margin-left: -8px;
+  animation: sc-shelf-viewer-enter 260ms cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: center;
+}
+
+.sc-shelf-open-viewer:first-child {
+  margin-left: 0;
+}
+
+.sc-shelf-open-viewer > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.sc-shelf-open-viewer-exit {
+  animation: sc-shelf-viewer-exit 220ms ease-in forwards;
+}
+
+@keyframes sc-shelf-viewer-enter {
+  from { opacity: 0; transform: scale(0.55); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes sc-shelf-viewer-exit {
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: 0; transform: scale(0.55); }
+}
+
 .sc-shelf-item:hover {
   transform: scale(1.08) !important;
   z-index: 3;
@@ -2581,7 +2642,7 @@
   position: absolute;
   inset: 0;
   background: var(--bg-overlay-primary);
-  z-index: 4;
+  z-index: 7;
   border-radius: 36px;
   corner-shape: superellipse;
   corner-shape: superellipse(1.6);
@@ -2629,6 +2690,7 @@
 /* Open shelf — 3-row stack with header */
 .sc-shelf-wrap-open {
   padding: 0;
+  z-index: 8;
 }
 
 .sc-shelf-open {

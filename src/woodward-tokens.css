@@ -39,7 +39,7 @@
   --text-accent-secondary: var(--blue-600);
   --text-positive: var(--green-300);
   --text-warning: var(--amber-500);
-  --text-error: var(--red-300);
+  --text-error: var(--red-400);
   --text-on-accented: var(--solid-white);
   --text-on-accented-secondary: var(--solid-black);
   --icon-sensitive: var(--amber-800);

@@ -18,6 +18,7 @@ import { WindowManagerProvider, useWindow } from './WindowManager';
 import StoryViewer from './StoryViewer';
 import ShareDialog from './ShareDialog';
 import Footer from './Footer';
+import FloatingCTA from './FloatingCTA';
 import './ShowcaseMap.css';
 
 // Flip to `false` to show the nav, bottom bar, and theme toggle
@@ -189,48 +190,44 @@ export const FLOORS = {
     { id: 'hp16', type: 'private', name: 'Rob F.', people: [p('Rob F.')], pos: { col: 3, row: 4 }, span: 1 },
   ],
   'DropIn': [
-    // Row 0 — leadership row
-    { id: 'di1', type: 'private', name: 'Howard L.', people: [p('Howard L.')], pos: { col: 0, row: 0 }, span: 1 },
-    { id: 'di2', type: 'private', name: 'Jon B.', people: [p('Jon B.')], pos: { col: 1, row: 0 }, span: 1 },
-    { id: 'di3', type: 'private', name: 'Derek C.', people: [p('Derek C.')], pos: { col: 2, row: 0 }, span: 1 },
-    { id: 'di4', type: 'private', name: 'Keegan L.', people: [p('Keegan L.')], pos: { col: 3, row: 0 }, span: 1 },
-    { id: 'di5', type: 'private', name: 'Michael W.', people: [p('Michael W.')], pos: { col: 4, row: 0 }, span: 1 },
-    { id: 'di6', type: 'private', name: 'Will H.', people: [p('Will H.')], pos: { col: 5, row: 0 }, span: 1 },
-    // Row 1
-    { id: 'di7', type: 'private', name: 'Joe W.', people: [p('Joe W.')], pos: { col: 0, row: 1 }, span: 1 },
-    { id: 'di8', type: 'private', name: 'Chelsea T.', people: [p('Chelsea T.')], pos: { col: 1, row: 1 }, span: 1 },
+    // Row 0 — leadership offices with activity indicators
+    { id: 'di1', type: 'private', name: 'Howard L.', people: [p('Howard L.')], pos: { col: 0, row: 0 }, span: 1, figma: { comment: 'Can we tighten the 24px gap to 16px?', file: 'Dock v3', author: 'Ava L.' } },
+    { id: 'di2', type: 'private', name: 'Jon B.', people: [p('Jon B.')], pos: { col: 1, row: 0 }, span: 1, github: { repo: 'roam/app', number: 4842, title: 'Pricing page layout v2', branch: 'jon/pricing-v2' } },
+    { id: 'di-allhands', type: 'meeting', name: 'All Hands', people: [p('Derek C.'), p('Keegan L.'), p('Howard L.'), p('Sean M.'), p('Michael M.'), p('Arnav B.')], pos: { col: 2, row: 0 }, colSpan: 2, rowSpan: 1 },
+    { id: 'di5', type: 'private', name: 'Michael W.', people: [p('Michael W.'), p('Ava L.')], pos: { col: 4, row: 0 }, span: 1 },
+    { id: 'di6', type: 'private', name: 'Will H.', people: [p('Will H.')], pos: { col: 5, row: 0 }, span: 1, spotify: { song: 'Some Might Say', artist: 'Oasis', art: '/spotify/oasis-some-might-say.png' } },
+    // Row 1 — mixed activity + 2-person sync
+    { id: 'di7', type: 'private', name: 'Joe W.', people: [p('Joe W.')], pos: { col: 0, row: 1 }, span: 1, github: { repo: 'roam/app', number: 4836, title: 'Feature page: cards + split section polish', branch: 'joe/feature-page-polish' } },
+    { id: 'di8', type: 'private', name: 'Chelsea T.', people: [p('Chelsea T.')], pos: { col: 1, row: 1 }, span: 1, story: '/stories/story-1.png' },
     { id: 'di9', type: 'private', name: 'Grace S.', people: [p('Grace S.')], pos: { col: 2, row: 1 }, span: 1 },
     { id: 'di10', type: 'private', name: 'Lexi B.', people: [p('Lexi B.')], pos: { col: 3, row: 1 }, span: 1 },
-    { id: 'di11', type: 'private', name: 'John M.', people: [p('John M.')], pos: { col: 4, row: 1 }, span: 1 },
-    { id: 'di12', type: 'private', name: 'Jeff G.', people: [p('Jeff G.')], pos: { col: 5, row: 1 }, span: 1 },
-    // Row 2 — café + 4 offices
-    { id: 'di-cafe', type: 'game', name: 'Café', people: [p('Ashley B.'), p('Brooke F.')], pos: { col: 0, row: 2 }, colSpan: 2, rowSpan: 2 },
-    { id: 'di13', type: 'private', name: 'Olivia S.', people: [p('Olivia S.')], pos: { col: 2, row: 2 }, span: 1 },
-    { id: 'di14', type: 'private', name: 'Ethan B.', people: [p('Ethan B.')], pos: { col: 3, row: 2 }, span: 1 },
-    { id: 'di15', type: 'private', name: 'Sarah M.', people: [p('Sarah M.')], pos: { col: 4, row: 2 }, span: 1 },
+    { id: 'di-11', type: 'meeting', name: '1:1 Sync', people: [p('John M.'), p('Jeff G.')], pos: { col: 4, row: 1 }, colSpan: 2, rowSpan: 1 },
+    // Row 2 — café + offices with varied activity
+    { id: 'di-cafe', type: 'game', name: 'Café', people: [p('Ashley B.'), p('Brooke F.'), p('Olivia S.')], pos: { col: 0, row: 2 }, colSpan: 2, rowSpan: 2 },
+    { id: 'di13', type: 'private', name: 'Olivia S.', people: [p('Olivia S.')], pos: { col: 2, row: 2 }, span: 1, github: { repo: 'roam/app', number: 4812, title: 'Fix AInbox typing indicator ghost state', branch: 'fix/typing-ghost' } },
+    { id: 'di14', type: 'private', name: 'Ethan B.', people: [p('Ethan B.'), p('Peter L.')], pos: { col: 3, row: 2 }, span: 1 },
+    { id: 'di15', type: 'private', name: 'Sarah M.', people: [p('Sarah M.')], pos: { col: 4, row: 2 }, span: 1, figma: { comment: 'Let’s try tightening the card gap to 12px', file: 'AInbox v4', author: 'Michael W.' } },
     { id: 'di16', type: 'private', name: 'Daniel R.', people: [p('Daniel R.')], pos: { col: 5, row: 2 }, span: 1 },
-    // Row 3
-    { id: 'di17', type: 'private', name: 'Sophia R.', people: [p('Sophia R.')], pos: { col: 2, row: 3 }, span: 1 },
-    { id: 'di18', type: 'private', name: 'Hannah B.', people: [p('Hannah B.')], pos: { col: 3, row: 3 }, span: 1 },
-    { id: 'di19', type: 'private', name: 'Mia C.', people: [p('Mia C.')], pos: { col: 4, row: 3 }, span: 1 },
-    { id: 'di20', type: 'private', name: 'Camila T.', people: [p('Camila T.')], pos: { col: 5, row: 3 }, span: 1 },
-    // Row 4
+    // Row 3 — brainstorm room + paired offices
+    { id: 'di-brainstorm', type: 'meeting', name: 'Product Brainstorm', people: [p('Sophia R.'), p('Hannah B.'), p('Emily C.'), p('Isabella M.')], pos: { col: 2, row: 3 }, colSpan: 2, rowSpan: 1 },
+    { id: 'di19', type: 'private', name: 'Mia C.', people: [p('Mia C.'), p('Sophia R.')], pos: { col: 4, row: 3 }, span: 1 },
+    { id: 'di20', type: 'private', name: 'Camila T.', people: [p('Camila T.')], pos: { col: 5, row: 3 }, span: 1, spotify: { song: 'Midnight City', artist: 'M83', art: '/spotify/m83-midnight-city.png' } },
+    // Row 4 — bottom row w/ activity
     { id: 'di21', type: 'private', name: 'Isabella M.', people: [p('Isabella M.')], pos: { col: 0, row: 4 }, span: 1 },
     { id: 'di22', type: 'private', name: 'Natalie W.', people: [p('Natalie W.')], pos: { col: 1, row: 4 }, span: 1 },
     { id: 'di23', type: 'private', name: 'Megan T.', people: [p('Megan T.')], pos: { col: 2, row: 4 }, span: 1 },
-    { id: 'di24', type: 'private', name: 'Madison R.', people: [p('Madison R.')], pos: { col: 3, row: 4 }, span: 1 },
-    { id: 'di25', type: 'private', name: 'Rachel C.', people: [p('Rachel C.')], pos: { col: 4, row: 4 }, span: 1 },
-    { id: 'di26', type: 'private', name: 'Chloe P.', people: [p('Chloe P.')], pos: { col: 5, row: 4 }, span: 1 },
+    { id: 'di24', type: 'private', name: 'Madison R.', people: [p('Madison R.'), p('Rachel C.')], pos: { col: 3, row: 4 }, span: 1 },
+    { id: 'di-demo', type: 'meeting', name: 'Demo Prep', people: [p('Thomas G.'), p('Klas L.'), p('Mattias L.')], pos: { col: 4, row: 4 }, colSpan: 2, rowSpan: 1 },
   ],
   'Preview': [
     { id: 'pv1', type: 'private', name: 'Arnav B.', people: [p('Arnav B.')], pos: { col: 0, row: 0 }, span: 1, spotify: { song: 'Some Might Say', artist: 'Oasis', art: '/spotify/oasis-some-might-say.png' } },
-    { id: 'pv2', type: 'private', name: 'Tom D.', people: [p('Tom D.')], pos: { col: 1, row: 0 }, span: 1 },
+    { id: 'pv2', type: 'private', name: 'Tom D.', people: [p('Tom D.')], pos: { col: 1, row: 0 }, span: 1, figma: { comment: 'Bump the header tracking a touch?', file: 'Feature page v2', author: 'Joe W.' } },
     { id: 'pv3', type: 'private', name: 'Will H.', people: [p('Will H.')], pos: { col: 2, row: 0 }, span: 1, github: { repo: 'roam/app', number: 4812, title: 'Fix AInbox typing indicator ghost state', branch: 'fix/typing-ghost' } },
     { id: 'pv4', type: 'private', name: 'John H.', people: [p('John H.')], pos: { col: 3, row: 0 }, span: 1 },
     { id: 'pv5', type: 'private', name: 'Mattias L.', people: [p('Mattias L.')], pos: { col: 4, row: 0 }, span: 1, github: { repo: 'roam/app', number: 4830, title: 'Evals harness: parallel runs + retries', branch: 'mattias/evals-parallel' } },
     { id: 'pv6', type: 'private', name: 'Thomas G.', people: [p('Thomas G.')], pos: { col: 5, row: 0 }, span: 1, spotify: { song: 'Ne Me Quitte Pas', artist: 'Jacques Brel', art: '/spotify/jacques-brel-ne-me-quitte-pas.png' } },
     { id: 'pv7', type: 'private', name: 'Michael M.', people: [p('Michael M.')], pos: { col: 0, row: 1 }, span: 1, github: { repo: 'roam/app', number: 4825, title: 'Meeting card layout polish', branch: 'mm/meeting-cards' } },
-    { id: 'pv8', type: 'private', name: 'Ava L.', people: [p('Ava L.')], pos: { col: 1, row: 1 }, span: 1 },
+    { id: 'pv8', type: 'private', name: 'Ava L.', people: [p('Ava L.')], pos: { col: 1, row: 1 }, span: 1, figma: { comment: 'Let’s try tightening the card gap to 12px', file: 'AInbox v4', author: 'Michael W.' } },
     { id: 'pv-sprint', type: 'meeting', name: 'Sprint Planning', people: [p('Derek C.'), p('Michael M.'), p('John M.'), p('Arnav B.'), p('Olivia S.'), p('Sophia R.')], pos: { col: 2, row: 1 }, colSpan: 2, rowSpan: 2 },
     { id: 'pv9', type: 'private', name: 'Howard L.', people: [p('Howard L.')], pos: { col: 4, row: 1 }, span: 1 },
     { id: 'pv10', type: 'private', name: 'Garima K.', people: [p('Garima K.')], pos: { col: 5, row: 1 }, span: 1 },
@@ -264,9 +261,21 @@ export const FLOORS = {
     { id: 's11', type: 'private', name: 'Keegan L.', people: [p('Keegan L.')], pos: { col: 2, row: 4 }, span: 1 },
     { id: 's12', type: 'private', name: 'Ava L.', people: [p('Ava L.')], pos: { col: 3, row: 4 }, span: 1 },
   ],
+  'Shelf': [
+    { id: 'sh-joe', type: 'private', name: 'Joe W.', people: [p('Joe W.')], pos: { col: 0, row: 0 }, span: 1 },
+    { id: 'sh-library', type: 'meeting', name: 'The Library', people: [p('Chelsea T.'), p('Olivia S.'), p('Sophia R.')], pos: { col: 2, row: 0 }, colSpan: 2, rowSpan: 2 },
+    { id: 'sh-grace', type: 'private', name: 'Grace S.', people: [p('Grace S.')], pos: { col: 5, row: 0 }, span: 1 },
+    { id: 'sh-ava', type: 'private', name: 'Ava L.', people: [p('Ava L.')], pos: { col: 1, row: 1 }, span: 1 },
+    { id: 'sh-observatory', type: 'meeting', name: 'Observatory', people: [p('Derek C.'), p('Michael M.'), p('John M.'), p('Arnav B.')], pos: { col: 4, row: 1 }, colSpan: 2, rowSpan: 2 },
+    { id: 'sh-campfire', type: 'meeting', name: 'Campfire', people: [p('Emily C.'), p('Hannah B.'), p('Sophia R.')], pos: { col: 0, row: 3 }, colSpan: 2, rowSpan: 2 },
+    { id: 'sh-greenhouse', type: 'meeting', name: 'The Greenhouse', people: [p('Isabella M.'), p('Madison R.'), p('Rachel C.')], pos: { col: 2, row: 3 }, colSpan: 2, rowSpan: 2 },
+    { id: 'sh-will', type: 'private', name: 'Will H.', people: [p('Will H.')], pos: { col: 4, row: 3 }, span: 1 },
+    { id: 'sh-mia', type: 'private', name: 'Mia C.', people: [p('Mia C.')], pos: { col: 5, row: 3 }, span: 1 },
+    { id: 'sh-daniel', type: 'private', name: 'Daniel R.', people: [p('Daniel R.')], pos: { col: 4, row: 4 }, span: 1 },
+  ],
 };
 
-const FLOOR_NAMES = Object.keys(FLOORS).filter(n => n !== 'Preview' && n !== 'Homepage');
+const FLOOR_NAMES = Object.keys(FLOORS).filter(n => n !== 'Preview' && n !== 'Homepage' && n !== 'Shelf');
 
 // Sidebar rooms
 
@@ -1343,11 +1352,11 @@ function ShelfWindow({ win, onDrag, photoIdx, direction, onPrev, onNext }) {
 }
 
 // Main showcase component
-export default function ShowcaseMap({ initialFloor = 'R&D', embedded = false, autoKnock = false, spotifyAlwaysOpen = false, githubAlwaysOpen = false, hideOnIt = false, theme } = {}) {
+export default function ShowcaseMap({ initialFloor = 'R&D', embedded = false, autoKnock = false, spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, hideOnIt = false, shelfAutoOpen = false, theme } = {}) {
   return (
     <ChatProvider>
       <WindowManagerProvider initialWindows={INITIAL_WINDOWS}>
-        <ShowcaseMapInner initialFloor={initialFloor} embedded={embedded} autoKnock={autoKnock} spotifyAlwaysOpen={spotifyAlwaysOpen} githubAlwaysOpen={githubAlwaysOpen} hideOnIt={hideOnIt} themeOverride={theme} />
+        <ShowcaseMapInner initialFloor={initialFloor} embedded={embedded} autoKnock={autoKnock} spotifyAlwaysOpen={spotifyAlwaysOpen} githubAlwaysOpen={githubAlwaysOpen} figmaAlwaysOpen={figmaAlwaysOpen} hideOnIt={hideOnIt} shelfAutoOpen={shelfAutoOpen} themeOverride={theme} />
       </WindowManagerProvider>
     </ChatProvider>
   );
@@ -1511,7 +1520,7 @@ function useTargetHintStyle(targetRef, active, offset = { top: -30, left: 'cente
   return style;
 }
 
-function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = false, spotifyAlwaysOpen = false, githubAlwaysOpen = false, hideOnIt = false, themeOverride = null }) {
+function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = false, spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, hideOnIt = false, shelfAutoOpen = false, themeOverride = null }) {
   const [themeState, setThemeState] = useState('dark');
   const theme = themeOverride || themeState;
   const setTheme = themeOverride ? () => {} : setThemeState;
@@ -1851,7 +1860,7 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
       setJoinedRoomId(howardRoom.id);
     }, 3000);
   }, [activeFloor, knockingRoom, joinedRoomId, meetingWin, theaterWin]);
-  const [shelfOpen, setShelfOpen] = useState(false);
+  const [shelfOpen, setShelfOpen] = useState(shelfAutoOpen);
   const [pipPos, setPipPos] = useState(null);
   const [magicastShape, setMagicastShape] = useState('circle');
   const [shelfClosing, setShelfClosing] = useState(false);
@@ -1917,11 +1926,43 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
   }, [shelfOpen]);
   const [shelfPhotoIdx, setShelfPhotoIdx] = useState(1);
   const [shelfDir, setShelfDir] = useState(null);
+  const [shelfWinHost, setShelfWinHost] = useState(null);
+  useEffect(() => {
+    if (!embedded || !miniRoamRef.current) return;
+    const host = miniRoamRef.current.closest('.fp-section-visual, .fp-hero-stage');
+    if (host) setShelfWinHost(host);
+  }, [embedded]);
+  const [shelfViewers, setShelfViewers] = useState([
+    { id: 'v1', avatar: '/headshots/chelsea-turbin.jpg', ring: '#7C7CFF', itemIdx: 1, exiting: false },
+    { id: 'v2', avatar: '/headshots/jon-brod.jpg', ring: '#52C1F0', itemIdx: 4, exiting: false },
+    { id: 'v3', avatar: '/headshots/grace-sutherland.jpg', ring: '#FF6B6B', itemIdx: 4, exiting: false },
+    { id: 'v4', avatar: '/headshots/mattias-leino.jpg', ring: '#F0A64D', itemIdx: 8, exiting: false },
+  ]);
+  useEffect(() => {
+    if (!shelfActive) return;
+    const interval = setInterval(() => {
+      setShelfViewers(prev => {
+        if (prev.length === 0) return prev;
+        const idx = Math.floor(Math.random() * prev.length);
+        return prev.map((v, i) => i === idx ? { ...v, exiting: true } : v);
+      });
+      setTimeout(() => {
+        setShelfViewers(prev => prev.map(v => {
+          if (!v.exiting) return v;
+          let next;
+          do { next = Math.floor(Math.random() * 12); } while (next === v.itemIdx);
+          return { ...v, itemIdx: next, exiting: false };
+        }));
+      }, 260);
+    }, 2200);
+    return () => clearInterval(interval);
+  }, [shelfActive]);
   const openShelfPhoto = useCallback((idx) => {
     setShelfDir(null);
     setShelfPhotoIdx(idx);
+    if (embedded) shelfWin.move({ x: 24, y: 24 });
     shelfWin.open();
-  }, [shelfWin]);
+  }, [shelfWin, embedded]);
   const prevShelfPhoto = useCallback(() => {
     setShelfDir('prev');
     setShelfPhotoIdx(i => (i - 2 + SHELF_TOTAL) % SHELF_TOTAL + 1);
@@ -2247,6 +2288,7 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
                       <PrivateRoomCard
                         spotifyAlwaysOpen={spotifyAlwaysOpen}
                         githubAlwaysOpen={githubAlwaysOpen}
+                        figmaAlwaysOpen={figmaAlwaysOpen}
                         onPersonClick={openMiniChat}
                         onRoomClick={room.people.length === 0 ? undefined : (r) => {
                           if (joinedRoomId === r.id) return;
@@ -2378,6 +2420,7 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
                             if (idx >= SIZES.length) return null;
                             const { w, h } = SIZES[idx];
                             const photoIdx = idx + 1;
+                            const itemViewers = shelfViewers.filter(v => v.itemIdx === idx);
                             return (
                               <div
                                 key={i}
@@ -2386,6 +2429,19 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
                                 onClick={(e) => { e.stopPropagation(); openShelfPhoto(photoIdx); }}
                               >
                                 <img src={`/shelf/photos/photo-${photoIdx}.png`} alt="" />
+                                {itemViewers.length > 0 && (
+                                  <div className="sc-shelf-open-viewers">
+                                    {itemViewers.map(v => (
+                                      <div
+                                        key={v.id}
+                                        className={`sc-shelf-open-viewer ${v.exiting ? 'sc-shelf-open-viewer-exit' : ''}`}
+                                        style={{ borderColor: v.ring }}
+                                      >
+                                        <img src={v.avatar} alt="" />
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
                               </div>
                             );
                           })}
@@ -2475,7 +2531,14 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
       {onairWin.isOpen && <OnAir win={onairWin} onDrag={makeDragHandler(onairWin)} demo />}
       {meetingWin.isOpen && activeMeetingRoom && <MeetingWindow win={meetingWin} onDrag={makeDragHandler(meetingWin)} roomName={activeMeetingRoom.name} people={activeMeetingRoom.people} onOpenChat={() => ainboxWin.open()} onOpenOnAir={() => onairWin.open()} />}
       {theaterWin.isOpen && <TheaterWindow win={theaterWin} onDrag={makeDragHandler(theaterWin)} speakers={theaterSpeakers} audience={SHOWCASE_PEOPLE} me={JOE} onOpenChat={() => ainboxWin.open()} />}
-      {shelfWin.isOpen && <ShelfWindow win={shelfWin} onDrag={makeDragHandler(shelfWin)} photoIdx={shelfPhotoIdx} direction={shelfDir} onPrev={prevShelfPhoto} onNext={nextShelfPhoto} />}
+      {shelfWin.isOpen && (
+        shelfWinHost
+          ? ReactDOM.createPortal(
+              <ShelfWindow win={shelfWin} onDrag={makeDragHandler(shelfWin)} photoIdx={shelfPhotoIdx} direction={shelfDir} onPrev={prevShelfPhoto} onNext={nextShelfPhoto} />,
+              shelfWinHost
+            )
+          : <ShelfWindow win={shelfWin} onDrag={makeDragHandler(shelfWin)} photoIdx={shelfPhotoIdx} direction={shelfDir} onPrev={prevShelfPhoto} onNext={nextShelfPhoto} />
+      )}
       {magicastWin.isOpen && <MagicastWindow win={magicastWin} onDrag={makeDragHandler(magicastWin)} pipPos={pipPos} shape={magicastShape} />}
       {magicastWin.isOpen && <MagicastBubble onPositionChange={setPipPos} shape={magicastShape} onShapeChange={setMagicastShape} />}
       {magicastWin.isOpen && <div className="mc-recording-border" />}
@@ -2756,6 +2819,8 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
       </div>
 
       <Footer />
+
+      <FloatingCTA title="Ready to grow your business?" showAfter={800} />
       </>)}
 
       {/* Theme capsule + grid toggle — pinned to right side */}

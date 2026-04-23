@@ -27,6 +27,7 @@ function RightControls({ theme, onToggleTheme, showGrid, onToggleGrid }) {
 }
 import Navbar from './Navbar';
 import Footer from './Footer';
+import FloatingCTA from './FloatingCTA';
 import AInbox, { TypingIndicator } from './AInbox';
 import MeetingWindow from './MeetingWindow';
 import TheaterWindow from './TheaterWindow';
@@ -840,7 +841,7 @@ function OnAirPreview() {
   return <OnAir win={noopWin('onair')} onDrag={() => {}} demo />;
 }
 
-function MapPreview({ spotifyAlwaysOpen = false, githubAlwaysOpen = false, hideOnIt = false } = {}) {
+function MapPreview({ spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, hideOnIt = false, autoKnock = false, shelfAutoOpen = false, initialFloor = 'Preview' } = {}) {
   const [pageTheme, setPageTheme] = useState(() =>
     typeof document !== 'undefined' ? document.documentElement.getAttribute('data-theme') || 'dark' : 'dark'
   );
@@ -854,7 +855,7 @@ function MapPreview({ spotifyAlwaysOpen = false, githubAlwaysOpen = false, hideO
   }, []);
   return (
     <div className="fp-map-preview">
-      <ShowcaseMap initialFloor="Preview" spotifyAlwaysOpen={spotifyAlwaysOpen} githubAlwaysOpen={githubAlwaysOpen} hideOnIt={hideOnIt} theme={pageTheme} />
+      <ShowcaseMap embedded autoKnock={autoKnock} initialFloor={initialFloor} spotifyAlwaysOpen={spotifyAlwaysOpen} githubAlwaysOpen={githubAlwaysOpen} figmaAlwaysOpen={figmaAlwaysOpen} hideOnIt={hideOnIt} shelfAutoOpen={shelfAutoOpen} theme={pageTheme} />
     </div>
   );
 }
@@ -896,26 +897,25 @@ function MagicastPreview() {
 export const FEATURES = {
   'drop-in-meetings': {
     eyebrow: 'Drop-In Meetings',
-    title: 'Knock on a door, drop into a chat',
-    hero: 'Knock on an empty seat in someone\'s private office to start an audio-only Drop-In Meeting. If they want to talk, they\'ll accept your knock — and you\'re instantly in the room together.',
-    visual: <MapPreview />,
+    title: 'Drop-In Meetings',
+    hero: <>Turn next week’s 60 minute meeting into a 5 minute conversation, right now. Audio-only private office or fully featured video conferencing rooms, right on the map.<br /><br />Knock to drop-in to anyone who is available for a quick meeting. The average meeting time in Roam is just 8 minutes long!</>,
+    visual: <MapPreview autoKnock initialFloor="DropIn" />,
+    quote: {
+      quote: '“Walk out of a meeting … as soon as it is obvious you aren’t adding value … It is not rude to leave, it is rude to make someone stay and waste their time.”',
+      author: 'Elon Musk',
+      role: 'CEO, Tesla',
+      avatar: '/quotes/elon-musk.jpg',
+    },
     sections: [
       {
-        title: 'A knock, not a calendar invite',
-        desc: 'See someone is at their desk and just knock. They get a friendly heads-up, accept, and you\'re talking in seconds. No links, no scheduling tetris.',
-        visual: <MapPreview />,
+        title: 'Shelf',
+        desc: 'Showcase your favorite pictures, books, movies, awards, achievements and more on your virtual shelf. Discover unexpected connections. You’ll get to know your team faster in 2 minutes in Roam than 2 years on Zoom.',
+        visual: <MapPreview shelfAutoOpen initialFloor="Shelf" />,
       },
       {
-        title: 'Audio-first, low-friction',
-        desc: 'Drop-Ins start as audio only — like leaning into someone\'s doorway. Turn on video or screenshare the moment you need to.',
-      },
-      {
-        title: 'Their shelf, their vibe',
-        desc: 'When you\'re in someone\'s office, you can see their shelf — the pictures, books, music, and trinkets they\'ve chosen to showcase. Conversation starters, built in.',
-      },
-      {
-        title: 'They can say no',
-        desc: 'Heads-down? Decline the knock, set yourself busy, or close the door. Drop-Ins respect the rhythm of real work.',
+        type: 'quote',
+        quote: '“One either meets or one works.”',
+        author: 'Peter Drucker',
       },
     ],
   },
@@ -1071,7 +1071,7 @@ export const FEATURES = {
         ],
         title: 'Integrations',
         desc: 'Integrates with your favorite apps via Zapier or the Roam developer API. Native integrations with GitHub & Spotify.',
-        visual: <MapPreview spotifyAlwaysOpen hideOnIt />,
+        visual: <MapPreview spotifyAlwaysOpen figmaAlwaysOpen hideOnIt />,
       },
       {
         variant: 'additional',
@@ -1385,6 +1385,18 @@ function FeatureSection({ eyebrow, title, desc, visual, icons, variant, cards, b
   );
 }
 
+function FeatureQuote({ quote, author, role }) {
+  return (
+    <section className="fp-quote">
+      <div className="fp-quote-inner">
+        <div className="fp-quote-author">{author}</div>
+        {role && <div className="fp-quote-role">{role}</div>}
+        <blockquote className="fp-quote-text">{quote}</blockquote>
+      </div>
+    </section>
+  );
+}
+
 function FeaturePageInner({ slug }) {
   const feature = FEATURES[slug];
   const [theme, setTheme] = useState('dark');
@@ -1423,7 +1435,7 @@ function FeaturePageInner({ slug }) {
   if (!feature) return null;
 
   return (
-    <div className="sc-viewport fp-page" data-theme={theme}>
+    <div className="sc-viewport fp-page" data-theme={theme} data-slug={slug}>
       {showGrid && (
         <div className="sc-grid-debug">
           {Array.from({ length: 12 }).map((_, i) => <div key={i} className="sc-grid-debug-col" />)}
@@ -1455,8 +1467,12 @@ function FeaturePageInner({ slug }) {
         <div className="fp-hero-stage">{feature.visual}</div>
       </div>
 
+      {feature.quote && <FeatureQuote {...feature.quote} />}
+
       {feature.sections.map((s, i) => (
-        <FeatureSection key={i} {...s} />
+        s.type === 'quote'
+          ? <FeatureQuote key={i} {...s} />
+          : <FeatureSection key={i} {...s} />
       ))}
 
       <div className="fp-footer-cta">
@@ -1476,6 +1492,8 @@ function FeaturePageInner({ slug }) {
       </div>
 
       <Footer />
+
+      <FloatingCTA />
     </div>
   );
 }
