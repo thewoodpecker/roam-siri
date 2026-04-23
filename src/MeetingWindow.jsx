@@ -254,7 +254,7 @@ export default function MeetingWindow({ win, onDrag, roomName, people: allPeople
 
       {/* Video grid */}
       <div className="meeting-win-body">
-        <div className="meeting-win-grid" style={{ gridTemplateColumns: `repeat(${virtualCols}, 1fr)`, gridTemplateRows: `repeat(${rows}, 1fr)` }}>
+        <div className="meeting-win-grid" style={{ gridTemplateColumns: `repeat(${virtualCols}, 1fr)`, gridTemplateRows: `repeat(${rows}, auto)` }}>
           {people.map((person, i) => {
             const isLastRow = i >= lastRowStart;
             const tileStyle = { gridColumnEnd: 'span 2' };

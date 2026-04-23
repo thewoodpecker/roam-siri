@@ -26,6 +26,7 @@ function RightControls({ theme, onToggleTheme, showGrid, onToggleGrid }) {
   );
 }
 import Navbar from './Navbar';
+import Footer from './Footer';
 import AInbox, { TypingIndicator } from './AInbox';
 import MeetingWindow from './MeetingWindow';
 import TheaterWindow from './TheaterWindow';
@@ -333,21 +334,17 @@ const AINBOX_FOLDER_SECTIONS = [
 
 function AInboxFoldersPreview() {
   return (
-    <div className="fp-folders-stage">
-      <div className="fp-folders-window">
-        <AInbox
-          win={noopWin('ainbox')}
-          onDrag={() => {}}
-          initialChatId="all-hands"
-          sidebarScrollToBottom
-          staticMode
-          autoAddFolders
-          favoritesOverride={AINBOX_FOLDER_FAVORITES}
-          sectionsOverride={AINBOX_FOLDER_SECTIONS}
-          messagesOverride={AINBOX_AH_MESSAGES}
-        />
-      </div>
-    </div>
+    <AInbox
+      win={noopWin('ainbox')}
+      onDrag={() => {}}
+      initialChatId="all-hands"
+      sidebarScrollToBottom
+      staticMode
+      autoAddFolders
+      favoritesOverride={AINBOX_FOLDER_FAVORITES}
+      sectionsOverride={AINBOX_FOLDER_SECTIONS}
+      messagesOverride={AINBOX_AH_MESSAGES}
+    />
   );
 }
 
@@ -790,6 +787,47 @@ function AInboxPreview({ overrides = false, view = 'thread', chatId = null, mmAu
   return <AInbox win={noopWin('ainbox')} onDrag={() => {}} initialSidebarView={initialSidebarView} />;
 }
 
+/* Hero-only wrapper that drives the internal chat scrollTop from page scroll,
+   so the messages glide upward as the visitor scrolls past the hero. */
+function AInboxHeroAnimated(props) {
+  const wrapRef = useRef(null);
+  useEffect(() => {
+    const wrap = wrapRef.current;
+    if (!wrap) return;
+    let raf = 0;
+    const tick = () => {
+      raf = 0;
+      const msgs = wrap.querySelector('.ainbox-detail-messages');
+      if (!msgs) return;
+      const rect = wrap.getBoundingClientRect();
+      const vh = window.innerHeight || document.documentElement.clientHeight;
+      const total = rect.height + vh;
+      const passed = vh - rect.top;
+      const progress = Math.min(1, Math.max(0, passed / total));
+      const maxScroll = msgs.scrollHeight - msgs.clientHeight;
+      if (maxScroll > 0) msgs.scrollTop = maxScroll * (1 - progress);
+    };
+    const schedule = () => {
+      if (raf) return;
+      raf = requestAnimationFrame(tick);
+    };
+    const initial = requestAnimationFrame(() => requestAnimationFrame(tick));
+    window.addEventListener('scroll', schedule, { passive: true });
+    window.addEventListener('resize', schedule);
+    return () => {
+      cancelAnimationFrame(initial);
+      if (raf) cancelAnimationFrame(raf);
+      window.removeEventListener('scroll', schedule);
+      window.removeEventListener('resize', schedule);
+    };
+  }, []);
+  return (
+    <div ref={wrapRef} className="fp-ainbox-hero-anim">
+      <AInboxPreview {...props} />
+    </div>
+  );
+}
+
 function MagicMinutesPreview() {
   return <MagicMinutes win={noopWin('magicminutes')} onDrag={() => {}} />;
 }
@@ -802,10 +840,21 @@ function OnAirPreview() {
   return <OnAir win={noopWin('onair')} onDrag={() => {}} demo />;
 }
 
-function MapPreview({ spotifyAlwaysOpen = false, githubAlwaysOpen = false } = {}) {
+function MapPreview({ spotifyAlwaysOpen = false, githubAlwaysOpen = false, hideOnIt = false } = {}) {
+  const [pageTheme, setPageTheme] = useState(() =>
+    typeof document !== 'undefined' ? document.documentElement.getAttribute('data-theme') || 'dark' : 'dark'
+  );
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    const obs = new MutationObserver(() => {
+      setPageTheme(document.documentElement.getAttribute('data-theme') || 'dark');
+    });
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    return () => obs.disconnect();
+  }, []);
   return (
     <div className="fp-map-preview">
-      <ShowcaseMap initialFloor="Preview" spotifyAlwaysOpen={spotifyAlwaysOpen} githubAlwaysOpen={githubAlwaysOpen} />
+      <ShowcaseMap initialFloor="Preview" spotifyAlwaysOpen={spotifyAlwaysOpen} githubAlwaysOpen={githubAlwaysOpen} hideOnIt={hideOnIt} theme={pageTheme} />
     </div>
   );
 }
@@ -924,7 +973,7 @@ export const FEATURES = {
     eyebrow: 'AInbox',
     title: 'Enterprise Messaging with AInbox in your Roam HQ.',
     hero: 'Unleash ultraproductivity in your company HQ with AI-powered Enterprise Chat and Instant Messaging. Send Direct Messages, Group Chats, or Confidential Chats right in your own Virtual HQ. Set up your own custom groups. Tailor for your own bespoke workflow with custom folders, pinned chats, bookmarks, scheduled messages, and drag-and-drop reordering. Search your entire history. Give out guest badges to chat with people outside your organization, free!',
-    visual: <AInboxPreview overrides view="dm" />,
+    visual: <AInboxHeroAnimated overrides view="dm" />,
     sections: [
       {
         title: 'Group Chat',
@@ -1022,10 +1071,11 @@ export const FEATURES = {
         ],
         title: 'Integrations',
         desc: 'Integrates with your favorite apps via Zapier or the Roam developer API. Native integrations with GitHub & Spotify.',
-        visual: <MapPreview spotifyAlwaysOpen />,
+        visual: <MapPreview spotifyAlwaysOpen hideOnIt />,
       },
       {
         variant: 'additional',
+        eyebrow: 'Included',
         title: 'Additional Features in your AI-Powered Virtual Office',
         desc: (
           <>
@@ -1038,12 +1088,42 @@ export const FEATURES = {
       {
         title: 'Company Visualization',
         desc: 'Roam gives everyone a complete visualization of everything happening right now at the company - who is at HQ, who is in which physical office, who is talking to who, who is on external calls. It’s like your whole company is together under one roof.',
-        visual: <MapPreview />,
+        visual: <MapPreview hideOnIt />,
       },
       {
         title: 'Ship Faster with GitHub on the Map',
         desc: 'Cut code review times. When you have an outstanding PR from a fellow engineer, a GitHub icon appears next to their office on the map linking to it. At a glance, you know what you owe. You and your team will appreciate this context signal. We cut our own internal PR time by 42%. Ship faster!',
-        visual: <MapPreview githubAlwaysOpen />,
+        visual: <MapPreview githubAlwaysOpen hideOnIt />,
+      },
+      {
+        variant: 'cards',
+        cards: [
+          {
+            icon: '/icons/guest-badge.svg',
+            title: 'External Guests',
+            desc: 'Invite external guests by their email to chat in your organization. Invite as many as you like, free of charge.',
+          },
+          {
+            icon: '/icons/shield.svg',
+            title: 'SSO/SAML',
+            desc: 'Powerful controls to manage your organization. Integrates directly with SSO and SAML so you’re in real-time control over who has access to your chats.',
+          },
+          {
+            icon: '/icons/global-relay.svg',
+            title: 'Archiving and Retrieval',
+            desc: 'Integration with Global Relay available for messaging archive compliance.',
+          },
+        ],
+      },
+      {
+        variant: 'split',
+        title: 'Why Enterprise Messaging from Roam?',
+        bullets: [
+          'AI-Native.',
+          'Meetings & Chats are better together',
+          'Familiar Interface for Direct Messages',
+          'Confidential Messages.',
+        ],
       },
     ],
   },
@@ -1159,13 +1239,44 @@ export const FEATURE_ORDER = [
   'on-air',
 ];
 
-function FeatureSection({ eyebrow, title, desc, visual, icons, variant }) {
+function FeatureSection({ eyebrow, title, desc, visual, icons, variant, cards, bullets }) {
+  if (variant === 'split' && bullets && bullets.length > 0) {
+    return (
+      <section className="fp-section fp-section-split">
+        <div className="fp-split-inner">
+          <h2 className="fp-split-title text-title-1">{title}</h2>
+          <ul className="fp-split-bullets">
+            {bullets.map((b, i) => <li key={i} className="text-body">{b}</li>)}
+          </ul>
+        </div>
+      </section>
+    );
+  }
+  if (variant === 'cards' && cards && cards.length > 0) {
+    return (
+      <section className="fp-section fp-section-cards">
+        {cards.map((c, i) => (
+          <div key={i} className="fp-card">
+            <div className="fp-card-icon">
+              <span
+                className="fp-card-icon-glyph"
+                style={{ WebkitMaskImage: `url(${c.icon})`, maskImage: `url(${c.icon})` }}
+                aria-hidden="true"
+              />
+            </div>
+            <h3 className="fp-card-title text-title-4">{c.title}</h3>
+            <p className="fp-card-desc text-body">{c.desc}</p>
+          </div>
+        ))}
+      </section>
+    );
+  }
   return (
     <section className={`fp-section ${variant ? `fp-section-${variant}` : ''}`}>
       <div className="fp-section-text">
-        {eyebrow && <div className="fp-section-eyebrow">{eyebrow}</div>}
+        {eyebrow && <div className="fp-section-eyebrow text-caption-strong">{eyebrow}</div>}
         <h2 className="fp-section-title">{title}</h2>
-        <p className="fp-section-desc">{desc}</p>
+        <p className="fp-section-desc text-body">{desc}</p>
         {icons && icons.length > 0 && (
           <div className="fp-section-icons">
             {icons.map((src, i) => (
@@ -1211,11 +1322,16 @@ function FeaturePageInner({ slug }) {
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, [slug]);
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-    document.body.style.background = theme === 'light' ? '#FFFFFF' : '#0C0C0E';
+    const html = document.documentElement;
+    html.classList.add('theme-switching');
+    html.setAttribute('data-theme', theme);
+    const raf = requestAnimationFrame(() => {
+      requestAnimationFrame(() => html.classList.remove('theme-switching'));
+    });
     return () => {
-      document.documentElement.removeAttribute('data-theme');
-      document.body.style.background = '';
+      cancelAnimationFrame(raf);
+      html.classList.remove('theme-switching');
+      html.removeAttribute('data-theme');
     };
   }, [theme]);
   if (!feature) return null;
@@ -1239,9 +1355,9 @@ function FeaturePageInner({ slug }) {
 
       <div className="fp-hero">
         <div className="fp-hero-inner">
-          <div className="fp-eyebrow">{feature.eyebrow}</div>
+          <div className="fp-eyebrow text-caption-strong">{feature.eyebrow}</div>
           <h1 className="fp-hero-title">{feature.title}</h1>
-          <p className="fp-hero-sub">{feature.hero}</p>
+          <p className="fp-hero-sub text-body">{feature.hero}</p>
           <div className="fp-cta-row">
             <button className="sc-promo-btn">Book Demo</button>
             <button className="sc-promo-btn">Free Trial</button>
@@ -1259,14 +1375,21 @@ function FeaturePageInner({ slug }) {
 
       <div className="fp-footer-cta">
         <div className="fp-footer-cta-inner">
-          <h2 className="fp-footer-cta-title">Ready to meet Roam?</h2>
-          <p className="fp-footer-cta-sub">Give your team an office that thinks. Book a demo or kick the tires for free.</p>
+          <div className="fp-footer-cta-lead">
+            <img className="fp-footer-cta-icon" src="/icons/roam-gold-icon.png" alt="" />
+            <div className="fp-footer-cta-text">
+              <h2 className="fp-footer-cta-title">Ready to meet Roam?</h2>
+              <p className="fp-footer-cta-sub text-body">Give your team an office that thinks. Book a demo or kick the tires for free.</p>
+            </div>
+          </div>
           <div className="fp-cta-row">
             <button className="sc-promo-btn">Book Demo</button>
             <button className="sc-promo-btn">Free Trial</button>
           </div>
         </div>
       </div>
+
+      <Footer />
     </div>
   );
 }

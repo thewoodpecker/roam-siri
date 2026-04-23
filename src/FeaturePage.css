@@ -68,9 +68,6 @@
 }
 
 .fp-eyebrow {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 12px;
-  font-weight: 600;
   letter-spacing: 0.18em;
   color: var(--text-secondary);
   text-transform: uppercase;
@@ -88,14 +85,9 @@
 }
 
 .fp-hero-sub {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 16px;
-  font-weight: 400;
-  line-height: 1.55;
   color: var(--text-secondary);
   margin: 0;
   max-width: 52ch;
-  letter-spacing: -0.2px;
 }
 
 .fp-cta-row {
@@ -151,6 +143,15 @@
   transform: none !important;
 }
 
+/* Animated ainbox hero wrapper — fill the stage and center its inner window */
+.fp-hero-stage .fp-ainbox-hero-anim,
+.fp-section-visual .fp-ainbox-hero-anim {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 /* Nested product component previews span 10 of the 12 grid columns and center inside the stage */
 .fp-hero-stage .meeting-win,
 .fp-hero-stage .theater-win,
@@ -200,9 +201,6 @@
 }
 
 .fp-section-eyebrow {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 12px;
-  font-weight: 600;
   letter-spacing: 0.18em;
   color: var(--text-secondary);
   text-transform: uppercase;
@@ -223,24 +221,62 @@
   display: inline-block;
 }
 
-/* "Additional Features" text-only variant — 8-column sentence-case block */
+/* "Additional Features" text-only variant — centered section header */
+.fp-section-additional {
+  position: relative;
+  padding-top: 96px;
+  justify-items: center;
+  text-align: center;
+}
+
+.fp-section-additional::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100vw;
+  height: 12px;
+  background-color: var(--border);
+  -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 12' preserveAspectRatio='none'><path d='M0 6 Q 10 0 20 6 T 40 6' stroke='black' fill='none' stroke-width='1'/></svg>");
+          mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 12' preserveAspectRatio='none'><path d='M0 6 Q 10 0 20 6 T 40 6' stroke='black' fill='none' stroke-width='1'/></svg>");
+  -webkit-mask-repeat: repeat-x;
+          mask-repeat: repeat-x;
+  -webkit-mask-size: 40px 12px;
+          mask-size: 40px 12px;
+  -webkit-mask-position: center;
+          mask-position: center;
+}
+
 .fp-section-additional .fp-section-text {
-  grid-column: 1 / span 8;
+  grid-column: 3 / span 8;
+  align-items: center;
+  text-align: center;
+  gap: 24px;
+}
+
+.fp-section-additional .fp-section-eyebrow {
+  align-self: center;
 }
 
 .fp-section-additional .fp-section-title {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 22px;
-  font-weight: 600;
-  line-height: 1.35;
-  letter-spacing: -0.2px;
-  text-transform: none;
+  font-size: clamp(28px, 3vw, 44px);
+  line-height: 1.05;
+  letter-spacing: -0.8px;
+  text-align: center;
+  align-self: center;
+  max-width: 20ch;
 }
 
 .fp-section-additional .fp-section-desc {
-  font-size: 20px;
-  line-height: 1.45;
-  color: var(--text-secondary);
+  text-align: center;
+  align-self: center;
+  max-width: 62ch;
+}
+
+.fp-section-additional .fp-section-desc-strong {
+  color: var(--text-primary);
+  font-weight: 500;
 }
 
 .fp-section-desc-strong {
@@ -272,14 +308,9 @@
 }
 
 .fp-section-desc {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 16px;
-  font-weight: 400;
-  line-height: 1.55;
   color: var(--text-secondary);
   margin: 0;
   max-width: 52ch;
-  letter-spacing: -0.2px;
   text-align: left;
   align-self: flex-start;
 }
@@ -305,51 +336,6 @@
 
 [data-theme="light"] .fp-section-visual {
   background-image: url('/wallpapers/wallpaper-light.png');
-}
-
-/* ── Folders preview: AInbox scaled 2x, pinned bottom-left ─────────── */
-.fp-section-visual:has(.fp-folders-stage) {
-  padding: 0;
-  align-items: stretch;
-  justify-content: stretch;
-}
-
-.fp-folders-stage {
-  position: relative;
-  width: 100%;
-  height: 724px; /* matches a standard fp-section-visual: 580 ainbox + 72*2 padding */
-  overflow: hidden;
-}
-
-.fp-folders-window {
-  position: absolute;
-  bottom: 56px;
-  left: 56px;
-  width: 780px;
-  height: 580px;
-  transform: scale(1.3);
-  transform-origin: bottom left;
-}
-
-.fp-section-visual .fp-folders-window .ainbox-window {
-  position: relative !important;
-  top: auto !important;
-  left: auto !important;
-  width: 100% !important;
-  height: 100% !important;
-  transform: none !important;
-}
-
-.fp-folders-window .ainbox-typing { display: none !important; }
-
-/* Disable internal scroll in the folders graphic — keep it static */
-.fp-folders-window .ainbox-sections,
-.fp-folders-window .ainbox-detail-messages,
-.fp-folders-window .ainbox-group-messages,
-.fp-folders-window .ainbox-dm-messages,
-.fp-folders-window .ainbox-thread-messages,
-.fp-folders-window .ainbox-search-results-list {
-  overflow: hidden !important;
 }
 
 .fp-section-visual-wallpaper {
@@ -380,6 +366,7 @@
   padding: 0 !important;
   overflow: hidden !important;
   display: block !important;
+  background: transparent !important;
 }
 
 .fp-map-preview .miniRoamOS {
@@ -463,12 +450,123 @@
   display: none !important;
 }
 
-/* ---- Footer CTA band (12-col grid, left-aligned) ---- */
+/* ---- 3-card grid (12-col, each card spans 4) ---- */
+.fp-section-cards {
+  row-gap: 0;
+  padding-bottom: 24px;
+}
+
+.fp-card {
+  grid-column: span 4;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 32px;
+  background: var(--bg-surface-raised);
+  border: 0.5px solid var(--border);
+  border-radius: 0;
+  box-sizing: border-box;
+}
+
+.fp-card-icon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: var(--background-primary);
+  color: var(--icon-secondary);
+  flex-shrink: 0;
+}
+
+.fp-card-icon-glyph {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  background-color: var(--icon-primary);
+  -webkit-mask-repeat: no-repeat;
+          mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+          mask-position: center;
+  -webkit-mask-size: contain;
+          mask-size: contain;
+}
+
+.fp-card-title {
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.fp-card-desc {
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+/* ---- Split section: title left, bullet list right ---- */
+.fp-section-split {
+  row-gap: 0;
+  align-items: start;
+  padding-top: 0;
+}
+
+.fp-split-inner {
+  grid-column: 1 / span 12;
+  display: grid;
+  grid-template-columns: repeat(var(--grid-columns), 1fr);
+  gap: var(--grid-gutter);
+  align-items: start;
+  background: var(--bg-surface-raised);
+  border: 0.5px solid var(--border);
+  padding: 64px;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.fp-split-title {
+  grid-column: 1 / span 6;
+  font-family: 'Possibility', serif;
+  font-size: clamp(20px, 2vw, 28px);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.6px;
+  color: var(--text-primary);
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.fp-split-bullets {
+  grid-column: 7 / span 6;
+  justify-self: end;
+  list-style: disc;
+  padding-left: 24px;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.fp-split-bullets li {
+  color: var(--text-primary);
+}
+
+@media (max-width: 900px) {
+  .fp-split-inner {
+    padding: 40px;
+    grid-template-columns: 1fr;
+  }
+  .fp-split-title,
+  .fp-split-bullets {
+    grid-column: 1 / -1;
+  }
+}
+
+
 .fp-footer-cta {
   width: 100%;
   max-width: var(--grid-max-width);
-  margin: 96px auto 0;
-  padding: 80px var(--grid-margin);
+  margin: 0 auto;
+  padding: 0 var(--grid-margin) 80px;
   box-sizing: border-box;
   display: grid;
   grid-template-columns: repeat(var(--grid-columns), 1fr);
@@ -477,12 +575,58 @@
 }
 
 .fp-footer-cta-inner {
-  grid-column: 1 / span 6;
+  position: relative;
+  grid-column: 1 / span 12;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  text-align: left;
+  gap: 32px;
+  background: var(--bg-surface-raised);
+  border: 0.5px solid var(--border);
+  border-radius: 0;
+  padding: 64px;
+  box-sizing: border-box;
+  width: 100%;
+  overflow: hidden;
+}
+
+.fp-footer-cta-inner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-color: var(--text-disabled);
+  -webkit-mask-image:
+    url('/swoosh.svg'),
+    linear-gradient(90deg, transparent 0%, black 15%, black 85%, transparent 100%);
+          mask-image:
+    url('/swoosh.svg'),
+    linear-gradient(90deg, transparent 0%, black 15%, black 85%, transparent 100%);
+  -webkit-mask-repeat: no-repeat, no-repeat;
+          mask-repeat: no-repeat, no-repeat;
+  -webkit-mask-position: -200px -200px, center;
+          mask-position: -200px -200px, center;
+  -webkit-mask-size: auto 300%, 100% 100%;
+          mask-size: auto 300%, 100% 100%;
+  -webkit-mask-composite: source-in;
+          mask-composite: intersect;
+  opacity: 0.15;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.fp-footer-cta-inner > * {
+  position: relative;
+  z-index: 1;
+}
+
+.fp-footer-cta-text {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  text-align: left;
-  gap: 16px;
+  gap: 8px;
+  min-width: 0;
 }
 
 .fp-footer-cta-title {
@@ -497,10 +641,74 @@
 }
 
 .fp-footer-cta-sub {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 15px;
   color: var(--text-secondary);
   margin: 0;
   max-width: 52ch;
-  line-height: 1.5;
+}
+
+/* ——— Inverted footer CTA in dark mode (light panel on dark page) ——— */
+[data-theme="dark"] .fp-footer-cta-inner {
+  background: #FFFFFF;
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="dark"] .fp-footer-cta-inner::before {
+  background-color: #000000;
+  opacity: 0.08;
+}
+
+[data-theme="dark"] .fp-footer-cta-title {
+  color: #1D1D1F;
+}
+
+[data-theme="dark"] .fp-footer-cta-sub {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="dark"] .fp-footer-cta-inner .sc-promo-btn {
+  background: #1D1D1F;
+  color: #FFFFFF;
+}
+
+.fp-footer-cta-icon {
+  width: 88px;
+  height: 88px;
+  flex-shrink: 0;
+  object-fit: contain;
+  display: block;
+  position: relative;
+  z-index: 1;
+}
+
+.fp-footer-cta-lead {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+}
+
+/* ——— Inverted footer CTA in light mode (dark panel on light page) ——— */
+[data-theme="light"] .fp-footer-cta-inner {
+  background: #1D1D1F;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="light"] .fp-footer-cta-inner::before {
+  background-color: #FFFFFF;
+  opacity: 0.12;
+}
+
+[data-theme="light"] .fp-footer-cta-title {
+  color: #FFFFFF;
+}
+
+[data-theme="light"] .fp-footer-cta-sub {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+[data-theme="light"] .fp-footer-cta-inner .sc-promo-btn {
+  background: #FFFFFF;
+  color: #1D1D1F;
 }

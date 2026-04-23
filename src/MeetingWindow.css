@@ -516,13 +516,14 @@
   gap: 8px;
   padding: 16px;
   min-height: 0;
-
+  align-content: center;
 }
 
 .meeting-win-tile {
   position: relative;
   border-radius: 12px;
   overflow: hidden;
+  aspect-ratio: 16 / 9;
 }
 
 .meeting-win-tile-active {

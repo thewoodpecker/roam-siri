@@ -29,7 +29,7 @@
   /* ——— Semantic Backgrounds ——— */
   --bg-winner: rgba(70,208,143,0.2);
   --bg-loser: rgba(239,83,80,0.2);
-  --background-sensitive: var(--amber-500);
+  --background-sensitive: var(--amber-800);
 
   /* ——— Text & Icon ——— */
   --text-primary: var(--graphite-50);
@@ -241,4 +241,143 @@
   --space-xxl: 40px;
   --space-xxxl: 48px;
   --space-xxxxl: 64px;
+
+  /* ——— Typography (Nebula UI) ——— */
+  --font-family-primary: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-family-mono: 'Roboto Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+/* Nebula UI typography styles — apply via class. */
+.text-title-1 {
+  font-family: var(--font-family-primary);
+  font-size: 34px;
+  font-weight: 600;
+  line-height: 40px;
+  letter-spacing: 0;
+}
+.text-title-2 {
+  font-family: var(--font-family-primary);
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 32px;
+  letter-spacing: 0;
+}
+.text-title-3 {
+  font-family: var(--font-family-primary);
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 28px;
+  letter-spacing: 0;
+}
+.text-title-4 {
+  font-family: var(--font-family-primary);
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 24px;
+  letter-spacing: 0;
+}
+.text-headline {
+  font-family: var(--font-family-primary);
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 24px;
+  letter-spacing: 0;
+}
+.text-body {
+  font-family: var(--font-family-primary);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 24px;
+  letter-spacing: -0.32px;
+}
+.text-body-emphasis {
+  font-family: var(--font-family-primary);
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 24px;
+  letter-spacing: -0.32px;
+}
+.text-body-strong {
+  font-family: var(--font-family-primary);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 24px;
+  letter-spacing: -0.32px;
+}
+.text-subheadline {
+  font-family: var(--font-family-primary);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  letter-spacing: -0.15px;
+}
+.text-subheadline-emphasis {
+  font-family: var(--font-family-primary);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+  letter-spacing: -0.15px;
+}
+.text-subheadline-strong {
+  font-family: var(--font-family-primary);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  letter-spacing: -0.15px;
+}
+.text-caption {
+  font-family: var(--font-family-primary);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 16px;
+  letter-spacing: 0;
+}
+.text-caption-emphasis {
+  font-family: var(--font-family-primary);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+  letter-spacing: 0;
+}
+.text-caption-strong {
+  font-family: var(--font-family-primary);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+  letter-spacing: 0;
+}
+.text-caption-2 {
+  font-family: var(--font-family-primary);
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 12px;
+  letter-spacing: 0.12px;
+}
+.text-caption-2-emphasis {
+  font-family: var(--font-family-primary);
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 12px;
+  letter-spacing: 0.12px;
+}
+.text-caption-2-strong {
+  font-family: var(--font-family-primary);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 12px;
+  letter-spacing: 0.12px;
+}
+.text-label-02 {
+  font-family: var(--font-family-mono);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 24px;
+  letter-spacing: 0;
+}
+.text-label-03 {
+  font-family: var(--font-family-mono);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 12px;
+  letter-spacing: 0;
 }

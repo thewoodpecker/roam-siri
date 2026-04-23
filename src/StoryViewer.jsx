@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import './StoryViewer.css';
 
+const isVideoSrc = (src) => /\.(mp4|webm|mov)$/i.test(src);
+
 export default function StoryViewer({ stories, initialIndex = 0, onClose }) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [progress, setProgress] = useState(0);
   const containerRef = useRef(null);
+  const activeVideoRef = useRef(null);
   const [offset, setOffset] = useState(0);
   const [loaded, setLoaded] = useState(false);
   const [closing, setClosing] = useState(false);
@@ -14,10 +17,11 @@ export default function StoryViewer({ stories, initialIndex = 0, onClose }) {
     setTimeout(onClose, 250);
   };
 
-  // Preload all story images before showing
+  // Preload all story images before showing (video sources skip image preload)
   useEffect(() => {
     let cancelled = false;
     const promises = stories.map(s => new Promise(resolve => {
+      if (/\.(mp4|webm|mov)$/i.test(s.image)) { resolve(); return; }
       const img = new Image();
       img.onload = resolve;
       img.onerror = resolve;
@@ -51,9 +55,12 @@ export default function StoryViewer({ stories, initialIndex = 0, onClose }) {
 
   const current = stories[currentIndex];
 
-  // Auto-advance progress bar
+  // Auto-advance progress bar. Videos drive their own progress via
+  // timeupdate/ended; images use a fixed 5s timer.
   useEffect(() => {
     setProgress(0);
+    if (!current) return;
+    if (isVideoSrc(current.image)) return; // video effect handles progress
     const duration = 5000;
     const start = Date.now();
     const tick = () => {
@@ -63,17 +70,41 @@ export default function StoryViewer({ stories, initialIndex = 0, onClose }) {
       if (p < 1) {
         rafId = requestAnimationFrame(tick);
       } else {
-        // Advance to next story or close
-        if (currentIndex < stories.length - 1) {
-          setCurrentIndex(i => i + 1);
-        } else {
-          handleClose();
-        }
+        if (currentIndex < stories.length - 1) setCurrentIndex(i => i + 1);
+        else handleClose();
       }
     };
     let rafId = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(rafId);
-  }, [currentIndex, stories.length]);
+  }, [currentIndex, stories.length, current?.image]);
+
+  // Wire up video progress for the active video story. Browser `timeupdate`
+  // events fire ~4× per second which feels steppy, so we sample currentTime
+  // on every animation frame instead for a silky progress bar.
+  useEffect(() => {
+    if (!current || !isVideoSrc(current.image)) return;
+    const video = activeVideoRef.current;
+    if (!video) return;
+    let rafId;
+    const tick = () => {
+      const d = video.duration;
+      if (d && isFinite(d)) setProgress(Math.min(video.currentTime / d, 1));
+      rafId = requestAnimationFrame(tick);
+    };
+    const onEnded = () => {
+      setProgress(1);
+      if (currentIndex < stories.length - 1) setCurrentIndex(i => i + 1);
+      else handleClose();
+    };
+    video.addEventListener('ended', onEnded);
+    try { video.currentTime = 0; } catch {}
+    video.play?.().catch(() => {});
+    rafId = requestAnimationFrame(tick);
+    return () => {
+      cancelAnimationFrame(rafId);
+      video.removeEventListener('ended', onEnded);
+    };
+  }, [currentIndex, current?.image]);
 
   const goNext = () => {
     if (currentIndex < stories.length - 1) setCurrentIndex(i => i + 1);
@@ -96,7 +127,18 @@ export default function StoryViewer({ stories, initialIndex = 0, onClose }) {
               style={{ animationDelay: `${i * 80}ms` }}
               onClick={isCurrent ? undefined : () => setCurrentIndex(i)}
             >
-              <img className="sv-image" src={story.image} alt="" />
+              {isVideoSrc(story.image) ? (
+                <video
+                  ref={isCurrent ? activeVideoRef : undefined}
+                  className="sv-image"
+                  src={story.image}
+                  autoPlay={isCurrent}
+                  muted
+                  playsInline
+                />
+              ) : (
+                <img className="sv-image" src={story.image} alt="" />
+              )}
               {isCurrent && (
                 <>
                   <div className="sv-progress-bar">

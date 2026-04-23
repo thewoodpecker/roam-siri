@@ -76,7 +76,7 @@ export default function OnAir({ win, onDrag, demo }) {
       setSelectedColor(evt.color);
       setDemoKey(k => k + 1);
       setDemoActive(true);
-    }, 600);
+    }, 200);
   };
 
   useEffect(() => {
@@ -85,7 +85,7 @@ export default function OnAir({ win, onDrag, demo }) {
     if (!el) return;
     const observer = new IntersectionObserver(([entry]) => {
       if (entry.isIntersecting) {
-        setTimeout(startNextEvent, 2000);
+        setTimeout(startNextEvent, 200);
         observer.disconnect();
       }
     }, { threshold: 0.3 });

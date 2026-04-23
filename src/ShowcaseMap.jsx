@@ -8,13 +8,15 @@ import MiniChat, { getChatIdForAvatar } from './MiniChat';
 import OnAir from './OnAir';
 import MeetingWindow from './MeetingWindow';
 import TheaterWindow from './TheaterWindow';
+import OnItTaskPane from './OnItTaskPane';
 import MagicMinutes from './MagicMinutes';
 import Recordings from './Recordings';
 import Lobby from './Lobby';
-import { ChatProvider } from './ChatContext';
+import { ChatProvider, useChat } from './ChatContext';
 import { WindowManagerProvider, useWindow } from './WindowManager';
 import StoryViewer from './StoryViewer';
 import ShareDialog from './ShareDialog';
+import Footer from './Footer';
 import './ShowcaseMap.css';
 
 // Flip to `false` to show the nav, bottom bar, and theme toggle
@@ -83,7 +85,7 @@ const FLOORS = {
     { id: 'r1', type: 'private', name: 'Klas L.', people: [], pos: { col: 0, row: 0 }, span: 1 },
     { id: 'r2', type: 'private', name: 'Derek C.', people: [p('Derek C.'), p('Michael M.')], pos: { col: 1, row: 0 }, span: 1 },
     { id: 'r3', type: 'private', name: 'John M.', people: [p('John M.')], pos: { col: 2, row: 0 }, span: 1 },
-    { id: 'r4', type: 'private', name: 'Howard L.', people: [p('Howard L.')], pos: { col: 3, row: 0 }, span: 1, story: '/stories/story-1.png' },
+    { id: 'r4', type: 'private', name: 'Howard L.', people: [p('Howard L.')], pos: { col: 3, row: 0 }, span: 1, story: '/stories/story-howard.mp4' },
     { id: 'r5', type: 'private', name: 'Keegan L.', people: [p('Keegan L.')], pos: { col: 4, row: 0 }, span: 1 },
     { id: 'r5b', type: 'private', name: 'Jon B.', people: [p('Jon B.')], pos: { col: 5, row: 0 }, span: 1, spotify: { song: 'Some Might Say', artist: 'Oasis', art: '/spotify/oasis-some-might-say.png' } },
     { id: 'r6', type: 'private', name: 'Grace S.', people: [p('Grace S.')], pos: { col: 0, row: 1 }, span: 1 },
@@ -94,7 +96,7 @@ const FLOORS = {
     { id: 'r12', type: 'private', name: 'Jeff G.', people: [p('Jeff G.')], pos: { col: 0, row: 2 }, span: 1 },
     { id: 'r13', type: 'private', name: 'Peter L.', people: [p('Peter L.')], pos: { col: 1, row: 2 }, span: 1 },
     { id: 'r14', type: 'private', name: 'Sean M.', people: [p('Sean M.')], pos: { col: 4, row: 2 }, span: 1 },
-    { id: 'r14b', type: 'private', name: 'Joe W.', people: [p('Joe W.')], pos: { col: 5, row: 2 }, span: 1 },
+    { id: 'r14b', type: 'private', name: 'Joe W.', people: [p('Joe W.')], pos: { col: 5, row: 2 }, span: 1, github: { repo: 'roam/app', number: 4836, title: 'Feature page: cards + split section polish', branch: 'joe/feature-page-polish' } },
     { id: 'r15', type: 'private', name: 'Aaron W.', people: [p('Aaron W.')], pos: { col: 0, row: 3 }, span: 1 },
     { id: 'r16', type: 'game', name: 'Game Room', people: [], pos: { col: 1, row: 3 }, span: 1 },
     { id: 'alan-kay', type: 'meeting', name: 'Meeting Room', people: [p('Grace S.'), p('Chelsea T.'), p('Lexi B.'), p('Ashley B.'), p('Hannah B.'), p('Daniel R.')], pos: { col: 2, row: 3 }, colSpan: 2, rowSpan: 2 },
@@ -312,7 +314,11 @@ function SimpleStoryBubble({ image, delay = 0, onClick }) {
       </div>
       <div className="sc-story-circle">
         <div className="sc-story-photo">
-          <img className="sc-story-thumb" src={image} alt="" />
+          {/\.(mp4|webm|mov)$/i.test(image) ? (
+            <video className="sc-story-thumb" src={`${image}#t=0.1`} muted playsInline preload="auto" />
+          ) : (
+            <img className="sc-story-thumb" src={image} alt="" />
+          )}
           <div className="sc-story-overlay">
             <img src="/icons/story.svg" width="20" height="20" alt="" />
           </div>
@@ -526,8 +532,8 @@ function PrivateRoomCard({ room, storyBubble, onPersonClick, onRoomClick, spotif
             {activeVibe === 'claude' && <img className="sc-ai-icon" src="/icons/claude.svg" alt="" />}
             {activeVibe === 'codex' && <img className="sc-ai-icon" src="/icons/codex-white.svg" alt="" />}
             {activeVibe === 'both' && <img className="sc-ai-icon sc-ai-icon-combo" src="/icons/vibe-combo.svg" alt="" />}
-            {!isEmpty && room.spotify && <SpotifyBadge spotify={room.spotify} alwaysOpen={spotifyAlwaysOpen} visible={!activeVibe} />}
-            {!isEmpty && room.github && <GitHubBadge github={room.github} alwaysOpen={githubAlwaysOpen} visible={!activeVibe} />}
+            {room.spotify && <SpotifyBadge spotify={room.spotify} alwaysOpen={spotifyAlwaysOpen} visible={!isEmpty && !activeVibe} />}
+            {room.github && <GitHubBadge github={room.github} alwaysOpen={githubAlwaysOpen} visible={!isEmpty && !activeVibe} />}
           </div>
           {room.people.length > 0 && (
             <div className="private-office-seat">
@@ -1013,6 +1019,157 @@ function DropInFeatureVisual({ theme, className }) {
   );
 }
 
+function OnItFeatureChat() {
+  const INITIAL = [
+    { id: 1, self: true, text: 'Can you tell me if you see Sean MacIsaac and Thomas Grapperon meeting together?' },
+    { id: 2, self: false, text: "I'm On-It! I'll notify you the next time I notice that Sean MacIsaac and Thomas Grapperon are meeting together." },
+  ];
+  const [messages, setMessages] = useState(INITIAL);
+  const [inputText, setInputText] = useState('');
+  const messagesRef = useRef(null);
+  useEffect(() => {
+    if (messagesRef.current) {
+      messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
+    }
+  }, [messages.length]);
+  const sendMessage = () => {
+    const text = inputText.trim();
+    if (!text) return;
+    setMessages(m => [...m, { id: Date.now(), self: true, text }]);
+    setInputText('');
+  };
+  const renderBubble = (m, prev) => {
+    const isFirstInGroup = !prev || prev.self !== m.self;
+    const radiusIn = isFirstInGroup ? '18px 18px 18px 4px' : '4px 18px 18px 4px';
+    const radiusOut = isFirstInGroup ? '20px 20px 4px 20px' : '20px 4px 4px 20px';
+    return (
+      <div key={m.id} className={`mc-msg ${m.self ? 'mc-msg-self' : ''} ${!isFirstInGroup ? 'mc-msg-consecutive' : ''}`}>
+        <div className={`mc-msg-bubble ${m.self ? 'mc-msg-bubble-self' : ''}`} style={{ borderRadius: m.self ? radiusOut : radiusIn }}>
+          <p>{m.text}</p>
+        </div>
+      </div>
+    );
+  };
+  return (
+    <div className="mc-window sc-onit-window" style={{ position: 'relative', left: 0, top: 0 }}>
+      <div className="mc-header">
+        <div className="mc-traffic-lights">
+          <div className="mc-light mc-light-close" />
+          <div className="mc-light mc-light-minimize" />
+          <div className="mc-light mc-light-maximize" />
+        </div>
+        <div className="mc-header-center">
+          <img src="/on-it-agent.png" alt="" className="mc-header-avatar" />
+          <span className="mc-header-name">On-It</span>
+        </div>
+      </div>
+      <div className="mc-body sc-onit-body">
+        <div className="sc-onit-chat-col">
+          <div className="mc-messages" ref={messagesRef}>
+            {messages.map((m, i) => renderBubble(m, messages[i - 1]))}
+          </div>
+          <div className="ainbox-composer">
+            <div className="ainbox-composer-box">
+              <div className="ainbox-composer-field">
+                <input
+                  placeholder="Ask anything"
+                  value={inputText}
+                  onChange={(e) => setInputText(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') sendMessage(); }}
+                />
+              </div>
+              <div className="ainbox-composer-toolbar">
+                <div className="ainbox-toolbar-plus">
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1V11M1 6H11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                </div>
+                <div className="ainbox-toolbar-spacer" />
+                <div className="ainbox-toolbar-group">
+                  <img
+                    src="/icons/composer/Send.svg"
+                    alt=""
+                    className={`ainbox-toolbar-img ainbox-send-icon ${inputText.trim() ? 'ainbox-send-active' : ''}`}
+                    onClick={sendMessage}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="sc-onit-task-col">
+          <OnItTaskPane />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const HOMEPAGE_REVIEWS = [
+  { quote: "@roam is such a phenomenal and carefully crafted product", name: 'Scott Belsky', title: 'Founder', company: 'A24 Labs & Behance', avatar: '/reviews/scott-belsky.jpg', link: 'https://x.com/scottbelsky/status/1857278962210058351' },
+  { quote: "If you are a small or medium sized startup and you aren't using @roam, think again.", name: 'Michael Arrington', title: 'Founder', company: 'TechCrunch & Arrington Capital', avatar: '/reviews/arrington.jpg', link: 'https://x.com/arrington/status/1857098914891006341' },
+  { quote: "Use @roam", name: 'Anthony Pompliano', title: 'Founder & CEO', company: 'Professional Capital Management', avatar: '/reviews/apompliano.jpg', link: 'https://x.com/APompliano/status/1688928271868801025' },
+  { quote: "It's literally groundbreaking for remote teams. Our average conversations amongst team members has gone up by 20x.", name: 'Nicholas Hildebrandt', title: 'CEO', company: 'WithLore', avatar: '/reviews/nicholas-hildebrandt.jpg', link: 'https://x.com/TheNPCEO/status/1982869601445941672' },
+  { quote: "Since using it, team culture has improved, communication is smoother, and remote work feels much more human.", name: 'Ezequiel Bucai', title: 'Founder & CEO', company: 'Wibond', avatar: '/reviews/ezequiel-bucai.jpg', link: 'https://www.linkedin.com/posts/ezequiel-bucai-2942a328_tu-equipo-es-100-remoto-esto-te-puede-activity-7330624945116352512-eK7y' },
+  { quote: "Roam brings the magic of in person collaboration to a remote company — far fewer meetings on the calendar.", name: 'Tarush Aggarwal', title: 'Founder & CEO', company: '5x', avatar: '/reviews/tarush-aggarwal.jpg', link: 'https://www.linkedin.com/posts/tarushaggarwal_weve-been-loving-our-experience-with-roam-activity-7396495212405088256-J5Tw' },
+  { quote: "Roam chose an interface that invites collaboration both passively and actively. It makes it feel like you're together.", name: 'Andrew Hutson', title: 'COO', company: 'QFlow', avatar: '/reviews/andrew-hutson.jpg', link: 'https://www.g2.com/products/roam/reviews/roam-review-9668429' },
+  { quote: "Our average meeting time at Myko is 6.9 min. Our virtual HQ Roam makes it easy to have quick conversations.", name: 'Trevor Lee', title: 'Co-Founder & CEO', company: 'Myko AI', avatar: '/reviews/trevor-lee.jpg', link: 'https://www.linkedin.com/posts/trevorlee20_our-average-meeting-time-at-myko-is-69min-activity-7333591989403205634-e5YC' },
+  { quote: "After 30 days of Roam, we're addicted. We have literally abandoned @slack, @zoom, and @Calendly.", name: 'Net Kohen', title: 'CEO', company: 'Link Me', avatar: '/reviews/net-kohen.jpg', link: 'https://x.com/NetKohen/status/1919519266782507194' },
+  { quote: "Roam… Check it out. Its saved us so much time and energy. What they have created is truly remarkable. Howard Lerman and Roam team you have done so well…", name: 'Adam Ritter', title: 'Co-Founder', company: 'HomeKynd', avatar: '/reviews/adam-ritter.jpg', link: 'https://www.linkedin.com/posts/adamritter1_roam-check-it-out-its-saved-us-so-much-activity-7272999235929681921-gJbu' },
+  { quote: "At Deepgram we cannot understate how fundamentally Roam has shifted our remote culture away from not just communicating online to actually collaborating in a shared space.", name: 'Hannah Gorelik', title: 'Manager', company: 'Deepgram', avatar: '/reviews/hannah-gorelik.jpg', link: 'https://www.linkedin.com/feed/update/urn:li:activity:7184972666448048128' },
+  { quote: "Roam is becoming a big part of how our show teams around the world connect together.", name: 'Duncan Fisher', title: 'Director', company: 'Cirque du Soleil', avatar: '/reviews/duncan-fisher.jpg', link: 'https://www.linkedin.com/feed/update/urn:li:activity:7207336015240249345' },
+];
+
+function getSocialIcon(url = '') {
+  try {
+    const host = new URL(url).hostname.replace(/^www\./, '');
+    if (host === 'x.com' || host === 'twitter.com' || host.endsWith('.x.com') || host.endsWith('.twitter.com')) return '/icons/social/x.svg';
+    if (host === 'linkedin.com' || host.endsWith('.linkedin.com')) return '/icons/social/linkedin.svg';
+    if (host === 'g2.com' || host.endsWith('.g2.com')) return '/icons/social/g2.svg';
+    if (host === 'reddit.com' || host.endsWith('.reddit.com')) return '/icons/social/reddit.svg';
+    if (host === 'instagram.com' || host.endsWith('.instagram.com')) return '/icons/social/instagram.svg';
+  } catch { /* fall through */ }
+  return null;
+}
+
+function HomepageReviews() {
+  return (
+    <section className="sc-reviews-section">
+      <div className="sc-reviews-container">
+        <div className="sc-reviews-intro">
+          <h2 className="sc-reviews-heading">See what our customers say</h2>
+        </div>
+        {HOMEPAGE_REVIEWS.map((r) => {
+          const icon = getSocialIcon(r.link);
+          return (
+            <a
+              key={r.name}
+              href={r.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="sc-review-card"
+            >
+              {icon && (
+                <span
+                  className="sc-review-social-icon"
+                  aria-hidden="true"
+                  style={{ WebkitMaskImage: `url(${icon})`, maskImage: `url(${icon})` }}
+                />
+              )}
+              <p className="sc-review-quote">&ldquo;{r.quote}&rdquo;</p>
+              <div className="sc-review-meta">
+                <img src={r.avatar} alt="" className="sc-review-avatar" />
+                <div className="sc-review-person">
+                  <div className="sc-review-name">{r.name}</div>
+                  <div className="sc-review-title">{r.title}, {r.company}</div>
+                </div>
+              </div>
+            </a>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 function MagicastFeatureVisual({ theme, className }) {
   const [shape, setShape] = useState('circle');
   return (
@@ -1093,11 +1250,11 @@ function ShelfWindow({ win, onDrag, photoIdx, direction, onPrev, onNext }) {
 }
 
 // Main showcase component
-export default function ShowcaseMap({ initialFloor = 'R&D', embedded = false, autoKnock = false, spotifyAlwaysOpen = false, githubAlwaysOpen = false } = {}) {
+export default function ShowcaseMap({ initialFloor = 'R&D', embedded = false, autoKnock = false, spotifyAlwaysOpen = false, githubAlwaysOpen = false, hideOnIt = false, theme } = {}) {
   return (
     <ChatProvider>
       <WindowManagerProvider initialWindows={INITIAL_WINDOWS}>
-        <ShowcaseMapInner initialFloor={initialFloor} embedded={embedded} autoKnock={autoKnock} spotifyAlwaysOpen={spotifyAlwaysOpen} githubAlwaysOpen={githubAlwaysOpen} />
+        <ShowcaseMapInner initialFloor={initialFloor} embedded={embedded} autoKnock={autoKnock} spotifyAlwaysOpen={spotifyAlwaysOpen} githubAlwaysOpen={githubAlwaysOpen} hideOnIt={hideOnIt} themeOverride={theme} />
       </WindowManagerProvider>
     </ChatProvider>
   );
@@ -1261,8 +1418,10 @@ function useTargetHintStyle(targetRef, active, offset = { top: -30, left: 'cente
   return style;
 }
 
-function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = false, spotifyAlwaysOpen = false, githubAlwaysOpen = false }) {
-  const [theme, setTheme] = useState('dark');
+function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = false, spotifyAlwaysOpen = false, githubAlwaysOpen = false, hideOnIt = false, themeOverride = null }) {
+  const [themeState, setThemeState] = useState('dark');
+  const theme = themeOverride || themeState;
+  const setTheme = themeOverride ? () => {} : setThemeState;
   const [layout, setLayout] = useState('v2');
   const [activeFloor, setActiveFloor] = useState(initialFloor);
   const [floorTransition, setFloorTransition] = useState('visible'); // 'visible' | 'out' | 'in'
@@ -1305,6 +1464,41 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
   // People movement — occasionally move someone between offices and meeting rooms
   const [movements, setMovements] = useState({ removed: {}, added: {}, anim: {} }); // anim: { roomId: 'leaving' | 'arriving' }
   const [miniChats, setMiniChats] = useState([]);
+  const { setMessages: setChatMessages } = useChat();
+
+  const openOnItChat = () => {
+    const chatId = 'on-it';
+    setChatMessages(prev => {
+      if (prev[chatId]) return prev;
+      return {
+        ...prev,
+        [chatId]: {
+          type: 'dm', name: 'On-It', subtitle: 'AI Executive Assistant',
+          avatar: '/on-it-agent.png',
+          messages: [
+            { id: 1, self: false, text: "Hey Joe 👋 I'm On-It, your AI executive assistant." },
+            { id: 2, self: false, text: "I can schedule meetings, watch for colleagues or events, draft follow-ups (internal or external), complete Magic Minutes action items for you, and tap into your team's templates + knowledge base." },
+            { id: 3, self: false, text: "What can I help you with?" },
+          ],
+        },
+      };
+    });
+    setMiniChats(prev => {
+      if (prev.find(c => c.chatId === chatId)) {
+        return prev.filter(c => c.chatId !== chatId);
+      }
+      const containerRect = miniRoamRef.current?.getBoundingClientRect();
+      const containerW = containerRect?.width || 1000;
+      const offset = prev.length * 330;
+      const x = Math.max(10, containerW - 330 - offset);
+      return [...prev, {
+        personName: 'On-It',
+        personAvatar: '/on-it-agent.png',
+        chatId,
+        position: { x, y: 150 },
+      }];
+    });
+  };
 
   const openMiniChat = (person, e) => {
     const chatId = getChatIdForAvatar(person.avatar);
@@ -1779,13 +1973,19 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
   const productsBarRef = useRef(null);
 
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-    document.body.style.background = theme === 'light' ? '#FFFFFF' : '#0C0C0E';
+    if (themeOverride) return; // parent controls the global data-theme
+    const html = document.documentElement;
+    html.classList.add('theme-switching');
+    html.setAttribute('data-theme', theme);
+    const raf = requestAnimationFrame(() => {
+      requestAnimationFrame(() => html.classList.remove('theme-switching'));
+    });
     return () => {
-      document.documentElement.removeAttribute('data-theme');
-      document.body.style.background = '';
+      cancelAnimationFrame(raf);
+      html.classList.remove('theme-switching');
+      html.removeAttribute('data-theme');
     };
-  }, [theme]);
+  }, [theme, themeOverride]);
 
   useEffect(() => {
     const viewport = viewportRef.current;
@@ -1853,6 +2053,23 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
           <div className="sc-v2-hero">
             <img className="sc-v2-hero-icon" src="/icons/roam-gold-icon.png" alt="Roam" />
             <h1 className="sc-v2-hero-title">Virtual Office that Thinks</h1>
+            <div className="sc-v2-hero-rating" aria-label="G2 rating 4.8 out of 5">
+              <span
+                className="sc-v2-hero-rating-g2"
+                aria-hidden="true"
+                style={{ WebkitMaskImage: 'url(/icons/social/g2.svg)', maskImage: 'url(/icons/social/g2.svg)' }}
+              />
+              <span className="sc-v2-hero-rating-stars" aria-hidden="true">
+                {[0, 1, 2, 3, 4].map(i => (
+                  <span
+                    key={i}
+                    className="sc-v2-hero-rating-star"
+                    style={{ WebkitMaskImage: 'url(/icons/star-fill.svg)', maskImage: 'url(/icons/star-fill.svg)' }}
+                  />
+                ))}
+              </span>
+              <span className="sc-v2-hero-rating-score">4.8/5</span>
+            </div>
             <p className="sc-v2-hero-subtitle">Roam is a Virtual Office Platform where remote work happens in the open and every action makes your company smarter.</p>
             <div className="sc-v2-hero-buttons">
               <button className="sc-promo-btn">Book Demo</button>
@@ -1873,6 +2090,19 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
           </div>
           <img className="sc-titlebar-logo" src="/icons/roam-logo.png" alt="roam" />
           <div className="sc-titlebar-spacer" />
+          {!embedded && !hideOnIt && (
+            <button
+              type="button"
+              className="sc-on-it-btn"
+              onClick={(e) => { e.stopPropagation(); openOnItChat(); }}
+              onMouseDown={(e) => e.stopPropagation()}
+              aria-label="Chat with On-It"
+            >
+              <span className="sc-on-it-hex">
+                <img src="/on-it-agent.png" alt="" />
+              </span>
+            </button>
+          )}
         </div>
 
         {/* Main content area */}
@@ -2160,7 +2390,7 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
       {lobbyWin.isOpen && <Lobby win={lobbyWin} onDrag={makeDragHandler(lobbyWin)} />}
       {/* Product features bar — inside miniRoamOS, pinned to bottom */}
       {/* Handwritten annotation pointing to the product bar */}
-      <Hint portal={false} text="Product Tour" blob="peaks" arrow="swoop-right" visible={hintVisible} style={{ ...(introHintStyle || { top: 190, left: 90 }), display: 'none' }} />
+      <Hint portal={false} text="Product Tour" blob="peaks" arrow="swoop-right" visible={hintVisible} style={introHintStyle || { top: 190, left: 90 }} />
       <div className="sc-products-bar" ref={productsBarRef}>
         {PRODUCTS.map((item, i) => {
           const winByName = {
@@ -2177,6 +2407,7 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
             ? () => { if (w.isOpen) w.requestClose(); else w.open(); }
             : item.name === 'Virtual Office' ? pulseMapWindow
             : item.name === 'Drop-In Meetings' ? knockOnHoward
+            : item.name === 'On-It' ? openOnItChat
             : undefined;
           return (
             <React.Fragment key={item.name}>
@@ -2355,21 +2586,58 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
         </div>
       </div>
 
-      {/* Feature section — On-Air */}
+      {/* Feature section — On-It */}
       <div className="sc-feature-section sc-feature-section-reverse">
         <div className="sc-section-grid">
           <div className="sc-feature-visual sc-feature-visual-left">
             <div className="sc-feature-wallpaper" style={{ backgroundImage: `url(/wallpapers/wallpaper-${theme}.png)` }}>
-              <OnAir win={{ position: { x: 0, y: 0 }, zIndex: 1, isFocused: true, focus: () => {}, close: () => {}, open: () => {} }} onDrag={() => {}} demo />
+              <OnItFeatureChat />
             </div>
           </div>
           <div className="sc-feature-text sc-feature-text-right">
+            <h2 className="sc-feature-title">Your AI Assistant is On-It!</h2>
+            <p className="sc-feature-desc">In legacy work, only senior people in the corner office benefited from the ultraproductivity of an assistant. In Roam, everyone gets their own AI Assistant capable of observing what's happening in the office, scheduling meetings, following up via email and chat, and searching through all of your Magic Minutes. On-It is smart enough to volunteer to grab action items after a meeting when it has the skills. Click and your AI Assistant is On-It!</p>
+            <a href="#/feature/on-it" className="sc-feature-link">Learn about On-It →</a>
+          </div>
+        </div>
+      </div>
+
+      {/* Feature section — On-Air */}
+      <div className="sc-feature-section">
+        <div className="sc-section-grid">
+          <div className="sc-feature-text">
             <h2 className="sc-feature-title">ON-AIR</h2>
             <p className="sc-feature-desc">Now anyone can host Immersive Events for the Creator-Era</p>
             <a href="#/feature/on-air" className="sc-feature-link">Learn about On-Air →</a>
           </div>
+          <div className="sc-feature-visual">
+            <div className="sc-feature-wallpaper" style={{ backgroundImage: `url(/wallpapers/wallpaper-${theme}.png)` }}>
+              <OnAir win={{ position: { x: 0, y: 0 }, zIndex: 1, isFocused: true, focus: () => {}, close: () => {}, open: () => {} }} onDrag={() => {}} demo />
+            </div>
+          </div>
         </div>
       </div>
+
+      <HomepageReviews />
+
+      {/* Footer CTA — reuses FeaturePage's fp-footer-cta styles */}
+      <div className="fp-footer-cta">
+        <div className="fp-footer-cta-inner">
+          <div className="fp-footer-cta-lead">
+            <img className="fp-footer-cta-icon" src="/icons/roam-gold-icon.png" alt="" />
+            <div className="fp-footer-cta-text">
+              <h2 className="fp-footer-cta-title">Ready to Grow Your Business?</h2>
+              <p className="fp-footer-cta-sub text-body">Give your team an office that thinks. Book a demo or kick the tires for free.</p>
+            </div>
+          </div>
+          <div className="fp-cta-row">
+            <button className="sc-promo-btn">Book Demo</button>
+            <button className="sc-promo-btn">Free Trial</button>
+          </div>
+        </div>
+      </div>
+
+      <Footer />
       </>)}
 
       {/* Theme capsule + grid toggle — pinned to right side */}

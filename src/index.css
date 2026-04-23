@@ -33,5 +33,14 @@ body {
 }
 
 #root {
-  padding: 16px;
+  padding: 0;
+}
+
+/* Suppress all transitions during theme toggles to avoid jank across the tree. */
+html.theme-switching,
+html.theme-switching *,
+html.theme-switching *::before,
+html.theme-switching *::after {
+  transition: none !important;
+  animation-duration: 0s !important;
 }

@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useChat, registerChatData } from './ChatContext';
+import OnItTaskPane from './OnItTaskPane';
 import './AInbox.css';
 
 export const DM_REPLIES_BY_CHAT = {
@@ -668,6 +669,7 @@ const SIDEBAR_SECTIONS = [
   {
     id: 'dms', label: 'Direct Messages',
     items: [
+      { id: 'onit', name: 'On-It', avatar: '/on-it-agent.png', type: 'onit' },
       { id: 'grace', name: 'Grace Sutherland', avatar: '/headshots/grace-sutherland.jpg', type: 'dm' },
       { id: 'rob', name: 'Rob Figueiredo', avatar: '/headshots/rob-figueiredo.jpg', type: 'dm' },
       { id: 'thomas', name: 'Thomas Grapperon', avatar: '/headshots/thomas-grapperon.jpg', type: 'dm' },
@@ -998,6 +1000,23 @@ export const INITIAL_CONVERSATIONS = {
       { id: 1, sender: 'Derek Cicerone', avatar: '/headshots/derek-cicerone.jpg', time: 'Today 10:00 AM', text: "Morning everyone. Let's do a quick round. What's everyone working on today?" },
       { id: 2, sender: 'Rob Figueiredo', avatar: '/headshots/rob-figueiredo.jpg', time: 'Today 10:02 AM', text: "Wrapping up the auth refactor. Should be ready for review by noon." },
       { id: 3, sender: 'Keegan Lanzillotta', avatar: '/headshots/keegan-lanzillotta.jpg', time: 'Today 10:03 AM', text: "iOS push notifications fix is in QA. Starting on the chat performance ticket next." },
+    ],
+  },
+
+  /* ——— On-It assistant ——— */
+  onit: {
+    type: 'onit', name: 'On-It', subtitle: 'AI Assistant',
+    avatar: '/on-it-agent.png',
+    taskSummary: 'Watch for Sean and Thomas meeting together',
+    taskSteps: [
+      'Resolving Sean and Thomas in the company directory',
+      'Locating Sean MacIsaac and Thomas Grapperon on the map',
+      'Setting a watch for them to enter the same room',
+      'Notifying You',
+    ],
+    messages: [
+      { id: 1, self: true, text: 'Can you tell me if you see Sean MacIsaac and Thomas Grapperon meeting together?' },
+      { id: 2, self: false, text: "I'm On-It! I'll notify you the next time I notice that Sean MacIsaac and Thomas Grapperon are meeting together." },
     ],
   },
 
@@ -2680,7 +2699,7 @@ export default function AInbox({ win, onDrag, onOpenMagicMinutes, initialThreadV
           onClick={() => { if (!searchActive) searchInputRef.current?.focus(); }}
           style={!searchActive ? { cursor: 'text' } : undefined}
         >
-          <img src="/icons/mm-search.svg" alt="" width="16" height="16" className="ainbox-search-leading-icon" />
+          <span className="ainbox-search-leading-icon" aria-hidden="true" />
           {searchActive ? (
             <>
               <span className="ainbox-search-pill-label">{searchQuery || 'messages tab'}</span>
@@ -2867,7 +2886,7 @@ export default function AInbox({ win, onDrag, onOpenMagicMinutes, initialThreadV
                         ) : (
                           <div className={`ainbox-section-item-icon ${(item.type === 'meeting' || item.type === 'thread') ? 'ainbox-section-item-icon-circle' : ''}`}>
                             {item.type === 'meeting' && (
-                              <img src="/icons/magic-quill.svg" alt="" className="ainbox-section-item-icon-img" />
+                              <span className="ainbox-section-item-meeting-icon" aria-hidden="true" />
                             )}
                             {item.type === 'thread' && (
                               <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 4H13M3 8H10M3 12H7" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>
@@ -3051,6 +3070,39 @@ export default function AInbox({ win, onDrag, onOpenMagicMinutes, initialThreadV
                 {convo.messages.map(msg => (
                   <GroupMessage key={msg.id} msg={msg} onThreadClick={(m) => openThread(selectedChat, m.id)} />
                 ))}
+              </div>
+            </>
+          )}
+
+          {/* ——— On-It view (DM chat + animated task pane) ——— */}
+          {!threadView && convo && convo.type === 'onit' && (
+            <>
+              <div className="ainbox-detail-header">
+                <div className="ainbox-detail-header-left">
+                  <img src={convo.avatar} alt="" className="ainbox-detail-header-avatar" />
+                  <span className="ainbox-detail-header-name">{convo.name}</span>
+                  {convo.subtitle && <span className="ainbox-detail-header-subtitle">{convo.subtitle}</span>}
+                </div>
+                <div className="ainbox-detail-header-actions">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="3" r="1" fill="currentColor"/><circle cx="8" cy="8" r="1" fill="currentColor"/><circle cx="8" cy="13" r="1" fill="currentColor"/></svg>
+                </div>
+              </div>
+              <div className="ainbox-onit-split">
+                <div className="ainbox-onit-chat">
+                  <div className="ainbox-detail-messages ainbox-dm-messages" ref={messagesRef}>
+                    {getDmGroups(convo.messages).map(msg => (
+                      <DmMessage key={msg.id} msg={msg} isFirstInGroup={msg.isFirstInGroup} isLastInGroup={msg.isLastInGroup} />
+                    ))}
+                  </div>
+                </div>
+                <div className="ainbox-onit-task">
+                  <OnItTaskPane
+                    summary={convo.taskSummary}
+                    steps={convo.taskSteps}
+                    agentName={convo.name}
+                    agentAvatar={convo.avatar}
+                  />
+                </div>
               </div>
             </>
           )}
