@@ -74,7 +74,7 @@ const noopWin = (id) => ({
   open: () => {}, close: () => {}, requestClose: () => {}, focus: () => {}, move: () => {},
 });
 
-function MeetingPreview({ roomName = 'Daily Standup', autoReactions = true, roamojiOpen = true, people, gesturesEnabled = false, captionsScript }) {
+function MeetingPreview({ roomName = 'Daily Standup', autoReactions = true, roamojiOpen = true, people, gesturesEnabled = true, incomingGesturesEnabled = false, captionsScript }) {
   const resolvedPeople = people || VIDEO_SPEAKERS.filter(p => p.name !== 'Ethan Bishop' && p.name !== 'Hannah Bennett');
   return (
     <MeetingWindow
@@ -87,6 +87,7 @@ function MeetingPreview({ roomName = 'Daily Standup', autoReactions = true, roam
       autoReactions={autoReactions}
       roamojiOpen={roamojiOpen}
       gesturesEnabled={gesturesEnabled}
+      incomingGesturesEnabled={incomingGesturesEnabled}
       captionsScript={captionsScript}
     />
   );
@@ -1416,7 +1417,7 @@ function RoamojiReactionsPreview() {
     VIDEO_SPEAKERS[5], // Ethan Bishop
     VIDEO_SPEAKERS[6], // Sarah Mitchell
   ];
-  return <MeetingPreview people={fourPeople} autoReactions={true} roamojiOpen={true} gesturesEnabled={true} />;
+  return <MeetingPreview people={fourPeople} autoReactions={true} roamojiOpen={true} gesturesEnabled={true} incomingGesturesEnabled={true} />;
 }
 
 function ClosedCaptionsPreview() {

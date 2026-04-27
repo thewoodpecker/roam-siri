@@ -30,12 +30,12 @@ function LiveCaptions({ script }) {
 
       if (lineIndex >= script.length) {
         if (now - phaseStart >= RESTART_PAUSE) {
-          local = [];
+          // Loop back to the start of the script, but keep all existing
+          // entries — new captions will continue appending to the bottom.
           lineIndex = 0;
           charsTyped = 0;
           lineStarted = false;
           phaseStart = now;
-          commit();
         }
         frame = requestAnimationFrame(tick);
         return;
@@ -173,7 +173,7 @@ const VIEW_MODES = [
   { id: 'speaker', label: 'Active Speaker' },
 ];
 
-export default function MeetingWindow({ win, onDrag, roomName, people: allPeople, onOpenChat, onOpenOnAir, onOpenMagicMinutes, locked, autoReactions = true, handsRaised = false, onClickHands, roamojiOpen: roamojiInitialOpen = true, gesturesEnabled = false, captionsScript }) {
+export default function MeetingWindow({ win, onDrag, roomName, people: allPeople, onOpenChat, onOpenOnAir, onOpenMagicMinutes, locked, autoReactions = true, handsRaised = false, onClickHands, roamojiOpen: roamojiInitialOpen = true, gesturesEnabled = true, incomingGesturesEnabled = false, captionsScript }) {
   const people = useMemo(() => (allPeople || []).filter(p => p?.video), [allPeople]);
   const [closing, setClosing] = useState(false);
   const [activeSpeaker, setActiveSpeaker] = useState(0);
@@ -213,17 +213,17 @@ export default function MeetingWindow({ win, onDrag, roomName, people: allPeople
   const VARIATION_MAX = { bow: 20, fistBump: 16, handshake: 5, highFive: 21, roamaniac: 4 };
 
   useEffect(() => {
-    if (!gesturesEnabled || !winRef.current) return;
+    if (!incomingGesturesEnabled || !winRef.current) return;
     const observer = new IntersectionObserver(
       entries => entries.forEach(e => setInView(e.isIntersecting)),
       { threshold: 0.3 }
     );
     observer.observe(winRef.current);
     return () => observer.disconnect();
-  }, [gesturesEnabled]);
+  }, [incomingGesturesEnabled]);
 
   useEffect(() => {
-    if (!gesturesEnabled || !inView || people.length === 0) return;
+    if (!incomingGesturesEnabled || !inView || people.length === 0) return;
     let timeout;
     const schedule = (firstDelay) => {
       const delay = firstDelay ?? (4000 + Math.random() * 4000);
@@ -244,7 +244,7 @@ export default function MeetingWindow({ win, onDrag, roomName, people: allPeople
     };
     schedule(800);
     return () => clearTimeout(timeout);
-  }, [gesturesEnabled, inView, people]);
+  }, [incomingGesturesEnabled, inView, people]);
 
   const onIncomingResolved = useCallback((personName) => {
     incomingActiveRef.current = false;
