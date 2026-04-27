@@ -273,9 +273,44 @@ export const FLOORS = {
     { id: 'sh-mia', type: 'private', name: 'Mia C.', people: [p('Mia C.')], pos: { col: 5, row: 3 }, span: 1 },
     { id: 'sh-daniel', type: 'private', name: 'Daniel R.', people: [p('Daniel R.')], pos: { col: 4, row: 4 }, span: 1 },
   ],
+  'Presence': [
+    // Every person on the floor is currently in the central Quarterly Review
+    // meeting — all surrounding rooms read as empty so the meeting "presence"
+    // pops on the map.
+    { id: 'pr1', type: 'private', name: 'Klas L.', people: [], pos: { col: 0, row: 0 }, span: 1 },
+    { id: 'pr2', type: 'private', name: 'Howard L.', people: [], pos: { col: 1, row: 0 }, span: 1 },
+    { id: 'pr3', type: 'private', name: 'Jon B.', people: [], pos: { col: 2, row: 0 }, span: 1 },
+    { id: 'pr4', type: 'private', name: 'Derek C.', people: [], pos: { col: 3, row: 0 }, span: 1 },
+    { id: 'pr5', type: 'private', name: 'Michael M.', people: [], pos: { col: 4, row: 0 }, span: 1 },
+    { id: 'pr6', type: 'private', name: 'Keegan L.', people: [], pos: { col: 5, row: 0 }, span: 1 },
+    // Rows 1–2 — central meeting room, flanked by empty private offices
+    { id: 'pr-joe', type: 'private', name: 'Joe W.', people: [], pos: { col: 0, row: 1 }, span: 1 },
+    // The ShowcaseMap meeting card filters room.people to only those with a
+    // `video` property (live tile thumbnails), so populate this with the
+    // video-eligible roster from SHOWCASE_PEOPLE — ~21 attendees so the
+    // meeting renders as a clearly crowded multi-row of avatars.
+    { id: 'pr-quarterly', type: 'meeting', name: 'Quarterly Review', people: [
+      p('Ashley B.'), p('Brooke F.'), p('Camila T.'), p('Chloe P.'), p('Emily C.'),
+      p('Grace T.'), p('Hannah B.'), p('Isabella M.'), p('Jessica H.'), p('Lauren H.'),
+      p('Madison R.'), p('Megan T.'), p('Mia C.'), p('Natalie W.'), p('Olivia S.'),
+      p('Rachel C.'), p('Sarah M.'), p('Sophia R.'), p('Daniel R.'), p('Ethan B.'),
+      p('Michael S.'),
+    ], pos: { col: 1, row: 1 }, colSpan: 4, rowSpan: 2 },
+    { id: 'pr-mattias', type: 'private', name: 'Mattias L.', people: [], pos: { col: 5, row: 1 }, span: 1 },
+    { id: 'pr-sean', type: 'private', name: 'Sean M.', people: [], pos: { col: 0, row: 2 }, span: 1 },
+    { id: 'pr-will', type: 'private', name: 'Will H.', people: [], pos: { col: 5, row: 2 }, span: 1 },
+    // Row 3 — theater + offices + 1:1 + game
+    { id: 'pr-theater', type: 'theater', name: 'Theater', people: [], pos: { col: 0, row: 3 }, colSpan: 2, rowSpan: 2 },
+    { id: 'pr-lexi', type: 'private', name: 'Lexi B.', people: [], pos: { col: 2, row: 3 }, span: 1 },
+    { id: 'pr-grace', type: 'private', name: 'Grace S.', people: [], pos: { col: 3, row: 3 }, span: 1 },
+    { id: 'pr-cafe', type: 'game', name: 'Café', people: [], pos: { col: 4, row: 3 }, colSpan: 2, rowSpan: 2 },
+    // Row 4 — bottom row of offices
+    { id: 'pr-peter', type: 'private', name: 'Peter L.', people: [], pos: { col: 2, row: 4 }, span: 1 },
+    { id: 'pr-john', type: 'private', name: 'John M.', people: [], pos: { col: 3, row: 4 }, span: 1 },
+  ],
 };
 
-const FLOOR_NAMES = Object.keys(FLOORS).filter(n => n !== 'Preview' && n !== 'Homepage' && n !== 'Shelf');
+const FLOOR_NAMES = Object.keys(FLOORS).filter(n => n !== 'Preview' && n !== 'Homepage' && n !== 'Shelf' && n !== 'Presence');
 
 // Sidebar rooms
 
@@ -1352,11 +1387,11 @@ function ShelfWindow({ win, onDrag, photoIdx, direction, onPrev, onNext }) {
 }
 
 // Main showcase component
-export default function ShowcaseMap({ initialFloor = 'R&D', embedded = false, autoKnock = false, spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, hideOnIt = false, shelfAutoOpen = false, theme } = {}) {
+export default function ShowcaseMap({ initialFloor = 'R&D', embedded = false, autoKnock = false, spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, hideOnIt = false, shelfAutoOpen = false, shareAutoOpen = false, theme } = {}) {
   return (
     <ChatProvider>
       <WindowManagerProvider initialWindows={INITIAL_WINDOWS}>
-        <ShowcaseMapInner initialFloor={initialFloor} embedded={embedded} autoKnock={autoKnock} spotifyAlwaysOpen={spotifyAlwaysOpen} githubAlwaysOpen={githubAlwaysOpen} figmaAlwaysOpen={figmaAlwaysOpen} hideOnIt={hideOnIt} shelfAutoOpen={shelfAutoOpen} themeOverride={theme} />
+        <ShowcaseMapInner initialFloor={initialFloor} embedded={embedded} autoKnock={autoKnock} spotifyAlwaysOpen={spotifyAlwaysOpen} githubAlwaysOpen={githubAlwaysOpen} figmaAlwaysOpen={figmaAlwaysOpen} hideOnIt={hideOnIt} shelfAutoOpen={shelfAutoOpen} shareAutoOpen={shareAutoOpen} themeOverride={theme} />
       </WindowManagerProvider>
     </ChatProvider>
   );
@@ -1520,7 +1555,7 @@ function useTargetHintStyle(targetRef, active, offset = { top: -30, left: 'cente
   return style;
 }
 
-function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = false, spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, hideOnIt = false, shelfAutoOpen = false, themeOverride = null }) {
+function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = false, spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, hideOnIt = false, shelfAutoOpen = false, shareAutoOpen = false, themeOverride = null }) {
   const [themeState, setThemeState] = useState('dark');
   const theme = themeOverride || themeState;
   const setTheme = themeOverride ? () => {} : setThemeState;
@@ -1561,7 +1596,7 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
   const [activeVibes, setActiveVibes] = useState({});
   const miniRoamRef = useRef(null);
   const [storyViewer, setStoryViewer] = useState(null); // { stories, initialIndex }
-  const [shareOpen, setShareOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(shareAutoOpen);
   const [viewedStories, setViewedStories] = useState({});
   // People movement — occasionally move someone between offices and meeting rooms
   const [movements, setMovements] = useState({ removed: {}, added: {}, anim: {} }); // anim: { roomId: 'leaving' | 'arriving' }

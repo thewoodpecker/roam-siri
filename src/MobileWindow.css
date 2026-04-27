@@ -26,6 +26,7 @@
 
 /* --- Mac window chrome --- */
 .mw-chrome {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -75,10 +76,15 @@
 }
 
 .mw-chrome-title {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
   display: flex;
   flex-direction: column;
   align-items: center;
   line-height: 1.1;
+  pointer-events: none;
 }
 
 .mw-chrome-title-primary {
@@ -94,7 +100,66 @@
 }
 
 .mw-chrome-spacer {
-  width: 54px;
+  display: none;
+}
+
+.mw-chrome-platform-toggle {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.mw-chrome-platform-seg {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.mw-chrome-platform-seg:hover {
+  color: #fff;
+}
+
+.mw-chrome-platform-seg-active {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.sc-viewport[data-theme="light"] .mw-chrome-platform-toggle {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.sc-viewport[data-theme="light"] .mw-chrome-platform-seg {
+  color: rgba(0, 0, 0, 0.35);
+}
+
+.sc-viewport[data-theme="light"] .mw-chrome-platform-seg:hover {
+  color: #1a1a1c;
+}
+
+.sc-viewport[data-theme="light"] .mw-chrome-platform-seg-active {
+  background: rgba(0, 0, 0, 0.08);
+  color: #1a1a1c;
+}
+
+/* ——— Android-mode overrides ——— */
+.mw-win-android .mw-notch {
+  width: 16px;
+  height: 16px;
+  top: 24px;
+  border-radius: 50%;
 }
 
 .mw-chrome-btn {
@@ -127,8 +192,7 @@
   width: 300px;
   height: 628px;
   background: #0f0f10;
-  border-radius: 58px;
-  corner-shape: superellipse;
+  border-radius: var(--radius-3xl);
   corner-shape: superellipse(1.6);
   padding: 8px;
   box-shadow:
@@ -156,8 +220,7 @@
   width: 100%;
   height: 100%;
   background: #0c0c0e;
-  border-radius: 50px;
-  corner-shape: superellipse;
+  border-radius: var(--radius-3xl);
   corner-shape: superellipse(1.6);
   overflow: hidden;
   isolation: isolate;
@@ -306,7 +369,7 @@
   width: 100%;
   height: 150px;
   background: rgba(255, 255, 255, 0.05);
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   corner-shape: superellipse(1.6);
   border: none;
   padding: 0;

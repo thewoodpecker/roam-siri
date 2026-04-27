@@ -270,6 +270,7 @@ export default function MobileWindow({ win, onDrag, onOpenStories }) {
   const [viewStack, setViewStack] = useState(['overworld']);
   const currentView = viewStack[viewStack.length - 1];
   const [clock, setClock] = useState(() => formatClock(new Date()));
+  const [platform, setPlatform] = useState('ios');
 
   useEffect(() => {
     const tick = () => setClock(formatClock(new Date()));
@@ -299,7 +300,7 @@ export default function MobileWindow({ win, onDrag, onOpenStories }) {
 
   return (
     <div
-      className={`mw-win ${!win.isFocused ? 'mw-win-unfocused' : ''} ${closing ? 'mw-win-closing' : ''}`}
+      className={`mw-win mw-win-${platform} ${!win.isFocused ? 'mw-win-unfocused' : ''} ${closing ? 'mw-win-closing' : ''}`}
       style={{ left: win.position.x, top: win.position.y, zIndex: win.zIndex }}
       onMouseDown={() => win.focus()}
     >
@@ -310,8 +311,30 @@ export default function MobileWindow({ win, onDrag, onOpenStories }) {
           <button className="mw-light mw-light-max" onMouseDown={(e) => e.stopPropagation()} aria-label="Maximize" />
         </div>
         <div className="mw-chrome-title">
-          <span className="mw-chrome-title-primary">iPhone 16e</span>
-          <span className="mw-chrome-title-secondary">iOS 26.2</span>
+          <span className="mw-chrome-title-primary">{platform === 'ios' ? 'iPhone 16e' : 'Pixel 9'}</span>
+          <span className="mw-chrome-title-secondary">{platform === 'ios' ? 'iOS 26.2' : 'Android 15'}</span>
+        </div>
+        <div className="mw-chrome-platform-toggle" onMouseDown={(e) => e.stopPropagation()}>
+          <button
+            type="button"
+            className={`mw-chrome-platform-seg ${platform === 'ios' ? 'mw-chrome-platform-seg-active' : ''}`}
+            onClick={() => setPlatform('ios')}
+            aria-label="iOS"
+            aria-pressed={platform === 'ios'}
+            title="iOS"
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.54 12.94c-.02-2.33 1.9-3.45 1.99-3.5-1.08-1.59-2.77-1.8-3.37-1.83-1.43-.14-2.79.84-3.52.84-.73 0-1.85-.82-3.04-.8-1.56.02-3 .91-3.8 2.31-1.62 2.82-.41 7 1.17 9.27.77 1.12 1.69 2.37 2.9 2.33 1.17-.05 1.61-.75 3.03-.75 1.41 0 1.81.75 3.04.73 1.26-.02 2.05-1.14 2.82-2.26.88-1.3 1.25-2.57 1.27-2.63-.03-.02-2.44-.94-2.46-3.7zm-2.34-6.79c.65-.78 1.09-1.87.96-2.95-.93.04-2.06.62-2.73 1.4-.6.7-1.12 1.81-.98 2.87 1.04.08 2.1-.53 2.75-1.32z"/></svg>
+          </button>
+          <button
+            type="button"
+            className={`mw-chrome-platform-seg ${platform === 'android' ? 'mw-chrome-platform-seg-active' : ''}`}
+            onClick={() => setPlatform('android')}
+            aria-label="Android"
+            aria-pressed={platform === 'android'}
+            title="Android"
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.523 15.341a1.006 1.006 0 1 1 .005-2.01 1.006 1.006 0 0 1-.005 2.01zm-11.046 0a1.006 1.006 0 1 1 .005-2.01 1.006 1.006 0 0 1-.005 2.01zm11.4-6.02 2.004-3.47a.417.417 0 0 0-.722-.417l-2.03 3.513A12.56 12.56 0 0 0 12 7.792c-1.86 0-3.608.405-5.13 1.155L4.843 5.434a.417.417 0 0 0-.722.417L6.124 9.32C2.68 11.19.32 14.67 0 18.79h24c-.32-4.12-2.68-7.6-6.123-9.47z"/></svg>
+          </button>
         </div>
         <div className="mw-chrome-spacer" aria-hidden="true" />
       </div>
@@ -323,7 +346,7 @@ export default function MobileWindow({ win, onDrag, onOpenStories }) {
             {(activeTab === 'roam' || activeTab === 'ainbox') && <div className="mw-topbar-bg" aria-hidden="true" />}
             <div className="mw-status">
               <span className="mw-time">{clock}</span>
-              <img className="mw-status-icons" src="/icons/mobile-tabs/status.svg" alt="" />
+              <img className="mw-status-icons" src={platform === 'ios' ? '/icons/mobile-tabs/status.svg' : '/icons/mobile-tabs/android-status.svg'} alt="" />
             </div>
 
             {activeTab === 'roam' && currentView === 'overworld' && (

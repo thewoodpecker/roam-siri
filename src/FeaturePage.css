@@ -157,6 +157,717 @@
   align-items: center;
 }
 
+/* Knock dialog preview — overlays the meeting window in the Drop-In Video Meetings section */
+.fp-knock-preview {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.fp-knock-frame {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  /* Match the MeetingWindow's overridden width (see .fp-section-visual .meeting-win)
+     so the overlay covers exactly the meeting window and the window centers
+     within the section visual. */
+  width: calc(((100% - 11 * var(--grid-gutter)) / 12) * 10 + 9 * var(--grid-gutter));
+  flex-shrink: 0;
+  /* Match the meeting window's corner shape so the dialog overlay gets clipped
+     to the same superellipse and doesn't poke past the rounded corners. */
+  border-radius: var(--radius-2xl);
+  corner-shape: superellipse(1.6);
+  overflow: hidden;
+}
+
+/* Inside the knock frame, the meeting window already fills the frame's width,
+   so cancel the section-visual width override that would re-apply the 10/12 calc
+   to the (already-narrowed) frame. */
+.fp-section-visual .fp-knock-frame .meeting-win,
+.fp-section-visual .fp-lock-frame .meeting-win {
+  width: 100% !important;
+}
+
+/* Krisp Noise Cancellation frame — meeting window with the audio settings
+   popover anchored above the toolbar's microphone control. */
+.fp-krisp-frame {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: calc(((100% - 11 * var(--grid-gutter)) / 12) * 10 + 9 * var(--grid-gutter));
+  flex-shrink: 0;
+  border-radius: var(--radius-2xl);
+  corner-shape: superellipse(1.6);
+  overflow: hidden;
+}
+
+.fp-section-visual .fp-krisp-frame .meeting-win {
+  width: 100% !important;
+}
+
+.fp-krisp-popover {
+  position: absolute;
+  left: 50%;
+  bottom: 52px;
+  transform: translateX(-50%);
+  width: 320px;
+  padding: 0 8px;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-surface-elevated-secondary);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  corner-shape: superellipse(1.6);
+  box-shadow: var(--shadow-4);
+  color: var(--text-primary);
+  z-index: 4;
+}
+
+.fp-krisp-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 8px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.fp-krisp-label {
+  flex: 1 0 0;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  letter-spacing: -0.15px;
+  color: var(--text-primary);
+}
+
+.fp-krisp-picker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 2px 2px 6px;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.fp-krisp-picker-value {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  letter-spacing: -0.15px;
+  color: var(--text-primary);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.fp-krisp-picker-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 2px;
+  background: rgba(255, 255, 255, 0.05);
+  border: none;
+  border-radius: 6px;
+  color: var(--text-primary);
+  cursor: default;
+  flex-shrink: 0;
+}
+
+.fp-krisp-picker-caret {
+  width: 9px;
+  height: 12px;
+  background: currentColor;
+  -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 9 12'><path d='M1 4l3.5-3 3.5 3M1 8l3.5 3 3.5-3' stroke='black' stroke-width='1.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>") center / contain no-repeat;
+  mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 9 12'><path d='M1 4l3.5-3 3.5 3M1 8l3.5 3 3.5-3' stroke='black' stroke-width='1.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>") center / contain no-repeat;
+}
+
+.fp-krisp-slider {
+  position: relative;
+  flex: 1 0 0;
+  min-width: 0;
+  height: 16px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 0.5px solid var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+  touch-action: none;
+}
+
+.fp-krisp-slider-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background: var(--text-primary);
+  border-radius: 12px 0 0 12px;
+}
+
+.fp-krisp-slider-thumb {
+  position: absolute;
+  top: 50%;
+  width: 16px;
+  height: 16px;
+  margin-top: -8px;
+  margin-left: -8px;
+  background: var(--solid-white, #fff);
+  border-radius: 50%;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.fp-krisp-spacer {
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.fp-krisp-section-label {
+  padding: 8px 8px 4px;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  letter-spacing: -0.15px;
+  color: var(--text-secondary);
+}
+
+.fp-krisp-toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 8px;
+  width: 100%;
+  box-sizing: border-box;
+  background: transparent;
+  border: none;
+  color: inherit;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
+.fp-krisp-toggle-text {
+  flex: 1 0 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.fp-krisp-toggle-title {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  letter-spacing: -0.15px;
+  color: var(--text-primary);
+}
+
+.fp-krisp-toggle-sub {
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 16px;
+  color: var(--text-secondary);
+}
+
+.fp-krisp-switch {
+  position: relative;
+  width: 40px;
+  height: 24px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+}
+
+.fp-krisp-switch::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 20px;
+  height: 20px;
+  background: var(--solid-white, #fff);
+  border-radius: 50%;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  transition: right 160ms ease;
+}
+
+.fp-krisp-switch-on {
+  background: #6E31E7;
+}
+
+/* Locked Room frame — same width sizing as the knock frame, but no overflow
+   clipping so the Magnify rings can extend past the meeting-window edges. */
+.fp-lock-frame {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: calc(((100% - 11 * var(--grid-gutter)) / 12) * 10 + 9 * var(--grid-gutter));
+  flex-shrink: 0;
+}
+
+/* Pin sits below the titlebar; left/top/transform are set inline by
+   LockedRoomPreview after measuring the lock icon's actual position so
+   the connector line points to its exact center. */
+.fp-lock-magnify {
+  z-index: 5;
+  --magnify-ring-color: var(--border-secondary);
+}
+
+.fp-lock-magnify .fp-magnify-ring {
+  border-width: 1.5px;
+}
+
+.fp-lock-magnify-glyph {
+  display: block;
+  width: 32px;
+  height: 32px;
+  background-color: var(--text-error);
+  -webkit-mask: url('/icons/lock.svg') no-repeat center / contain;
+          mask: url('/icons/lock.svg') no-repeat center / contain;
+}
+
+/* Raised Hands popover — anchored above the hand-raise toolbar pill in the
+   meeting window via inline left/bottom set by RaisedHandsPreview. */
+.fp-hands-popover {
+  position: absolute;
+  z-index: 40;
+  width: 320px;
+  background: var(--bg-surface-elevated-secondary);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  corner-shape: superellipse(1.6);
+  box-shadow: var(--shadow-4);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.fp-hands-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  letter-spacing: -0.15px;
+}
+
+.fp-hands-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fp-hands-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.fp-hands-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.fp-hands-name {
+  flex: 1 1 auto;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  letter-spacing: -0.15px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fp-hands-badge {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  corner-shape: superellipse(1.6);
+  background: #F0B330;
+  color: #1A1A1A;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+}
+
+.fp-hands-badge-icon {
+  width: 14px;
+  height: 14px;
+  display: inline-block;
+  background-color: #1A1A1A;
+  -webkit-mask: url('/icons/hand-raise.svg') no-repeat center / contain;
+          mask: url('/icons/hand-raise.svg') no-repeat center / contain;
+}
+
+.fp-hands-lower {
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  background: var(--background-primary);
+  color: var(--text-primary);
+  border-radius: var(--radius-md);
+  corner-shape: superellipse(1.6);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.15px;
+  cursor: pointer;
+  transition: background-color 150ms ease;
+  box-shadow: inset 0 0.5px 0 var(--border);
+}
+
+[data-theme="light"] .fp-hands-lower {
+  box-shadow: none;
+}
+
+.fp-hands-lower:hover {
+  background: var(--bg-secondary);
+}
+
+/* Generic image-only feature preview — full-width screenshot with a 2px
+   border along the bottom in the opaque border color. Used by External
+   Meetings, Virtual Background, Face Touch Up, etc. */
+.fp-image-preview {
+  width: calc(((100% - 11 * var(--grid-gutter)) / 12) * 10 + 9 * var(--grid-gutter));
+  flex-shrink: 0;
+  display: block;
+  line-height: 0;
+}
+
+.fp-image-preview img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Modifier — the preview spans 8 of the 12 grid columns instead of 10. */
+.fp-image-preview-half {
+  width: calc(((100% - 11 * var(--grid-gutter)) / 12) * 8 + 7 * var(--grid-gutter));
+}
+
+/* Sections containing an .fp-image-preview drop the wallpaper for a flat
+   background-primary surface so the screenshot reads cleanly. */
+.fp-section-visual:has(.fp-image-preview) {
+  background-image: none;
+  background-color: var(--background-primary);
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+[data-theme="light"] .fp-section-visual:has(.fp-image-preview) {
+  background-image: none;
+  background-color: var(--background-primary);
+}
+
+/* Horizontal section variant — text on the left (4 cols), visual on the
+   right (8 cols), arranged side-by-side and vertically centered. Used for
+   image-only previews that read better next to their text rather than below.
+   The `-reverse` variant flips the order: visual on the left, text on the right.
+   Defined after the :has(.fp-image-preview) rule so its property overrides
+   (transparent bg, 32px padding) win on equal specificity. */
+.fp-section-horz,
+.fp-section-horz-reverse {
+  align-items: center;
+  row-gap: 0;
+}
+
+.fp-section-horz .fp-section-text {
+  grid-column: 1 / span 4;
+}
+
+.fp-section-horz .fp-section-visual {
+  grid-column: 5 / span 8;
+}
+
+.fp-section-horz-reverse .fp-section-visual {
+  grid-column: 1 / span 8;
+  grid-row: 1;
+}
+
+.fp-section-horz-reverse .fp-section-text {
+  grid-column: 9 / span 4;
+  grid-row: 1;
+}
+
+.fp-section-horz .fp-section-visual,
+.fp-section-horz-reverse .fp-section-visual {
+  padding: 32px;
+  background-image: none;
+  background-color: transparent;
+}
+
+
+/* Inside a horz section, the image preview fills its 8-col container — no
+   extra inner sizing or background. */
+.fp-section-horz .fp-image-preview,
+.fp-section-horz-reverse .fp-image-preview {
+  width: 100%;
+}
+
+/* The virtual-background compare slider sits flush — no padding or border
+   on the surrounding section visual. */
+.fp-section-visual:has(.fp-vbg-compare) {
+  padding: 0;
+}
+
+.fp-section-visual:has(.fp-vbg-compare)::after {
+  display: none;
+}
+
+/* Virtual Background compare-slider — two stacked images with a draggable
+   vertical divider that reveals the difference between them. */
+.fp-vbg-compare {
+  position: relative;
+  cursor: ew-resize;
+  user-select: none;
+  overflow: hidden;
+  line-height: 0;
+}
+
+.fp-vbg-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  pointer-events: none;
+}
+
+.fp-vbg-clip {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.fp-vbg-clip .fp-vbg-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.fp-vbg-divider {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #fff;
+  transform: translateX(-50%);
+  pointer-events: none;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.45);
+  z-index: 2;
+}
+
+.fp-vbg-handle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #fff;
+  color: #1A1A1A;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+  pointer-events: auto;
+}
+
+
+/* Class-driven transitions for both enter and exit. We deliberately do NOT
+   use @keyframes for entry — when the same property has an `animation` and
+   a `transition`, browsers can keep the property "owned" by the animation
+   controller even after it ends, which suppresses the exit transition. */
+.fp-knock-dialog-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-overlay-primary);
+  z-index: 30;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 280ms ease-out;
+}
+
+.fp-knock-dialog-overlay-visible {
+  opacity: 1;
+}
+
+.fp-knock-dialog {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 28px 32px;
+  background: var(--bg-surface-elevated-secondary);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-xl);
+  corner-shape: superellipse(1.6);
+  box-shadow: var(--shadow-5);
+  min-width: 280px;
+  max-width: 360px;
+  opacity: 0;
+  transform: scale(0.92) translateY(8px);
+  transition: opacity 280ms ease-out, transform 320ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.fp-knock-dialog-visible {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+}
+
+.fp-knock-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.08);
+}
+
+.fp-knock-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  text-align: center;
+  letter-spacing: -0.15px;
+  line-height: 1.35;
+}
+
+.fp-knock-dots > span {
+  display: inline-block;
+  animation: fp-knock-dot 1.2s infinite;
+  opacity: 0.4;
+}
+
+.fp-knock-dots > span:nth-child(2) { animation-delay: 0.15s; }
+.fp-knock-dots > span:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes fp-knock-dot {
+  0%, 60%, 100% { opacity: 0.25; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-2px); }
+}
+
+/* Sophia's tile exit during the 'leaving' phase. The CSS animation runs
+   on the existing tile DOM; ~20ms after it finishes the phase flips to 'idle',
+   removing Sophia from the people array, and the FLIP effect smoothly morphs
+   the remaining four tiles back to the centered 4-tile layout. */
+.fp-knock-frame[data-phase="leaving"] [data-tile-id="Sophia Ramirez"] {
+  animation: fp-knock-tile-leave 420ms cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+@keyframes fp-knock-tile-leave {
+  from { opacity: 1; transform: scale(1); }
+  to   { opacity: 0; transform: scale(0.7); }
+}
+
+/* MiniChat preview — small DM window for The Boot section */
+.fp-minichat-preview {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+/* Magnify pin overlaying the boot icon in the composer toolbar.
+   Positioned relative to .fp-minichat-preview-win (the chat window). */
+.fp-boot-magnify {
+  /* Center the pin horizontally over the boot icon, line lands at top-center. */
+  left: 10px;
+  top: 260px;
+  z-index: 5;
+}
+
+.fp-boot-magnify-glyph {
+  display: block;
+  width: 44px;
+  height: 44px;
+  background-color: var(--icon-secondary);
+  -webkit-mask: url('/icons/boot.svg') no-repeat center / contain;
+          mask: url('/icons/boot.svg') no-repeat center / contain;
+}
+
+.fp-minichat-preview-frame {
+  position: relative;
+  width: 320px;
+  height: 520px;
+  flex-shrink: 0;
+}
+
+.fp-minichat-preview-win {
+  position: relative !important;
+  top: auto !important;
+  left: auto !important;
+  transform: none !important;
+  width: 320px !important;
+  height: 520px !important;
+  flex-shrink: 0;
+}
+
+.fp-minichat-preview-win .ainbox-composer input {
+  pointer-events: none;
+}
+
+.fp-minichat-system {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  align-self: center;
+  margin: 16px auto 8px;
+  padding: 6px 12px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  background: var(--background-primary);
+  border-radius: 999px;
+}
+
+.fp-minichat-system-icon {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  background-color: var(--icon-secondary);
+  -webkit-mask: url('/icons/boot.svg') no-repeat center / contain;
+          mask: url('/icons/boot.svg') no-repeat center / contain;
+}
+
+.fp-minichat-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 4px;
+}
+
+.fp-minichat-action-icon {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  background-color: var(--icon-secondary);
+  -webkit-mask-repeat: no-repeat;
+          mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+          mask-position: center;
+  -webkit-mask-size: contain;
+          mask-size: contain;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.fp-minichat-action-icon:hover {
+  background-color: var(--icon-primary);
+}
+
 /* Nested product component previews span 10 of the 12 grid columns and center inside the stage */
 .fp-hero-stage .meeting-win,
 .fp-hero-stage .theater-win,
@@ -178,6 +889,15 @@
   transform: none !important;
   flex-shrink: 0;
   width: calc(((100% - 11 * var(--grid-gutter)) / 12) * 10 + 9 * var(--grid-gutter)) !important;
+}
+
+/* The meeting window is hardcoded to 780x580 in MeetingWindow.css; when the
+   preview override widens it, preserve that aspect ratio so the body keeps
+   pace with the wider 16/9 tiles instead of overflowing into the toolbar. */
+.fp-hero-stage .meeting-win,
+.fp-section-visual .meeting-win {
+  height: auto !important;
+  aspect-ratio: 780 / 580;
 }
 
 /* ---- Feature sections (12-col grid, left-aligned) ---- */
@@ -209,6 +929,13 @@
   letter-spacing: 0.18em;
   color: var(--text-secondary);
   text-transform: uppercase;
+}
+
+.fp-section-title-image {
+  display: block;
+  height: 32px;
+  width: auto;
+  flex-shrink: 0;
 }
 
 .fp-section-icons {
@@ -357,8 +1084,7 @@
   width: calc(((100% - 11 * var(--grid-gutter)) / 12) * 10 + 9 * var(--grid-gutter));
   aspect-ratio: 3 / 2;
   overflow: hidden;
-  border-radius: 36px;
-  corner-shape: superellipse;
+  border-radius: var(--radius-2xl);
   corner-shape: superellipse(1.6);
   flex-shrink: 0;
 }
@@ -405,11 +1131,10 @@
   aspect-ratio: auto !important;
   margin: 0 !important;
   overflow: visible !important;
-  border-radius: 36px !important;
-  corner-shape: superellipse !important;
+  border-radius: var(--radius-2xl) !important;
   corner-shape: superellipse(1.6) !important;
   border: 0.5px solid var(--border) !important;
-  box-shadow: 0 0 0 0.5px var(--border), var(--shadow-5) !important;
+  box-shadow: var(--shadow-5) !important;
 }
 
 .fp-section-visual > .shelf-win,
@@ -789,8 +1514,7 @@
   box-sizing: border-box;
   background: var(--bg-surface-raised);
   border: 0.5px solid var(--border);
-  border-radius: 28px;
-  corner-shape: superellipse;
+  border-radius: var(--radius-xl);
   corner-shape: superellipse(1.6);
   display: flex;
   flex-direction: column;
@@ -945,8 +1669,7 @@
   flex: 1;
   padding: 8px 10px;
   font-size: 12.5px;
-  border-radius: 14px;
-  corner-shape: superellipse;
+  border-radius: var(--radius-md);
   corner-shape: superellipse(1.6);
 }
 

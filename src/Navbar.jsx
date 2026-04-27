@@ -461,7 +461,7 @@ export default function Navbar() {
       {isUnified && (
         <div className="hidden lg:block mx-4 mt-4 relative z-10">
           <div
-            className="rounded-2xl overflow-hidden transition-all duration-150 ease-out"
+            className="rounded-lg overflow-hidden transition-all duration-150 ease-out"
             style={{
               backgroundColor: activeMenu !== null ? 'var(--bg-surface-primary)' : 'var(--nav-bg, var(--bg-surface-primary))',
               borderWidth: 1,
@@ -493,8 +493,8 @@ export default function Navbar() {
                   Existing Members
                   <svg width="10" height="6" viewBox="0 0 10 6" fill="none" className={`transition-transform duration-200 ${activeMenu === "Existing Members" ? "rotate-180" : ""}`}><path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
                 </button>
-                <button className="rounded-lg bg-white/5 px-4 py-2 text-sm font-normal leading-5 tracking-[-0.15px] text-white shadow-[inset_0px_0.5px_0px_0px_rgba(255,255,255,0.1)] transition-colors hover:bg-white/10">Book Demo</button>
-                <button className="rounded-lg bg-white/5 px-4 py-2 text-sm font-normal leading-5 tracking-[-0.15px] text-white shadow-[inset_0px_0.5px_0px_0px_rgba(255,255,255,0.1)] transition-colors hover:bg-white/10">Free Trial</button>
+                <button className="rounded-md bg-white/5 px-4 py-2 text-sm font-normal leading-5 tracking-[-0.15px] text-white shadow-[inset_0px_0.5px_0px_0px_rgba(255,255,255,0.1)] transition-colors hover:bg-white/10">Book Demo</button>
+                <button className="rounded-md bg-white/5 px-4 py-2 text-sm font-normal leading-5 tracking-[-0.15px] text-white shadow-[inset_0px_0.5px_0px_0px_rgba(255,255,255,0.1)] transition-colors hover:bg-white/10">Free Trial</button>
               </div>
             </div>
             {/* Menu expander */}
@@ -558,8 +558,8 @@ export default function Navbar() {
               Existing Members
               <svg width="10" height="6" viewBox="0 0 10 6" fill="none" className={`transition-transform duration-200 ${activeMenu === "Existing Members" ? "rotate-180" : ""}`}><path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
             </button>
-            <button className="rounded-lg bg-white/5 px-4 py-2 text-sm font-normal leading-5 tracking-[-0.15px] text-white shadow-[inset_0px_0.5px_0px_0px_rgba(255,255,255,0.1)] transition-colors hover:bg-white/10">Book Demo</button>
-            <button className="rounded-lg bg-white/5 px-4 py-2 text-sm font-normal leading-5 tracking-[-0.15px] text-white shadow-[inset_0px_0.5px_0px_0px_rgba(255,255,255,0.1)] transition-colors hover:bg-white/10">Free Trial</button>
+            <button className="rounded-md bg-white/5 px-4 py-2 text-sm font-normal leading-5 tracking-[-0.15px] text-white shadow-[inset_0px_0.5px_0px_0px_rgba(255,255,255,0.1)] transition-colors hover:bg-white/10">Book Demo</button>
+            <button className="rounded-md bg-white/5 px-4 py-2 text-sm font-normal leading-5 tracking-[-0.15px] text-white shadow-[inset_0px_0.5px_0px_0px_rgba(255,255,255,0.1)] transition-colors hover:bg-white/10">Free Trial</button>
           </div>
         </div>
       )}
@@ -616,7 +616,7 @@ export default function Navbar() {
               {/* Nav bar background removed in v2 — transparent nav */}
               {/* Menu panel background - inset with rounded corners */}
               <div
-                className="pointer-events-none absolute z-[-1] rounded-2xl"
+                className="pointer-events-none absolute z-[-1] rounded-lg"
                 style={{
                   opacity: isAnimating ? 1 : 0,
                   left: 40,
@@ -677,7 +677,7 @@ export default function Navbar() {
           <div
             ref={menuContentRef}
             onMouseEnter={handleMenuMouseEnter}
-            className={`relative z-50 overflow-hidden ${isV2 ? "mx-[40px] rounded-2xl" : ""}`}
+            className={`relative z-50 overflow-hidden ${isV2 ? "mx-[40px] rounded-lg" : ""}`}
             style={{
               height: isAnimating && menuHeight ? menuHeight : 0,
               transition: `height ${transitionDuration} ease-out`,

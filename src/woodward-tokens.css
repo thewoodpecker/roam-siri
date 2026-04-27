@@ -381,3 +381,31 @@
   line-height: 12px;
   letter-spacing: 0;
 }
+
+/* ——— Corner radius tokens ———
+   Always pair with `corner-shape: superellipse(1.6)` at the use-site.
+   In browsers that support `corner-shape`, the @supports block inflates the
+   token to a larger px so the squircle reads at the same visual size as the
+   plain rounded fallback below. */
+:root {
+  --radius-xs:  4px;
+  --radius-sm:  6px;
+  --radius-md:  10px;
+  --radius-lg:  16px;
+  --radius-xl:  24px;
+  --radius-2xl: 32px;
+  --radius-3xl: 48px;
+  --radius-full: 999px;
+}
+@supports (corner-shape: superellipse(1.6)) {
+  :root {
+    --radius-xs:  5px;
+    --radius-sm:  8px;
+    --radius-md:  13px;
+    --radius-lg:  20px;
+    --radius-xl:  30px;
+    --radius-2xl: 40px;
+    --radius-3xl: 60px;
+    --radius-full: 999px;
+  }
+}

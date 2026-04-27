@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Corner radius calibration</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<style>
+  :root {
+    --bg: #0a0a0c;
+    --fg: #e8e8ea;
+    --fg-dim: #8a8a8f;
+    --fg-faint: #5a5a5f;
+    --surf: #1c1c1f;
+    --surf-accent: #2b2b2f;
+    --border: rgba(255,255,255,0.08);
+    --accent: #d4a856;
+  }
+
+  /* ---- Proposed token set (Option A — @supports swaps a single var) ---- */
+  :root {
+    --radius-xs:  4px;
+    --radius-sm:  6px;
+    --radius-md:  10px;
+    --radius-lg:  16px;
+    --radius-xl:  24px;
+    --radius-2xl: 32px;
+    --radius-3xl: 48px;
+    --radius-full: 999px;
+  }
+  @supports (corner-shape: superellipse(1.6)) {
+    :root {
+      --radius-xs:  5px;
+      --radius-sm:  8px;
+      --radius-md:  13px;
+      --radius-lg:  20px;
+      --radius-xl:  30px;
+      --radius-2xl: 40px;
+      --radius-3xl: 60px;
+      --radius-full: 999px;
+    }
+  }
+
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, 'Inter', system-ui, sans-serif;
+    padding: 56px 48px 96px;
+    min-height: 100vh;
+  }
+  h1 {
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+    margin: 0 0 8px;
+  }
+  h2 {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--fg-dim);
+    margin: 48px 0 20px;
+  }
+  p.lede {
+    color: var(--fg-dim);
+    font-size: 14px;
+    line-height: 1.55;
+    margin: 0 0 36px;
+    max-width: 640px;
+  }
+  code {
+    font-family: 'SF Mono', ui-monospace, Menlo, monospace;
+    font-size: 12px;
+    background: var(--surf-accent);
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+
+  .support-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surf);
+    border: 0.5px solid var(--border);
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-size: 12px;
+    color: var(--fg-dim);
+    margin: 0 0 32px;
+  }
+  .support-badge .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: #666;
+  }
+  @supports (corner-shape: superellipse(1.6)) {
+    .support-badge .dot { background: #4caf50; }
+    .support-badge .text::before { content: 'Supported: '; color: #4caf50; }
+  }
+  @supports not (corner-shape: superellipse(1.6)) {
+    .support-badge .text::before { content: 'Not supported in this browser: '; color: #e0644c; }
+  }
+
+  /* Calibration grid */
+  .grid {
+    display: grid;
+    grid-template-columns: 72px minmax(0,1fr) minmax(0,1fr) minmax(0,1fr);
+    gap: 36px 48px;
+    align-items: center;
+    max-width: 960px;
+  }
+  .grid .col-head {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--fg-dim);
+  }
+  .row-label {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--fg);
+  }
+  .cell {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .box {
+    background: linear-gradient(135deg, #2a2a2f, #1a1a1d);
+    border: 0.5px solid var(--border);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.03);
+    flex-shrink: 0;
+  }
+  .meta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .meta code {
+    padding: 1px 5px;
+    font-size: 11px;
+    background: transparent;
+    color: var(--fg-dim);
+  }
+  .meta .px {
+    color: var(--fg);
+    font-weight: 600;
+    font-size: 12px;
+    font-family: 'SF Mono', ui-monospace, Menlo, monospace;
+  }
+
+  /* ---- Corner variants ---- */
+  /* Plain rounded at the FALLBACK px value (what squircle-less browsers get) */
+  .plain.xs   { width: 40px;  height: 40px;  border-radius: 4px; }
+  .plain.sm   { width: 56px;  height: 56px;  border-radius: 6px; }
+  .plain.md   { width: 72px;  height: 72px;  border-radius: 10px; }
+  .plain.lg   { width: 96px;  height: 96px;  border-radius: 16px; }
+  .plain.xl   { width: 128px; height: 128px; border-radius: 24px; }
+  .plain.xxl  { width: 160px; height: 160px; border-radius: 32px; }
+  .plain.xxxl { width: 200px; height: 200px; border-radius: 48px; }
+
+  /* Squircle at the INFLATED px value — should visually match plain */
+  .sq.xs   { width: 40px;  height: 40px;  border-radius: 5px;  corner-shape: superellipse(1.6); }
+  .sq.sm   { width: 56px;  height: 56px;  border-radius: 8px;  corner-shape: superellipse(1.6); }
+  .sq.md   { width: 72px;  height: 72px;  border-radius: 13px; corner-shape: superellipse(1.6); }
+  .sq.lg   { width: 96px;  height: 96px;  border-radius: 20px; corner-shape: superellipse(1.6); }
+  .sq.xl   { width: 128px; height: 128px; border-radius: 30px; corner-shape: superellipse(1.6); }
+  .sq.xxl  { width: 160px; height: 160px; border-radius: 40px; corner-shape: superellipse(1.6); }
+  .sq.xxxl { width: 200px; height: 200px; border-radius: 60px; corner-shape: superellipse(1.6); }
+
+  /* Squircle at the FALLBACK px — to show the mismatch when you use the same px for both */
+  .sq-mismatch.xs   { width: 40px;  height: 40px;  border-radius: 4px;  corner-shape: superellipse(1.6); }
+  .sq-mismatch.sm   { width: 56px;  height: 56px;  border-radius: 6px;  corner-shape: superellipse(1.6); }
+  .sq-mismatch.md   { width: 72px;  height: 72px;  border-radius: 10px; corner-shape: superellipse(1.6); }
+  .sq-mismatch.lg   { width: 96px;  height: 96px;  border-radius: 16px; corner-shape: superellipse(1.6); }
+  .sq-mismatch.xl   { width: 128px; height: 128px; border-radius: 24px; corner-shape: superellipse(1.6); }
+  .sq-mismatch.xxl  { width: 160px; height: 160px; border-radius: 32px; corner-shape: superellipse(1.6); }
+  .sq-mismatch.xxxl { width: 200px; height: 200px; border-radius: 48px; corner-shape: superellipse(1.6); }
+
+  /* ---- Token usage preview ---- */
+  .tokens {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 24px;
+    max-width: 960px;
+  }
+  .token-card {
+    background: var(--surf);
+    border: 0.5px solid var(--border);
+    padding: 20px;
+    border-radius: var(--radius-lg);
+    corner-shape: superellipse(1.6);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    align-items: center;
+  }
+  .token-swatch {
+    width: 88px;
+    height: 88px;
+    background: linear-gradient(135deg, #3a3a3f, #1e1e22);
+    border: 0.5px solid var(--border);
+    /* Uses the token var + corner-shape. With @supports, the var auto-swaps
+       to the larger px for squircle browsers; non-supporting browsers see the
+       smaller fallback with plain rounded corners. */
+    corner-shape: superellipse(1.6);
+  }
+  .t-xs   .token-swatch { border-radius: var(--radius-xs); }
+  .t-sm   .token-swatch { border-radius: var(--radius-sm); }
+  .t-md   .token-swatch { border-radius: var(--radius-md); }
+  .t-lg   .token-swatch { border-radius: var(--radius-lg); }
+  .t-xl   .token-swatch { border-radius: var(--radius-xl); }
+  .t-xxl  .token-swatch { border-radius: var(--radius-2xl); }
+  .t-xxxl .token-swatch { border-radius: var(--radius-3xl); }
+
+  .token-card .name {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--fg);
+  }
+  .token-card .var {
+    font-family: 'SF Mono', ui-monospace, Menlo, monospace;
+    font-size: 11px;
+    color: var(--fg-dim);
+  }
+</style>
+</head>
+<body>
+
+<h1>Corner radius calibration</h1>
+<p class="lede">
+  Option A tokens — one var per size, swapped via <code>@supports</code> so browsers without
+  <code>corner-shape</code> get a smaller plain rounded corner that looks visually equivalent to
+  the inflated squircle version used by supporting browsers.
+</p>
+
+<div class="support-badge">
+  <span class="dot"></span>
+  <span class="text"><code>corner-shape: superellipse(1.6)</code></span>
+</div>
+
+<h2>Side-by-side at each size</h2>
+<p class="lede" style="margin-top:-16px;">
+  <strong>Column 1</strong> — plain rounded at the fallback px.
+  <strong>Column 2</strong> — squircle 1.6 at the same (fallback) px: shows the visual mismatch when you don't inflate.
+  <strong>Column 3</strong> — squircle 1.6 at the calibrated (inflated) px: the size that should look like column 1.
+  Column 1 and Column 3 should look identical in size; adjust the calibration px values if they don't.
+</p>
+
+<div class="grid">
+  <div></div>
+  <div class="col-head">Rounded (fallback)</div>
+  <div class="col-head">Squircle @ fallback px</div>
+  <div class="col-head">Squircle @ calibrated px</div>
+
+  <div class="row-label">XS</div>
+  <div class="cell"><div class="box plain xs"></div><div class="meta"><span class="px">4px</span><code>--radius-xs</code></div></div>
+  <div class="cell"><div class="box sq-mismatch xs"></div><div class="meta"><span class="px">4px</span><code>same as fallback</code></div></div>
+  <div class="cell"><div class="box sq xs"></div><div class="meta"><span class="px">5px</span><code>--radius-xs ★</code></div></div>
+
+  <div class="row-label">SM</div>
+  <div class="cell"><div class="box plain sm"></div><div class="meta"><span class="px">6px</span><code>--radius-sm</code></div></div>
+  <div class="cell"><div class="box sq-mismatch sm"></div><div class="meta"><span class="px">6px</span><code>same as fallback</code></div></div>
+  <div class="cell"><div class="box sq sm"></div><div class="meta"><span class="px">8px</span><code>--radius-sm ★</code></div></div>
+
+  <div class="row-label">MD</div>
+  <div class="cell"><div class="box plain md"></div><div class="meta"><span class="px">10px</span><code>--radius-md</code></div></div>
+  <div class="cell"><div class="box sq-mismatch md"></div><div class="meta"><span class="px">10px</span><code>same as fallback</code></div></div>
+  <div class="cell"><div class="box sq md"></div><div class="meta"><span class="px">13px</span><code>--radius-md ★</code></div></div>
+
+  <div class="row-label">LG</div>
+  <div class="cell"><div class="box plain lg"></div><div class="meta"><span class="px">16px</span><code>--radius-lg</code></div></div>
+  <div class="cell"><div class="box sq-mismatch lg"></div><div class="meta"><span class="px">16px</span><code>same as fallback</code></div></div>
+  <div class="cell"><div class="box sq lg"></div><div class="meta"><span class="px">20px</span><code>--radius-lg ★</code></div></div>
+
+  <div class="row-label">XL</div>
+  <div class="cell"><div class="box plain xl"></div><div class="meta"><span class="px">24px</span><code>--radius-xl</code></div></div>
+  <div class="cell"><div class="box sq-mismatch xl"></div><div class="meta"><span class="px">24px</span><code>same as fallback</code></div></div>
+  <div class="cell"><div class="box sq xl"></div><div class="meta"><span class="px">30px</span><code>--radius-xl ★</code></div></div>
+
+  <div class="row-label">2XL</div>
+  <div class="cell"><div class="box plain xxl"></div><div class="meta"><span class="px">32px</span><code>--radius-2xl</code></div></div>
+  <div class="cell"><div class="box sq-mismatch xxl"></div><div class="meta"><span class="px">32px</span><code>same as fallback</code></div></div>
+  <div class="cell"><div class="box sq xxl"></div><div class="meta"><span class="px">40px</span><code>--radius-2xl ★</code></div></div>
+
+  <div class="row-label">3XL</div>
+  <div class="cell"><div class="box plain xxxl"></div><div class="meta"><span class="px">48px</span><code>--radius-3xl</code></div></div>
+  <div class="cell"><div class="box sq-mismatch xxxl"></div><div class="meta"><span class="px">48px</span><code>same as fallback</code></div></div>
+  <div class="cell"><div class="box sq xxxl"></div><div class="meta"><span class="px">60px</span><code>--radius-3xl ★</code></div></div>
+</div>
+
+<h2>Live tokens — <code>var(--radius-*) + corner-shape</code></h2>
+<p class="lede" style="margin-top:-16px;">
+  These boxes reference the CSS variables directly and always apply <code>corner-shape: superellipse(1.6)</code>.
+  In supporting browsers they render as the calibrated squircle (inflated px); in non-supporting browsers
+  they fall back to the smaller plain rounded px automatically — no per-site branching.
+</p>
+
+<div class="tokens">
+  <div class="token-card t-xs"><div class="token-swatch"></div><div class="name">XS</div><div class="var">--radius-xs</div></div>
+  <div class="token-card t-sm"><div class="token-swatch"></div><div class="name">SM</div><div class="var">--radius-sm</div></div>
+  <div class="token-card t-md"><div class="token-swatch"></div><div class="name">MD</div><div class="var">--radius-md</div></div>
+  <div class="token-card t-lg"><div class="token-swatch"></div><div class="name">LG</div><div class="var">--radius-lg</div></div>
+  <div class="token-card t-xl"><div class="token-swatch"></div><div class="name">XL</div><div class="var">--radius-xl</div></div>
+  <div class="token-card t-xxl"><div class="token-swatch"></div><div class="name">2XL</div><div class="var">--radius-2xl</div></div>
+  <div class="token-card t-xxxl"><div class="token-swatch"></div><div class="name">3XL</div><div class="var">--radius-3xl</div></div>
+</div>
+
+</body>
+</html>

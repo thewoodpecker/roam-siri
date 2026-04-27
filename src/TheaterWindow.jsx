@@ -311,17 +311,17 @@ export default function TheaterWindow({ win, onDrag, speakers: rawSpeakers = [],
 
             {/* Center pill group */}
             <div className="meeting-win-pill-group">
-              <div className={`meeting-win-pill ${roamojiOpen ? 'meeting-win-pill-active' : ''}`} onClick={() => setRoamojiOpen(o => !o)}><img src="/icons/emoji.svg" alt="" /></div>
-              <div className="meeting-win-pill meeting-win-pill-muted"><img src="/icons/microphone.svg" alt="" /></div>
-              <div className="meeting-win-pill"><img src="/icons/magic-quill.svg" alt="" /></div>
-              <div className="meeting-win-pill meeting-win-pill-leave" onClick={handleClose}><img src="/icons/door.svg" alt="" /></div>
+              <div className={`meeting-win-pill ${roamojiOpen ? 'meeting-win-pill-active' : ''}`} data-tooltip="Roamoji" onClick={() => setRoamojiOpen(o => !o)}><img src="/icons/emoji.svg" alt="" /></div>
+              <div className="meeting-win-pill meeting-win-pill-muted" data-tooltip="Microphone"><img src="/icons/microphone.svg" alt="" /></div>
+              <div className="meeting-win-pill" data-tooltip="Magic Minutes"><img src="/icons/magic-quill.svg" alt="" /></div>
+              <div className="meeting-win-pill meeting-win-pill-leave" data-tooltip="Leave" onClick={handleClose}><img src="/icons/door.svg" alt="" /></div>
             </div>
 
             {/* Right pill group */}
             <div className="meeting-win-toolbar-right">
               <div className="meeting-win-pill-group">
-                <div className="meeting-win-pill"><img src="/icons/meeting-chat.svg" alt="" /></div>
-                <div className="meeting-win-pill"><img src="/icons/floors.svg" alt="" /></div>
+                <div className="meeting-win-pill" data-tooltip="Theater Chat"><img src="/icons/meeting-chat.svg" alt="" /></div>
+                <div className="meeting-win-pill" data-tooltip="Floors"><img src="/icons/floors.svg" alt="" /></div>
               </div>
             </div>
           </div>

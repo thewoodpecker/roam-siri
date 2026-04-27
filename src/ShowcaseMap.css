@@ -1035,7 +1035,8 @@
 .sc-viewport[data-theme="light"] .mc-window,
 .sc-viewport[data-theme="light"] .mc-win,
 .sc-viewport[data-theme="light"] .onair-window,
-.sc-viewport[data-theme="light"] .meeting-win {
+.sc-viewport[data-theme="light"] .meeting-win,
+[data-theme="light"] .shelf-win {
   background: rgba(255, 255, 255, 0.3);
 }
 
@@ -1202,8 +1203,7 @@
   overflow: hidden;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-radius: 36px;
-  corner-shape: superellipse;
+  border-radius: var(--radius-2xl);
   corner-shape: superellipse(1.6);
   border: 0.5px solid var(--border);
   box-shadow:
@@ -2643,8 +2643,7 @@
   inset: 0;
   background: var(--bg-overlay-primary);
   z-index: 7;
-  border-radius: 36px;
-  corner-shape: superellipse;
+  border-radius: var(--radius-2xl);
   corner-shape: superellipse(1.6);
   animation: sc-shelf-fade-in 200ms ease-out;
 }
@@ -3246,8 +3245,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 0 8px;
-  border-radius: 0 0 36px 36px;
-  corner-shape: superellipse;
+  border-radius: 0 0 var(--radius-2xl) var(--radius-2xl);
   corner-shape: superellipse(1.6);
   border-top: 0.5px solid var(--border);
   background: var(--bg-surface-primary-subdued);
@@ -3451,8 +3449,7 @@
   position: absolute;
   inset: 0;
   background: var(--bg-overlay-primary);
-  border-radius: 36px;
-  corner-shape: superellipse;
+  border-radius: var(--radius-2xl);
   corner-shape: superellipse(1.6);
   display: flex;
   align-items: center;
@@ -3576,8 +3573,7 @@
   backdrop-filter: blur(30px);
   -webkit-backdrop-filter: blur(30px);
   border: 0.5px solid var(--border);
-  border-radius: 24px;
-  corner-shape: superellipse;
+  border-radius: var(--radius-xl);
   corner-shape: superellipse(1.6);
   display: flex;
   flex-direction: column;
@@ -3724,12 +3720,11 @@
   backdrop-filter: blur(30px);
   -webkit-backdrop-filter: blur(30px);
   border: 0.5px solid var(--border);
-  border-radius: 32px;
-  corner-shape: superellipse;
+  border-radius: var(--radius-2xl);
   corner-shape: superellipse(1.6);
   display: flex;
   flex-direction: column;
-  box-shadow: 0 0 0 0.5px var(--border), var(--shadow-5);
+  box-shadow: var(--shadow-5);
   overflow: hidden;
   animation: mc-win-in 250ms ease-out;
 }
@@ -3980,7 +3975,6 @@
   -webkit-mask-image: none !important;
   mask-image: none !important;
   border-radius: 17%;
-  corner-shape: superellipse;
   corner-shape: superellipse(1.6);
   overflow: hidden;
 }

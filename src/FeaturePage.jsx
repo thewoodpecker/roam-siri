@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import ShowcaseMap from './ShowcaseMap';
 
 function RightControls({ theme, onToggleTheme, showGrid, onToggleGrid }) {
@@ -33,6 +33,7 @@ import MeetingWindow from './MeetingWindow';
 import TheaterWindow from './TheaterWindow';
 import MagicMinutes from './MagicMinutes';
 import Lobby from './Lobby';
+import Magnify from './Magnify';
 import OnAir from './OnAir';
 import { WindowManagerProvider } from './WindowManager';
 import { ChatProvider } from './ChatContext';
@@ -73,15 +74,20 @@ const noopWin = (id) => ({
   open: () => {}, close: () => {}, requestClose: () => {}, focus: () => {}, move: () => {},
 });
 
-function MeetingPreview({ roomName = 'Daily Standup' }) {
+function MeetingPreview({ roomName = 'Daily Standup', autoReactions = true, roamojiOpen = true, people, gesturesEnabled = false, captionsScript }) {
+  const resolvedPeople = people || VIDEO_SPEAKERS.filter(p => p.name !== 'Ethan Bishop' && p.name !== 'Hannah Bennett');
   return (
     <MeetingWindow
       win={noopWin('meeting')}
       onDrag={() => {}}
       roomName={roomName}
-      people={VIDEO_SPEAKERS}
+      people={resolvedPeople}
       onOpenChat={() => {}}
       onOpenOnAir={() => {}}
+      autoReactions={autoReactions}
+      roamojiOpen={roamojiOpen}
+      gesturesEnabled={gesturesEnabled}
+      captionsScript={captionsScript}
     />
   );
 }
@@ -841,7 +847,7 @@ function OnAirPreview() {
   return <OnAir win={noopWin('onair')} onDrag={() => {}} demo />;
 }
 
-function MapPreview({ spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, hideOnIt = false, autoKnock = false, shelfAutoOpen = false, initialFloor = 'Preview' } = {}) {
+function MapPreview({ spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, hideOnIt = false, autoKnock = false, shelfAutoOpen = false, shareAutoOpen = false, initialFloor = 'Preview' } = {}) {
   const [pageTheme, setPageTheme] = useState(() =>
     typeof document !== 'undefined' ? document.documentElement.getAttribute('data-theme') || 'dark' : 'dark'
   );
@@ -855,7 +861,7 @@ function MapPreview({ spotifyAlwaysOpen = false, githubAlwaysOpen = false, figma
   }, []);
   return (
     <div className="fp-map-preview">
-      <ShowcaseMap embedded autoKnock={autoKnock} initialFloor={initialFloor} spotifyAlwaysOpen={spotifyAlwaysOpen} githubAlwaysOpen={githubAlwaysOpen} figmaAlwaysOpen={figmaAlwaysOpen} hideOnIt={hideOnIt} shelfAutoOpen={shelfAutoOpen} theme={pageTheme} />
+      <ShowcaseMap embedded autoKnock={autoKnock} initialFloor={initialFloor} spotifyAlwaysOpen={spotifyAlwaysOpen} githubAlwaysOpen={githubAlwaysOpen} figmaAlwaysOpen={figmaAlwaysOpen} hideOnIt={hideOnIt} shelfAutoOpen={shelfAutoOpen} shareAutoOpen={shareAutoOpen} theme={pageTheme} />
     </div>
   );
 }
@@ -893,11 +899,619 @@ function MagicastPreview() {
   );
 }
 
+function KnockDropInPreview() {
+  // Cycle: knocking → joined (10s) → leaving (Sophia's tile exits) → idle (3s) → knocking …
+  const [phase, setPhase] = useState('knocking');
+  // dialogMounted controls whether the dialog is in the DOM at all; dialogVisible
+  // controls the -visible class. Both start false so the dialog is NOT mounted
+  // until the preview scrolls into view. Once mounted, the first paint is at
+  // opacity 0 — a double-rAF then flips dialogVisible true, firing the entry
+  // transition. We keep it mounted through the full exit transition so the
+  // browser has time to play the animation before unmount.
+  const [dialogMounted, setDialogMounted] = useState(false);
+  const [dialogVisible, setDialogVisible] = useState(false);
+  // Hold the cycle until the preview is scrolled into view — otherwise the
+  // tiles have already animated mid-cycle by the time the user sees them.
+  const [started, setStarted] = useState(false);
+  const previewRef = useRef(null);
+  const DIALOG_EXIT_MS = 400; // buffer past the 320ms transform transition
+  const TILE_EXIT_MS = 440;
+
+  useEffect(() => {
+    if (started) return;
+    const el = previewRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        setStarted(true);
+        obs.disconnect();
+      }
+    }, { threshold: 0.3 });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [started]);
+
+  useEffect(() => {
+    if (!started) return;
+    if (phase === 'knocking') {
+      setDialogMounted(true);
+      setDialogVisible(false);
+      // Double rAF so the browser commits and paints the opacity:0 frame
+      // before we flip the class — that's what makes the entry transition fire.
+      let raf1 = 0, raf2 = 0;
+      raf1 = requestAnimationFrame(() => {
+        raf2 = requestAnimationFrame(() => setDialogVisible(true));
+      });
+      const tHide = setTimeout(() => setDialogVisible(false), 2800);
+      const tUnmount = setTimeout(() => setDialogMounted(false), 2800 + DIALOG_EXIT_MS);
+      const tJoin = setTimeout(() => setPhase('joined'), 2800 + DIALOG_EXIT_MS);
+      return () => {
+        cancelAnimationFrame(raf1);
+        cancelAnimationFrame(raf2);
+        clearTimeout(tHide);
+        clearTimeout(tUnmount);
+        clearTimeout(tJoin);
+      };
+    }
+    if (phase === 'joined') {
+      const t = setTimeout(() => setPhase('leaving'), 10000);
+      return () => clearTimeout(t);
+    }
+    if (phase === 'leaving') {
+      const t = setTimeout(() => setPhase('idle'), TILE_EXIT_MS);
+      return () => clearTimeout(t);
+    }
+    // phase === 'idle'
+    const t = setTimeout(() => setPhase('knocking'), 3000);
+    return () => clearTimeout(t);
+  }, [phase, started]);
+
+  const sophia = videoPerson('Sophia Ramirez', 'Female', 'Sophia Ramirez');
+  const others = VIDEO_SPEAKERS.filter(p => p.name !== 'Sophia Ramirez').slice(0, 4);
+  const sophiaPresent = phase === 'joined' || phase === 'leaving';
+  const people = sophiaPresent ? [...others, sophia] : others;
+
+  // When the grid relayouts (Sophia joining), existing tiles just snap to
+  // their new positions — only the new tile gets a fade+scale-in. We track
+  // tile IDs (not rects) so scroll-induced viewport changes don't trigger
+  // any animation.
+  const frameRef = useRef(null);
+  const prevIdsRef = useRef(null); // null = haven't seen any render yet
+  useLayoutEffect(() => {
+    const root = frameRef.current;
+    if (!root) return;
+    const tiles = root.querySelectorAll('[data-tile-id]');
+    const newIds = new Set();
+    tiles.forEach(t => newIds.add(t.dataset.tileId));
+    const prev = prevIdsRef.current;
+    if (prev) {
+      tiles.forEach(t => {
+        const id = t.dataset.tileId;
+        if (!prev.has(id)) {
+          // Brand-new tile (added since last render). Fade + scale in.
+          t.animate(
+            [
+              { opacity: 0, transform: 'scale(0.7)' },
+              { opacity: 1, transform: 'scale(1)' },
+            ],
+            { duration: 420, easing: 'cubic-bezier(0.32, 0.72, 0, 1)', fill: 'both' }
+          );
+        }
+      });
+    }
+    prevIdsRef.current = newIds;
+  }, [people]);
+
+  return (
+    <div className="fp-knock-preview" ref={previewRef}>
+      <div className="fp-knock-frame" data-phase={phase} ref={frameRef}>
+        <MeetingWindow
+          win={noopWin('meeting')}
+          onDrag={() => {}}
+          roomName="Walt Disney"
+          people={people}
+          onOpenChat={() => {}}
+          onOpenOnAir={() => {}}
+          roamojiOpen={false}
+          autoReactions={false}
+        />
+        {dialogMounted && (
+          <div className={`fp-knock-dialog-overlay ${dialogVisible ? 'fp-knock-dialog-overlay-visible' : ''}`}>
+            <div className={`fp-knock-dialog ${dialogVisible ? 'fp-knock-dialog-visible' : ''}`}>
+              <img
+                className="fp-knock-avatar"
+                src="/videos/Female/sophia_ramirez.png"
+                alt=""
+              />
+              <div className="fp-knock-label">
+                Sophia is knocking on Walt Disney
+                <span className="fp-knock-dots"><span>.</span><span>.</span><span>.</span></span>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function LockedRoomPreview() {
+  // Two people not shown in the Drop-In Video Meetings preview above.
+  const people = [
+    VIDEO_SPEAKERS.find(p => p.name === 'Mia Chen'),
+    VIDEO_SPEAKERS.find(p => p.name === 'Ethan Bishop'),
+  ].filter(Boolean);
+
+  // Measure the actual lock-icon position so the magnify pin lands on its
+  // exact horizontal/vertical center, regardless of font rendering width.
+  const frameRef = useRef(null);
+  const [pinPos, setPinPos] = useState(null);
+  useLayoutEffect(() => {
+    const measure = () => {
+      const frame = frameRef.current;
+      if (!frame) return;
+      const lock = frame.querySelector('.meeting-win-lock');
+      if (!lock) return;
+      const fRect = frame.getBoundingClientRect();
+      const lRect = lock.getBoundingClientRect();
+      const lockCenterX = lRect.left + lRect.width / 2 - fRect.left;
+      const lockCenterY = lRect.top + lRect.height / 2 - fRect.top;
+      const PIN_TOP = 64;
+      const PIN_SIZE = 80;
+      const pinCenterY = PIN_TOP + PIN_SIZE / 2;
+      setPinPos({
+        left: lockCenterX,
+        top: PIN_TOP,
+        lineY: lockCenterY - pinCenterY,
+      });
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    if (frameRef.current) ro.observe(frameRef.current);
+    return () => ro.disconnect();
+  }, []);
+
+  return (
+    <div className="fp-knock-preview">
+      <div className="fp-lock-frame" ref={frameRef}>
+        <MeetingWindow
+          win={noopWin('meeting')}
+          onDrag={() => {}}
+          roomName="Strategy Sync"
+          people={people}
+          onOpenChat={() => {}}
+          onOpenOnAir={() => {}}
+          locked
+          roamojiOpen={false}
+          autoReactions={false}
+        />
+        {pinPos && (
+          <Magnify
+            className="fp-lock-magnify"
+            style={{ left: pinPos.left, top: pinPos.top, transform: 'translateX(-50%)' }}
+            lineTo={{ y: pinPos.lineY }}
+          >
+            <span className="fp-lock-magnify-glyph" aria-hidden="true" />
+          </Magnify>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function RaisedHandsPreview() {
+  // 9 people in the meeting room — five of them have raised hands.
+  const people = [
+    VIDEO_SPEAKERS.find(p => p.name === 'Olivia Sanders'),
+    VIDEO_SPEAKERS.find(p => p.name === 'Ethan Bishop'),
+    VIDEO_SPEAKERS.find(p => p.name === 'Hannah Bennett'),
+    VIDEO_SPEAKERS.find(p => p.name === 'Sarah Mitchell'),
+    videoPerson('Daniel Russell', 'Male', 'Daniel Russell'),
+    VIDEO_SPEAKERS.find(p => p.name === 'Mia Chen'),
+    VIDEO_SPEAKERS.find(p => p.name === 'Emily Carter'),
+    VIDEO_SPEAKERS.find(p => p.name === 'Lauren Hayes'),
+    VIDEO_SPEAKERS.find(p => p.name === 'Ashley Brooks'),
+  ].filter(Boolean);
+
+  // Order matches the popover, with hand-raise count.
+  const raisedHands = [
+    { person: VIDEO_SPEAKERS.find(p => p.name === 'Olivia Sanders'), count: 1 },
+    { person: VIDEO_SPEAKERS.find(p => p.name === 'Ethan Bishop'), count: 2 },
+    { person: VIDEO_SPEAKERS.find(p => p.name === 'Hannah Bennett'), count: 3 },
+    { person: VIDEO_SPEAKERS.find(p => p.name === 'Sarah Mitchell'), count: 4 },
+    { person: videoPerson('Daniel Russell', 'Male', 'Daniel Russell'), count: 5 },
+  ];
+
+  // Measure the hand-raise toolbar pill so the popover anchors over it.
+  const frameRef = useRef(null);
+  const popoverRef = useRef(null);
+  const [popoverPos, setPopoverPos] = useState(null);
+  const [popoverOpen, setPopoverOpen] = useState(true);
+  // Local user's own hand state — drives the toolbar pill color (amber when
+  // raised, default when lowered). Independent of the popover list which
+  // shows other people who have raised their hands.
+  const [myHandRaised, setMyHandRaised] = useState(true);
+  useLayoutEffect(() => {
+    const measure = () => {
+      const frame = frameRef.current;
+      if (!frame) return;
+      const centerGroup = frame.querySelector('.meeting-win-toolbar > .meeting-win-pill-group:nth-child(2)');
+      if (!centerGroup) return;
+      const pills = centerGroup.querySelectorAll('.meeting-win-pill');
+      const handPill = pills[3];
+      if (!handPill) return;
+      const fr = frame.getBoundingClientRect();
+      const pr = handPill.getBoundingClientRect();
+      setPopoverPos({
+        left: pr.left + pr.width / 2 - fr.left,
+        bottom: fr.bottom - pr.top + 12,
+      });
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    if (frameRef.current) ro.observe(frameRef.current);
+    return () => ro.disconnect();
+  }, []);
+
+  // Close popover on outside click (excluding the hand pill itself, which
+  // toggles via onClickHands).
+  useEffect(() => {
+    if (!popoverOpen) return;
+    const onDocClick = (e) => {
+      if (popoverRef.current && popoverRef.current.contains(e.target)) return;
+      if (e.target.closest && e.target.closest('[data-hand-pill="true"]')) return;
+      setPopoverOpen(false);
+    };
+    document.addEventListener('mousedown', onDocClick);
+    return () => document.removeEventListener('mousedown', onDocClick);
+  }, [popoverOpen]);
+
+  return (
+    <div className="fp-knock-preview">
+      <div className="fp-lock-frame" ref={frameRef}>
+        <MeetingWindow
+          win={noopWin('meeting')}
+          onDrag={() => {}}
+          roomName="All Hands"
+          people={people}
+          onOpenChat={() => {}}
+          onOpenOnAir={() => {}}
+          roamojiOpen={false}
+          autoReactions={false}
+          handsRaised={myHandRaised}
+          onClickHands={() => {
+            // If your hand is lowered, clicking the pill raises it and opens
+            // the popover. Otherwise just toggle the popover.
+            if (!myHandRaised) {
+              setMyHandRaised(true);
+              setPopoverOpen(true);
+            } else {
+              setPopoverOpen(o => !o);
+            }
+          }}
+        />
+        {popoverPos && popoverOpen && (
+          <div
+            ref={popoverRef}
+            className="fp-hands-popover"
+            style={{ left: popoverPos.left, bottom: popoverPos.bottom, transform: 'translateX(-50%)' }}
+          >
+            <div className="fp-hands-title">Raised Hands</div>
+            <ul className="fp-hands-list">
+              {raisedHands.map(({ person, count }) => (
+                <li key={person.name} className="fp-hands-item">
+                  <img className="fp-hands-avatar" src={person.avatar} alt="" />
+                  <span className="fp-hands-name">{person.fullName || person.name}</span>
+                  <span className="fp-hands-badge">
+                    <span className="fp-hands-badge-icon" aria-hidden="true" />
+                    <span className="fp-hands-badge-count">{count}</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <button className="fp-hands-lower" onClick={() => { setMyHandRaised(false); setPopoverOpen(false); }}>Lower Hand</button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ExternalMeetingsPreview() {
+  return (
+    <div className="fp-image-preview">
+      <img src="/feature/calendar-google.png" alt="Google Calendar with Roam meeting integration" />
+    </div>
+  );
+}
+
+// Reusable before/after compare slider — drag the vertical handle to reveal
+// the difference between two stacked images. The "before" image (leftSrc)
+// sits beneath; the "after" image (rightSrc) is clipped to the right of the
+// divider, so dragging right reveals more of it.
+function CompareSlider({ leftSrc, rightSrc, leftAlt = '', rightAlt = '' }) {
+  const containerRef = useRef(null);
+  const [pos, setPos] = useState(0.5);
+  const draggingRef = useRef(false);
+
+  useEffect(() => {
+    const onMove = (e) => {
+      if (!draggingRef.current || !containerRef.current) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const x = (clientX - rect.left) / rect.width;
+      setPos(Math.max(0, Math.min(1, x)));
+    };
+    const onUp = () => { draggingRef.current = false; };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    window.addEventListener('touchmove', onMove, { passive: true });
+    window.addEventListener('touchend', onUp);
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+      window.removeEventListener('touchmove', onMove);
+      window.removeEventListener('touchend', onUp);
+    };
+  }, []);
+
+  const startDrag = () => { draggingRef.current = true; };
+
+  return (
+    <div
+      ref={containerRef}
+      className="fp-image-preview fp-vbg-compare"
+      onMouseDown={startDrag}
+      onTouchStart={startDrag}
+    >
+      <img className="fp-vbg-img" src={leftSrc} alt={leftAlt} />
+      <div className="fp-vbg-clip" style={{ clipPath: `inset(0 0 0 ${pos * 100}%)` }}>
+        <img className="fp-vbg-img" src={rightSrc} alt={rightAlt} />
+      </div>
+      <div className="fp-vbg-divider" style={{ left: `${pos * 100}%` }}>
+        <span className="fp-vbg-handle" aria-hidden="true">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M5 3L2 7L5 11M9 3L12 7L9 11" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function VirtualBackgroundPreview() {
+  return (
+    <CompareSlider
+      leftSrc="/feature/vbg-without.png"
+      rightSrc="/feature/vbg-with.png"
+      leftAlt="Without virtual background"
+      rightAlt="With virtual background"
+    />
+  );
+}
+
+function FaceTouchUpPreview() {
+  return (
+    <CompareSlider
+      leftSrc="/feature/beauty-without.png"
+      rightSrc="/feature/beauty-with.png"
+      leftAlt="Without Face Touch Up"
+      rightAlt="With Face Touch Up"
+    />
+  );
+}
+
+function KrispToggleRow({ title, sub, on, onToggle }) {
+  return (
+    <button type="button" className="fp-krisp-toggle-row" onClick={onToggle} aria-pressed={on}>
+      <div className="fp-krisp-toggle-text">
+        <div className="fp-krisp-toggle-title">{title}</div>
+        <div className="fp-krisp-toggle-sub">{sub}</div>
+      </div>
+      <span className={`fp-krisp-switch ${on ? 'fp-krisp-switch-on' : ''}`} aria-hidden="true" />
+    </button>
+  );
+}
+
+function KrispNoiseCancellationPreview() {
+  const [volume, setVolume] = useState(0.7);
+  const [toggles, setToggles] = useState({
+    noise: true,
+    background: true,
+    autoLevel: true,
+    disable: true,
+  });
+  const sliderRef = useRef(null);
+  const draggingRef = useRef(false);
+
+  const setFromClientX = (clientX) => {
+    const el = sliderRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const x = (clientX - rect.left) / rect.width;
+    setVolume(Math.max(0, Math.min(1, x)));
+  };
+
+  useEffect(() => {
+    const onMove = (e) => {
+      if (!draggingRef.current) return;
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      setFromClientX(clientX);
+    };
+    const onUp = () => { draggingRef.current = false; };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    window.addEventListener('touchmove', onMove, { passive: true });
+    window.addEventListener('touchend', onUp);
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+      window.removeEventListener('touchmove', onMove);
+      window.removeEventListener('touchend', onUp);
+    };
+  }, []);
+
+  const onSliderDown = (e) => {
+    draggingRef.current = true;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    setFromClientX(clientX);
+  };
+
+  const toggle = (key) => () => setToggles(t => ({ ...t, [key]: !t[key] }));
+  const pct = `${volume * 100}%`;
+
+  return (
+    <div className="fp-krisp-frame">
+      <MeetingPreview autoReactions={false} roamojiOpen={false} />
+      <div className="fp-krisp-popover" role="presentation">
+        <div className="fp-krisp-row">
+          <span className="fp-krisp-label">Speaker</span>
+          <div className="fp-krisp-picker">
+            <span className="fp-krisp-picker-value">Logitech 4K</span>
+            <button type="button" className="fp-krisp-picker-btn" aria-label="Choose speaker">
+              <span className="fp-krisp-picker-caret" aria-hidden="true" />
+            </button>
+          </div>
+        </div>
+        <div className="fp-krisp-row">
+          <span className="fp-krisp-label">Microphone</span>
+          <div className="fp-krisp-picker">
+            <span className="fp-krisp-picker-value">MacBook Air</span>
+            <button type="button" className="fp-krisp-picker-btn" aria-label="Choose microphone">
+              <span className="fp-krisp-picker-caret" aria-hidden="true" />
+            </button>
+          </div>
+        </div>
+        <div className="fp-krisp-row">
+          <span className="fp-krisp-label">Output Volume</span>
+          <div
+            className="fp-krisp-slider"
+            ref={sliderRef}
+            onMouseDown={onSliderDown}
+            onTouchStart={onSliderDown}
+            role="slider"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={Math.round(volume * 100)}
+          >
+            <div className="fp-krisp-slider-fill" style={{ width: pct }} />
+            <div className="fp-krisp-slider-thumb" style={{ left: pct }} />
+          </div>
+        </div>
+        <div className="fp-krisp-spacer" />
+        <div className="fp-krisp-section-label">Advanced</div>
+        <KrispToggleRow title="Noise Cancellation" sub="Powered by Krisp" on={toggles.noise} onToggle={toggle('noise')} />
+        <KrispToggleRow title="Background Voice Cancellation" sub="May increase power consumption" on={toggles.background} onToggle={toggle('background')} />
+        <KrispToggleRow title="Automatic Input Level Adjustment" sub="Recommended" on={toggles.autoLevel} onToggle={toggle('autoLevel')} />
+        <KrispToggleRow title="Disable Audio Processing" sub="Not Recommended" on={toggles.disable} onToggle={toggle('disable')} />
+      </div>
+    </div>
+  );
+}
+
+function RoamojiReactionsPreview() {
+  const fourPeople = [
+    VIDEO_SPEAKERS[1], // Lauren Hayes
+    VIDEO_SPEAKERS[2], // Ashley Brooks
+    VIDEO_SPEAKERS[5], // Ethan Bishop
+    VIDEO_SPEAKERS[6], // Sarah Mitchell
+  ];
+  return <MeetingPreview people={fourPeople} autoReactions={true} roamojiOpen={true} gesturesEnabled={true} />;
+}
+
+function ClosedCaptionsPreview() {
+  const fourPeople = [
+    VIDEO_SPEAKERS[0], // Emily Carter
+    VIDEO_SPEAKERS[5], // Ethan Bishop
+    VIDEO_SPEAKERS[6], // Sarah Mitchell
+    VIDEO_SPEAKERS[7], // Olivia Sanders
+  ];
+  const [emily, ethan, sarah, olivia] = fourPeople;
+  const line = (p, text) => ({ name: p.fullName || p.name, avatar: p.avatar, text });
+  const script = [
+    line(emily, 'Hey everyone, thanks for hopping on.'),
+    line(ethan, 'Of course. Should we kick things off?'),
+    line(sarah, 'Yeah let’s do it. I went through the captions exploration today and I think we’re really close — the transcript scrolls live, the avatars match the speakers, and it stays out of the way of the video.'),
+    line(olivia, 'That’s great. Anything we still need to figure out before we ship?'),
+    line(emily, 'Just one open thread on punctuation timing — I’ll have an answer by tomorrow.'),
+    line(ethan, 'Sounds good. Let’s plan to walk through it again on Friday.'),
+  ];
+  return <MeetingPreview people={fourPeople} autoReactions={false} roamojiOpen={false} captionsScript={script} />;
+}
+
+function BootChatPreview() {
+  return (
+    <div className="fp-minichat-preview">
+      <div className="fp-minichat-preview-frame">
+        <Magnify
+          className="fp-boot-magnify"
+          style={{ top: 260, left: 10 }}
+          lineTo={{ y: 188 }}
+        >
+          <span className="fp-boot-magnify-glyph" aria-hidden="true" />
+        </Magnify>
+      <div className="mc-window fp-minichat-preview-win">
+        <div className="mc-header">
+          <div className="mc-traffic-lights">
+            <div className="mc-light mc-light-close" />
+            <div className="mc-light mc-light-minimize" />
+            <div className="mc-light mc-light-maximize" />
+          </div>
+          <div className="mc-header-center">
+            <img className="mc-header-avatar" src="/headshots/howard-lerman.jpg" alt="" />
+            <span className="mc-header-name">Howard L.</span>
+          </div>
+        </div>
+        <div className="mc-body">
+          <div className="mc-messages">
+            <div className="mc-msg">
+              <div className="mc-msg-bubble" style={{ borderRadius: '18px 18px 18px 4px' }}>
+                <p>…and circling back to the Q3 forecast, I really think we should walk through all 47 line items one more time, just to make sure—</p>
+              </div>
+            </div>
+            <div className="mc-msg">
+              <div className="mc-msg-bubble mc-msg-consecutive" style={{ borderRadius: '4px 18px 18px 4px' }}>
+                <p>Actually, on second thought, let me start from the top.</p>
+              </div>
+            </div>
+            <div className="fp-minichat-system">
+              <span className="fp-minichat-system-icon" aria-hidden="true" />
+              <span>You gave Howard the boot.</span>
+            </div>
+          </div>
+          <div className="ainbox-composer">
+            <div className="ainbox-composer-box">
+              <div className="ainbox-composer-field">
+                <input placeholder="Write a Message..." readOnly />
+              </div>
+              <div className="ainbox-composer-toolbar">
+                <div className="ainbox-toolbar-plus">
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1V11M1 6H11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                </div>
+                <div className="ainbox-toolbar-group fp-minichat-actions">
+                  <span className="fp-minichat-action-icon" style={{ WebkitMaskImage: 'url(/icons/boot.svg)', maskImage: 'url(/icons/boot.svg)' }} title="Boot" />
+                  <span className="fp-minichat-action-icon" style={{ WebkitMaskImage: 'url(/icons/hand-raise.svg)', maskImage: 'url(/icons/hand-raise.svg)' }} title="Wave" />
+                  <span className="fp-minichat-action-icon" style={{ WebkitMaskImage: 'url(/icons/knock.svg)', maskImage: 'url(/icons/knock.svg)' }} title="Knock" />
+                </div>
+                <div className="ainbox-toolbar-spacer" />
+                <div className="ainbox-toolbar-group">
+                  <img src="/icons/composer/Send.svg" alt="" className="ainbox-toolbar-img ainbox-send-icon" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      </div>
+    </div>
+  );
+}
+
 /* ===== Feature content registry ===== */
 export const FEATURES = {
   'drop-in-meetings': {
     eyebrow: 'Drop-In Meetings',
-    title: 'Drop-In Meetings',
+    title: 'Knock. Talk. Done.',
     hero: <>Turn next week’s 60 minute meeting into a 5 minute conversation, right now. Audio-only private office or fully featured video conferencing rooms, right on the map.<br /><br />Knock to drop-in to anyone who is available for a quick meeting. The average meeting time in Roam is just 8 minutes long!</>,
     visual: <MapPreview autoKnock initialFloor="DropIn" />,
     quote: {
@@ -914,8 +1528,71 @@ export const FEATURES = {
       },
       {
         type: 'quote',
-        quote: '“One either meets or one works.”',
-        author: 'Peter Drucker',
+        quote: '“Always hated the sight of five, six grown men sitting around a table, doing nothing but work their jaw.”',
+        author: 'Annie Proulx',
+      },
+      {
+        title: 'The Boot',
+        desc: 'If someone’s overstaying their welcome in your office, give them the boot!',
+        visual: <BootChatPreview />,
+      },
+      {
+        title: 'Drop-In Video Meetings',
+        desc: 'Drop into any Video Conference room to join a meeting. See a discussion you want in on? Knock and join.',
+        visual: <KnockDropInPreview />,
+      },
+      {
+        title: 'Locked Room',
+        desc: 'Lock your room if you wish to prevent drop-ins.',
+        visual: <LockedRoomPreview />,
+      },
+      {
+        title: 'Presence on the Map',
+        desc: 'Your meeting shows up right on the HQ map so you can project your presence and your colleagues have a strong sense of what’s going on at HQ.',
+        visual: <MapPreview initialFloor="Presence" />,
+      },
+      {
+        title: 'External Meetings',
+        desc: 'Easily set up a meeting via Google Calendar or O365. Just select Roam and add anyone you like to the meeting.',
+        visual: <ExternalMeetingsPreview />,
+      },
+      {
+        title: 'Screenshare',
+        desc: 'Ultra high resolution screenshare with optional soundshare.',
+        visual: <MapPreview shareAutoOpen initialFloor="R&D" />,
+      },
+      {
+        title: 'Raised Hands',
+        desc: 'Raise hands in order to ask questions.',
+        visual: <RaisedHandsPreview />,
+      },
+      {
+        title: 'Virtual Background or Blur',
+        desc: 'Blur your background or upload an image to use as your virtual background.',
+        visual: <VirtualBackgroundPreview />,
+        variant: 'horz',
+      },
+      {
+        title: 'Face Touch Up',
+        desc: 'Add Face Touch Up effects to beautify your skin!',
+        visual: <FaceTouchUpPreview />,
+        variant: 'horz-reverse',
+      },
+      {
+        title: 'Krisp Noise Cancellation',
+        desc: 'Roam embeds Krisp, the #1 Noise Cancellation technology, ensuring only active voices on calls are heard, eliminating all other nearby voices and distractions.',
+        visual: <KrispNoiseCancellationPreview />,
+      },
+      {
+        titleImage: { src: '/feature/roamoji-wordmark.svg', alt: 'Roamoji' },
+        title: 'Roamoji Reactions',
+        desc: 'Fist bump, high five, or show respect by bowing with Roamoji reactions. There’s even a secret FOUNDER MODE unlock for those adventurous members who can figure it out…',
+        visual: <RoamojiReactionsPreview />,
+      },
+      {
+        title: 'Closed Captions',
+        desc: 'Turn on closed captions if you’d like to see the meeting transcribed in real time.',
+        visual: <ClosedCaptionsPreview />,
       },
     ],
   },
@@ -1317,7 +1994,7 @@ function CompareColumn({ side, data }) {
   );
 }
 
-function FeatureSection({ eyebrow, title, desc, visual, icons, variant, cards, bullets, left, right }) {
+function FeatureSection({ eyebrow, title, titleImage, desc, visual, icons, variant, cards, bullets, left, right }) {
   if (variant === 'compare' && left && right) {
     return (
       <section className="fp-section fp-section-compare">
@@ -1361,6 +2038,7 @@ function FeatureSection({ eyebrow, title, desc, visual, icons, variant, cards, b
     <section className={`fp-section ${variant ? `fp-section-${variant}` : ''}`}>
       <div className="fp-section-text">
         {eyebrow && <div className="fp-section-eyebrow text-caption-strong">{eyebrow}</div>}
+        {titleImage && <img className="fp-section-title-image" src={titleImage.src} alt={titleImage.alt || ''} />}
         <h2 className="fp-section-title">{title}</h2>
         <p className="fp-section-desc text-body">{desc}</p>
         {icons && icons.length > 0 && (

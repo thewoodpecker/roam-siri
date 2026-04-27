@@ -1,6 +1,113 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import ShareDialog from './ShareDialog';
+import { TileGestures } from './Gestures';
+import './Gestures.css';
 import './MeetingWindow.css';
+
+function LiveCaptions({ script }) {
+  const [entries, setEntries] = useState([]);
+  const scrollRef = useRef(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    let frame;
+    let lineIndex = 0;
+    let charsTyped = 0;
+    let lineStarted = false;
+    let phaseStart = performance.now();
+    const CHARS_PER_SECOND = 32;
+    const PAUSE_BETWEEN_LINES = 700;
+    const RESTART_PAUSE = 1500;
+    let local = [];
+
+    const commit = () => {
+      if (!cancelled) setEntries(local.slice());
+    };
+
+    const tick = () => {
+      if (cancelled) return;
+      const now = performance.now();
+
+      if (lineIndex >= script.length) {
+        if (now - phaseStart >= RESTART_PAUSE) {
+          local = [];
+          lineIndex = 0;
+          charsTyped = 0;
+          lineStarted = false;
+          phaseStart = now;
+          commit();
+        }
+        frame = requestAnimationFrame(tick);
+        return;
+      }
+
+      const line = script[lineIndex];
+
+      // Inter-line pause after completing the current line.
+      if (lineStarted && charsTyped >= line.text.length) {
+        if (now - phaseStart >= PAUSE_BETWEEN_LINES) {
+          lineIndex += 1;
+          charsTyped = 0;
+          lineStarted = false;
+          phaseStart = now;
+        }
+        frame = requestAnimationFrame(tick);
+        return;
+      }
+
+      // Append a fresh entry exactly once per line.
+      if (!lineStarted) {
+        local.push({ name: line.name, avatar: line.avatar, partial: '' });
+        lineStarted = true;
+        phaseStart = now;
+      }
+
+      const elapsed = now - phaseStart;
+      const targetChars = Math.min(line.text.length, Math.floor(elapsed * CHARS_PER_SECOND / 1000));
+      if (targetChars !== charsTyped) {
+        charsTyped = targetChars;
+        const last = local[local.length - 1];
+        local[local.length - 1] = { ...last, partial: line.text.slice(0, charsTyped) };
+        commit();
+      }
+
+      if (charsTyped >= line.text.length) {
+        // Switch into pause phase; phaseStart resets so the pause is measured
+        // from the moment the line completed.
+        phaseStart = now;
+      }
+
+      frame = requestAnimationFrame(tick);
+    };
+
+    setEntries([]);
+    frame = requestAnimationFrame(tick);
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(frame);
+    };
+  }, [script]);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+  }, [entries]);
+
+  return (
+    <div className="meeting-win-captions" ref={scrollRef}>
+      {entries.map((e, i) => (
+        <div key={i} className="meeting-win-caption-row">
+          <img className="meeting-win-caption-avatar" src={e.avatar} alt="" />
+          <div className="meeting-win-caption-text">
+            <div className="meeting-win-caption-name">{e.name}</div>
+            <div className="meeting-win-caption-body">{e.partial}</div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 const ROAMOJIS = ['🤣', '🔥', '👏', '👍', '🍿', '🎉', '🚀', '😍', '💯'];
 
@@ -66,14 +173,14 @@ const VIEW_MODES = [
   { id: 'speaker', label: 'Active Speaker' },
 ];
 
-export default function MeetingWindow({ win, onDrag, roomName, people: allPeople, onOpenChat, onOpenOnAir }) {
+export default function MeetingWindow({ win, onDrag, roomName, people: allPeople, onOpenChat, onOpenOnAir, onOpenMagicMinutes, locked, autoReactions = true, handsRaised = false, onClickHands, roamojiOpen: roamojiInitialOpen = true, gesturesEnabled = false, captionsScript }) {
   const people = useMemo(() => (allPeople || []).filter(p => p?.video), [allPeople]);
   const [closing, setClosing] = useState(false);
   const [activeSpeaker, setActiveSpeaker] = useState(0);
   const [viewMode, setViewMode] = useState('gallery');
   const [viewMenuOpen, setViewMenuOpen] = useState(false);
   const viewMenuRef = useRef(null);
-  const [roamojiOpen, setRoamojiOpen] = useState(true);
+  const [roamojiOpen, setRoamojiOpen] = useState(roamojiInitialOpen);
   const [roamojiClosing, setRoamojiClosing] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [ghosts, setGhosts] = useState([]);
@@ -93,6 +200,62 @@ export default function MeetingWindow({ win, onDrag, roomName, people: allPeople
       });
     };
   }, []);
+
+  // Simulated incoming gestures — once the meeting scrolls into view, a tile
+  // periodically sends a gesture *to me* so the user can practice reciprocating.
+  // Cycles through people and gestures so each round is different.
+  const [incomingByTile, setIncomingByTile] = useState({});
+  const incomingActiveRef = useRef(false);
+  const winRef = useRef(null);
+  const [inView, setInView] = useState(false);
+  const cycleRef = useRef({ person: 0, gesture: 0 });
+  const GESTURE_POOL = ['fistBump', 'highFive', 'handshake', 'bow'];
+  const VARIATION_MAX = { bow: 20, fistBump: 16, handshake: 5, highFive: 21, roamaniac: 4 };
+
+  useEffect(() => {
+    if (!gesturesEnabled || !winRef.current) return;
+    const observer = new IntersectionObserver(
+      entries => entries.forEach(e => setInView(e.isIntersecting)),
+      { threshold: 0.3 }
+    );
+    observer.observe(winRef.current);
+    return () => observer.disconnect();
+  }, [gesturesEnabled]);
+
+  useEffect(() => {
+    if (!gesturesEnabled || !inView || people.length === 0) return;
+    let timeout;
+    const schedule = (firstDelay) => {
+      const delay = firstDelay ?? (4000 + Math.random() * 4000);
+      timeout = setTimeout(() => {
+        if (!incomingActiveRef.current) {
+          const tileIndex = cycleRef.current.person % people.length;
+          const gesture = GESTURE_POOL[cycleRef.current.gesture % GESTURE_POOL.length];
+          cycleRef.current.person += 1;
+          cycleRef.current.gesture += 1;
+          const variation = Math.floor(Math.random() * VARIATION_MAX[gesture]) + 1;
+          incomingActiveRef.current = true;
+          setIncomingByTile({
+            [people[tileIndex].name]: { gesture, variation, key: Date.now() },
+          });
+        }
+        schedule();
+      }, delay);
+    };
+    schedule(800);
+    return () => clearTimeout(timeout);
+  }, [gesturesEnabled, inView, people]);
+
+  const onIncomingResolved = useCallback((personName) => {
+    incomingActiveRef.current = false;
+    setIncomingByTile(prev => {
+      if (!prev[personName]) return prev;
+      const next = { ...prev };
+      delete next[personName];
+      return next;
+    });
+  }, []);
+
 
   const playSound = useCallback((soundItem) => {
     const key = soundItem.emoji;
@@ -146,6 +309,7 @@ export default function MeetingWindow({ win, onDrag, roomName, people: allPeople
 
   // Auto-reactions from other participants — sometimes burst multiple
   useEffect(() => {
+    if (!autoReactions) return;
     if (!people.length) return;
     const timers = [];
     const scheduleReaction = () => {
@@ -218,6 +382,7 @@ export default function MeetingWindow({ win, onDrag, roomName, people: allPeople
 
   return (
     <div
+      ref={winRef}
       className={`meeting-win ${!win.isFocused ? 'meeting-win-unfocused' : ''} ${closing ? 'meeting-win-closing' : ''}`}
       style={{ left: win.position.x, top: win.position.y, zIndex: win.zIndex }}
       onMouseDown={() => win.focus()}
@@ -230,7 +395,10 @@ export default function MeetingWindow({ win, onDrag, roomName, people: allPeople
           <div className="meeting-win-light meeting-win-light-max" />
         </div>
         <div className="meeting-win-header-center">
-          <span className="meeting-win-title">{roomName}</span>
+          <span className="meeting-win-title">
+            {roomName}
+            {locked && <span className="meeting-win-lock" role="img" aria-label="Locked" />}
+          </span>
           <span className="meeting-win-subtitle">Recording Magic Minutes</span>
         </div>
         <div className="meeting-win-header-right" ref={viewMenuRef}>
@@ -262,7 +430,7 @@ export default function MeetingWindow({ win, onDrag, roomName, people: allPeople
               tileStyle.gridColumnStart = 1 + (cols - lastRowCount) + (i - lastRowStart) * 2;
             }
             return (
-            <div key={person.name + i} style={tileStyle} className={`meeting-win-tile ${i === activeSpeaker ? 'meeting-win-tile-active' : ''} ${!videoMap[i] ? 'meeting-win-tile-off' : ''}`}>
+            <div key={person.name} data-tile-id={person.name} style={tileStyle} className={`meeting-win-tile ${i === activeSpeaker ? 'meeting-win-tile-active' : ''} ${!videoMap[i] ? 'meeting-win-tile-off' : ''}`}>
               {videoMap[i] ? (
                 <video
                   className="meeting-win-video"
@@ -280,6 +448,14 @@ export default function MeetingWindow({ win, onDrag, roomName, people: allPeople
               <div className="meeting-win-name">
                 <span>{person.fullName || person.name}</span>
               </div>
+              {gesturesEnabled && (
+                <TileGestures
+                  isRoamaniac
+                  occupantName={person.name?.split(' ')[0] || 'them'}
+                  incoming={incomingByTile[person.name]}
+                  onIncomingResolved={() => onIncomingResolved(person.name)}
+                />
+              )}
             </div>
             );
           })}
@@ -307,20 +483,35 @@ export default function MeetingWindow({ win, onDrag, roomName, people: allPeople
           </div>
         )}
 
+        {/* Live captions */}
+        {captionsScript && captionsScript.length > 0 && (
+          <LiveCaptions script={captionsScript} />
+        )}
+
         {/* Toolbar */}
         <div className="meeting-win-toolbar-wrap">
           <div className="meeting-win-toolbar">
             {/* Left */}
             <div className="meeting-win-pill-group">
-              <div className="meeting-win-pill" onClick={onOpenChat}><img src="/icons/chat.svg" alt="" /></div>
+              <div className="meeting-win-pill" data-tooltip="Chat" onClick={onOpenChat}><img src="/icons/chat.svg" alt="" /></div>
             </div>
             {/* Center */}
             <div className="meeting-win-pill-group">
-              <div className="meeting-win-pill meeting-win-pill-muted"><img src="/icons/video-off.svg" alt="" /></div>
-              <div className="meeting-win-pill"><img src="/icons/microphone.svg" alt="" /></div>
-              <div className="meeting-win-pill" onClick={() => setShareOpen(true)}><img src="/icons/screenshare.svg" alt="" /></div>
-              <div className="meeting-win-pill"><img src="/icons/hand-raise.svg" alt="" /></div>
-              <div className={`meeting-win-pill ${roamojiOpen ? 'meeting-win-pill-active' : ''}`} onClick={() => {
+              <div className="meeting-win-pill meeting-win-pill-muted" data-tooltip="Video"><img src="/icons/video-off.svg" alt="" /></div>
+              <div className="meeting-win-pill" data-tooltip="Microphone"><img src="/icons/microphone.svg" alt="" /></div>
+              <div className="meeting-win-pill" data-tooltip="Share Screen" onClick={() => setShareOpen(true)}><img src="/icons/screenshare.svg" alt="" /></div>
+              <div
+                className={`meeting-win-pill ${handsRaised ? 'meeting-win-pill-hands-raised' : ''}`}
+                data-tooltip={handsRaised ? 'Raised Hands' : 'Raise Hand'}
+                onClick={onClickHands}
+                data-hand-pill="true"
+              >
+                <span
+                  className={`meeting-win-hand-glyph ${handsRaised ? 'meeting-win-hand-glyph-raised' : ''}`}
+                  aria-hidden="true"
+                />
+              </div>
+              <div className={`meeting-win-pill ${roamojiOpen ? 'meeting-win-pill-active' : ''}`} data-tooltip="Roamoji" onClick={() => {
                 if (roamojiOpen) {
                   setRoamojiClosing(true);
                   setTimeout(() => { setRoamojiOpen(false); setRoamojiClosing(false); }, 200);
@@ -328,15 +519,15 @@ export default function MeetingWindow({ win, onDrag, roomName, people: allPeople
                   setRoamojiOpen(true);
                 }
               }}><img src="/icons/emoji.svg" alt="" /></div>
-              <div className="meeting-win-pill"><img src="/icons/magic-quill.svg" alt="" /></div>
-              <div className="meeting-win-pill meeting-win-pill-leave" onClick={handleClose}><img src="/icons/door.svg" alt="" /></div>
+              <div className="meeting-win-pill" data-tooltip="Magic Minutes" onClick={onOpenMagicMinutes}><img src="/icons/magic-quill.svg" alt="" /></div>
+              <div className="meeting-win-pill meeting-win-pill-leave" data-tooltip="Leave" onClick={handleClose}><img src="/icons/door.svg" alt="" /></div>
             </div>
             {/* Right */}
             <div className="meeting-win-toolbar-right">
               <div className="meeting-win-pill-group">
-                <div className="meeting-win-pill"><img src="/icons/add-people.svg" alt="" /></div>
-                <div className="meeting-win-pill"><img src="/icons/meeting-chat.svg" alt="" /></div>
-                <div className="meeting-win-pill"><img src="/icons/floors.svg" alt="" /></div>
+                <div className="meeting-win-pill" data-tooltip="Add People"><img src="/icons/add-people.svg" alt="" /></div>
+                <div className="meeting-win-pill" data-tooltip="Meeting Chat"><img src="/icons/meeting-chat.svg" alt="" /></div>
+                <div className="meeting-win-pill" data-tooltip="Floors"><img src="/icons/floors.svg" alt="" /></div>
               </div>
             </div>
           </div>

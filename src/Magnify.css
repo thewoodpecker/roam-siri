@@ -1,0 +1,148 @@
+/* Magnify — focus-feature callout with pin + concentric rings */
+
+.fp-magnify {
+  --magnify-size: 80px;
+  --magnify-ring-step: 0.6;     /* each ring grows by this much from previous */
+  --magnify-ring-color: rgba(255, 255, 255, 0.12);
+  --magnify-pin-bg: var(--bg-surface-elevated-secondary);
+  --magnify-pin-border: rgba(255, 255, 255, 0.18);
+  --magnify-tail-size: 18px;
+
+  position: absolute;
+  width: var(--magnify-size);
+  height: var(--magnify-size);
+  pointer-events: none;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  isolation: isolate;
+}
+
+/* Concentric rings — emanate outward from the central pin.
+   Each ring is sized as a multiple of the pin diameter via --n. */
+.fp-magnify-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--magnify-size);
+  height: var(--magnify-size);
+  border: 0.5px solid var(--magnify-ring-color);
+  border-radius: 50%;
+  pointer-events: none;
+  transform-origin: center;
+  opacity: 0;
+  /* Animation only kicks in once the magnify scrolls into view (entered
+     class added). Ring 1 starts shortly after the pin appears, then 2 and
+     3 stagger so a continuous outward stream develops. */
+}
+
+.fp-magnify-entered .fp-magnify-ring {
+  animation: fp-magnify-ring-ripple 4.8s ease-out infinite;
+  animation-delay: calc(1300ms + (var(--n) - 1) * 1.6s);
+}
+
+@keyframes fp-magnify-ring-ripple {
+  0% {
+    transform: translate(-50%, -50%) scale(0.7);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.5;
+  }
+  70% {
+    opacity: 0.18;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1.8);
+    opacity: 0;
+  }
+}
+
+/* Central pin — circular halo with the focused element inside */
+.fp-magnify-pin {
+  position: relative;
+  width: var(--magnify-size);
+  height: var(--magnify-size);
+  border-radius: 50%;
+  background: var(--magnify-pin-bg);
+  border: 0.5px solid var(--magnify-pin-border);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: grid;
+  place-items: center;
+  z-index: 2;
+  box-shadow: var(--shadow-2);
+  opacity: 0;
+  transform: scale(0.85);
+}
+
+.fp-magnify-entered .fp-magnify-pin {
+  animation: fp-magnify-pin-in 620ms cubic-bezier(0.34, 1.56, 0.64, 1) 700ms forwards;
+}
+
+@keyframes fp-magnify-pin-in {
+  0%   { opacity: 0; transform: scale(0.85); }
+  60%  { opacity: 1; transform: scale(1.06); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* Connector line — hairline + dot drawn from the pin edge to the target.
+   The svg's overflow="visible" attribute lets the line/circle extend past
+   the 1×1 viewport, so we can position the SVG at the pin center and let
+   the geometry coordinates do the rest. */
+.fp-magnify-line {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  overflow: visible;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Line draws from the target endpoint toward the pin. The SVG carries
+   stroke-dasharray + stroke-dashoffset attributes for the initial values;
+   this animation tweens stroke-dashoffset down to 0. We use a CSS animation
+   (not a transition) with explicit 0% keyframe so it always plays from the
+   defined start state without relying on a previously-painted "from" value. */
+.fp-magnify-entered .fp-magnify-line line {
+  animation: fp-magnify-line-draw 720ms cubic-bezier(0.4, 0, 0.2, 1) 200ms forwards;
+}
+
+@keyframes fp-magnify-line-draw {
+  0%   { stroke-dashoffset: var(--magnify-line-length, 999); }
+  100% { stroke-dashoffset: 0; }
+}
+
+/* Endpoint dot fades in as the line begins to draw. */
+.fp-magnify-line circle {
+  opacity: 0;
+}
+
+.fp-magnify-entered .fp-magnify-line circle {
+  animation: fp-magnify-dot-in 280ms ease-out 200ms forwards;
+}
+
+@keyframes fp-magnify-dot-in {
+  0%   { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+.fp-magnify-content {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  /* Re-enable interaction inside the pin if the child needs it */
+  pointer-events: auto;
+}
+
+.fp-magnify-content > * {
+  display: block;
+}
+
+/* Light theme */
+[data-theme="light"] .fp-magnify {
+  --magnify-ring-color: rgba(0, 0, 0, 0.10);
+  --magnify-pin-bg: rgba(255, 255, 255, 0.55);
+  --magnify-pin-border: rgba(0, 0, 0, 0.12);
+}
