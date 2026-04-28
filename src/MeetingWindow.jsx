@@ -120,9 +120,14 @@ const SOUND_ROAMOJIS = [
 
 function SoundButton({ emoji, level, onClick }) {
   const bars = 16;
-  const levelClass = level <= 0 ? '' : level <= 1 ? 'roamoji-bars-l1' : level <= 2 ? 'roamoji-bars-l2' : 'roamoji-bars-l3';
+  const levelClass =
+    level >= 4 ? 'roamoji-bars-l4' :
+    level >= 3 ? 'roamoji-bars-l3' :
+    level >= 2 ? 'roamoji-bars-l2' :
+    level >= 1 ? 'roamoji-bars-l1' : '';
+  const shakeClass = level >= 4 ? 'roamoji-sound-shake-red' : level >= 3 ? 'roamoji-sound-shake' : '';
   return (
-    <button className={`roamoji-sound-btn ${level > 0 ? 'roamoji-sound-active' : ''}`} onClick={onClick}>
+    <button className={`roamoji-sound-btn ${level > 0 ? 'roamoji-sound-active' : ''} ${shakeClass}`} onClick={onClick}>
       <span className="roamoji-sound-emoji">{emoji}</span>
       <div className={`roamoji-sound-bars ${levelClass}`}>
         {Array.from({ length: bars }, (_, i) => (
@@ -173,12 +178,12 @@ const VIEW_MODES = [
   { id: 'speaker', label: 'Active Speaker' },
 ];
 
-export default function MeetingWindow({ win, onDrag, roomName, people: allPeople, onOpenChat, onOpenOnAir, onOpenMagicMinutes, locked, autoReactions = true, handsRaised = false, onClickHands, roamojiOpen: roamojiInitialOpen = true, gesturesEnabled = true, incomingGesturesEnabled = false, captionsScript }) {
-  const people = useMemo(() => (allPeople || []).filter(p => p?.video), [allPeople]);
+export default function MeetingWindow({ win, onDrag, roomName, people: allPeople, onOpenChat, onOpenOnAir, onOpenMagicMinutes, locked, autoReactions = true, handsRaised = false, onClickHands, roamojiOpen: roamojiInitialOpen = true, gesturesEnabled = true, incomingGesturesEnabled = false, captionsScript, initialViewMode = 'gallery', initialViewMenuOpen = false, compact = false }) {
+  const people = useMemo(() => (allPeople || []).filter(p => p && (p.video || p.avatar)), [allPeople]);
   const [closing, setClosing] = useState(false);
   const [activeSpeaker, setActiveSpeaker] = useState(0);
-  const [viewMode, setViewMode] = useState('gallery');
-  const [viewMenuOpen, setViewMenuOpen] = useState(false);
+  const [viewMode, setViewMode] = useState(initialViewMode);
+  const [viewMenuOpen, setViewMenuOpen] = useState(initialViewMenuOpen);
   const viewMenuRef = useRef(null);
   const [roamojiOpen, setRoamojiOpen] = useState(roamojiInitialOpen);
   const [roamojiClosing, setRoamojiClosing] = useState(false);
@@ -383,7 +388,7 @@ export default function MeetingWindow({ win, onDrag, roomName, people: allPeople
   return (
     <div
       ref={winRef}
-      className={`meeting-win ${!win.isFocused ? 'meeting-win-unfocused' : ''} ${closing ? 'meeting-win-closing' : ''}`}
+      className={`meeting-win ${!win.isFocused ? 'meeting-win-unfocused' : ''} ${closing ? 'meeting-win-closing' : ''} ${compact ? 'meeting-win-compact' : ''}`}
       style={{ left: win.position.x, top: win.position.y, zIndex: win.zIndex }}
       onMouseDown={() => win.focus()}
     >
@@ -422,15 +427,14 @@ export default function MeetingWindow({ win, onDrag, roomName, people: allPeople
 
       {/* Video grid */}
       <div className="meeting-win-body">
-        <div className="meeting-win-grid" style={{ gridTemplateColumns: `repeat(${virtualCols}, 1fr)`, gridTemplateRows: `repeat(${rows}, auto)` }}>
-          {people.map((person, i) => {
-            const isLastRow = i >= lastRowStart;
-            const tileStyle = { gridColumnEnd: 'span 2' };
-            if (centerLastRow && isLastRow) {
-              tileStyle.gridColumnStart = 1 + (cols - lastRowCount) + (i - lastRowStart) * 2;
-            }
-            return (
-            <div key={person.name} data-tile-id={person.name} style={tileStyle} className={`meeting-win-tile ${i === activeSpeaker ? 'meeting-win-tile-active' : ''} ${!videoMap[i] ? 'meeting-win-tile-off' : ''}`}>
+        {(() => {
+          const renderTile = (person, i, { style, className = '' } = {}) => (
+            <div
+              key={person.name}
+              data-tile-id={person.name}
+              style={style}
+              className={`meeting-win-tile ${i === activeSpeaker ? 'meeting-win-tile-active' : ''} ${!videoMap[i] ? 'meeting-win-tile-off' : ''} ${className}`}
+            >
               {videoMap[i] ? (
                 <video
                   className="meeting-win-video"
@@ -446,6 +450,11 @@ export default function MeetingWindow({ win, onDrag, roomName, people: allPeople
                 </div>
               )}
               <div className="meeting-win-name">
+                {i === activeSpeaker && (
+                  <div className="meeting-win-talking" aria-hidden="true">
+                    <span /><span /><span /><span />
+                  </div>
+                )}
                 <span>{person.fullName || person.name}</span>
               </div>
               {gesturesEnabled && (
@@ -457,9 +466,51 @@ export default function MeetingWindow({ win, onDrag, roomName, people: allPeople
                 />
               )}
             </div>
+          );
+
+          if (viewMode === 'speaker' && people.length > 0) {
+            const main = people[activeSpeaker] || people[0];
+            const others = people.filter((_, i) => i !== activeSpeaker);
+            return (
+              <div className="meeting-win-speaker-layout">
+                <div className="meeting-win-speaker-main">
+                  {renderTile(main, activeSpeaker, { className: 'meeting-win-speaker-main-tile' })}
+                </div>
+                {others.length > 0 && (
+                  <div className="meeting-win-speaker-thumbs">
+                    {others.map((p) => {
+                      const i = people.indexOf(p);
+                      return renderTile(p, i, { className: 'meeting-win-thumb' });
+                    })}
+                  </div>
+                )}
+              </div>
             );
-          })}
-        </div>
+          }
+
+          if (viewMode === 'dynamic') {
+            return (
+              <div className="meeting-win-dynamic-layout">
+                {people.map((person, i) => renderTile(person, i, {
+                  className: i === activeSpeaker ? 'meeting-win-dynamic-active' : '',
+                }))}
+              </div>
+            );
+          }
+
+          return (
+            <div className="meeting-win-grid" style={{ gridTemplateColumns: `repeat(${virtualCols}, 1fr)`, gridTemplateRows: `repeat(${rows}, auto)` }}>
+              {people.map((person, i) => {
+                const isLastRow = i >= lastRowStart;
+                const tileStyle = { gridColumnEnd: 'span 2' };
+                if (centerLastRow && isLastRow) {
+                  tileStyle.gridColumnStart = 1 + (cols - lastRowCount) + (i - lastRowStart) * 2;
+                }
+                return renderTile(person, i, { style: tileStyle });
+              })}
+            </div>
+          );
+        })()}
 
         {/* Roamoji ghosts */}
         <div className="roamoji-ghost-container">

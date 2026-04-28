@@ -1601,18 +1601,18 @@ function WarRoomView() {
 }
 
 const EDIT_BG_COLORS = [
-  { id: 'black', color: '#0C0C0E', room: '#1D1E20', swatch: '#0C0C0E', label: 'Default' },
-  { id: 'red', color: '#201318', room: '#2E1E24', swatch: '#E53935', label: 'Red' },
-  { id: 'orange', color: '#201613', room: '#2E221C', swatch: '#FF6F00', label: 'Orange' },
-  { id: 'yellow', color: '#201D13', room: '#2E2B1C', swatch: '#FFC107', label: 'Yellow' },
-  { id: 'green', color: '#132017', room: '#1C2E22', swatch: '#46D08F', label: 'Green' },
-  { id: 'cyan', color: '#131F20', room: '#1C2D2E', swatch: '#4DD0E1', label: 'Cyan' },
-  { id: 'blue', color: '#131620', room: '#1C222E', swatch: '#0059DC', label: 'Blue' },
-  { id: 'purple', color: '#181320', room: '#241E2E', swatch: '#835CE9', label: 'Purple' },
-  { id: 'pink', color: '#201318', room: '#2E1E24', swatch: '#C2185B', label: 'Pink' },
+  { id: 'black',  dark: { color: '#0C0C0E', room: '#1D1E20' }, light: { color: '#F5F5F7', room: '#FFFFFF' }, swatch: '#0C0C0E', label: 'Default' },
+  { id: 'red',    dark: { color: '#201318', room: '#2E1E24' }, light: { color: '#FCE5E7', room: '#FFF5F6' }, swatch: '#E53935', label: 'Red' },
+  { id: 'orange', dark: { color: '#201613', room: '#2E221C' }, light: { color: '#FCEEDD', room: '#FFF7F0' }, swatch: '#FF6F00', label: 'Orange' },
+  { id: 'yellow', dark: { color: '#201D13', room: '#2E2B1C' }, light: { color: '#FCF4D6', room: '#FFFBEC' }, swatch: '#FFC107', label: 'Yellow' },
+  { id: 'green',  dark: { color: '#132017', room: '#1C2E22' }, light: { color: '#DBF2E5', room: '#F0FBF4' }, swatch: '#46D08F', label: 'Green' },
+  { id: 'cyan',   dark: { color: '#131F20', room: '#1C2D2E' }, light: { color: '#DAF2F5', room: '#F0FBFC' }, swatch: '#4DD0E1', label: 'Cyan' },
+  { id: 'blue',   dark: { color: '#131620', room: '#1C222E' }, light: { color: '#DCE5FA', room: '#F0F4FE' }, swatch: '#0059DC', label: 'Blue' },
+  { id: 'purple', dark: { color: '#181320', room: '#241E2E' }, light: { color: '#E9DDF8', room: '#F6F0FE' }, swatch: '#835CE9', label: 'Purple' },
+  { id: 'pink',   dark: { color: '#201318', room: '#2E1E24' }, light: { color: '#FBDDE7', room: '#FEF0F5' }, swatch: '#C2185B', label: 'Pink' },
 ];
 
-function EditMapView() {
+export function EditMapView({ onThemeChange } = {}) {
   const baseRoom = meetingRooms.find(r => r.id === 'alan-kay');
   const [peopleCount, setPeopleCount] = useState(500);
   const [speakerCount, setSpeakerCount] = useState(3);
@@ -1755,7 +1755,24 @@ function EditMapView() {
     return () => window.removeEventListener('keydown', onKey);
   }, [selectedRoom, editingNameId]);
 
-  const themeColors = EDIT_BG_COLORS.find(c => c.id === bgColor) || EDIT_BG_COLORS[0];
+  const [pageTheme, setPageTheme] = useState(() =>
+    typeof document !== 'undefined' ? document.documentElement.getAttribute('data-theme') || 'dark' : 'dark'
+  );
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    const obs = new MutationObserver(() => {
+      setPageTheme(document.documentElement.getAttribute('data-theme') || 'dark');
+    });
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    return () => obs.disconnect();
+  }, []);
+
+  const themePalette = EDIT_BG_COLORS.find(c => c.id === bgColor) || EDIT_BG_COLORS[0];
+  const themeColors = { ...themePalette, ...(pageTheme === 'light' ? themePalette.light : themePalette.dark) };
+
+  useEffect(() => {
+    onThemeChange?.({ color: themeColors.color, room: themeColors.room });
+  }, [bgColor, pageTheme, onThemeChange]);
 
   const addRoom = (type) => {
     const roomNames = { 'private': 'Private Office', 'team': 'Team Room', 'meeting': 'Meeting Room', 'theater': 'Theater', 'game': 'Game Room', 'command': 'Command Center' };
@@ -1886,17 +1903,20 @@ function EditMapView() {
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 3V13M3 8H13" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>
             </button>
             {showAddMenu && (
-              <div className="add-room-menu" style={{ backgroundColor: themeColors.room }}>
+              <div className="add-room-menu">
                 {roomTypes.map(t => (<button key={t.id} className="add-room-option" onClick={() => { addRoom(t.id); setShowAddMenu(false); }}><span className="add-room-name">{t.name}</span></button>))}
               </div>
             )}
           </div>
           <div className="toolbar-bg-swatches">
-            {EDIT_BG_COLORS.map(c => (
-              <button key={c.id} className={`toolbar-swatch ${bgColor === c.id ? 'toolbar-swatch-active' : ''}`}
-                style={{ background: c.swatch, border: c.id === 'black' ? '1px solid rgba(255,255,255,0.2)' : 'none' }}
-                onClick={() => setBgColor(c.id)} title={c.label} />
-            ))}
+            {EDIT_BG_COLORS.map(c => {
+              const swatch = c.id === 'black' && pageTheme === 'light' ? '#FFFFFF' : c.swatch;
+              return (
+                <button key={c.id} className={`toolbar-swatch ${bgColor === c.id ? 'toolbar-swatch-active' : ''}`}
+                  style={{ background: swatch }}
+                  onClick={() => setBgColor(c.id)} title={c.label} />
+              );
+            })}
           </div>
         </div>
       </div>

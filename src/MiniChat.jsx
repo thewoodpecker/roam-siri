@@ -98,7 +98,7 @@ function DmBubble({ msg, isFirstInGroup }) {
   );
 }
 
-export default function MiniChat({ personName, personAvatar, chatId, position, onClose }) {
+export default function MiniChat({ personName, personAvatar, chatId, position, onClose, closeSignal = 0 }) {
   const { messages, setMessages, getReply } = useChat();
   const { state: wmState, register, unregister, focus: wmFocus } = useWindowManager();
   const wmId = 'mc-' + chatId;
@@ -203,6 +203,12 @@ export default function MiniChat({ personName, personAvatar, chatId, position, o
     setClosing(true);
     setTimeout(onClose, 200);
   };
+
+  useEffect(() => {
+    if (closeSignal > 0 && !closing) {
+      handleClose();
+    }
+  }, [closeSignal]);
 
   const sendMessage = () => {
     if (!inputText.trim() || !convo) return;

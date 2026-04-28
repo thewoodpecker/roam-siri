@@ -10,7 +10,7 @@
   backdrop-filter: blur(30px);
   -webkit-backdrop-filter: blur(30px);
   border: 0.5px solid var(--border);
-  border-radius: var(--radius-2xl);
+  border-radius: var(--radius-xl);
   corner-shape: superellipse(1.6);
   display: flex;
   flex-direction: column;
@@ -212,6 +212,10 @@
   background: var(--bg-secondary);
 }
 
+.sc-viewport[data-theme="light"] .rec-chip {
+  box-shadow: none;
+}
+
 /* List */
 .rec-list {
   flex: 1;
@@ -267,7 +271,7 @@
   border-radius: 50%;
   object-fit: cover;
   border: 1.5px solid rgba(0, 0, 0, 0.4);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--shadow-1);
 }
 
 .rec-thumb-avatar-centered {

@@ -34,7 +34,7 @@
   padding: 0 10px;
   background: #1e1d20;
   border-radius: 14px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45), 0 2px 6px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-6);
   width: 300px;
   box-sizing: border-box;
   margin: 0 auto 12px;

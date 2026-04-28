@@ -10,7 +10,7 @@
   backdrop-filter: blur(30px);
   -webkit-backdrop-filter: blur(30px);
   border: 0.5px solid var(--border);
-  border-radius: var(--radius-2xl);
+  border-radius: var(--radius-xl);
   corner-shape: superellipse(1.6);
   display: flex;
   flex-direction: column;
@@ -288,8 +288,27 @@
   opacity: 0.7;
 }
 
-.roamoji-sound-btn.roamoji-sound-active {
+/* Shake only when level meter is hot (orange/red), not for low levels */
+.roamoji-sound-btn.roamoji-sound-shake {
   animation: roamoji-shake 0.5s infinite;
+}
+
+.roamoji-sound-btn.roamoji-sound-shake-red {
+  animation: roamoji-shake-red 0.32s infinite;
+}
+
+@keyframes roamoji-shake-red {
+  0% { transform: translate3d(2%, 2%, 0); }
+  10% { transform: translate3d(-2%, -4%, 0); }
+  20% { transform: translate3d(-4%, 0, 0); }
+  30% { transform: translate3d(4%, 3%, 0); }
+  40% { transform: translate3d(2%, -2%, 0); }
+  50% { transform: translate3d(-2%, 3%, 0); }
+  60% { transform: translate3d(-4%, 3%, 0); }
+  70% { transform: translate3d(4%, 2%, 0); }
+  80% { transform: translate3d(-2%, -2%, 0); }
+  90% { transform: translate3d(2%, 4%, 0); }
+  100% { transform: translate3d(2%, -3%, 0); }
 }
 
 @keyframes roamoji-shake {
@@ -368,12 +387,20 @@
   animation: roamoji-bar-rand 0.9s ease-in-out infinite alternate;
 }
 
-/* Level 3 — high */
+/* Level 3 — high (orange) */
 .roamoji-bars-l3 { opacity: 1; }
 .roamoji-bars-l3 .roamoji-sound-bar {
   background: var(--amber-500);
   transform-origin: bottom;
   animation: roamoji-bar-rand 0.6s ease-in-out infinite alternate;
+}
+
+/* Level 4 — peak (red) */
+.roamoji-bars-l4 { opacity: 1; }
+.roamoji-bars-l4 .roamoji-sound-bar {
+  background: var(--red-400);
+  transform-origin: bottom;
+  animation: roamoji-bar-rand 0.4s ease-in-out infinite alternate;
 }
 
 /* Stagger each bar's animation */
@@ -530,6 +557,59 @@
   align-content: center;
 }
 
+.meeting-win-speaker-layout {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  min-height: 0;
+}
+
+.meeting-win-speaker-main {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+
+.meeting-win-speaker-main-tile {
+  flex: 1;
+  aspect-ratio: auto !important;
+  min-height: 0;
+  animation: meeting-win-speaker-swap 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes meeting-win-speaker-swap {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.meeting-win-speaker-thumbs {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.meeting-win-thumb {
+  flex: 1;
+  min-width: 0;
+  aspect-ratio: 16 / 9;
+}
+
+.meeting-win-dynamic-layout {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-auto-rows: 1fr;
+  gap: 8px;
+  padding: 16px;
+  min-height: 0;
+}
+
+.meeting-win-dynamic-layout .meeting-win-tile {
+  aspect-ratio: auto !important;
+}
+
 .meeting-win-tile {
   position: relative;
   border-radius: 12px;
@@ -583,6 +663,20 @@
   border-radius: 8px;
 }
 
+.meeting-win-tile.tile-gesture-active .meeting-win-name {
+  display: none;
+}
+
+/* Compact preview — hides per-tile name labels and shrinks the hover
+   roamoji/gesture overlay so it doesn't dominate small tiles. */
+.meeting-win-compact .meeting-win-name {
+  display: none;
+}
+
+.meeting-win-compact .gesture-bar-container {
+  transform: scale(0.55);
+}
+
 .meeting-win-name span {
   font-size: 14px;
   font-weight: 400;
@@ -595,6 +689,32 @@
 .meeting-win-mic {
   width: 16px;
   height: 16px;
+}
+
+.meeting-win-talking {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  height: 14px;
+  margin-right: 2px;
+}
+
+.meeting-win-talking span {
+  display: block;
+  width: 2px;
+  background: var(--border-focus, #4ade80);
+  border-radius: 2px;
+  animation: meeting-win-talking-bar 0.9s ease-in-out infinite;
+}
+
+.meeting-win-talking span:nth-child(1) { height: 30%; animation-delay: 0s; }
+.meeting-win-talking span:nth-child(2) { height: 70%; animation-delay: 0.15s; }
+.meeting-win-talking span:nth-child(3) { height: 50%; animation-delay: 0.3s; }
+.meeting-win-talking span:nth-child(4) { height: 80%; animation-delay: 0.45s; }
+
+@keyframes meeting-win-talking-bar {
+  0%, 100% { transform: scaleY(0.4); }
+  50%      { transform: scaleY(1); }
 }
 
 .meeting-win-mic-muted {
@@ -744,7 +864,7 @@
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.15s ease, transform 0.15s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-2);
   z-index: 10;
 }
 

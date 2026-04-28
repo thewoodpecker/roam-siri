@@ -11,6 +11,7 @@ import TheaterWindow from './TheaterWindow';
 import OnItTaskPane from './OnItTaskPane';
 import MagicMinutes from './MagicMinutes';
 import Recordings from './Recordings';
+import Calendar from './Calendar';
 import Lobby from './Lobby';
 import MobileWindow from './MobileWindow';
 import { ChatProvider, useChat } from './ChatContext';
@@ -81,74 +82,76 @@ const SHOWCASE_PEOPLE = [
 
 const p = (name) => SHOWCASE_PEOPLE.find(p => p.name === name) || SHOWCASE_PEOPLE[0];
 
+// Physical office assignments — used by the Physical Office Tags feature visual
+const CITY_BY_NAME = {
+  'Klas L.': 'NYC', 'Derek C.': 'LDN', 'John M.': 'TYO', 'Howard L.': 'NYC', 'Keegan L.': 'LAX', 'Jon B.': 'BER',
+  'Grace S.': 'YYZ', 'Michael W.': 'SFO', 'Rob F.': 'SYD', 'Chelsea T.': 'PAR', 'Tom D.': 'MEX', 'Will H.': 'MEL',
+  'Lexi B.': 'AUS', 'Garima K.': 'BOM', 'Ava L.': 'AMS', 'Mia C.': 'SIN', 'Sarah M.': 'DUB',
+  'Ashley B.': 'GRU', 'Hannah B.': 'STO', 'Daniel R.': 'LIS', 'John B.': 'SEL', 'Michael M.': 'MAD',
+  'Joe W.': 'NYC', 'Peter L.': 'CHI', 'Sean M.': 'YVR', 'Jeff G.': 'TLV',
+};
+function getCityForPerson(person) {
+  if (!person) return null;
+  return CITY_BY_NAME[person.name] || null;
+}
+
 // Floor layouts — each floor has its own rooms
 export const FLOORS = {
   'R&D': [
-    { id: 'r1', type: 'private', name: 'Klas L.', people: [], pos: { col: 0, row: 0 }, span: 1 },
+    // Row 0 — six private offices
+    { id: 'r1', type: 'private', name: 'Klas L.', people: [p('Klas L.')], pos: { col: 0, row: 0 }, span: 1 },
     { id: 'r2', type: 'private', name: 'Derek C.', people: [p('Derek C.'), p('Michael M.')], pos: { col: 1, row: 0 }, span: 1 },
     { id: 'r3', type: 'private', name: 'John M.', people: [p('John M.')], pos: { col: 2, row: 0 }, span: 1 },
     { id: 'r4', type: 'private', name: 'Howard L.', people: [p('Howard L.')], pos: { col: 3, row: 0 }, span: 1, story: '/stories/story-howard.mp4' },
     { id: 'r5', type: 'private', name: 'Keegan L.', people: [p('Keegan L.')], pos: { col: 4, row: 0 }, span: 1 },
     { id: 'r5b', type: 'private', name: 'Jon B.', people: [p('Jon B.')], pos: { col: 5, row: 0 }, span: 1, spotify: { song: 'Some Might Say', artist: 'Oasis', art: '/spotify/oasis-some-might-say.png' } },
+    // Row 1 — privates flanking a center theater that spans rows 1-2
     { id: 'r6', type: 'private', name: 'Grace S.', people: [p('Grace S.')], pos: { col: 0, row: 1 }, span: 1 },
     { id: 'r7', type: 'private', name: 'Michael W.', people: [p('Michael W.')], pos: { col: 1, row: 1 }, span: 1, figma: { comment: 'Can we tighten the 24px gap to 16px?', file: 'Dock v3', author: 'Ava L.' } },
     { id: 'theater', type: 'theater', name: 'Theater', people: [], pos: { col: 2, row: 1 }, colSpan: 2, rowSpan: 2 },
     { id: 'r8', type: 'private', name: 'Rob F.', people: [p('Rob F.')], pos: { col: 4, row: 1 }, span: 1 },
     { id: 'r8b', type: 'private', name: 'Chelsea T.', people: [p('Chelsea T.')], pos: { col: 5, row: 1 }, span: 1 },
+    // Row 2 — privates flanking the theater
     { id: 'r12', type: 'private', name: 'Jeff G.', people: [p('Jeff G.')], pos: { col: 0, row: 2 }, span: 1 },
     { id: 'r13', type: 'private', name: 'Peter L.', people: [p('Peter L.')], pos: { col: 1, row: 2 }, span: 1 },
     { id: 'r14', type: 'private', name: 'Sean M.', people: [p('Sean M.')], pos: { col: 4, row: 2 }, span: 1 },
     { id: 'r14b', type: 'private', name: 'Joe W.', people: [p('Joe W.')], pos: { col: 5, row: 2 }, span: 1, github: { repo: 'roam/app', number: 4836, title: 'Feature page: cards + split section polish', branch: 'joe/feature-page-polish' } },
+    // Rows 3-4 — game room, meeting room, daily standup spanning two rows each
     { id: 'r15', type: 'private', name: 'Aaron W.', people: [p('Aaron W.')], pos: { col: 0, row: 3 }, span: 1 },
-    { id: 'r16', type: 'game', name: 'Game Room', people: [], pos: { col: 1, row: 3 }, span: 1 },
-    { id: 'alan-kay', type: 'meeting', name: 'Meeting Room', people: [p('Grace S.'), p('Chelsea T.'), p('Lexi B.'), p('Ashley B.'), p('Hannah B.'), p('Daniel R.')], pos: { col: 2, row: 3 }, colSpan: 2, rowSpan: 2 },
-    { id: 'standup', type: 'meeting', name: 'Daily Standup', people: [p('Lexi B.'), p('Grace S.'), p('Chelsea T.'), p('Garima K.'), p('Ava L.'), p('Mia C.'), p('Sarah M.'), p('Ethan B.')], pos: { col: 4, row: 3 }, colSpan: 2, rowSpan: 2 },
+    { id: 'r16', type: 'private', name: 'Mattias L.', people: [p('Mattias L.')], pos: { col: 1, row: 3 }, span: 1 },
+    { id: 'alan-kay', type: 'meeting', name: 'Meeting Room', people: [p('Grace S.'), p('Lexi B.'), p('Ashley B.'), p('Hannah B.'), p('Daniel R.')], pos: { col: 2, row: 3 }, colSpan: 2, rowSpan: 2 },
+    { id: 'standup', type: 'game', name: 'Game Room', people: [p('Tom D.'), p('Chelsea T.'), p('Will H.')], pos: { col: 4, row: 3 }, colSpan: 2, rowSpan: 2 },
+    // Row 4 — additional privates under r15 / r16
+    { id: 'r17', type: 'private', name: 'Ethan B.', people: [p('Ethan B.')], pos: { col: 0, row: 4 }, span: 1 },
+    { id: 'r18', type: 'private', name: 'Daniel R.', people: [p('Daniel R.')], pos: { col: 1, row: 4 }, span: 1 },
   ],
   'Commercial': [
-    // Large lobby spanning top-left
-    { id: 'c-lobby', type: 'meeting', name: 'Sales Floor', people: [p('Lexi B.'), p('Will H.'), p('Peter L.'), p('Sean M.'), p('Chelsea T.'), p('Garima K.'), p('Joe W.'), p('Brooke F.'), p('Camila T.'), p('Isabella M.'), p('Michael S.')], pos: { col: 0, row: 0 }, colSpan: 3, rowSpan: 2 },
-    { id: 'c1', type: 'private', name: 'Arnav B.', people: [p('Arnav B.')], pos: { col: 3, row: 0 }, span: 1, story: '/stories/story-3.jpg' },
+    // Top-left lobby; right column of privates
+    { id: 'c-lobby', type: 'meeting', name: 'Sales Floor', people: [p('Lexi B.'), p('Will H.'), p('Peter L.'), p('Sean M.'), p('Garima K.'), p('Joe W.'), p('Brooke F.'), p('Camila T.')], pos: { col: 0, row: 0 }, colSpan: 3, rowSpan: 2 },
+    { id: 'c1', type: 'private', name: 'Arnav B.', people: [p('Arnav B.')], pos: { col: 3, row: 0 }, span: 1, story: '/stories/lobby.mp4' },
     { id: 'c2', type: 'private', name: 'Aaron W.', people: [p('Aaron W.')], pos: { col: 4, row: 0 }, span: 1 },
     { id: 'c3', type: 'private', name: 'Tom D.', people: [], pos: { col: 5, row: 0 }, span: 1 },
-    // Row 2 — right side offices
     { id: 'c4', type: 'private', name: 'Klas L.', people: [p('Klas L.')], pos: { col: 3, row: 1 }, span: 1 },
-    { id: 'c5', type: 'private', name: 'John B.', people: [p('John B.'), p('Thomas G.')], pos: { col: 4, row: 1 }, span: 1 },
+    { id: 'c5', type: 'private', name: 'John B.', people: [p('John B.')], pos: { col: 4, row: 1 }, span: 1 },
     { id: 'c6', type: 'private', name: 'Mattias L.', people: [p('Mattias L.')], pos: { col: 5, row: 1 }, span: 1 },
-    // Row 3 — sparse with gap
-    { id: 'c7', type: 'private', name: 'Jeff G.', people: [p('Jeff G.')], pos: { col: 0, row: 2 }, span: 1 },
-    { id: 'c8', type: 'private', name: 'Howard L.', people: [], pos: { col: 1, row: 2 }, span: 1 },
-    { id: 'c9', type: 'game', name: 'Game Room', people: [], pos: { col: 4, row: 2 }, colSpan: 2, rowSpan: 1 },
-    // Row 4 — theater and offices
-    { id: 'c10', type: 'private', name: 'Rob F.', people: [p('Rob F.')], pos: { col: 0, row: 3 }, span: 1 },
-    { id: 'c11', type: 'theater', name: 'Theater', people: [], pos: { col: 1, row: 3 }, colSpan: 3, rowSpan: 2 },
-    { id: 'c12', type: 'private', name: 'Derek C.', people: [p('Derek C.')], pos: { col: 4, row: 3 }, span: 1 },
-    { id: 'c13', type: 'private', name: 'Michael M.', people: [p('Michael M.')], pos: { col: 5, row: 3 }, span: 1 },
+    // Bottom rows — theater + game room
+    { id: 'c-theater', type: 'theater', name: 'Theater', people: [], pos: { col: 0, row: 2 }, colSpan: 3, rowSpan: 2 },
+    { id: 'c-game', type: 'game', name: 'Game Room', people: [p('Tom D.'), p('Will H.'), p('John B.'), p('Brooke F.')], pos: { col: 3, row: 2 }, colSpan: 3, rowSpan: 2 },
   ],
   'Marketing': [
-    // Row 1 — offices with a gap in the middle
+    // Row 0 — six private offices
     { id: 'm1', type: 'private', name: 'Grace S.', people: [p('Grace S.')], pos: { col: 0, row: 0 }, span: 1 },
-    { id: 'm2', type: 'private', name: 'Chelsea T.', people: [p('Chelsea T.')], pos: { col: 1, row: 0 }, span: 1, story: '/stories/story-2.png' },
-    { id: 'm3', type: 'private', name: 'Keegan L.', people: [p('Keegan L.')], pos: { col: 4, row: 0 }, span: 1 },
-    { id: 'm4', type: 'private', name: 'John M.', people: [p('John M.')], pos: { col: 5, row: 0 }, span: 1 },
-    // Row 2 — meeting room in the center
-    { id: 'm5', type: 'private', name: 'Lexi B.', people: [p('Lexi B.')], pos: { col: 0, row: 1 }, span: 1, story: '/stories/story-4.jpg' },
-    { id: 'm-brand', type: 'meeting', name: 'Brand Review', people: [p('Ava L.'), p('Derek C.'), p('Arnav B.'), p('Aaron W.'), p('Chloe P.'), p('Emily C.'), p('Grace T.'), p('Jessica H.')], pos: { col: 1, row: 1 }, colSpan: 2, rowSpan: 2 },
-    { id: 'm-content', type: 'meeting', name: 'Content Sync', people: [p('Rob F.'), p('Joe W.'), p('Lauren H.'), p('Madison R.'), p('Megan T.'), p('Natalie W.')], pos: { col: 3, row: 1 }, colSpan: 2, rowSpan: 2 },
-    { id: 'm6', type: 'private', name: 'Mattias L.', people: [p('Mattias L.')], pos: { col: 5, row: 1 }, span: 1 },
-    // Row 3 — sparse
-    { id: 'm7', type: 'private', name: 'Will H.', people: [p('Will H.')], pos: { col: 0, row: 2 }, span: 1 },
-    { id: 'm8', type: 'private', name: 'Klas L.', people: [p('Klas L.')], pos: { col: 5, row: 2 }, span: 1 },
-    // Row 4 — theater + game + offices
-    { id: 'm9', type: 'theater', name: 'Theater', people: [], pos: { col: 0, row: 3 }, colSpan: 2, rowSpan: 2 },
-    { id: 'm10', type: 'private', name: 'Peter L.', people: [p('Peter L.')], pos: { col: 2, row: 3 }, span: 1 },
-    { id: 'm11', type: 'private', name: 'Tom D.', people: [], pos: { col: 3, row: 3 }, span: 1 },
-    { id: 'm12', type: 'game', name: 'Game Room', people: [], pos: { col: 4, row: 3 }, span: 1 },
-    { id: 'm13', type: 'private', name: 'Sean M.', people: [p('Sean M.')], pos: { col: 5, row: 3 }, span: 1 },
-    // Row 5
-    { id: 'm14', type: 'private', name: 'Michael M.', people: [p('Michael M.')], pos: { col: 2, row: 4 }, span: 1 },
-    { id: 'm15', type: 'private', name: 'Thomas G.', people: [p('Thomas G.')], pos: { col: 3, row: 4 }, span: 1 },
-    { id: 'm16', type: 'private', name: 'Jon B.', people: [p('Jon B.')], pos: { col: 4, row: 4 }, span: 1 },
-    { id: 'm17', type: 'private', name: 'John H.', people: [p('John H.')], pos: { col: 5, row: 4 }, span: 1 },
+    { id: 'm2', type: 'private', name: 'Chelsea T.', people: [p('Chelsea T.')], pos: { col: 1, row: 0 }, span: 1, story: '/stories/game-room.mp4' },
+    { id: 'm3', type: 'private', name: 'Lexi B.', people: [p('Lexi B.')], pos: { col: 2, row: 0 }, span: 1, story: '/stories/roamvision.mp4' },
+    { id: 'm4', type: 'private', name: 'Mattias L.', people: [p('Mattias L.')], pos: { col: 3, row: 0 }, span: 1 },
+    { id: 'm5', type: 'private', name: 'Keegan L.', people: [p('Keegan L.')], pos: { col: 4, row: 0 }, span: 1 },
+    { id: 'm6', type: 'private', name: 'John M.', people: [p('John M.')], pos: { col: 5, row: 0 }, span: 1 },
+    // Rows 1-2 — two big meeting rooms side-by-side
+    { id: 'm-brand', type: 'meeting', name: 'Brand Review', people: [p('Ava L.'), p('Derek C.'), p('Arnav B.'), p('Aaron W.'), p('Chloe P.'), p('Emily C.')], pos: { col: 0, row: 1 }, colSpan: 3, rowSpan: 2 },
+    { id: 'm-content', type: 'meeting', name: 'Content Sync', people: [p('Rob F.'), p('Joe W.'), p('Lauren H.'), p('Madison R.'), p('Megan T.'), p('Natalie W.')], pos: { col: 3, row: 1 }, colSpan: 3, rowSpan: 2 },
+    // Rows 3-4 — theater + game room
+    { id: 'm-theater', type: 'theater', name: 'Theater', people: [], pos: { col: 0, row: 3 }, colSpan: 3, rowSpan: 2 },
+    { id: 'm-game', type: 'game', name: 'Game Room', people: [p('Hannah B.'), p('Olivia S.'), p('Sophia R.'), p('Isabella M.')], pos: { col: 3, row: 3 }, colSpan: 3, rowSpan: 2 },
   ],
   'Executive': [
     // Large boardroom center
@@ -165,26 +168,78 @@ export const FLOORS = {
     { id: 'e-lounge', type: 'game', name: 'Executive Lounge', people: [], pos: { col: 0, row: 3 }, colSpan: 3, rowSpan: 2 },
     { id: 'e8', type: 'private', name: 'Grace S.', people: [p('Grace S.')], pos: { col: 3, row: 3 }, span: 1 },
     { id: 'e9', type: 'private', name: 'Chelsea T.', people: [p('Chelsea T.')], pos: { col: 4, row: 3 }, span: 1 },
-    { id: 'e10', type: 'theater', name: 'Theater', people: [], pos: { col: 5, row: 3 }, rowSpan: 2 },
+    { id: 'e10', type: 'private', name: 'Sean M.', people: [p('Sean M.')], pos: { col: 5, row: 3 }, span: 1 },
+    { id: 'e11', type: 'private', name: 'Mattias L.', people: [p('Mattias L.')], pos: { col: 5, row: 4 }, span: 1 },
+  ],
+  'VirtualOffice': [
+    // Row 0 — top row mixing private offices with a multi-row "Pitch Deck" meeting
+    { id: 'vo1', type: 'private', name: 'Brooke F.', people: [p('Brooke F.')], pos: { col: 0, row: 0 }, span: 1, story: '/stories/lobby.mp4' },
+    { id: 'vo2', type: 'private', name: 'Hannah B.', people: [p('Hannah B.')], pos: { col: 1, row: 0 }, span: 1 },
+    { id: 'vo-pitch', type: 'meeting', name: 'Pitch Deck', people: [p('Camila T.'), p('Daniel R.'), p('Olivia S.'), p('Mia C.'), p('Sophia R.')], pos: { col: 2, row: 0 }, colSpan: 2, rowSpan: 2 },
+    { id: 'vo3', type: 'private', name: 'Sarah M.', people: [p('Sarah M.')], pos: { col: 4, row: 0 }, span: 1, spotify: { song: 'Heads Will Roll', artist: 'Yeah Yeah Yeahs', art: '/spotify/oasis-some-might-say.png' } },
+    { id: 'vo4', type: 'private', name: 'Megan T.', people: [p('Megan T.')], pos: { col: 5, row: 0 }, span: 1 },
+    // Row 1 — small pods around the Pitch Deck
+    { id: 'vo5', type: 'private', name: 'Lauren H.', people: [p('Lauren H.')], pos: { col: 0, row: 1 }, span: 1 },
+    { id: 'vo6', type: 'private', name: 'Madison R.', people: [p('Madison R.')], pos: { col: 1, row: 1 }, span: 1 },
+    { id: 'vo7', type: 'private', name: 'Jessica H.', people: [p('Jessica H.')], pos: { col: 4, row: 1 }, span: 1, github: { repo: 'roam/app', number: 4912, title: 'Pricing tiers v2: usage-based add-ons', branch: 'jessica/pricing-tiers' } },
+    { id: 'vo8', type: 'private', name: 'Natalie W.', people: [p('Natalie W.')], pos: { col: 5, row: 1 }, span: 1, story: '/stories/game-room.mp4' },
+    // Row 2 — Brainstorm + lounge
+    { id: 'vo-brainstorm', type: 'meeting', name: 'Brainstorm Room', people: [p('Hannah B.'), p('Lauren H.'), p('Madison R.'), p('Megan T.'), p('Chloe P.')], pos: { col: 0, row: 2 }, colSpan: 2, rowSpan: 1 },
+    { id: 'vo9', type: 'private', name: 'Rachel C.', people: [p('Rachel C.')], pos: { col: 2, row: 2 }, span: 1 },
+    { id: 'vo10', type: 'private', name: 'Chloe P.', people: [p('Chloe P.')], pos: { col: 3, row: 2 }, span: 1, figma: { comment: 'Bumping the hero illustration size — does this read better?', file: 'Marketing site v4', author: 'Ava L.' } },
+    { id: 'vo-snack', type: 'game', name: 'Snack Bar', people: [], pos: { col: 4, row: 2 }, colSpan: 2, rowSpan: 1 },
+    // Row 3 — theater anchored center, more privates flanking
+    { id: 'vo11', type: 'private', name: 'Ethan B.', people: [p('Ethan B.')], pos: { col: 0, row: 3 }, span: 1 },
+    { id: 'vo12', type: 'private', name: 'Michael S.', people: [p('Michael S.')], pos: { col: 1, row: 3 }, span: 1 },
+    { id: 'vo-theater', type: 'theater', name: 'Theater', people: [], pos: { col: 2, row: 3 }, colSpan: 2, rowSpan: 2 },
+    { id: 'vo13', type: 'private', name: 'Emily C.', people: [p('Emily C.')], pos: { col: 4, row: 3 }, span: 1 },
+    { id: 'vo14', type: 'private', name: 'Isabella M.', people: [p('Isabella M.')], pos: { col: 5, row: 3 }, span: 1 },
+    // Row 4 — Demo Day + Reading Nook lounge
+    { id: 'vo-demo', type: 'meeting', name: 'Demo Day', people: [p('Sarah M.'), p('Ashley B.'), p('Joe W.'), p('Lexi B.'), p('Brooke F.'), p('Olivia S.')], pos: { col: 0, row: 4 }, colSpan: 2, rowSpan: 1 },
+    { id: 'vo-reading', type: 'game', name: 'Reading Nook', people: [], pos: { col: 4, row: 4 }, colSpan: 2, rowSpan: 1 },
+  ],
+  'GameDay': [
+    // Top row — small private offices
+    { id: 'gd-t1', type: 'private', name: 'Klas L.', people: [], pos: { col: 0, row: 0 }, span: 1 },
+    { id: 'gd-t2', type: 'private', name: 'Derek C.', people: [], pos: { col: 1, row: 0 }, span: 1 },
+    { id: 'gd-t3', type: 'private', name: 'John M.', people: [], pos: { col: 2, row: 0 }, span: 1 },
+    { id: 'gd-t4', type: 'private', name: 'Howard L.', people: [p('Howard L.')], pos: { col: 3, row: 0 }, span: 1 },
+    { id: 'gd-t5', type: 'private', name: 'Keegan L.', people: [p('Keegan L.')], pos: { col: 4, row: 0 }, span: 1 },
+    { id: 'gd-t6', type: 'private', name: 'Jon B.', people: [p('Jon B.')], pos: { col: 5, row: 0 }, span: 1 },
+    // Middle — Game Room as the centerpiece, flanked by privates
+    { id: 'gd-l1', type: 'private', name: 'Grace S.', people: [p('Grace S.')], pos: { col: 0, row: 1 }, span: 1 },
+    { id: 'gd-game', type: 'game', name: 'Game Room', people: [p('Tom D.'), p('Chelsea T.'), p('Will H.'), p('Klas L.'), p('Derek C.'), p('John M.'), p('John B.')], pos: { col: 1, row: 1 }, colSpan: 4, rowSpan: 3 },
+    { id: 'gd-r1', type: 'private', name: 'Michael W.', people: [p('Michael W.')], pos: { col: 5, row: 1 }, span: 1 },
+    { id: 'gd-l2', type: 'private', name: 'Jeff G.', people: [p('Jeff G.')], pos: { col: 0, row: 2 }, span: 1 },
+    { id: 'gd-r2', type: 'private', name: 'Rob F.', people: [p('Rob F.')], pos: { col: 5, row: 2 }, span: 1 },
+    { id: 'gd-l3', type: 'private', name: 'Peter L.', people: [p('Peter L.')], pos: { col: 0, row: 3 }, span: 1 },
+    { id: 'gd-r3', type: 'private', name: 'Joe W.', people: [p('Joe W.')], pos: { col: 5, row: 3 }, span: 1 },
+    // Bottom row — privates
+    { id: 'gd-b1', type: 'private', name: 'Aaron W.', people: [p('Aaron W.')], pos: { col: 0, row: 4 }, span: 1 },
+    { id: 'gd-b2', type: 'private', name: 'Sean M.', people: [p('Sean M.')], pos: { col: 1, row: 4 }, span: 1 },
+    { id: 'gd-b3', type: 'private', name: 'Arnav B.', people: [p('Arnav B.')], pos: { col: 2, row: 4 }, span: 1 },
+    { id: 'gd-b4', type: 'private', name: 'Mattias L.', people: [p('Mattias L.')], pos: { col: 3, row: 4 }, span: 1 },
+    { id: 'gd-b5', type: 'private', name: 'Thomas G.', people: [p('Thomas G.')], pos: { col: 4, row: 4 }, span: 1 },
+    { id: 'gd-b6', type: 'private', name: 'John H.', people: [p('John H.')], pos: { col: 5, row: 4 }, span: 1 },
   ],
   'Homepage': [
-    { id: 'hp1', type: 'private', name: 'Arnav B.', people: [p('Arnav B.')], pos: { col: 0, row: 0 }, span: 1, story: '/stories/story-3.jpg' },
+    { id: 'hp1', type: 'private', name: 'Mattias L.', people: [p('Mattias L.')], pos: { col: 0, row: 0 }, span: 1, github: { repo: 'roam/app', number: 4830, title: 'Evals harness: parallel runs + retries', branch: 'mattias/evals-parallel' } },
     { id: 'hp-huddle', type: 'meeting', name: 'Design Huddle', people: [p('Derek C.'), p('Michael W.'), p('Keegan L.'), p('Jon B.'), p('Jeff G.'), p('Will H.'), p('John M.'), p('Michael M.'), p('Hannah B.'), p('Isabella M.'), p('Mia C.'), p('Natalie W.'), p('Rachel C.')], pos: { col: 1, row: 0 }, colSpan: 2, rowSpan: 1 },
     { id: 'hp2', type: 'private', name: 'Klas L.', people: [p('Klas L.'), p('Chelsea T.')], pos: { col: 3, row: 0 }, span: 1 },
     { id: 'hp3', type: 'private', name: 'Tom D.', people: [], pos: { col: 4, row: 0 }, span: 1 },
     { id: 'hp4', type: 'private', name: 'Thomas G.', people: [p('Thomas G.')], pos: { col: 5, row: 0 }, span: 1 },
-    { id: 'hp5', type: 'private', name: 'Mattias L.', people: [p('Mattias L.')], pos: { col: 0, row: 1 }, span: 1, github: { repo: 'roam/app', number: 4830, title: 'Evals harness: parallel runs + retries', branch: 'mattias/evals-parallel' } },
+    { id: 'hp5', type: 'private', name: 'Peter L.', people: [p('Peter L.')], pos: { col: 0, row: 1 }, span: 1, story: '/stories/lobby.mp4' },
     { id: 'hp6', type: 'private', name: 'John H.', people: [p('John H.')], pos: { col: 1, row: 1 }, span: 1, spotify: { song: 'Redbone', artist: 'Childish Gambino', art: '/spotify/childish-gambino-redbone.png' } },
     { id: 'hp-pods', type: 'meeting', name: 'Engineering Pods', people: [p('Emily C.'), p('Daniel R.'), p('Ethan B.'), p('Michael S.'), p('Sophia R.')], pos: { col: 2, row: 1 }, colSpan: 2, rowSpan: 2 },
     { id: 'hp7', type: 'private', name: 'Howard L.', people: [p('Howard L.')], pos: { col: 4, row: 1 }, span: 1 },
-    { id: 'hp8', type: 'private', name: 'John B.', people: [p('John B.')], pos: { col: 5, row: 1 }, span: 1, story: '/stories/story-1.png' },
-    { id: 'hp9', type: 'private', name: 'Lauren H.', people: [p('Lauren H.')], pos: { col: 0, row: 2 }, span: 1 },
+    { id: 'hp8', type: 'private', name: 'John B.', people: [p('John B.')], pos: { col: 5, row: 1 }, span: 1, story: '/stories/soundboard.mp4' },
+    { id: 'hp9', type: 'private', name: 'Lauren H.', people: [p('Lauren H.')], pos: { col: 0, row: 2 }, span: 1, story: '/stories/ad.mp4' },
     { id: 'hp10', type: 'private', name: 'Jessica H.', people: [p('Jessica H.'), p('Grace T.')], pos: { col: 1, row: 2 }, span: 1 },
-    { id: 'hp11', type: 'private', name: 'Ava L.', people: [p('Ava L.')], pos: { col: 4, row: 2 }, span: 1, story: '/stories/story-2.png' },
+    { id: 'hp11', type: 'private', name: 'Ava L.', people: [p('Ava L.')], pos: { col: 4, row: 2 }, span: 1, story: '/stories/game-room.mp4' },
     { id: 'hp12', type: 'private', name: 'Garima K.', people: [p('Garima K.'), p('Chloe P.')], pos: { col: 5, row: 2 }, span: 1 },
     { id: 'hp-theater', type: 'theater', name: 'Theater', people: [], pos: { col: 0, row: 3 }, colSpan: 2, rowSpan: 2 },
-    { id: 'hp13', type: 'private', name: 'Peter L.', people: [p('Peter L.'), p('Grace S.')], pos: { col: 2, row: 3 }, span: 1 },
-    { id: 'hp14', type: 'private', name: 'Sean M.', people: [p('Sean M.')], pos: { col: 3, row: 3 }, span: 1, story: '/stories/story-4.jpg' },
+    { id: 'hp13', type: 'private', name: 'Arnav B.', people: [p('Arnav B.'), p('Grace S.')], pos: { col: 2, row: 3 }, span: 1 },
+    { id: 'hp14', type: 'private', name: 'Sean M.', people: [p('Sean M.')], pos: { col: 3, row: 3 }, span: 1, story: '/stories/roamvision.mp4' },
     { id: 'hp-demo', type: 'meeting', name: 'Demo Day', people: [p('Joe W.'), p('Lexi B.'), p('Ashley B.'), p('Brooke F.'), p('Olivia S.'), p('Sarah M.')], pos: { col: 4, row: 3 }, colSpan: 2, rowSpan: 2 },
     { id: 'hp15', type: 'private', name: 'Aaron W.', people: [p('Aaron W.'), p('Madison R.')], pos: { col: 2, row: 4 }, span: 1 },
     { id: 'hp16', type: 'private', name: 'Rob F.', people: [p('Rob F.')], pos: { col: 3, row: 4 }, span: 1 },
@@ -198,7 +253,7 @@ export const FLOORS = {
     { id: 'di6', type: 'private', name: 'Will H.', people: [p('Will H.')], pos: { col: 5, row: 0 }, span: 1, spotify: { song: 'Some Might Say', artist: 'Oasis', art: '/spotify/oasis-some-might-say.png' } },
     // Row 1 — mixed activity + 2-person sync
     { id: 'di7', type: 'private', name: 'Joe W.', people: [p('Joe W.')], pos: { col: 0, row: 1 }, span: 1, github: { repo: 'roam/app', number: 4836, title: 'Feature page: cards + split section polish', branch: 'joe/feature-page-polish' } },
-    { id: 'di8', type: 'private', name: 'Chelsea T.', people: [p('Chelsea T.')], pos: { col: 1, row: 1 }, span: 1, story: '/stories/story-1.png' },
+    { id: 'di8', type: 'private', name: 'Chelsea T.', people: [p('Chelsea T.')], pos: { col: 1, row: 1 }, span: 1, story: '/stories/soundboard.mp4' },
     { id: 'di9', type: 'private', name: 'Grace S.', people: [p('Grace S.')], pos: { col: 2, row: 1 }, span: 1 },
     { id: 'di10', type: 'private', name: 'Lexi B.', people: [p('Lexi B.')], pos: { col: 3, row: 1 }, span: 1 },
     { id: 'di-11', type: 'meeting', name: '1:1 Sync', people: [p('John M.'), p('Jeff G.')], pos: { col: 4, row: 1 }, colSpan: 2, rowSpan: 1 },
@@ -218,6 +273,32 @@ export const FLOORS = {
     { id: 'di23', type: 'private', name: 'Megan T.', people: [p('Megan T.')], pos: { col: 2, row: 4 }, span: 1 },
     { id: 'di24', type: 'private', name: 'Madison R.', people: [p('Madison R.'), p('Rachel C.')], pos: { col: 3, row: 4 }, span: 1 },
     { id: 'di-demo', type: 'meeting', name: 'Demo Prep', people: [p('Thomas G.'), p('Klas L.'), p('Mattias L.')], pos: { col: 4, row: 4 }, colSpan: 2, rowSpan: 1 },
+  ],
+  // Hero layout for the Theater feature page — large theater in the middle,
+  // empty offices around it (everyone has gone to the show).
+  'TheaterHero': [
+    // Row 0 — top row of empty offices
+    { id: 'th-t1', type: 'private', name: 'Klas L.', people: [], pos: { col: 0, row: 0 }, span: 1 },
+    { id: 'th-t2', type: 'private', name: 'Derek C.', people: [], pos: { col: 1, row: 0 }, span: 1 },
+    { id: 'th-t3', type: 'private', name: 'John M.', people: [], pos: { col: 2, row: 0 }, span: 1 },
+    { id: 'th-t4', type: 'private', name: 'Howard L.', people: [], pos: { col: 3, row: 0 }, span: 1 },
+    { id: 'th-t5', type: 'private', name: 'Keegan L.', people: [], pos: { col: 4, row: 0 }, span: 1 },
+    { id: 'th-t6', type: 'private', name: 'Jon B.', people: [], pos: { col: 5, row: 0 }, span: 1 },
+    // Rows 1-3 — theater anchored center, flanked by empty offices on each side
+    { id: 'th-l1', type: 'private', name: 'Grace S.', people: [], pos: { col: 0, row: 1 }, span: 1 },
+    { id: 'th-theater', type: 'theater', name: 'Theater', people: [], pos: { col: 1, row: 1 }, colSpan: 4, rowSpan: 3 },
+    { id: 'th-r1', type: 'private', name: 'Rob F.', people: [], pos: { col: 5, row: 1 }, span: 1 },
+    { id: 'th-l2', type: 'private', name: 'Jeff G.', people: [], pos: { col: 0, row: 2 }, span: 1 },
+    { id: 'th-r2', type: 'private', name: 'Joe W.', people: [], pos: { col: 5, row: 2 }, span: 1 },
+    { id: 'th-l3', type: 'private', name: 'Peter L.', people: [], pos: { col: 0, row: 3 }, span: 1 },
+    { id: 'th-r3', type: 'private', name: 'Sean M.', people: [], pos: { col: 5, row: 3 }, span: 1 },
+    // Row 4 — bottom row of empty offices
+    { id: 'th-b1', type: 'private', name: 'Aaron W.', people: [], pos: { col: 0, row: 4 }, span: 1 },
+    { id: 'th-b2', type: 'private', name: 'Mattias L.', people: [], pos: { col: 1, row: 4 }, span: 1 },
+    { id: 'th-b3', type: 'private', name: 'Ethan B.', people: [], pos: { col: 2, row: 4 }, span: 1 },
+    { id: 'th-b4', type: 'private', name: 'Daniel R.', people: [], pos: { col: 3, row: 4 }, span: 1 },
+    { id: 'th-b5', type: 'private', name: 'Thomas G.', people: [], pos: { col: 4, row: 4 }, span: 1 },
+    { id: 'th-b6', type: 'private', name: 'John H.', people: [], pos: { col: 5, row: 4 }, span: 1 },
   ],
   'Preview': [
     { id: 'pv1', type: 'private', name: 'Arnav B.', people: [p('Arnav B.')], pos: { col: 0, row: 0 }, span: 1, spotify: { song: 'Some Might Say', artist: 'Oasis', art: '/spotify/oasis-some-might-say.png' } },
@@ -310,7 +391,7 @@ export const FLOORS = {
   ],
 };
 
-const FLOOR_NAMES = Object.keys(FLOORS).filter(n => n !== 'Preview' && n !== 'Homepage' && n !== 'Shelf' && n !== 'Presence');
+const FLOOR_NAMES = ['R&D', 'Commercial', 'Marketing'];
 
 // Sidebar rooms
 
@@ -595,7 +676,7 @@ function AiVibeIcon({ src, label, combo = false }) {
 }
 
 // Private office room card — uses the same markup as mapv3
-function PrivateRoomCard({ room, storyBubble, onPersonClick, onRoomClick, spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false }) {
+function PrivateRoomCard({ room, storyBubble, onPersonClick, onRoomClick, spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, showPhysicalTags = false }) {
   const [talking, setTalking] = useState({});
   const hasTalk = room.people.length > 1;
 
@@ -679,6 +760,9 @@ function PrivateRoomCard({ room, storyBubble, onPersonClick, onRoomClick, spotif
                     <img className="seat-avatar" src={person.avatar} alt={person.name} />
                     <span className="seat-nametag">{person.name}</span>
                     {hasTalk && <div className={`sc-private-talk-ring ${talking[person.name] ? 'sc-talking' : ''}`} />}
+                    {showPhysicalTags && getCityForPerson(person) && (
+                      <span className="sc-physical-tag" data-tag-person={person.name}>{getCityForPerson(person)}</span>
+                    )}
                     {i === 0 && storyBubble}
                   </div>
                 ))}
@@ -691,26 +775,60 @@ function PrivateRoomCard({ room, storyBubble, onPersonClick, onRoomClick, spotif
   );
 }
 
-// Theater room card — stage with 2 speakers + audience rows with dots
+// Theater room card — stage with up to 3 speakers + audience rows with dots
+const THEATER_PREVIEW_EMOJIS = ['🤣', '🔥', '👏', '👍', '🍿', '🎉', '🚀', '😍', '💯'];
+
 function TheaterRoomCard({ room, speakers = [], onPersonClick, speakerStories = {}, viewedStories = {}, onStoryClick, onRoomClick }) {
-  const [talkingIdx, setTalkingIdx] = useState(1);
+  const speakerCount = speakers.length || 1;
+  const [talkingIdx, setTalkingIdx] = useState(speakerCount > 1 ? 1 : 0);
 
   // Alternate which speaker is talking
   useEffect(() => {
     const t = setInterval(() => {
-      setTalkingIdx(idx => (idx === 0 ? 1 : 0));
+      setTalkingIdx(idx => (idx + 1) % speakerCount);
     }, 2200 + Math.random() * 1500);
     return () => clearInterval(t);
-  }, []);
+  }, [speakerCount]);
 
   // Row segments — each number is how many audience dots sit in that bench segment
   const audienceRows = [
-    [0, 3, 0, 2, 4],
-    [4, 0, 2, 3, 0],
-    [0, 2, 4, 0, 3],
+    [3, 4, 2, 3, 4],
+    [4, 2, 4, 3, 4],
+    [3, 4, 3, 4, 2],
   ];
   // Which dot in each bench (if any) is the highlighted/active one — [rowIdx, benchIdx, dotIdx]
   const activeDot = [1, 0, 1];
+
+  // Floating emoji reactions rising from random audience benches
+  const [reactions, setReactions] = useState([]);
+  const reactionIdRef = useRef(0);
+  useEffect(() => {
+    let timer;
+    const schedule = () => {
+      const delay = 700 + Math.random() * 1600;
+      timer = setTimeout(() => {
+        const rowIdx = Math.floor(Math.random() * audienceRows.length);
+        const row = audienceRows[rowIdx];
+        const filled = row.map((c, i) => (c > 0 ? i : -1)).filter(i => i >= 0);
+        if (filled.length) {
+          const benchIdx = filled[Math.floor(Math.random() * filled.length)];
+          const emoji = Math.random() < 0.65
+            ? '👏'
+            : THEATER_PREVIEW_EMOJIS[Math.floor(Math.random() * THEATER_PREVIEW_EMOJIS.length)];
+          const id = reactionIdRef.current++;
+          const leftPct = ((benchIdx + 0.5) / row.length) * 100;
+          const topPct = ((rowIdx + 0.5) / audienceRows.length) * 100;
+          setReactions(prev => [...prev, { id, emoji, leftPct, topPct }]);
+          // Keep mounted past the 3s CSS animation so the exit (scale-down + fade)
+          // has time to paint before React unmounts the node.
+          setTimeout(() => setReactions(prev => prev.filter(r => r.id !== id)), 3400);
+        }
+        schedule();
+      }, delay);
+    };
+    schedule();
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <div className="sc-room-card" onClick={() => onRoomClick && onRoomClick(room)} style={{ cursor: 'pointer' }}>
@@ -760,6 +878,19 @@ function TheaterRoomCard({ room, speakers = [], onPersonClick, speakerStories = 
                   ))}
                 </div>
               ))}
+              <div className="theater-preview-reactions">
+                {reactions.map(r => (
+                  <span
+                    key={r.id}
+                    className="theater-preview-reaction"
+                    style={{ left: `${r.leftPct}%`, top: `${r.topPct}%` }}
+                  >
+                    <span className="theater-preview-reaction-sway">
+                      <span className="theater-preview-reaction-life">{r.emoji}</span>
+                    </span>
+                  </span>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -769,7 +900,7 @@ function TheaterRoomCard({ room, speakers = [], onPersonClick, speakerStories = 
 }
 
 // Meeting room card — same markup as mapv3, with talking indicators
-function MeetingRoomCardShowcase({ room, onPersonClick, onRoomClick }) {
+function MeetingRoomCardShowcase({ room, onPersonClick, onRoomClick, showPhysicalTags = false }) {
   const [talking, setTalking] = useState({});
 
   useEffect(() => {
@@ -797,6 +928,9 @@ function MeetingRoomCardShowcase({ room, onPersonClick, onRoomClick }) {
               <div key={person.name + i} className={`person meeting-room-person ${person._new ? 'sc-person-arriving' : ''} ${person.isJoining ? 'sc-joining' : ''}`} onClick={(e) => { e.stopPropagation(); onPersonClick && onPersonClick(person, e); }} style={{ cursor: getChatIdForAvatar(person.avatar) ? 'pointer' : 'default' }}>
                 <img className="avatar" src={person.avatar} alt={person.name} />
                 <div className={`avatar-inner-glow ${talking[person.name] ? 'sc-talking' : 'glow-off'}`} />
+                {showPhysicalTags && getCityForPerson(person) && (
+                  <span className="sc-physical-tag" data-tag-person={person.name}>{getCityForPerson(person)}</span>
+                )}
               </div>
             ))}
           </div>
@@ -809,16 +943,149 @@ function MeetingRoomCardShowcase({ room, onPersonClick, onRoomClick }) {
 
 // Game room card — same markup as mapv3
 function GameRoomCard({ room }) {
+  const people = room.people || [];
+  const area = (room.colSpan || room.span || 1) * (room.rowSpan || 1);
+  const cap = area >= 4 ? 8 : 4;
+  const visible = people.slice(0, cap);
+  const boardPeople = people.slice(0, 8);
+  const [boardOpen, setBoardOpen] = useState(false);
+  const cardRef = useRef(null);
+  const [portalTarget, setPortalTarget] = useState(null);
+  const [talking, setTalking] = useState({});
+
+  useEffect(() => {
+    if (!boardOpen) return;
+    const el = cardRef.current?.closest('.sc-window') || cardRef.current?.closest('.fp-map-preview') || document.body;
+    setPortalTarget(el);
+  }, [boardOpen]);
+
+  useEffect(() => {
+    if (!visible.length) return;
+    const interval = setInterval(() => {
+      setTalking(() => {
+        const next = {};
+        const count = Math.random() < 0.5 ? 1 : 2;
+        const pool = [...visible];
+        for (let k = 0; k < count && pool.length; k++) {
+          const idx = Math.floor(Math.random() * pool.length);
+          next[pool[idx].name] = true;
+          pool.splice(idx, 1);
+        }
+        return next;
+      });
+    }, 1500 + Math.random() * 1500);
+    return () => clearInterval(interval);
+  }, [visible]);
+
   return (
-    <div className="sc-room-card">
+    <div className="sc-room-card" ref={cardRef}>
       <div className="big-meeting-card-inner" style={{ height: '100%' }}>
         <div className="meeting-room-card" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
           <div className="game-room-lines"><div className="game-room-zigzag" /></div>
-          <div className="card-header" style={{ padding: '0 12px' }}>
+          <div className="card-header" style={{ padding: '0 12px', marginBottom: 0 }}>
             <h3 className="office-name">{room.name}</h3>
           </div>
+          {visible.length > 0 && (
+            <div className="game-room-roster">
+              {visible.map((person, i) => (
+                <GameHex key={person.name || i} person={person} rank={i < 3 ? i + 1 : null} colorIndex={i} talking={!!talking[person.name]} />
+              ))}
+            </div>
+          )}
+          {visible.length > 0 && (
+            <button
+              type="button"
+              className="game-room-leaderboard-btn"
+              onClick={(e) => { e.stopPropagation(); setBoardOpen(true); }}
+            >
+              <span>Leaderboard</span>
+              <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
+                <path d="M4.5 3l3 3-3 3" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+          )}
         </div>
       </div>
+      {boardOpen && portalTarget && ReactDOM.createPortal(
+        <GameLeaderboardDialog
+          roomName={room.name}
+          people={boardPeople}
+          onClose={() => setBoardOpen(false)}
+        />,
+        portalTarget
+      )}
+    </div>
+  );
+}
+
+function GameLeaderboardDialog({ roomName, people, onClose }) {
+  // Deterministic point values descending; sprinkle in up/down carrots
+  const POINTS = [503, 490, 479, 438, 391, 340, 301, 268];
+  const TRENDS = [null, 'up', 'down', null, 'up', null, 'down', 'up'];
+  return (
+    <div className="game-leaderboard-overlay" onClick={(e) => { e.stopPropagation(); onClose(); }}>
+      <div className="game-leaderboard-dialog" onClick={(e) => e.stopPropagation()}>
+        <div className="game-leaderboard-row game-leaderboard-head">
+          <div className="game-leaderboard-cell game-leaderboard-cell-trend" aria-hidden="true" />
+          <div className="game-leaderboard-cell game-leaderboard-cell-rank">Rank</div>
+          <div className="game-leaderboard-cell game-leaderboard-cell-player">Player</div>
+          <div className="game-leaderboard-cell game-leaderboard-cell-points">Points</div>
+        </div>
+        {people.map((person, i) => {
+          const rank = i + 1;
+          const trend = TRENDS[i];
+          const rankClass = rank === 1 ? 'gold' : rank === 2 ? 'silver' : rank === 3 ? 'bronze' : null;
+          return (
+            <div key={person.name || i} className={`game-leaderboard-row ${i % 2 === 0 ? 'game-leaderboard-row-alt' : ''}`}>
+              <div className="game-leaderboard-cell game-leaderboard-cell-trend">
+                {trend && (
+                  <span className={`game-leaderboard-carrot game-leaderboard-carrot-${trend}`} aria-hidden="true">
+                    <svg width="12" height="12" viewBox="0 0 12 12">
+                      {trend === 'up' ? (
+                        <path d="M6 3l3.5 5h-7z" fill="#34c759" />
+                      ) : (
+                        <path d="M6 9l3.5-5h-7z" fill="#ff453a" />
+                      )}
+                    </svg>
+                  </span>
+                )}
+              </div>
+              <div className="game-leaderboard-cell game-leaderboard-cell-rank">
+                {rankClass ? (
+                  <span className={`game-leaderboard-medal game-leaderboard-medal-${rankClass}`}>{rank}</span>
+                ) : (
+                  <span className="game-leaderboard-rank-num">{rank}</span>
+                )}
+              </div>
+              <div className="game-leaderboard-cell game-leaderboard-cell-player">
+                <GameHex person={person} rank={null} small colorIndex={i} />
+                <span className="game-leaderboard-player-name">{person.fullName || person.name}</span>
+              </div>
+              <div className="game-leaderboard-cell game-leaderboard-cell-points">{POINTS[i] || 0}</div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function GameHex({ person, rank, small = false, colorIndex = 0, talking = false }) {
+  const rankClass = rank === 1 ? 'gold' : rank === 2 ? 'silver' : rank === 3 ? 'bronze' : null;
+  const colorClass = `game-hex-c${(colorIndex % 8) + 1}`;
+  return (
+    <div className={`game-hex ${colorClass} ${small ? 'game-hex-small' : ''} ${talking ? 'game-hex-talking' : ''}`}>
+      <div className="game-hex-border">
+        <div
+          className="game-hex-avatar"
+          style={person.avatar ? { backgroundImage: `url(${person.avatar})` } : undefined}
+        />
+      </div>
+      {rankClass && (
+        <div className={`game-hex-rank game-hex-rank-${rankClass}`}>
+          <span>{rank}</span>
+        </div>
+      )}
     </div>
   );
 }
@@ -1266,14 +1533,12 @@ function getSocialIcon(url = '') {
   return null;
 }
 
-function HomepageReviews() {
+export function HomepageReviews({ limit } = {}) {
+  const reviews = typeof limit === 'number' ? HOMEPAGE_REVIEWS.slice(0, limit) : HOMEPAGE_REVIEWS;
   return (
     <section className="sc-reviews-section">
       <div className="sc-reviews-container">
-        <div className="sc-reviews-intro">
-          <h2 className="sc-reviews-heading">See what our customers say</h2>
-        </div>
-        {HOMEPAGE_REVIEWS.map((r) => {
+        {reviews.map((r) => {
           const icon = getSocialIcon(r.link);
           return (
             <a
@@ -1329,6 +1594,7 @@ const INITIAL_WINDOWS = [
   { id: 'magicast', isOpen: false, position: { x: 40, y: 160 }, zIndex: 30 },
   { id: 'magicminutes', isOpen: false, position: { x: 60, y: 180 }, zIndex: 30 },
   { id: 'recordings', isOpen: false, position: { x: 80, y: 160 }, zIndex: 30 },
+  { id: 'calendar', isOpen: false, position: { x: 100, y: 120 }, zIndex: 30 },
   { id: 'lobby', isOpen: false, position: { x: 100, y: 140 }, zIndex: 30 },
   { id: 'mobile', isOpen: false, position: { x: 120, y: 80 }, zIndex: 30 },
 ];
@@ -1387,11 +1653,11 @@ function ShelfWindow({ win, onDrag, photoIdx, direction, onPrev, onNext }) {
 }
 
 // Main showcase component
-export default function ShowcaseMap({ initialFloor = 'R&D', embedded = false, autoKnock = false, spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, hideOnIt = false, shelfAutoOpen = false, shareAutoOpen = false, theme } = {}) {
+export default function ShowcaseMap({ initialFloor = 'R&D', embedded = false, autoKnock = false, spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, hideOnIt = false, onItAutoOpen = false, shelfAutoOpen = false, shareAutoOpen = false, theme, autoCycleFloors = false, autoCycleDms = false, showPhysicalTags = false } = {}) {
   return (
     <ChatProvider>
       <WindowManagerProvider initialWindows={INITIAL_WINDOWS}>
-        <ShowcaseMapInner initialFloor={initialFloor} embedded={embedded} autoKnock={autoKnock} spotifyAlwaysOpen={spotifyAlwaysOpen} githubAlwaysOpen={githubAlwaysOpen} figmaAlwaysOpen={figmaAlwaysOpen} hideOnIt={hideOnIt} shelfAutoOpen={shelfAutoOpen} shareAutoOpen={shareAutoOpen} themeOverride={theme} />
+        <ShowcaseMapInner initialFloor={initialFloor} embedded={embedded} autoKnock={autoKnock} spotifyAlwaysOpen={spotifyAlwaysOpen} githubAlwaysOpen={githubAlwaysOpen} figmaAlwaysOpen={figmaAlwaysOpen} hideOnIt={hideOnIt} onItAutoOpen={onItAutoOpen} shelfAutoOpen={shelfAutoOpen} shareAutoOpen={shareAutoOpen} themeOverride={theme} autoCycleFloors={autoCycleFloors} autoCycleDms={autoCycleDms} showPhysicalTags={showPhysicalTags} />
       </WindowManagerProvider>
     </ChatProvider>
   );
@@ -1555,7 +1821,7 @@ function useTargetHintStyle(targetRef, active, offset = { top: -30, left: 'cente
   return style;
 }
 
-function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = false, spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, hideOnIt = false, shelfAutoOpen = false, shareAutoOpen = false, themeOverride = null }) {
+function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = false, spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, hideOnIt = false, onItAutoOpen = false, shelfAutoOpen = false, shareAutoOpen = false, themeOverride = null, autoCycleFloors = false, autoCycleDms = false, showPhysicalTags = false }) {
   const [themeState, setThemeState] = useState('dark');
   const theme = themeOverride || themeState;
   const setTheme = themeOverride ? () => {} : setThemeState;
@@ -1576,6 +1842,27 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
       });
     }, 200);
   };
+
+  useEffect(() => {
+    if (!autoCycleFloors) return;
+    const id = setInterval(() => {
+      setFloorTransition('out');
+      setTimeout(() => {
+        setActiveFloor(curr => {
+          const idx = FLOOR_NAMES.indexOf(curr);
+          return FLOOR_NAMES[(idx + 1) % FLOOR_NAMES.length];
+        });
+        setFloorTransition('in');
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            setFloorTransition('visible');
+          });
+        });
+      }, 200);
+    }, 2000);
+    return () => clearInterval(id);
+  }, [autoCycleFloors]);
+
   const [navLogoVisible, setNavLogoVisible] = useState(false);
   const [showGrid, setShowGrid] = useState(() => {
     try { return localStorage.getItem('showGrid') === 'true'; } catch { return false; }
@@ -1671,8 +1958,85 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
     setMiniChats(prev => prev.filter(c => c.chatId !== chatId));
   };
 
+  const [dmPortalTarget, setDmPortalTarget] = useState(null);
+  useEffect(() => {
+    if (!autoCycleDms && !onItAutoOpen) {
+      setDmPortalTarget(null);
+      return;
+    }
+    const el = miniRoamRef.current?.closest('.fp-section-visual') || null;
+    setDmPortalTarget(el);
+  }, [autoCycleDms, onItAutoOpen]);
+
+  useEffect(() => {
+    if (!onItAutoOpen) return;
+    const t = setTimeout(() => openOnItChat(), 0);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onItAutoOpen]);
+
+  useEffect(() => {
+    if (!autoCycleDms) return;
+    const timers = [];
+    let lastChatId = null;
+    const cycle = () => {
+      const floor = FLOORS[activeFloor] || [];
+      const seen = new Set();
+      const candidates = [];
+      floor.forEach(r => {
+        (r.people || []).forEach(person => {
+          const id = getChatIdForAvatar(person.avatar);
+          if (id && !seen.has(id) && id !== lastChatId) {
+            seen.add(id);
+            candidates.push(person);
+          }
+        });
+      });
+      if (!candidates.length) {
+        timers.push(setTimeout(cycle, 1500));
+        return;
+      }
+      const person = candidates[Math.floor(Math.random() * candidates.length)];
+      const chatId = getChatIdForAvatar(person.avatar);
+      lastChatId = chatId;
+      const hostEl = miniRoamRef.current?.closest('.fp-section-visual') || miniRoamRef.current;
+      const hostRect = hostEl?.getBoundingClientRect();
+      const w = hostRect?.width || 1000;
+      const h = hostRect?.height || 700;
+      const chatW = 320;
+      const chatH = 520;
+      const margin = 32;
+      // Pick a random corner and pin the chat 32px from those edges
+      const corners = ['tl', 'tr', 'bl', 'br'];
+      const corner = corners[Math.floor(Math.random() * corners.length)];
+      const x = corner === 'tl' || corner === 'bl' ? margin : Math.max(margin, w - chatW - margin);
+      const y = corner === 'tl' || corner === 'tr' ? margin : Math.max(margin, h - chatH - margin);
+      setMiniChats([{
+        personName: person.fullName || person.name,
+        personAvatar: person.avatar,
+        chatId,
+        position: { x, y },
+        closeSignal: 0,
+      }]);
+      const visibleMs = 3200 + Math.random() * 1800;
+      timers.push(setTimeout(() => {
+        setMiniChats(prev => prev.map(c => ({ ...c, closeSignal: (c.closeSignal || 0) + 1 })));
+        timers.push(setTimeout(() => {
+          setMiniChats([]);
+          timers.push(setTimeout(cycle, 500 + Math.random() * 700));
+        }, 220));
+      }, visibleMs));
+    };
+    timers.push(setTimeout(cycle, 700));
+    return () => {
+      timers.forEach(clearTimeout);
+      setMiniChats([]);
+    };
+  }, [autoCycleDms, activeFloor]);
+
   useEffect(() => {
     if (autoKnock) return;
+    if (showPhysicalTags) return;
     const floor = FLOORS[activeFloor];
     const privateRooms = floor.filter(r => r.type === 'private' && r.people.length === 1 && !r.story);
     const meetingRooms = floor.filter(r => r.type === 'meeting' && r.people.length > 0);
@@ -1842,16 +2206,26 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
     });
   }, [activeFloor, movements]);
 
-  const theaterSpeakers = useMemo(() => [p('Camila T.'), p('Megan T.')], []);
+  const theaterSpeakers = useMemo(() => [p('Camila T.'), p('Megan T.'), p('Hannah B.')], []);
   const speakerStories = {};
 
   const allStoryRooms = useMemo(() => {
     const rooms = [];
-    FLOOR_NAMES.forEach(floor => {
-      FLOORS[floor].forEach(r => {
-        if (r.story && r.people[0]) rooms.push(r);
+    const seen = new Set();
+    Object.values(FLOORS).forEach(floor => {
+      floor.forEach(r => {
+        if (r.story && r.people[0] && !seen.has(r.story)) {
+          seen.add(r.story);
+          rooms.push(r);
+        }
       });
     });
+    // Pin Lauren's `ad.mp4` to the second slot, right after Howard's story
+    const idx = rooms.findIndex(r => r.story === '/stories/ad.mp4');
+    if (idx > 1) {
+      const [lauren] = rooms.splice(idx, 1);
+      rooms.splice(1, 0, lauren);
+    }
     return rooms;
   }, []);
 
@@ -1868,6 +2242,7 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
   const magicastWin = useWindow('magicast');
   const magicminutesWin = useWindow('magicminutes');
   const recordingsWin = useWindow('recordings');
+  const calendarWin = useWindow('calendar');
   const lobbyWin = useWindow('lobby');
   const mobileWin = useWindow('mobile');
   const [activeMeetingRoom, setActiveMeetingRoom] = useState(null);
@@ -2260,7 +2635,7 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
           </div>
           <img className="sc-titlebar-logo" src="/icons/roam-logo.png" alt="roam" />
           <div className="sc-titlebar-spacer" />
-          {!embedded && !hideOnIt && (
+          {(!embedded || onItAutoOpen) && !hideOnIt && (
             <button
               type="button"
               className="sc-on-it-btn"
@@ -2314,13 +2689,14 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
                         }}
                       />
                     ) : room.type === 'meeting' ? (
-                      <MeetingRoomCardShowcase room={{ ...room, people: joinedRoomId === room.id && !room.people.some(p => p.avatar === JOE.avatar) ? [...room.people, { ...JOE, isJoining: true }] : room.people }} onPersonClick={openMiniChat} onRoomClick={(r) => { setJoinedRoomId(r.id); const ppl = r.people.some(p => p.avatar === JOE.avatar) ? r.people : [...r.people, JOE]; setActiveMeetingRoom({ ...r, people: ppl }); meetingWin.open(); }} />
+                      <MeetingRoomCardShowcase showPhysicalTags={showPhysicalTags} room={{ ...room, people: joinedRoomId === room.id && !room.people.some(p => p.avatar === JOE.avatar) ? [...room.people, { ...JOE, isJoining: true }] : room.people }} onPersonClick={openMiniChat} onRoomClick={(r) => { setJoinedRoomId(r.id); const ppl = r.people.some(p => p.avatar === JOE.avatar) ? r.people : [...r.people, JOE]; setActiveMeetingRoom({ ...r, people: ppl }); meetingWin.open(); }} />
                     ) : room.type === 'game' ? (
                       <GameRoomCard room={room} />
                     ) : room.type === 'command' ? (
                       <CommandCenterCard room={room} />
                     ) : (
                       <PrivateRoomCard
+                        showPhysicalTags={showPhysicalTags}
                         spotifyAlwaysOpen={spotifyAlwaysOpen}
                         githubAlwaysOpen={githubAlwaysOpen}
                         figmaAlwaysOpen={figmaAlwaysOpen}
@@ -2549,7 +2925,23 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
               <div className="sc-toolbar-pill" data-tooltip="On-Air" onClick={() => onairWin.open()}>
                 <img src="/icons/on-air.svg" width="16" height="16" alt="" />
               </div>
-              <div className="sc-toolbar-pill" data-tooltip="Calendar">
+              <div
+                className="sc-toolbar-pill"
+                data-tooltip="Calendar"
+                onClick={(e) => {
+                  const pill = e.currentTarget.getBoundingClientRect();
+                  const host = e.currentTarget.closest('.miniRoamOS') || e.currentTarget.closest('.sc-viewport');
+                  const hostRect = host ? host.getBoundingClientRect() : { left: 0, top: 0, width: 0 };
+                  const winW = 880;
+                  const winH = 600;
+                  const margin = 16;
+                  const right = hostRect.width - (pill.right - hostRect.left) - margin;
+                  const left = Math.max(16, hostRect.width - winW - right);
+                  const top = Math.max(16, pill.top - hostRect.top - winH - margin);
+                  calendarWin.move({ x: left, y: top });
+                  calendarWin.open();
+                }}
+              >
                 <img src="/icons/calendar.svg" width="16" height="16" alt="" />
               </div>
             </div>
@@ -2559,9 +2951,15 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
         <ShareDialog open={shareOpen} onClose={() => setShareOpen(false)} />
         {knockingRoom && <KnockDialog room={knockingRoom} onCancel={() => { clearTimeout(knockTimerRef.current); setKnockingRoom(null); }} />}
       </div>
-      {miniChats.map(mc => (
+      {!dmPortalTarget && miniChats.map(mc => (
         <MiniChat key={mc.chatId} {...mc} onClose={() => closeMiniChat(mc.chatId)} />
       ))}
+      {dmPortalTarget && ReactDOM.createPortal(
+        miniChats.map(mc => (
+          <MiniChat key={mc.chatId} {...mc} onClose={() => closeMiniChat(mc.chatId)} />
+        )),
+        dmPortalTarget
+      )}
       {ainboxWin.isOpen && <AInbox win={ainboxWin} onDrag={makeDragHandler(ainboxWin)} onOpenMagicMinutes={() => magicminutesWin.open()} />}
       {onairWin.isOpen && <OnAir win={onairWin} onDrag={makeDragHandler(onairWin)} demo />}
       {meetingWin.isOpen && activeMeetingRoom && <MeetingWindow win={meetingWin} onDrag={makeDragHandler(meetingWin)} roomName={activeMeetingRoom.name} people={activeMeetingRoom.people} onOpenChat={() => ainboxWin.open()} onOpenOnAir={() => onairWin.open()} />}
@@ -2579,6 +2977,7 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
       {magicastWin.isOpen && <div className="mc-recording-border" />}
       {magicminutesWin.isOpen && <MagicMinutes win={magicminutesWin} onDrag={makeDragHandler(magicminutesWin)} />}
       {recordingsWin.isOpen && <Recordings win={recordingsWin} onDrag={makeDragHandler(recordingsWin)} />}
+      {calendarWin.isOpen && <Calendar win={calendarWin} onDrag={makeDragHandler(calendarWin)} />}
       {lobbyWin.isOpen && <Lobby win={lobbyWin} onDrag={makeDragHandler(lobbyWin)} />}
       {mobileWin.isOpen && <MobileWindow win={mobileWin} onDrag={makeDragHandler(mobileWin)} onOpenStories={() => {
         if (allStoriesData.length > 0) {
@@ -2665,6 +3064,7 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
           <div className="sc-feature-text sc-feature-text-right">
             <h2 className="sc-feature-title">VIRTUAL OFFICE</h2>
             <p className="sc-feature-desc">Company Visualization with Live Presence on the Map. A live view of who's in the office, who's meeting with who, who's talking, 3D chats as they happen, music people are listening to, and much more. A shared view that makes your whole company feel as if everyone's in one room. Click on anyone's head to chat with them, or click on an empty seat to enter a room with them.</p>
+            <a href="#/feature/virtual-office" className="sc-feature-link">Learn about Virtual Office →</a>
           </div>
         </div>
       </div>
@@ -2690,6 +3090,7 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
                 win={{ position: { x: 0, y: 0 }, zIndex: 1, isFocused: true, focus: () => {}, close: () => {}, open: () => {} }}
                 onDrag={() => {}}
                 roomName="Daily Standup"
+                gesturesEnabled={false}
                 people={[
                   p('Ashley B.'),
                   p('Emily C.'),
@@ -2704,7 +3105,6 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
           <div className="sc-feature-text sc-feature-text-right">
             <h2 className="sc-feature-title">VIDEO CONFERENCING</h2>
             <p className="sc-feature-desc">Jump into a Meeting Room for video conferencing when you need to collaborate. When you're done, you're done! Includes high resolution screensharing and whiteboard as well. No more back-to-back video meetings filling out all day. Just meet when you need to, and when you're done, back to work.</p>
-            <a href="#/feature/video-conferencing" className="sc-feature-link">Learn about Video Conferencing →</a>
           </div>
         </div>
       </div>

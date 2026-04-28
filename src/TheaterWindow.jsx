@@ -13,9 +13,14 @@ const SOUND_ROAMOJIS = [
 
 function SoundButton({ emoji, level, onClick }) {
   const bars = 16;
-  const levelClass = level <= 0 ? '' : level <= 1 ? 'roamoji-bars-l1' : level <= 2 ? 'roamoji-bars-l2' : 'roamoji-bars-l3';
+  const levelClass =
+    level >= 4 ? 'roamoji-bars-l4' :
+    level >= 3 ? 'roamoji-bars-l3' :
+    level >= 2 ? 'roamoji-bars-l2' :
+    level >= 1 ? 'roamoji-bars-l1' : '';
+  const shakeClass = level >= 4 ? 'roamoji-sound-shake-red' : level >= 3 ? 'roamoji-sound-shake' : '';
   return (
-    <button className={`roamoji-sound-btn ${level > 0 ? 'roamoji-sound-active' : ''}`} onClick={onClick}>
+    <button className={`roamoji-sound-btn ${level > 0 ? 'roamoji-sound-active' : ''} ${shakeClass}`} onClick={onClick}>
       <span className="roamoji-sound-emoji">{emoji}</span>
       <div className={`roamoji-sound-bars ${levelClass}`}>
         {Array.from({ length: bars }, (_, i) => (
@@ -65,9 +70,10 @@ const BENCH_PATTERNS = [
 
 const BENCH_ROWS = 3;
 
-export default function TheaterWindow({ win, onDrag, speakers: rawSpeakers = [], audience: rawAudience = [], me, onOpenChat }) {
+export default function TheaterWindow({ win, onDrag, speakers: rawSpeakers = [], audience: rawAudience = [], backstage: rawBackstage = [], me, onOpenChat, stereoDemo = false }) {
   const speakers = rawSpeakers.filter(p => p?.video);
   const audience = rawAudience.filter(p => p?.video);
+  const backstage = rawBackstage.filter(p => p?.video);
   const [closing, setClosing] = useState(false);
   const [roamojiOpen, setRoamojiOpen] = useState(true);
   const [roamojiClosing, setRoamojiClosing] = useState(false);
@@ -172,7 +178,7 @@ export default function TheaterWindow({ win, onDrag, speakers: rawSpeakers = [],
 
   // Auto-reactions from random audience members
   useEffect(() => {
-    if (!allAudience.length) return;
+    if (stereoDemo || !allAudience.length) return;
     let timers = [];
     const schedule = () => {
       const delay = 800 + Math.random() * 2200;
@@ -189,7 +195,39 @@ export default function TheaterWindow({ win, onDrag, speakers: rawSpeakers = [],
     };
     schedule();
     return () => timers.forEach(t => clearTimeout(t));
-  }, [allAudience.length, spawnGhostFromAudience]);
+  }, [stereoDemo, allAudience.length, spawnGhostFromAudience]);
+
+  // Stereo demo — only sound roamojis, no audio, each button's level
+  // fluctuates on its own cadence so they shake/flare at different times.
+  useEffect(() => {
+    if (!stereoDemo || !allAudience.length) return;
+    const cleanups = [];
+    const randLevel = () => 1 + Math.floor(Math.random() * 4); // 1-4 (gray/green/orange/red)
+
+    SOUND_ROAMOJIS.forEach((s, i) => {
+      const tick = () => {
+        setSoundLevels(prev => ({ ...prev, [s.emoji]: randLevel() }));
+        const next = setTimeout(tick, 600 + Math.random() * 1100);
+        cleanups.push(() => clearTimeout(next));
+      };
+      // Stagger initial fire so buttons don't change in lockstep
+      const start = setTimeout(tick, i * 220);
+      cleanups.push(() => clearTimeout(start));
+    });
+
+    const fire = () => {
+      const emoji = SOUND_ROAMOJIS[Math.floor(Math.random() * SOUND_ROAMOJIS.length)].emoji;
+      const burst = 3 + Math.floor(Math.random() * 4);
+      for (let b = 0; b < burst; b++) {
+        const bt = setTimeout(() => spawnGhostFromAudience(emoji), b * 70);
+        cleanups.push(() => clearTimeout(bt));
+      }
+      const next = setTimeout(fire, 220 + Math.random() * 280);
+      cleanups.push(() => clearTimeout(next));
+    };
+    fire();
+    return () => cleanups.forEach(fn => fn());
+  }, [stereoDemo, allAudience.length, spawnGhostFromAudience]);
 
   const handleClose = () => {
     setClosing(true);
@@ -226,7 +264,21 @@ export default function TheaterWindow({ win, onDrag, speakers: rawSpeakers = [],
 
       {/* Body */}
       <div className="theater-win-body">
-        {/* Stage — 3 video tiles */}
+        {/* Backstage — small tucked-away video feeds of next presenter(s) */}
+        {backstage.length > 0 && (
+          <div className="theater-win-backstage">
+            <div className="theater-win-backstage-label">Backstage</div>
+            <div className="theater-win-backstage-tiles">
+              {backstage.slice(0, 2).map((person, i) => (
+                <div key={(person.name || 'b') + i} className="theater-win-backstage-tile">
+                  <video src={person.video} autoPlay loop muted playsInline />
+                  <div className="theater-win-backstage-name">{person.name}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        {/* Stage — up to 3 video tiles */}
         <div className="theater-win-stage">
           {stageTiles.map((person, i) => {
             const videoSrc = videoFor(person, i);

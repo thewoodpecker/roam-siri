@@ -66,8 +66,6 @@
   border-radius: 50%;
   background: var(--magnify-pin-bg);
   border: 0.5px solid var(--magnify-pin-border);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
   display: grid;
   place-items: center;
   z-index: 2;
@@ -143,6 +141,6 @@
 /* Light theme */
 [data-theme="light"] .fp-magnify {
   --magnify-ring-color: rgba(0, 0, 0, 0.10);
-  --magnify-pin-bg: rgba(255, 255, 255, 0.55);
+  --magnify-pin-bg: var(--bg-surface-elevated-primary);
   --magnify-pin-border: rgba(0, 0, 0, 0.12);
 }

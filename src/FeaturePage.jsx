@@ -1,5 +1,7 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import ShowcaseMap from './ShowcaseMap';
+import ReactDOM from 'react-dom';
+import ShowcaseMap, { HomepageReviews } from './ShowcaseMap';
+import { EditMapView } from './App';
 
 function RightControls({ theme, onToggleTheme, showGrid, onToggleGrid }) {
   return (
@@ -32,6 +34,8 @@ import AInbox, { TypingIndicator } from './AInbox';
 import MeetingWindow from './MeetingWindow';
 import TheaterWindow from './TheaterWindow';
 import MagicMinutes from './MagicMinutes';
+import Recordings from './Recordings';
+import Calendar from './Calendar';
 import Lobby from './Lobby';
 import Magnify from './Magnify';
 import OnAir from './OnAir';
@@ -59,6 +63,13 @@ const VIDEO_SPEAKERS = [
   videoPerson('Olivia Sanders', 'Female', 'Olivia Sanders'),
 ];
 
+const SPOTLIGHT_RESULTS = [
+  { name: 'Walt Disney', subtitle: 'Inventors · Designer · NYC', avatar: '/videos/Male/ethan_bishop.png', status: 'online' },
+  { name: 'Walter White', subtitle: 'Marketing · Engineer · Miami', avatar: '/videos/Male/daniel_russell.png', status: 'busy' },
+  { name: 'Walter Scott', subtitle: 'Overworld · Engineer · San Francisco', avatar: '/videos/Male/michael_stevens.png', status: 'away' },
+  { name: 'Walter Winter', subtitle: 'Offline · Sales · Miami', avatar: '/headshots/jeff-grossman.jpg', status: 'offline' },
+];
+
 const INITIAL_WINDOWS = [
   { id: 'ainbox', isOpen: true, position: { x: 0, y: 0 }, zIndex: 1 },
   { id: 'meeting', isOpen: true, position: { x: 0, y: 0 }, zIndex: 1 },
@@ -74,7 +85,7 @@ const noopWin = (id) => ({
   open: () => {}, close: () => {}, requestClose: () => {}, focus: () => {}, move: () => {},
 });
 
-function MeetingPreview({ roomName = 'Daily Standup', autoReactions = true, roamojiOpen = true, people, gesturesEnabled = true, incomingGesturesEnabled = false, captionsScript }) {
+function MeetingPreview({ roomName = 'Daily Standup', autoReactions = true, roamojiOpen = true, people, gesturesEnabled = true, incomingGesturesEnabled = false, captionsScript, compact = false }) {
   const resolvedPeople = people || VIDEO_SPEAKERS.filter(p => p.name !== 'Ethan Bishop' && p.name !== 'Hannah Bennett');
   return (
     <MeetingWindow
@@ -89,20 +100,105 @@ function MeetingPreview({ roomName = 'Daily Standup', autoReactions = true, roam
       gesturesEnabled={gesturesEnabled}
       incomingGesturesEnabled={incomingGesturesEnabled}
       captionsScript={captionsScript}
+      compact={compact}
     />
   );
 }
 
-function TheaterPreview() {
+function TheaterPreview({ speakers, audience, backstage, stereoDemo } = {}) {
   return (
     <TheaterWindow
       win={noopWin('theater')}
       onDrag={() => {}}
-      speakers={VIDEO_SPEAKERS.slice(0, 2)}
-      audience={VIDEO_SPEAKERS}
+      speakers={speakers || VIDEO_SPEAKERS.slice(0, 2)}
+      audience={audience || VIDEO_SPEAKERS}
+      backstage={backstage}
       me={JOE}
       onOpenChat={() => {}}
+      stereoDemo={stereoDemo}
     />
+  );
+}
+
+// Reordered speakers + audience for the Stereo Reactions section so it
+// doesn't reuse the same faces as other Theater previews on the page.
+const STEREO_SPEAKERS = [VIDEO_SPEAKERS[3], VIDEO_SPEAKERS[6], VIDEO_SPEAKERS[4]];
+const STEREO_AUDIENCE = [
+  VIDEO_SPEAKERS[5], VIDEO_SPEAKERS[2], VIDEO_SPEAKERS[7], VIDEO_SPEAKERS[0],
+  VIDEO_SPEAKERS[1], VIDEO_SPEAKERS[4], VIDEO_SPEAKERS[6], VIDEO_SPEAKERS[3],
+];
+
+// Whisper Rows preview — focused 3×3 audience grid where my row is highlighted
+// (focus border + talking ring on me) and every other row is dimmed.
+// Each face appears at most once across the whole grid.
+const WHISPER_AUDIENCE = [
+  videoPerson('Emily Carter', 'Female', 'Emily Carter'),
+  videoPerson('Lauren Hayes', 'Female', 'Lauren Hayes'),
+  videoPerson('Ashley Brooks', 'Female', 'Ashley Brooks'),
+  videoPerson('Hannah Bennett', 'Female', 'Hannah Bennett'),
+  videoPerson('Mia Chen', 'Female', 'Mia Chen'),
+  videoPerson('Ethan Bishop', 'Male', 'Ethan Bishop'),
+  videoPerson('Sarah Mitchell', 'Female', 'Sarah Mitchell'),
+  videoPerson('Olivia Sanders', 'Female', 'Olivia Sanders'),
+  videoPerson('Brooke Foster', 'Female', 'Brooke Foster'),
+  videoPerson('Camila Torres', 'Female', 'Camila Torres'),
+  videoPerson('Chloe Peterson', 'Female', 'Chloe Peterson'),
+  videoPerson('Grace Thompson', 'Female', 'Grace Thompson'),
+  videoPerson('Isabella Morgan', 'Female', 'Isabella Morgan'),
+  videoPerson('Jessica Hall', 'Female', 'Jessica Hall'),
+  videoPerson('Madison Reed', 'Female', 'Madison Reed'),
+  videoPerson('Megan Taylor', 'Female', 'Megan Taylor'),
+  videoPerson('Natalie Wilson', 'Female', 'Natalie Wilson'),
+  videoPerson('Rachel Cooper', 'Female', 'Rachel Cooper'),
+  videoPerson('Sophia Ramirez', 'Female', 'Sophia Ramirez'),
+  videoPerson('Daniel Russell', 'Male', 'Daniel Russell'),
+  videoPerson('Michael Stevens', 'Male', 'Michael Stevens'),
+];
+
+function WhisperPreview() {
+  // 9 benches. idx 4 (center) is the "me" bench. Other entries are the
+  // slot indices (0-4) within a 5-slot bench that should be filled.
+  const benchPatterns = [
+    [1, 3],
+    [0, 2, 4],
+    [0, 4],
+    [0, 2, 3],
+    null, // me — flanked by two unique audience members
+    [1, 3],
+    [0, 4],
+    [0, 2, 4],
+    [1, 3],
+  ];
+  let cursor = 0;
+  const pick = () => WHISPER_AUDIENCE[cursor++];
+  const benches = benchPatterns.map((pattern) => {
+    if (pattern === null) {
+      const slots = [null, pick(), JOE, pick(), null];
+      return { slots, isMe: true };
+    }
+    const slots = Array(5).fill(null);
+    pattern.forEach((slotIdx) => { slots[slotIdx] = pick(); });
+    return { slots, isMe: false };
+  });
+
+  return (
+    <div className="fp-whisper-preview">
+      <div className="fp-whisper-grid">
+        {benches.map((b, idx) => (
+          <div key={idx} className={`fp-whisper-bench ${b.isMe ? 'fp-whisper-bench-me' : 'fp-whisper-bench-dimmed'}`}>
+            {b.slots.map((p, si) => {
+              const isMe = b.isMe && p === JOE;
+              return (
+                <div key={si} className={`fp-whisper-slot ${!p ? 'fp-whisper-slot-empty' : ''}`}>
+                  {isMe && <div className="sc-private-talk-ring sc-talking" />}
+                  {p && <img src={p.avatar} alt="" />}
+                </div>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -836,8 +932,56 @@ function AInboxHeroAnimated(props) {
   );
 }
 
-function MagicMinutesPreview() {
-  return <MagicMinutes win={noopWin('magicminutes')} onDrag={() => {}} />;
+function MagicMinutesPreview({ meeting } = {}) {
+  return (
+    <div className="fp-mm-preview">
+      <MagicMinutes win={noopWin('magicminutes')} onDrag={() => {}} meeting={meeting} />
+    </div>
+  );
+}
+
+// All-Hands themed Magic Minutes content for the Theater "Magic Minutes for
+// the whole audience" section visual.
+const THEATER_ALL_HANDS_MEETING = {
+  title: 'Q2 All-Hands',
+  when: '10:00 AM - 11:00 AM',
+  calendarLabel: 'Roam All-Hands',
+  location: 'Walt Disney Theater',
+  brief: "Howard opened the all-hands with Q1 results — ARR up 38% quarter-over-quarter, three new enterprise wins, and net retention crossing 130%. Grace walked the company through Q2 hiring plans, including the EMEA cluster landing in May, and the redesigned onboarding journey built around the virtual office. Chelsea recapped the product roadmap: Magic Minutes hits GA next month, Theater enters open beta with whisper rows and stereo reactions, and the API opens to a wider group of design partners. The session closed with live audience Q&A captured directly from Theater.",
+  nextSteps: [
+    "Howard to share the full Q1 board deck in AInbox by end of week. 03:18",
+    "Engineering leads to finalize Magic Minutes launch checklist and submit risks by Thursday. 21:12",
+    "Grace to publish the EMEA onboarding plan and buddy assignments in #all-hands. 08:55",
+    "Chelsea to open Theater open-beta sign-ups for every pod via the AInbox digest. 14:24",
+    "All managers to run team-level retros within seven days and send rollups to chiefs of staff. 28:48",
+    "Open Q&A items deferred for follow-up are tagged in Magic Minutes — reply to assign owners. 41:02",
+  ],
+  transcript: [
+    { name: 'Howard Lerman', avatar: '/headshots/howard-lerman.jpg', time: '00:32', text: "Welcome to the Q2 All-Hands, everyone. I want to start by celebrating one of our strongest quarters yet. ARR is up 38% quarter-over-quarter, we closed three enterprise deals over a million dollars each, and net retention just crossed 130%. That's not luck — that's every team in this Theater pulling in the same direction.", active: false },
+    { name: 'Howard Lerman', avatar: '/headshots/howard-lerman.jpg', time: '03:18', text: "Today we're going to spend most of our time looking forward. Q2 is the quarter we go from product-led to product-and-platform-led. Magic Minutes ships to GA, Theater hits open beta, and we open the API to a wider group of design partners. Before I hand it off, thank you to everyone who shipped through the holiday slowdown — you set us up for this.", active: false },
+    { name: 'Grace Sutherland', avatar: '/headshots/grace-sutherland.jpg', time: '08:55', text: "On the people side — we're hiring 27 folks this quarter, with a meaningful EMEA cluster landing in May. I've redesigned the buddy program around the virtual office, so every new hire gets a Theater intro on day one and a guided tour of the rooms by the end of week one.", active: false },
+    { name: 'Chelsea Turbin', avatar: '/headshots/chelsea-turbin.jpg', time: '14:24', text: "Product update: Magic Minutes ships to general availability next month with auto-summaries, action items, and audience-wide recaps for Theater sessions. Theater itself enters open beta with whisper rows and stereo reactions — what you're experiencing in this all-hands is built on those features.", active: true },
+    { name: 'Lexi Bohonnon', avatar: '/headshots/lexi-bohonnon.jpg', time: '21:12', text: "On the engineering side — the Magic Minutes infrastructure is fully on-device for transcription, with cloud-side summarization where a bigger model adds value. We finished the security review last week, and the EU residency option ships alongside GA.", active: false },
+    { name: 'Howard Lerman', avatar: '/headshots/howard-lerman.jpg', time: '28:48', text: "One of the things I love about this all-hands format is that the entire company sees the same context at the same time. Magic Minutes will distribute this recap to anyone who couldn't attend — same transcript, same action items, same chat, no information asymmetry.", active: false },
+    { name: 'Grace Sutherland', avatar: '/headshots/grace-sutherland.jpg', time: '35:30', text: "Quick people note — please use the new whisper rows responsibly. Side conversations during all-hands are a feature, not a workaround. They're how we make a 600-person room feel like a real auditorium without anyone losing the thread.", active: false },
+    { name: 'Chelsea Turbin', avatar: '/headshots/chelsea-turbin.jpg', time: '41:02', text: "Closing the loop on Q&A — everything you raised in the audience chat is captured. I'll triage with the team this afternoon and reply with owners attached. Thanks for the energy today, everyone.", active: false },
+  ],
+};
+
+function RecordingsPreview() {
+  return (
+    <div className="fp-rec-preview">
+      <Recordings win={noopWin('recordings')} onDrag={() => {}} />
+    </div>
+  );
+}
+
+function CalendarPreview() {
+  return (
+    <div className="fp-cal-preview">
+      <Calendar win={noopWin('calendar')} onDrag={() => {}} />
+    </div>
+  );
 }
 
 function LobbyPreview() {
@@ -848,7 +992,98 @@ function OnAirPreview() {
   return <OnAir win={noopWin('onair')} onDrag={() => {}} demo />;
 }
 
-function MapPreview({ spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, hideOnIt = false, autoKnock = false, shelfAutoOpen = false, shareAutoOpen = false, initialFloor = 'Preview' } = {}) {
+function TodoPreview({ label = 'TODO' } = {}) {
+  return (
+    <div className="fp-todo-preview">
+      <span className="fp-todo-label">{label}</span>
+    </div>
+  );
+}
+
+
+function FlashCard({ supertitle, title, media, back }) {
+  const isVideo = media?.type === 'video';
+  const videoRef = useRef(null);
+  const [flipped, setFlipped] = useState(false);
+
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    if (flipped) v.pause();
+    else v.play().catch(() => {});
+  }, [flipped]);
+
+  const handleCardClick = () => {
+    if (!flipped) setFlipped(true);
+  };
+  const handlePlusClick = (e) => {
+    e.stopPropagation();
+    setFlipped(f => !f);
+  };
+
+  return (
+    <div
+      className={`fp-flashcard ${flipped ? 'fp-flashcard-flipped' : ''}`}
+      onClick={handleCardClick}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          setFlipped(f => !f);
+        }
+      }}
+    >
+      {isVideo ? (
+        <video
+          ref={videoRef}
+          className="fp-flashcard-bg"
+          src={media.src2x || media.src}
+          autoPlay
+          loop
+          muted
+          playsInline
+          preload="auto"
+          disablePictureInPicture
+          disableRemotePlayback
+        />
+      ) : (
+        <img
+          className="fp-flashcard-bg"
+          src={media.src}
+          srcSet={media.src2x ? `${media.src2x} 2x` : undefined}
+          alt=""
+          loading="lazy"
+          decoding="async"
+        />
+      )}
+      <div className="fp-flashcard-blur" aria-hidden="true" />
+      <div className="fp-flashcard-header">
+        {supertitle && <div className="fp-flashcard-supertitle">{supertitle}</div>}
+        <h3 className="fp-flashcard-title">{title}</h3>
+      </div>
+      <div className="fp-flashcard-footer">
+        {back && <div className="fp-flashcard-back">{back}</div>}
+        <button
+          type="button"
+          className="fp-flashcard-plus"
+          onClick={handlePlusClick}
+          aria-label={flipped ? 'Close' : 'Open'}
+          aria-expanded={flipped}
+        >
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <path d="M10 4v12M4 10h12" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+const MAGNIFY_TARGET_PERSON = 'Michael W.';
+const MAGNIFY_TARGET_CITY = 'SFO';
+
+function MapPreview({ spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, hideOnIt = false, onItAutoOpen = false, autoKnock = false, shelfAutoOpen = false, shareAutoOpen = false, initialFloor = 'Preview', showSidebar = false, autoCycleFloors = false, autoCycleDms = false, showPhysicalTags = false, spotlightSearch = false } = {}) {
   const [pageTheme, setPageTheme] = useState(() =>
     typeof document !== 'undefined' ? document.documentElement.getAttribute('data-theme') || 'dark' : 'dark'
   );
@@ -860,11 +1095,131 @@ function MapPreview({ spotifyAlwaysOpen = false, githubAlwaysOpen = false, figma
     obs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
     return () => obs.disconnect();
   }, []);
+  const wrapRef = useRef(null);
+  const [magnifyPos, setMagnifyPos] = useState(null);
+  const [magnifyHost, setMagnifyHost] = useState(null);
+  useEffect(() => {
+    if (!showPhysicalTags) return;
+    const host = wrapRef.current?.closest('.fp-section-visual') || null;
+    setMagnifyHost(host);
+    const measure = () => {
+      const wrap = wrapRef.current;
+      const refHost = host || wrap;
+      if (!wrap || !refHost) return;
+      const tag = wrap.querySelector(`[data-tag-person="${MAGNIFY_TARGET_PERSON}"]`);
+      if (!tag) {
+        setMagnifyPos(null);
+        return;
+      }
+      const hostRect = refHost.getBoundingClientRect();
+      const tagRect = tag.getBoundingClientRect();
+      const tagCenterX = tagRect.left - hostRect.left + tagRect.width / 2;
+      const tagCenterY = tagRect.top - hostRect.top + tagRect.height / 2;
+      const magnifySize = 88;
+      const lineLength = Math.max(80, Math.min(170, tagCenterY - 74));
+      const left = tagCenterX - magnifySize / 2;
+      const top = tagCenterY - lineLength - magnifySize / 2;
+      setMagnifyPos(prev => {
+        if (prev && Math.abs(prev.left - left) < 1 && Math.abs(prev.top - top) < 1 && Math.abs(prev.lineLength - lineLength) < 1) return prev;
+        return { left, top, lineLength };
+      });
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    if (wrapRef.current) ro.observe(wrapRef.current);
+    const id = setInterval(measure, 500);
+    return () => { ro.disconnect(); clearInterval(id); };
+  }, [showPhysicalTags]);
+  const className = [
+    'fp-map-preview',
+    showSidebar && 'fp-map-preview-with-sidebar',
+    autoCycleFloors && 'fp-map-preview-elevator',
+    autoCycleDms && 'fp-map-preview-dms',
+    showPhysicalTags && 'fp-map-preview-tags',
+    spotlightSearch && 'fp-map-preview-spotlight',
+  ].filter(Boolean).join(' ');
   return (
-    <div className="fp-map-preview">
-      <ShowcaseMap embedded autoKnock={autoKnock} initialFloor={initialFloor} spotifyAlwaysOpen={spotifyAlwaysOpen} githubAlwaysOpen={githubAlwaysOpen} figmaAlwaysOpen={figmaAlwaysOpen} hideOnIt={hideOnIt} shelfAutoOpen={shelfAutoOpen} shareAutoOpen={shareAutoOpen} theme={pageTheme} />
+    <div ref={wrapRef} className={className}>
+      <ShowcaseMap embedded autoKnock={autoKnock} initialFloor={initialFloor} spotifyAlwaysOpen={spotifyAlwaysOpen} githubAlwaysOpen={githubAlwaysOpen} figmaAlwaysOpen={figmaAlwaysOpen} hideOnIt={hideOnIt} onItAutoOpen={onItAutoOpen} shelfAutoOpen={shelfAutoOpen} shareAutoOpen={shareAutoOpen} theme={pageTheme} autoCycleFloors={autoCycleFloors} autoCycleDms={autoCycleDms} showPhysicalTags={showPhysicalTags} />
+      {spotlightSearch && (
+        <>
+          <div className="fp-spotlight-scrim" aria-hidden="true" />
+          <div className="fp-spotlight" role="search">
+            <div className="fp-spotlight-bar">
+              <svg className="fp-spotlight-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" />
+                <path d="M20 20L16.5 16.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+              <div className="fp-spotlight-input">
+                <span className="fp-spotlight-query">Walt</span>
+                <span className="fp-spotlight-caret" aria-hidden="true" />
+              </div>
+            </div>
+            <div className="fp-spotlight-results">
+              {SPOTLIGHT_RESULTS.map((r) => (
+                <div className="fp-spotlight-result" key={r.name}>
+                  <div className="fp-spotlight-avatar">
+                    <img src={r.avatar} alt="" />
+                    <span className={`fp-spotlight-status fp-spotlight-status-${r.status}`} aria-hidden="true" />
+                  </div>
+                  <div className="fp-spotlight-result-text">
+                    <p className="fp-spotlight-result-name">{r.name}</p>
+                    <p className="fp-spotlight-result-subtitle">{r.subtitle}</p>
+                  </div>
+                  <div className="fp-spotlight-action" aria-hidden="true">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                      <path d="M3 8H13M13 8L8.5 3.5M13 8L8.5 12.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
+      {showPhysicalTags && magnifyPos && magnifyHost && ReactDOM.createPortal(
+        <Magnify
+          size={88}
+          lineTo={{ x: 0, y: magnifyPos.lineLength }}
+          className="fp-tags-magnify"
+          style={{ left: magnifyPos.left, top: magnifyPos.top }}
+        >
+          <span className="fp-tags-magnify-city">{MAGNIFY_TARGET_CITY}</span>
+        </Magnify>,
+        magnifyHost
+      )}
     </div>
   );
+}
+
+function MapEditorPreview() {
+  const [windowTint, setWindowTint] = useState(null);
+  return (
+    <div className="fp-map-preview fp-map-editor-preview">
+      <div className="sc-window sc-window-mounted" style={windowTint ? { background: windowTint } : undefined}>
+        <div className="sc-titlebar">
+          <div className="sc-traffic-lights">
+            <div className="sc-light sc-light-close" />
+            <div className="sc-light sc-light-minimize" />
+            <div className="sc-light sc-light-maximize" />
+          </div>
+          <img className="sc-titlebar-logo" src="/icons/roam-logo.png" alt="roam" />
+          <div className="sc-titlebar-spacer" />
+        </div>
+        <div className="fp-map-editor-body">
+          <EditMapView onThemeChange={(t) => setWindowTint(hexToRgba(t.room, 0.3))} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function hexToRgba(hex, alpha) {
+  if (!hex || !hex.startsWith('#')) return null;
+  const v = hex.length === 4
+    ? hex.slice(1).split('').map(c => parseInt(c + c, 16))
+    : [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16)];
+  return `rgba(${v[0]}, ${v[1]}, ${v[2]}, ${alpha})`;
 }
 
 function MagicastPreview() {
@@ -903,12 +1258,9 @@ function MagicastPreview() {
 function KnockDropInPreview() {
   // Cycle: knocking → joined (10s) → leaving (Sophia's tile exits) → idle (3s) → knocking …
   const [phase, setPhase] = useState('knocking');
-  // dialogMounted controls whether the dialog is in the DOM at all; dialogVisible
-  // controls the -visible class. Both start false so the dialog is NOT mounted
-  // until the preview scrolls into view. Once mounted, the first paint is at
-  // opacity 0 — a double-rAF then flips dialogVisible true, firing the entry
-  // transition. We keep it mounted through the full exit transition so the
-  // browser has time to play the animation before unmount.
+  // Split mounted/visible so the dialog stays in the DOM through its exit
+  // transition. First paint is opacity 0; a double-rAF flips visible true to
+  // fire the entry transition; we unmount only after the exit transition runs.
   const [dialogMounted, setDialogMounted] = useState(false);
   const [dialogVisible, setDialogVisible] = useState(false);
   // Hold the cycle until the preview is scrolled into view — otherwise the
@@ -944,14 +1296,15 @@ function KnockDropInPreview() {
         raf2 = requestAnimationFrame(() => setDialogVisible(true));
       });
       const tHide = setTimeout(() => setDialogVisible(false), 2800);
-      const tUnmount = setTimeout(() => setDialogMounted(false), 2800 + DIALOG_EXIT_MS);
-      const tJoin = setTimeout(() => setPhase('joined'), 2800 + DIALOG_EXIT_MS);
+      const tDone = setTimeout(() => {
+        setDialogMounted(false);
+        setPhase('joined');
+      }, 2800 + DIALOG_EXIT_MS);
       return () => {
         cancelAnimationFrame(raf1);
         cancelAnimationFrame(raf2);
         clearTimeout(tHide);
-        clearTimeout(tUnmount);
-        clearTimeout(tJoin);
+        clearTimeout(tDone);
       };
     }
     if (phase === 'joined') {
@@ -1220,7 +1573,7 @@ function RaisedHandsPreview() {
 
 function ExternalMeetingsPreview() {
   return (
-    <div className="fp-image-preview">
+    <div className="fp-image-preview fp-image-preview-external-meetings">
       <img src="/feature/calendar-google.png" alt="Google Calendar with Roam meeting integration" />
     </div>
   );
@@ -1364,7 +1717,7 @@ function KrispNoiseCancellationPreview() {
   return (
     <div className="fp-krisp-frame">
       <MeetingPreview autoReactions={false} roamojiOpen={false} />
-      <div className="fp-krisp-popover" role="presentation">
+      <div className="fp-krisp-popover">
         <div className="fp-krisp-row">
           <span className="fp-krisp-label">Speaker</span>
           <div className="fp-krisp-picker">
@@ -1417,7 +1770,1068 @@ function RoamojiReactionsPreview() {
     VIDEO_SPEAKERS[5], // Ethan Bishop
     VIDEO_SPEAKERS[6], // Sarah Mitchell
   ];
-  return <MeetingPreview people={fourPeople} autoReactions={true} roamojiOpen={true} gesturesEnabled={true} incomingGesturesEnabled={true} />;
+  return <MeetingPreview people={fourPeople} incomingGesturesEnabled={true} />;
+}
+
+function WbIcon({ name, size = 24 }) {
+  return (
+    <span
+      className="fp-wb-glyph"
+      style={{
+        width: size,
+        height: size,
+        WebkitMaskImage: `url(/icons/wb/${name}.svg)`,
+        maskImage: `url(/icons/wb/${name}.svg)`,
+      }}
+      aria-hidden="true"
+    />
+  );
+}
+
+const MP_CURSOR_PALETTE = [
+  { color: 'var(--citrus-500)', dark: true },
+  { color: 'var(--green-500)' },
+  { color: 'var(--amber-500)', dark: true },
+  { color: 'var(--red-500)' },
+  { color: 'var(--pink-500)' },
+  { color: 'var(--indigo-500)' },
+  { color: 'var(--blue-500)' },
+  { color: 'var(--cyan-500)', dark: true },
+];
+
+const MP_CURSOR_NAMES = [
+  'Aaron', 'Arnav', 'Ava', 'Chelsea', 'Derek', 'Garima', 'Grace', 'Howard',
+  'Jeff', 'Joe', 'Jon', 'Keegan', 'Klas', 'Lexi', 'Mattias', 'Michael',
+  'Peter', 'Rob', 'Sean', 'Thomas', 'Tom', 'Will',
+];
+
+function pickRandom(arr, exclude) {
+  const pool = exclude == null ? arr : arr.filter(x => x !== exclude);
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+function SimulatedCursors({ containerRef, count = 2 }) {
+  const [size, setSize] = useState({ w: 0, h: 0 });
+  const [, setTick] = useState(0);
+
+  const agentsRef = useRef(null);
+  if (agentsRef.current == null) {
+    const usedNames = new Set();
+    const usedSwatches = new Set();
+    const pickUnique = (arr, used) => {
+      const pool = arr.filter(x => !used.has(x));
+      const choice = pool[Math.floor(Math.random() * pool.length)];
+      used.add(choice);
+      return choice;
+    };
+    agentsRef.current = Array.from({ length: count }, () => ({
+      name: pickUnique(MP_CURSOR_NAMES, usedNames),
+      swatch: pickUnique(MP_CURSOR_PALETTE, usedSwatches),
+      seg: null,
+      pos: { x: 0, y: 0 },
+    }));
+  }
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const measure = () => {
+      const rect = el.getBoundingClientRect();
+      setSize({ w: rect.width, h: rect.height });
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [containerRef]);
+
+  useEffect(() => {
+    if (size.w <= 0 || size.h <= 0) return;
+    const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+    const randomPoint = () => ({
+      x: Math.random() * Math.max(40, size.w - 40) + 20,
+      y: Math.random() * Math.max(40, size.h - 40) + 20,
+    });
+    const buildSegment = (from, startAt) => {
+      const isJitter = Math.random() < 0.35;
+      let to;
+      if (isJitter) {
+        const angle = Math.random() * Math.PI * 2;
+        const dist = 20 + Math.random() * 60;
+        to = {
+          x: clamp(from.x + Math.cos(angle) * dist, 20, size.w - 20),
+          y: clamp(from.y + Math.sin(angle) * dist, 20, size.h - 20),
+        };
+      } else {
+        to = randomPoint();
+      }
+      const dx = to.x - from.x;
+      const dy = to.y - from.y;
+      const dist = Math.hypot(dx, dy) || 1;
+      const px = -dy / dist;
+      const py = dx / dist;
+      const sway = (Math.random() - 0.5) * dist * 0.6;
+      const sway2 = (Math.random() - 0.5) * dist * 0.6;
+      const c1 = { x: from.x + dx * 0.33 + px * sway, y: from.y + dy * 0.33 + py * sway };
+      const c2 = { x: from.x + dx * 0.66 + px * sway2, y: from.y + dy * 0.66 + py * sway2 };
+      const baseDur = isJitter ? 280 + Math.random() * 320 : 900 + dist * (1.6 + Math.random() * 1.2);
+      return {
+        from,
+        c1,
+        c2,
+        to,
+        startedAt: startAt,
+        duration: baseDur,
+        idleAfter: isJitter ? 80 + Math.random() * 240 : 400 + Math.random() * 2400,
+      };
+    };
+    const now = performance.now();
+    agentsRef.current.forEach((agent, i) => {
+      const start = randomPoint();
+      agent.pos = start;
+      agent.seg = buildSegment(start, now + i * 600);
+    });
+
+    let raf;
+    const step = () => {
+      const now2 = performance.now();
+      agentsRef.current.forEach(agent => {
+        const seg = agent.seg;
+        if (!seg) return;
+        const segEnd = seg.startedAt + seg.duration + seg.idleAfter;
+        if (now2 >= segEnd) {
+          agent.pos = seg.to;
+          agent.seg = buildSegment(seg.to, now2);
+        }
+      });
+      setTick(t => (t + 1) % 1000000);
+      raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [size.w, size.h]);
+
+  if (size.w <= 0) return null;
+
+  const easeInOut = (t) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
+  const cubic = (p0, p1, p2, p3, t) => {
+    const u = 1 - t;
+    return u * u * u * p0 + 3 * u * u * t * p1 + 3 * u * t * t * p2 + t * t * t * p3;
+  };
+  const now = performance.now();
+
+  return (
+    <>
+      {agentsRef.current.map((agent, i) => {
+        const seg = agent.seg;
+        let x = agent.pos.x;
+        let y = agent.pos.y;
+        if (seg) {
+          const elapsed = now - seg.startedAt;
+          if (elapsed <= 0) {
+            x = seg.from.x;
+            y = seg.from.y;
+          } else if (elapsed >= seg.duration) {
+            x = seg.to.x;
+            y = seg.to.y;
+          } else {
+            const t = easeInOut(elapsed / seg.duration);
+            x = cubic(seg.from.x, seg.c1.x, seg.c2.x, seg.to.x, t);
+            y = cubic(seg.from.y, seg.c1.y, seg.c2.y, seg.to.y, t);
+          }
+        }
+        const { color, dark } = agent.swatch;
+        return (
+          <div key={i} className="fp-mp-cursor" style={{ left: x, top: y }} aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="fp-mp-cursor-arrow">
+              <path
+                d="M4.97267 3.72088L9.70161 19.7968C9.90771 20.4986 10.8692 20.5759 11.1839 19.9162L13.8073 14.4138C13.9093 14.2 14.1012 14.0427 14.3306 13.9846L20.2349 12.4944C20.9424 12.3156 21.0562 11.3566 20.41 11.0161L5.60331 3.20409C5.25697 3.02145 4.86185 3.34513 4.97279 3.72131L4.97267 3.72088Z"
+                fill={color}
+                stroke="white"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            <span
+              className={`fp-mp-cursor-name${dark ? ' fp-mp-cursor-name-dark' : ''}`}
+              style={{ background: color }}
+            >
+              {agent.name}
+            </span>
+          </div>
+        );
+      })}
+    </>
+  );
+}
+
+const BIG_MEETING_VIDEO_FILES = [
+  ['Female', 'ashley_brooks'],
+  ['Female', 'brooke_foster'],
+  ['Female', 'camila_torres'],
+  ['Female', 'chloe_peterson'],
+  ['Female', 'emily_carter'],
+  ['Female', 'grace_thompson'],
+  ['Female', 'hannah_bennett'],
+  ['Female', 'isabella_morgan'],
+  ['Female', 'jessica_hall'],
+  ['Female', 'lauren_hayes'],
+  ['Female', 'madison_reed'],
+  ['Female', 'megan_taylor'],
+  ['Female', 'mia_chen'],
+  ['Female', 'natalie_wilson'],
+  ['Female', 'olivia_sanders'],
+  ['Female', 'rachel_cooper'],
+  ['Female', 'sarah_mitchell'],
+  ['Female', 'sophia_ramirez'],
+  ['Male', 'daniel_russell'],
+  ['Male', 'ethan_bishop'],
+  ['Male', 'michael_stevens'],
+];
+
+const BIG_MEETING_ROAM_AVATARS = [
+  ['Aaron Wadhwa', 'aaron-wadhwa'],
+  ['Arnav Bansal', 'arnav-bansal'],
+  ['Ava Lee', 'ava-lee'],
+  ['Chelsea Turbin', 'chelsea-turbin'],
+  ['Derek Cicerone', 'derek-cicerone'],
+  ['Garima Kewlani', 'garima-kewlani'],
+  ['Grace Sutherland', 'grace-sutherland'],
+  ['Howard Lerman', 'howard-lerman'],
+  ['Jeff Grossman', 'jeff-grossman'],
+  ['Joe Woodward', 'joe-woodward'],
+  ['John Beutner', 'john-beutner'],
+  ['John Huffsmith', 'john-huffsmith'],
+  ['John Moffa', 'john-moffa'],
+  ['Jon Brod', 'jon-brod'],
+  ['Keegan Lanzillotta', 'keegan-lanzillotta'],
+  ['Klas Leino', 'klas-leino'],
+  ['Lexi Bohonnon', 'lexi-bohonnon'],
+  ['Mattias Leino', 'mattias-leino'],
+  ['Michael Miller', 'michael-miller'],
+  ['Michael Walrath', 'michael-walrath'],
+  ['Peter Lerman', 'peter-lerman'],
+  ['Rob Figueiredo', 'rob-figueiredo'],
+  ['Sean MacIsaac', 'sean-macisaac'],
+  ['Thomas Grapperon', 'thomas-grapperon'],
+  ['Tom Dixon', 'tom-dixon'],
+  ['Will Houseberry', 'will-hou'],
+];
+
+const BIG_MEETING_PEOPLE = (() => {
+  const TOTAL = 56;
+  const base = BIG_MEETING_VIDEO_FILES.map(([folder, slug]) => {
+    const fullName = slug.split('_').map(s => s[0].toUpperCase() + s.slice(1)).join(' ');
+    return {
+      fullName,
+      avatar: `/videos/${folder}/${slug}.png`,
+      video: `/videos/${folder}/${slug}.mp4`,
+    };
+  });
+  const shuffle = (arr) => {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  };
+  const queue = [];
+  while (queue.length < TOTAL) {
+    queue.push(...shuffle(base));
+  }
+  for (let i = 1; i < TOTAL; i++) {
+    if (queue[i].video === queue[i - 1].video) {
+      for (let j = i + 1; j < queue.length; j++) {
+        if (queue[j].video !== queue[i - 1].video && (i + 1 >= TOTAL || queue[j].video !== queue[i + 1].video)) {
+          [queue[i], queue[j]] = [queue[j], queue[i]];
+          break;
+        }
+      }
+    }
+  }
+  return queue.slice(0, TOTAL).map((p, i) => ({
+    ...p,
+    name: `${p.fullName}#${i}`,
+  }));
+})();
+
+function ActiveSpeakerPreview() {
+  const speakers = VIDEO_SPEAKERS.filter(p => p.name !== 'Ethan Bishop' && p.name !== 'Hannah Bennett');
+  return (
+    <div className="fp-as-preview">
+      <MeetingWindow
+        win={noopWin('meeting')}
+        onDrag={() => {}}
+        roomName="Walt Disney"
+        people={speakers}
+        onOpenChat={() => {}}
+        onOpenOnAir={() => {}}
+        autoReactions={false}
+        roamojiOpen={false}
+        gesturesEnabled={false}
+        initialViewMode="speaker"
+        initialViewMenuOpen
+      />
+    </div>
+  );
+}
+
+function RoamvisionPreview() {
+  return (
+    <div className="fp-rv-window">
+      <img src="/feature/roamvision-hero.jpg" alt="Roamvision conference room" />
+    </div>
+  );
+}
+
+function BigMeetingPreview() {
+  return (
+    <div className="fp-big-meeting">
+      <MeetingWindow
+        win={noopWin('meeting')}
+        onDrag={() => {}}
+        roomName="Walt Disney"
+        people={BIG_MEETING_PEOPLE}
+        onOpenChat={() => {}}
+        onOpenOnAir={() => {}}
+        autoReactions={false}
+        roamojiOpen={false}
+        gesturesEnabled={false}
+      />
+    </div>
+  );
+}
+
+function MultiplayerCursor({ containerRef }) {
+  const [pos, setPos] = useState(null);
+  const [identity, setIdentity] = useState(() => ({
+    name: pickRandom(MP_CURSOR_NAMES),
+    swatch: pickRandom(MP_CURSOR_PALETTE),
+  }));
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const onMove = (e) => {
+      const rect = el.getBoundingClientRect();
+      setPos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+    };
+    const onEnter = () => {
+      setIdentity(prev => ({
+        name: pickRandom(MP_CURSOR_NAMES, prev.name),
+        swatch: pickRandom(MP_CURSOR_PALETTE, prev.swatch),
+      }));
+    };
+    const onLeave = () => setPos(null);
+    el.addEventListener('pointerenter', onEnter);
+    el.addEventListener('pointermove', onMove);
+    el.addEventListener('pointerleave', onLeave);
+    return () => {
+      el.removeEventListener('pointerenter', onEnter);
+      el.removeEventListener('pointermove', onMove);
+      el.removeEventListener('pointerleave', onLeave);
+    };
+  }, [containerRef]);
+
+  if (!pos) return null;
+  const { color, dark } = identity.swatch;
+  return (
+    <div className="fp-mp-cursor" style={{ left: pos.x, top: pos.y }} aria-hidden="true">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="fp-mp-cursor-arrow">
+        <path
+          d="M4.97267 3.72088L9.70161 19.7968C9.90771 20.4986 10.8692 20.5759 11.1839 19.9162L13.8073 14.4138C13.9093 14.2 14.1012 14.0427 14.3306 13.9846L20.2349 12.4944C20.9424 12.3156 21.0562 11.3566 20.41 11.0161L5.60331 3.20409C5.25697 3.02145 4.86185 3.34513 4.97279 3.72131L4.97267 3.72088Z"
+          fill={color}
+          stroke="white"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+      <span
+        className={`fp-mp-cursor-name${dark ? ' fp-mp-cursor-name-dark' : ''}`}
+        style={{ background: color }}
+      >
+        {identity.name}
+      </span>
+    </div>
+  );
+}
+
+function WhiteboardPreview() {
+  const tools = [
+    { key: 'select', label: 'Select', icon: 'IconMousePointer' },
+    { key: 'pen', label: 'Pencil', icon: 'IconPencil' },
+    { key: 'square', label: 'Square', icon: 'IconShapeSquare' },
+    { key: 'circle', label: 'Circle', icon: 'IconShapeCircle' },
+    { key: 'arrow', label: 'Arrow', icon: 'IconArrowUpRight' },
+    { key: 'line', label: 'Line', icon: 'IconShapeLine' },
+    { key: 'text', label: 'Text', icon: 'IconText' },
+    { key: 'sticker', label: 'Sticky note', icon: 'IconStickyNote' },
+    { key: 'image', label: 'Image', icon: 'IconPhoto' },
+  ];
+  const colorRows = [
+    ['#FF453A', '#FF9F0A', '#FFD60A', '#34C759'],
+    ['#5AC8FA', '#0A84FF', '#1E40FF', '#AF52DE'],
+    ['#8E8E93', '#E5E5EA'],
+  ];
+
+  const SHAPE_TOOLS = ['square', 'circle', 'arrow', 'line'];
+  const STICKER_SIZE = 140;
+
+  const [activeTool, setActiveTool] = useState('pen');
+  const [activeColor, setActiveColor] = useState('#FFD60A');
+  const [strokes, setStrokes] = useState([]); // [{ color, points: [{x,y}, ...] }]
+  const [currentStroke, setCurrentStroke] = useState(null);
+  const [shapes, setShapes] = useState([]); // [{ id, type, color, x1, y1, x2, y2 }]
+  const [currentShape, setCurrentShape] = useState(null);
+  const [texts, setTexts] = useState([]); // [{ id, x, y, color, value }]
+  const [stickers, setStickers] = useState([]); // [{ id, x, y, color, value }]
+  const [editingTextId, setEditingTextId] = useState(null);
+  const [editingStickerId, setEditingStickerId] = useState(null);
+  const textIdRef = useRef(0);
+  const stickerIdRef = useRef(0);
+  const shapeIdRef = useRef(0);
+  const canvasRef = useRef(null);
+  const windowRef = useRef(null);
+  const editingTextRef = useRef(null);
+  const editingStickerRef = useRef(null);
+
+  useEffect(() => {
+    if (editingTextId != null) {
+      const id = window.requestAnimationFrame(() => {
+        editingTextRef.current?.focus();
+      });
+      return () => window.cancelAnimationFrame(id);
+    }
+  }, [editingTextId]);
+
+  useEffect(() => {
+    if (editingStickerId != null) {
+      const id = window.requestAnimationFrame(() => {
+        editingStickerRef.current?.focus();
+      });
+      return () => window.cancelAnimationFrame(id);
+    }
+  }, [editingStickerId]);
+
+  const getCanvasPoint = (e) => {
+    const rect = canvasRef.current.getBoundingClientRect();
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+  };
+
+  const onCanvasPointerDown = (e) => {
+    if (activeTool === 'pen') {
+      const { x, y } = getCanvasPoint(e);
+      setCurrentStroke({ color: activeColor, points: [{ x, y }] });
+      canvasRef.current.setPointerCapture?.(e.pointerId);
+      return;
+    }
+    if (SHAPE_TOOLS.includes(activeTool)) {
+      const { x, y } = getCanvasPoint(e);
+      setCurrentShape({ type: activeTool, color: activeColor, x1: x, y1: y, x2: x, y2: y });
+      canvasRef.current.setPointerCapture?.(e.pointerId);
+      return;
+    }
+    if (activeTool === 'text') {
+      e.preventDefault();
+      const { x, y } = getCanvasPoint(e);
+      const id = ++textIdRef.current;
+      setTexts(prev => [...prev, { id, x, y, color: activeColor, value: '' }]);
+      setEditingTextId(id);
+    }
+  };
+
+  const onCanvasPointerMove = (e) => {
+    if (currentStroke) {
+      const { x, y } = getCanvasPoint(e);
+      setCurrentStroke(prev => prev && { ...prev, points: [...prev.points, { x, y }] });
+    }
+    if (currentShape) {
+      const { x, y } = getCanvasPoint(e);
+      setCurrentShape(prev => prev && { ...prev, x2: x, y2: y });
+    }
+  };
+
+  const onCanvasPointerUp = () => {
+    if (currentStroke) {
+      if (currentStroke.points.length > 1) {
+        setStrokes(prev => [...prev, currentStroke]);
+      }
+      setCurrentStroke(null);
+    }
+    if (currentShape) {
+      const { x1, y1, x2, y2 } = currentShape;
+      if (Math.abs(x2 - x1) > 2 || Math.abs(y2 - y1) > 2) {
+        setShapes(prev => [...prev, { ...currentShape, id: ++shapeIdRef.current }]);
+      }
+      setCurrentShape(null);
+    }
+  };
+
+  const updateText = (id, value) => {
+    setTexts(prev => prev.map(t => (t.id === id ? { ...t, value } : t)));
+  };
+
+  const finishEditingText = (id) => {
+    setEditingTextId(null);
+    setTexts(prev => prev.filter(t => t.id !== id || t.value.trim().length > 0));
+  };
+
+  const updateSticker = (id, value) => {
+    setStickers(prev => prev.map(s => (s.id === id ? { ...s, value } : s)));
+  };
+
+  const dropStickerAtCenter = () => {
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const cx = rect.width / 2 - STICKER_SIZE / 2;
+    const cy = rect.height / 2 - STICKER_SIZE / 2;
+    const id = ++stickerIdRef.current;
+    setStickers(prev => [...prev, { id, x: cx, y: cy, color: activeColor, value: '' }]);
+    setEditingStickerId(id);
+  };
+
+  const startStickerDrag = (id) => (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const sticker = stickers.find(s => s.id === id);
+    if (!sticker) return;
+    const startBox = { x: sticker.x, y: sticker.y };
+    const wasEditing = editingStickerId === id;
+    let moved = false;
+    const onMove = (ev) => {
+      const dx = ev.clientX - startX;
+      const dy = ev.clientY - startY;
+      if (!moved && Math.hypot(dx, dy) < 3) return;
+      moved = true;
+      const nx = Math.max(0, Math.min(rect.width - STICKER_SIZE, startBox.x + dx));
+      const ny = Math.max(0, Math.min(rect.height - STICKER_SIZE, startBox.y + dy));
+      setStickers(prev => prev.map(s => (s.id === id ? { ...s, x: nx, y: ny } : s)));
+    };
+    const onUp = () => {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+      if (!moved && !wasEditing) {
+        setEditingStickerId(id);
+      } else if (moved && wasEditing) {
+        window.requestAnimationFrame(() => editingStickerRef.current?.focus());
+      }
+    };
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+  };
+
+  const strokeToPath = (stroke) => {
+    if (!stroke || stroke.points.length === 0) return '';
+    const [first, ...rest] = stroke.points;
+    return `M ${first.x} ${first.y} ` + rest.map(p => `L ${p.x} ${p.y}`).join(' ');
+  };
+
+  const renderShape = (s, key) => {
+    const x = Math.min(s.x1, s.x2);
+    const y = Math.min(s.y1, s.y2);
+    const w = Math.abs(s.x2 - s.x1);
+    const h = Math.abs(s.y2 - s.y1);
+    const common = { stroke: s.color, strokeWidth: 3, fill: 'none', strokeLinecap: 'round', strokeLinejoin: 'round' };
+    if (s.type === 'square') {
+      return <rect key={key} x={x} y={y} width={w} height={h} {...common} />;
+    }
+    if (s.type === 'circle') {
+      return <ellipse key={key} cx={x + w / 2} cy={y + h / 2} rx={w / 2} ry={h / 2} {...common} />;
+    }
+    if (s.type === 'line') {
+      return <line key={key} x1={s.x1} y1={s.y1} x2={s.x2} y2={s.y2} {...common} />;
+    }
+    if (s.type === 'arrow') {
+      const dx = s.x2 - s.x1;
+      const dy = s.y2 - s.y1;
+      const len = Math.hypot(dx, dy) || 1;
+      const angle = Math.atan2(dy, dx);
+      const headLen = Math.min(14, len * 0.4);
+      const headAngle = Math.PI / 6;
+      const ax1 = s.x2 - headLen * Math.cos(angle - headAngle);
+      const ay1 = s.y2 - headLen * Math.sin(angle - headAngle);
+      const ax2 = s.x2 - headLen * Math.cos(angle + headAngle);
+      const ay2 = s.y2 - headLen * Math.sin(angle + headAngle);
+      return (
+        <g key={key}>
+          <line x1={s.x1} y1={s.y1} x2={s.x2} y2={s.y2} {...common} />
+          <line x1={ax1} y1={ay1} x2={s.x2} y2={s.y2} {...common} />
+          <line x1={ax2} y1={ay2} x2={s.x2} y2={s.y2} {...common} />
+        </g>
+      );
+    }
+    return null;
+  };
+
+  const clearStrokes = () => {
+    setStrokes([]);
+    setCurrentStroke(null);
+    setShapes([]);
+    setCurrentShape(null);
+    setTexts([]);
+    setEditingTextId(null);
+    setStickers([]);
+    setEditingStickerId(null);
+  };
+
+  return (
+    <div className="fp-wb-window fp-mp-host" ref={windowRef}>
+      <div
+        ref={canvasRef}
+        className={`fp-wb-canvas fp-wb-canvas-${activeTool}`}
+        onPointerDown={onCanvasPointerDown}
+        onPointerMove={onCanvasPointerMove}
+        onPointerUp={onCanvasPointerUp}
+        onPointerCancel={onCanvasPointerUp}
+      >
+        <svg className="fp-wb-svg" preserveAspectRatio="none">
+          {strokes.map((s, i) => (
+            <path key={`stroke-${i}`} d={strokeToPath(s)} stroke={s.color} strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+          ))}
+          {currentStroke && (
+            <path d={strokeToPath(currentStroke)} stroke={currentStroke.color} strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+          )}
+          {shapes.map(s => renderShape(s, `shape-${s.id}`))}
+          {currentShape && renderShape(currentShape, 'shape-current')}
+        </svg>
+        {texts.map(t => (
+          editingTextId === t.id ? (
+            <textarea
+              key={t.id}
+              ref={editingTextRef}
+              autoFocus
+              className="fp-wb-text fp-wb-text-edit"
+              style={{ left: t.x, top: t.y, color: t.color }}
+              value={t.value}
+              onChange={(e) => updateText(t.id, e.target.value)}
+              onBlur={() => finishEditingText(t.id)}
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') {
+                  e.target.blur();
+                }
+              }}
+              onPointerDown={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
+              placeholder="Type..."
+            />
+          ) : (
+            <div
+              key={t.id}
+              className="fp-wb-text"
+              style={{ left: t.x, top: t.y, color: t.color }}
+              onPointerDown={(e) => {
+                if (activeTool === 'text') {
+                  e.stopPropagation();
+                  setEditingTextId(t.id);
+                }
+              }}
+            >
+              {t.value}
+            </div>
+          )
+        ))}
+        {stickers.map(s => (
+          <div
+            key={s.id}
+            className="fp-wb-sticker"
+            style={{ left: s.x, top: s.y, width: STICKER_SIZE, height: STICKER_SIZE }}
+            onPointerDown={startStickerDrag(s.id)}
+            onMouseDown={(e) => e.stopPropagation()}
+          >
+            {editingStickerId === s.id ? (
+              <textarea
+                ref={editingStickerRef}
+                autoFocus
+                className="fp-wb-sticker-text fp-wb-sticker-edit"
+                value={s.value}
+                onChange={(e) => updateSticker(s.id, e.target.value)}
+                onBlur={() => setEditingStickerId(null)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') {
+                    e.target.blur();
+                  }
+                }}
+                onPointerDown={(e) => e.stopPropagation()}
+                onMouseDown={(e) => e.stopPropagation()}
+                placeholder="Note..."
+              />
+            ) : (
+              <div className="fp-wb-sticker-text">{s.value}</div>
+            )}
+          </div>
+        ))}
+      </div>
+      <div className="fp-wb-titlebar">
+        <button type="button" className="fp-wb-iconbtn" aria-label="Close">
+          <WbIcon name="IconDismiss" />
+        </button>
+        <div className="fp-wb-title-right">
+          <button type="button" className="fp-wb-iconbtn" aria-label="Expand">
+            <WbIcon name="IconArrowExpand" />
+          </button>
+          <button type="button" className="fp-wb-iconbtn" aria-label="More">
+            <WbIcon name="IconEllipsisVertical" />
+          </button>
+        </div>
+      </div>
+      <div className="fp-wb-zoom">
+        <button type="button" className="fp-wb-zoom-btn" aria-label="Zoom out">
+          <WbIcon name="IconMinus" size={16} />
+        </button>
+        <span className="fp-wb-zoom-value">100%</span>
+        <button type="button" className="fp-wb-zoom-btn" aria-label="Zoom in">
+          <WbIcon name="IconPlus" size={16} />
+        </button>
+      </div>
+      <div className="fp-wb-toolbar">
+        {tools.map((t, i) => (
+          <React.Fragment key={t.key}>
+            {(i === 2 || i === 6) && <div className="fp-wb-toolbar-divider" />}
+            <button
+              type="button"
+              className={`fp-wb-tool ${activeTool === t.key ? 'fp-wb-tool-active' : ''}`}
+              aria-label={t.label}
+              onClick={() => {
+                setActiveTool(t.key);
+                if (t.key === 'sticker') {
+                  dropStickerAtCenter();
+                }
+              }}
+            >
+              <WbIcon name={t.icon} size={20} />
+            </button>
+          </React.Fragment>
+        ))}
+      </div>
+      <div className="fp-wb-palette">
+        <div className="fp-wb-swatches">
+          {colorRows.map((row, i) => (
+            <div key={i} className="fp-wb-swatch-row">
+              {row.map(color => (
+                <span
+                  key={color}
+                  className={`fp-wb-swatch ${activeColor === color ? 'fp-wb-swatch-active' : ''}`}
+                  style={{ background: color }}
+                  onClick={() => setActiveColor(color)}
+                />
+              ))}
+            </div>
+          ))}
+        </div>
+        <div className="fp-wb-palette-row">
+          <button type="button" className="fp-wb-palette-action">
+            <WbIcon name="IconLayers3BottomFill" size={20} />
+            <span>Back</span>
+          </button>
+          <div className="fp-wb-palette-vdivider" />
+          <button type="button" className="fp-wb-palette-action">
+            <WbIcon name="IconLayers3TopFill" size={20} />
+            <span>Front</span>
+          </button>
+        </div>
+        <button type="button" className="fp-wb-palette-delete" onClick={clearStrokes}>
+          <WbIcon name="IconTrash" size={20} />
+          <span>Delete</span>
+        </button>
+      </div>
+      <MultiplayerCursor containerRef={windowRef} />
+    </div>
+  );
+}
+
+const MIN_ITEM_SIZE = 80;
+
+function MediaBoardItem({ src, initialX, initialY, width: initialWidth, height: initialHeight, boardRef, onSelect, z }) {
+  const [box, setBox] = useState({ x: initialX, y: initialY, w: initialWidth, h: initialHeight });
+  const [hovered, setHovered] = useState(false);
+  const [playing, setPlaying] = useState(true);
+  const videoRef = useRef(null);
+
+  const startMove = (e) => {
+    e.preventDefault();
+    onSelect?.();
+    const board = boardRef.current;
+    if (!board) return;
+    const boardRect = board.getBoundingClientRect();
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const startBox = box;
+    const onMove = (ev) => {
+      const dx = ev.clientX - startX;
+      const dy = ev.clientY - startY;
+      const maxX = boardRect.width - startBox.w;
+      const maxY = boardRect.height - startBox.h;
+      setBox({
+        x: Math.max(0, Math.min(maxX, startBox.x + dx)),
+        y: Math.max(0, Math.min(maxY, startBox.y + dy)),
+        w: startBox.w,
+        h: startBox.h,
+      });
+    };
+    const onUp = () => {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+    };
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+  };
+
+  const startResize = (handle) => (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onSelect?.();
+    const board = boardRef.current;
+    if (!board) return;
+    const boardRect = board.getBoundingClientRect();
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const startBox = box;
+    const onMove = (ev) => {
+      const dx = ev.clientX - startX;
+      const dy = ev.clientY - startY;
+      let { x, y, w, h } = startBox;
+      if (handle.includes('e')) {
+        w = Math.max(MIN_ITEM_SIZE, Math.min(boardRect.width - startBox.x, startBox.w + dx));
+      }
+      if (handle.includes('s')) {
+        h = Math.max(MIN_ITEM_SIZE, Math.min(boardRect.height - startBox.y, startBox.h + dy));
+      }
+      if (handle.includes('w')) {
+        const newW = Math.max(MIN_ITEM_SIZE, startBox.w - dx);
+        x = startBox.x + (startBox.w - newW);
+        x = Math.max(0, x);
+        w = startBox.x + startBox.w - x;
+      }
+      if (handle.includes('n')) {
+        const newH = Math.max(MIN_ITEM_SIZE, startBox.h - dy);
+        y = startBox.y + (startBox.h - newH);
+        y = Math.max(0, y);
+        h = startBox.y + startBox.h - y;
+      }
+      setBox({ x, y, w, h });
+    };
+    const onUp = () => {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+    };
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+  };
+
+  const togglePlay = (e) => {
+    e.stopPropagation();
+    const v = videoRef.current;
+    if (!v) return;
+    if (v.paused) {
+      v.play().catch(() => {});
+      setPlaying(true);
+    } else {
+      v.pause();
+      setPlaying(false);
+    }
+  };
+
+  const showButton = !playing || hovered;
+  const cornerHandles = ['nw', 'ne', 'se', 'sw'];
+  const edgeHandles = ['n', 'e', 's', 'w'];
+
+  return (
+    <div
+      className="fp-mb-item"
+      style={{ left: box.x, top: box.y, width: box.w, height: box.h, zIndex: z }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <div className="fp-mb-item-inner" onPointerDown={startMove}>
+        <video
+          ref={videoRef}
+          className="fp-mb-video"
+          src={src}
+          autoPlay
+          loop
+          muted
+          playsInline
+          disablePictureInPicture
+          disableRemotePlayback
+          onPlay={() => setPlaying(true)}
+          onPause={() => setPlaying(false)}
+        />
+        <div className={`fp-mb-overlay ${showButton ? 'fp-mb-overlay-visible' : ''}`} />
+        <button
+          type="button"
+          className={`fp-mb-play ${showButton ? 'fp-mb-play-visible' : ''}`}
+          aria-label={playing ? 'Pause' : 'Play'}
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={togglePlay}
+        >
+          <WbIcon name={playing ? 'IconPauseCircle' : 'IconPlayCircle'} />
+        </button>
+      </div>
+      {hovered && (
+        <div className="fp-mb-bbox" aria-hidden="true">
+          {edgeHandles.map(h => (
+            <span
+              key={h}
+              className={`fp-mb-handle fp-mb-handle-edge fp-mb-handle-${h}`}
+              onPointerDown={startResize(h)}
+            />
+          ))}
+          {cornerHandles.map(h => (
+            <span
+              key={h}
+              className={`fp-mb-handle fp-mb-handle-corner fp-mb-handle-${h}`}
+              onPointerDown={startResize(h)}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MediaBoardPreview() {
+  const boardRef = useRef(null);
+  const windowRef = useRef(null);
+  const [zOrder, setZOrder] = useState(['disneyland', 'portrait']);
+  const [textActive, setTextActive] = useState(false);
+  const [texts, setTexts] = useState([]);
+  const [editingTextId, setEditingTextId] = useState(null);
+  const textIdRef = useRef(0);
+  const editingTextRef = useRef(null);
+  const bringToFront = (id) => setZOrder(prev => [...prev.filter(p => p !== id), id]);
+  const zIndexOf = (id) => zOrder.indexOf(id) + 1;
+
+  useEffect(() => {
+    if (editingTextId != null) {
+      const id = window.requestAnimationFrame(() => editingTextRef.current?.focus());
+      return () => window.cancelAnimationFrame(id);
+    }
+  }, [editingTextId]);
+
+  const onBoardPointerDown = (e) => {
+    if (!textActive) return;
+    if (e.target !== boardRef.current) return;
+    e.preventDefault();
+    const rect = boardRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const id = ++textIdRef.current;
+    setTexts(prev => [...prev, { id, x, y, value: '' }]);
+    setEditingTextId(id);
+  };
+
+  const updateText = (id, value) => {
+    setTexts(prev => prev.map(t => (t.id === id ? { ...t, value } : t)));
+  };
+
+  const finishEditingText = (id) => {
+    setEditingTextId(null);
+    setTexts(prev => prev.filter(t => t.id !== id || t.value.trim().length > 0));
+  };
+
+  return (
+    <div className="fp-mb-window fp-mp-host" ref={windowRef} aria-hidden="true">
+      <div className="fp-mb-titlebar">
+        <button type="button" className="fp-wb-iconbtn" aria-label="Close">
+          <WbIcon name="IconDismiss" />
+        </button>
+        <div className="fp-mb-title-center">
+          <button type="button" className="fp-wb-iconbtn" aria-label="Recent">
+            <WbIcon name="IconArrowCounterclockwise" />
+          </button>
+          <button
+            type="button"
+            className={`fp-wb-iconbtn ${textActive ? 'fp-wb-iconbtn-active' : ''}`}
+            aria-label="Text"
+            onClick={() => setTextActive(v => !v)}
+          >
+            <WbIcon name="IconText" />
+          </button>
+          <button type="button" className="fp-wb-iconbtn" aria-label="Attach">
+            <WbIcon name="IconPaperclip" />
+          </button>
+        </div>
+        <div className="fp-mb-title-right">
+          <button type="button" className="fp-wb-iconbtn" aria-label="Expand">
+            <WbIcon name="IconArrowExpand" />
+          </button>
+          <button type="button" className="fp-wb-iconbtn" aria-label="More">
+            <WbIcon name="IconEllipsisVertical" />
+          </button>
+        </div>
+      </div>
+      <div className="fp-mb-body">
+        <div
+          className={`fp-mb-board ${textActive ? 'fp-mb-board-text' : ''}`}
+          ref={boardRef}
+          onPointerDown={onBoardPointerDown}
+        >
+          <MediaBoardItem
+            src="/feature/disneyland.mp4"
+            initialX={32}
+            initialY={48}
+            width={420}
+            height={236}
+            boardRef={boardRef}
+            onSelect={() => bringToFront('disneyland')}
+            z={zIndexOf('disneyland')}
+          />
+          <MediaBoardItem
+            src="/feature/portrait-clip.mp4"
+            initialX={500}
+            initialY={32}
+            width={180}
+            height={320}
+            boardRef={boardRef}
+            onSelect={() => bringToFront('portrait')}
+            z={zIndexOf('portrait')}
+          />
+          {texts.map(t => (
+            editingTextId === t.id ? (
+              <textarea
+                key={t.id}
+                ref={editingTextRef}
+                autoFocus
+                className="fp-wb-text fp-wb-text-edit"
+                style={{ left: t.x, top: t.y }}
+                value={t.value}
+                onChange={(e) => updateText(t.id, e.target.value)}
+                onBlur={() => finishEditingText(t.id)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') e.target.blur();
+                }}
+                onPointerDown={(e) => e.stopPropagation()}
+                onMouseDown={(e) => e.stopPropagation()}
+                placeholder="Type..."
+              />
+            ) : (
+              <div
+                key={t.id}
+                className="fp-wb-text"
+                style={{ left: t.x, top: t.y }}
+                onPointerDown={(e) => {
+                  if (textActive) {
+                    e.stopPropagation();
+                    setEditingTextId(t.id);
+                  }
+                }}
+              >
+                {t.value}
+              </div>
+            )
+          ))}
+        </div>
+      </div>
+      <MultiplayerCursor containerRef={windowRef} />
+    </div>
+  );
 }
 
 function ClosedCaptionsPreview() {
@@ -1508,8 +2922,187 @@ function BootChatPreview() {
   );
 }
 
+/* Pricing comparison shared across feature pages — Legacy stack vs. the
+   bundled Virtual Office. Page-agnostic so it can sit at the bottom of
+   every feature page below the social-post reviews. */
+const STANDARD_PRICING_COMPARE = {
+  variant: 'compare',
+  left: {
+    title: 'Legacy Work',
+    subtitle: 'Manual, Not Integrated, $282/month',
+    rows: [
+      { name: 'Zoom', value: '$27/month', note: 'Endless 30-minute meetings' },
+      { name: 'Hopin', value: '$25/month', note: 'Outside your office' },
+      { name: 'Calendly', value: '$16/month', note: 'Can’t meet now' },
+      { name: 'Slack', value: '$32/month', note: 'No meetings' },
+      { name: 'Otter', value: '$29/month', note: 'Annoying bot' },
+      { name: 'Loom', value: '$20/month', note: 'Annoying extension' },
+      { name: 'Standalone AI Assistant', value: '$50/month', note: 'No office awareness' },
+      { name: 'Zoom Webinars', value: '$83/month', note: 'Yahoo-era webinars' },
+      { name: 'Cubicle', value: '$1,000/month', note: 'Commute, manual' },
+    ],
+    total: { label: 'Total', value: '$282/month', tone: 'negative' },
+  },
+  right: {
+    featured: true,
+    badge: 'Save 93%',
+    title: 'Virtual Office Super Bundle',
+    subtitle: 'AI-Powered, Integrated, $19.50/month',
+    rows: [
+      { name: 'Drop-In Meetings', href: '/drop-in-meetings', value: 'Included', note: '8-minute average' },
+      { name: 'Theater', href: '/theater', value: 'Included', note: 'In your office' },
+      { name: 'Lobby', href: '/lobby', value: 'Included', note: 'Meet now or later' },
+      { name: 'AInbox', href: '/ainbox', value: 'Included', note: 'Prompt your meetings' },
+      { name: 'Magic Minutes', href: '/magic-minutes', value: 'Included', note: 'No annoying bot' },
+      { name: 'Magicast', href: '/magicast', value: 'Included', note: 'No download' },
+      { name: 'On-It', href: '/on-it', value: 'Included', note: 'Office-aware AI' },
+      { name: 'On-Air', href: '/on-air', value: 'Included', note: 'Creator-era events' },
+      { name: 'Virtual Office', href: '/virtual-office', value: 'Included', note: 'Whole company, no commute' },
+    ],
+    total: { label: '9 products for the price of 1', value: '$19.50/month', tone: 'positive' },
+  },
+};
+
 /* ===== Feature content registry ===== */
 export const FEATURES = {
+  'virtual-office': {
+    eyebrow: 'Virtual Office Platform',
+    title: 'Your Whole Company in One HQ',
+    hero: <>It’s as if your whole company is in the same room from anywhere.<br /><br />A Roam Virtual Office lets you instantly see what’s happening and feel the buzz of the office at your distributed company.</>,
+    visual: <MapPreview initialFloor="R&D" />,
+    sections: [
+      {
+        title: 'Full Company Visualization',
+        desc: 'Visualize the whole company as people enter and exit video rooms. Instantly see who is meeting with who and who is talking — just as if you were in a real office.',
+        visual: <MapPreview initialFloor="VirtualOffice" />,
+      },
+      {
+        title: 'Feel the Office Buzz',
+        desc: 'Click a seat to enter a room. Your new location is visible on the map. A talking indicator animates on your head as you talk. As people move around and talk, your company will feel the energy of the movement and presence — just as if you were in the same physical office. Company Culture 📈',
+        visual: <MapPreview autoKnock initialFloor="DropIn" />,
+      },
+      {
+        variant: 'flashcards',
+        flashcards: [
+          { supertitle: 'Room Type', title: 'Private Office', back: 'Each member is assigned a Private Office, an audio-only home base to hold meetings and showcase your favorite books, movies, awards, articles, and more on their personal shelf.', media: { type: 'image', src: '/feature/flashcards/flash-card-private-office-front.png', src2x: '/feature/flashcards/flash-card-private-office-front@2x.png' } },
+          { supertitle: 'Room Type', title: 'Meeting Room', back: 'Dedicated video-enabled room to share your screen, collaborate on a shared whiteboard, record Magic Minutes, react with Roamoji, and more.', media: { type: 'image', src: '/feature/flashcards/flash-card-meeting-room-front.png', src2x: '/feature/flashcards/flash-card-meeting-room-front@2x.png' } },
+          { supertitle: 'Room Type', title: 'Theater', back: 'Hold all-hands meetings, presentations, and large-scale events for up to 3,000 people.', media: { type: 'image', src: '/feature/flashcards/flash-card-theater-front.png', src2x: '/feature/flashcards/flash-card-theater-front@2x.png' } },
+          { supertitle: 'Privacy', title: 'Do Not Disturb', back: 'If someone is doing deep work or otherwise doesn’t want to be bothered, they can set Do Not Disturb. Roam even automatically detects if someone is on a video conferencing call from Zoom or Google Meet and automatically puts that person in DND on Roam.', media: { type: 'image', src: '/feature/flashcards/flash-card-dnd-front.png', src2x: '/feature/flashcards/flash-card-dnd-front@2x.png' } },
+          { supertitle: 'Team Collaboration', title: '3D Chat', back: 'See chats and typing indicators from all groups as people message you. 3D chats visualize everyone who is messaging you right from the map at the same time.', media: { type: 'image', src: '/feature/flashcards/flash-card-3d-chat-front.png', src2x: '/feature/flashcards/flash-card-3d-chat-front@2x.png' } },
+          { supertitle: 'Team Culture', title: 'Stories', back: 'Share short video stories with your team as you work in the familiar social format beloved by millions. Stories are viewable for 24 hours but the good ones last forever.', media: { type: 'video', src: '/feature/flashcards/flash-card-stories-front.mp4', src2x: '/feature/flashcards/flash-card-stories-front@2x.mp4' } },
+        ],
+      },
+      {
+        title: 'Drop-In Meetings',
+        desc: 'Knock to drop-in to anyone who is available for a quick meeting. The average meeting time in Roam is just 8 minutes long!',
+        visual: <KnockDropInPreview />,
+      },
+      {
+        title: 'Game Room',
+        subtitle: <>Teams that Play Together <em>Win</em> Together</>,
+        desc: 'Increase employee engagement, build culture, and ramp newly formed teams with Game Room. Choose from 18 multiplayer titles like Battle Karts and Doodle Up, and view a live leaderboard that shows who’s winning right on the map. Team Video Games have a particularly strong impact on building newly formed teams. A recent study by four BYU information systems professors found newly-formed work teams experienced a 20 percent increase in productivity on subsequent tasks after playing video games together for just 45 minutes.',
+        visual: <MapPreview initialFloor="GameDay" />,
+      },
+      {
+        type: 'quote',
+        quote: '“To see that big of a jump — especially for the amount of time they played — was a little shocking. Companies are spending thousands and thousands of dollars on team-building activities, and I’m thinking, go buy an Xbox.”',
+        author: 'Greg Anderson',
+        role: 'Professor, Information Systems, BYU',
+      },
+      {
+        variant: 'flashcards',
+        flashcards: [
+          { supertitle: 'Team Collaboration', title: 'GitHub', back: 'A new era of handling PR requests. When you submit a PR request to your fellow dev, it appears next to your office right on the map until it’s done. PR review wait times drop drastically.', media: { type: 'video', src: '/feature/flashcards/flash-card-github-front.mp4', src2x: '/feature/flashcards/flash-card-github-front@2x.mp4' } },
+          { supertitle: 'Team Collaboration', title: 'Figma', back: 'Your Figma conversations appear right on the Roam floor map. Whenever you reply or comment on a Figma file, the Figma logo shows right next to your office. Click to instantly open the comment in Figma.', media: { type: 'image', src: '/feature/flashcards/flash-card-figma-front.png', src2x: '/feature/flashcards/flash-card-figma-front@2x.png' } },
+          { supertitle: 'Team Culture', title: 'Spotify', back: 'Stay in tune with your team by sharing what you’re playing on Spotify or Apple Music, right in your own office, right on the map.', media: { type: 'video', src: '/feature/flashcards/flash-card-spotify-front.mp4', src2x: '/feature/flashcards/flash-card-spotify-front@2x.mp4' } },
+          { supertitle: 'Room Type', title: 'Game Room', back: 'Increase employee engagement, build better culture, and ramp new teams in your Game Room. Teams that play together win together.', media: { type: 'image', src: '/feature/flashcards/flash-card-game-room-front.png', src2x: '/feature/flashcards/flash-card-game-room-front@2x.png' } },
+          { supertitle: 'Privacy', title: 'Out of Roam', back: 'If you’re out of the office for multiple days, your return date shows on your office.', media: { type: 'image', src: '/feature/flashcards/flash-card-out-of-roam-front.png', src2x: '/feature/flashcards/flash-card-out-of-roam-front@2x.png' } },
+          { supertitle: 'Privacy', title: 'Will Return', back: 'If you’re stepping away but returning today just set your Will Return time and a clock appears.', media: { type: 'image', src: '/feature/flashcards/flash-card-will-return-front.png', src2x: '/feature/flashcards/flash-card-will-return-front@2x.png' } },
+        ],
+      },
+      {
+        title: 'Customize Your Virtual Office with the Map Editor',
+        desc: 'Make your virtual office your own. Decide who sits next to whom. Pick your logo and colors. Resize offices and rooms to fit accordingly. Give yourself the corner office! Add new floors as you expand. Put the theater on its own floor. If you’ve ever played SimCity to lay out your own city, you’ll intuitively know how to lay out your own office with the Roam Map Editor.',
+        visual: <MapEditorPreview />,
+      },
+      {
+        title: 'Spotlight Search',
+        desc: 'Looking for someone? Instantly spotlight them on the map, on any floor. It’s like an automatic version of "Where’s Waldo".',
+        visual: <MapPreview spotlightSearch initialFloor="Commercial" />,
+      },
+      {
+        title: 'Elevator',
+        desc: 'Turn your HQ into a skyscraper! Add floors as your company expands. Organize the company by floor, if you like. See multiple floors from the same view, and scroll up and down to see everyone.',
+        visual: <MapPreview initialFloor="R&D" showSidebar autoCycleFloors />,
+      },
+      {
+        title: 'Interact on the Map',
+        desc: 'Click someone’s head to wave, knock, or chat. Waving at someone is a great way to say hey without annoying them too much.',
+        visual: <MapPreview initialFloor="R&D" autoCycleDms />,
+      },
+      {
+        title: 'Physical Office Tags',
+        desc: 'For hybrid companies, automatically show which people are in which physical offices right on the map.',
+        visual: <MapPreview initialFloor="R&D" showPhysicalTags />,
+      },
+      {
+        title: 'Recordings',
+        desc: 'Every meeting, On-Air Event, and Magic Minutes session is captured automatically and lands in Recordings. Browse by room or date, scrub through the video, and jump straight to a quoted moment — no more "can someone share the recording?" in chat.',
+        visual: <RecordingsPreview />,
+      },
+      {
+        title: 'Calendar',
+        desc: 'Pull up your calendar right from the map. Add events. You can even schedule meetings in Roam chat. Just chat a meeting time like "Tomorrow at 2pm" and it will be automatically underlined. Click it to instantly schedule a meeting with everyone you’re speaking with!',
+        visual: <CalendarPreview />,
+      },
+      {
+        title: 'AI Agents on the Map',
+        desc: 'Ultraproductive AI-first companies are hiring AI Agents to achieve tasks. You’re able to see which AI Agents are present, in their own offices, and you can even chat with them, knock on their doors and have voice conversations.',
+        visual: <MapPreview onItAutoOpen initialFloor="R&D" />,
+      },
+      {
+        variant: 'columns',
+        columns: [
+          {
+            title: 'Ultraproductivity',
+            desc: 'See everything going on at your company, instantly.',
+          },
+          {
+            title: 'Instant Culture',
+            desc: 'Everyone can see what’s happening at the company instantly. 9 out of 10 members of Roam report feeling more connected to their company within 3 days.',
+          },
+          {
+            title: 'Bespoke for Your Company',
+            desc: 'Your company has a unique identity. The subtle signals in the way you set up your virtual office is a reflection of that. Who sits next to who matters.',
+          },
+        ],
+      },
+      {
+        variant: 'lead',
+        leadContent: (
+          <>Roam is <strong>Your AI-powered Virtual HQ</strong>. Unleash <em>ultraproductivity</em> as an AI-first, globally distributed, fully digitized company—one single HQ for your people to work side-by-side with AI Agents.</>
+        ),
+      },
+      {
+        variant: 'explore',
+        title: 'Explore our Virtual Office Platform',
+        desc: '9 products for the price of one:',
+        items: [
+          'Company Visualization with the Virtual Office',
+          'Virtual Meeting Room with Drop-In Meetings',
+          'All-Hands Presentations with Theater',
+          'Enterprise Messaging with AInbox',
+          'Meeting Scheduler with Lobby',
+          'Screen Recorder with Magicast',
+          'AI Meeting Summarization with Magic Minutes',
+          'Your AI Assistant is On-It',
+          'Immersive Events with On-Air',
+        ],
+      },
+      { variant: 'reviews' },
+      STANDARD_PRICING_COMPARE,
+    ],
+  },
   'drop-in-meetings': {
     eyebrow: 'Drop-In Meetings',
     title: 'Knock. Talk. Done.',
@@ -1595,13 +3188,94 @@ export const FEATURES = {
         desc: 'Turn on closed captions if you’d like to see the meeting transcribed in real time.',
         visual: <ClosedCaptionsPreview />,
       },
+      {
+        title: 'Magic Minutes',
+        desc: 'AI Meeting Summarization that transcribes any meeting, summarizes it, and creates a group chat about the meeting in your AInbox for prompting and searching.',
+        visual: <MagicMinutesPreview />,
+      },
+      {
+        title: 'Whiteboard',
+        desc: 'Pull up a multiplayer, interactive whiteboard for your meeting.',
+        visual: <WhiteboardPreview />,
+      },
+      {
+        title: 'Media Board',
+        desc: 'Don’t share streamed videos live. Preload videos and sounds with HLS encoding for super fast and high quality local playback during your meeting. Let everyone enjoy the moment at the same time with quality.',
+        visual: <MediaBoardPreview />,
+      },
+      {
+        title: '300 Person Meetings',
+        desc: 'Roam Videoconferencing supports up to 300 people in a single meeting with cameras on. If you you want to go even bigger, you can use our Theater which supports up to 3,000 people in a unique immersive virtual events environment. Roam uses a proprietary, breakthrough technology called Magic Multiplexing to ensure high quality, smooth video for all uses even in large meetings.',
+        visual: <BigMeetingPreview />,
+      },
+      {
+        title: 'Active Speaker',
+        desc: 'Select Active Speaker mode to automatically pin the active speaker in a large focus window in the meeting. You can even exclude yourself from being active.\n\nRoam developed a proprietary signal processing technology using Noise Gate with Hysteresis to ensure a peaceful leadership transition.',
+        visual: <ActiveSpeakerPreview />,
+      },
+      {
+        title: 'Roamvision',
+        desc: 'Connect your physical conference rooms to Roam and display on-site participants on the Roam Virtual Office Map. Conduct Hybrid meetings that finally work the way they should: with presence, energy, and velocity. Bring your own Mac, PC, or use our hardware integration with the all-in-one Neat Board.',
+        visual: <RoamvisionPreview />,
+      },
+      {
+        variant: 'columns',
+        columns: [
+          {
+            title: 'Globally Distributed Mesh Architecture',
+            desc: 'Our patent-pending breakthrough architecture has 12 edge data centers spread around the globe to minimize latency for all participants.',
+          },
+          {
+            title: '99.9% Quality',
+            desc: 'Roam built its own proprietary video conferencing technology and dedicates significant R&D resources to monitoring meeting quality continuously under all internet and computation performance conditions.',
+          },
+          {
+            title: 'Everyday Low Prices',
+            desc: 'Roam is only $19.50/month per active member. Includes Company Visualization, Video Conferencing, Drop-In Meetings, AI Meeting Summaries, Group Chat, Booking and much more.',
+          },
+        ],
+      },
+      {
+        variant: 'lead',
+        leadContent: (
+          <>Roam is <strong>Your AI-powered Virtual HQ</strong>. Unleash <em>ultraproductivity</em> as an AI-first, globally distributed, fully digitized company—one single HQ for your people to work side-by-side with AI Agents.</>
+        ),
+      },
+      {
+        variant: 'explore',
+        title: 'Explore our Virtual Office Platform',
+        desc: '9 products for the price of one:',
+        items: [
+          'Company Visualization with the Virtual Office',
+          'Virtual Meeting Room with Drop-In Meetings',
+          'All-Hands Presentations with Theater',
+          'Enterprise Messaging with AInbox',
+          'Meeting Scheduler with Lobby',
+          'Screen Recorder with Magicast',
+          'AI Meeting Summarization with Magic Minutes',
+          'Your AI Assistant is On-It',
+          'Immersive Events with On-Air',
+        ],
+      },
+      {
+        variant: 'explore',
+        title: 'Compare Roam to Legacy Video Conferencing Providers',
+        items: [
+          'Roam vs. Zoom',
+          'Roam vs. WebEx',
+          'Roam vs. Teams',
+          'Roam vs. Meet',
+        ],
+      },
+      { variant: 'reviews' },
+      STANDARD_PRICING_COMPARE,
     ],
   },
   'video-conferencing': {
     eyebrow: 'Video Conferencing',
     title: 'Meetings that end when you’re done',
     hero: 'Jump into a meeting room the moment you need to collaborate, and get back to work the moment you don’t. No more standing half-hour meetings for a five-minute decision.',
-    visual: <MeetingPreview />,
+    visual: <MeetingPreview compact gesturesEnabled={false} autoReactions={false} />,
     sections: [
       {
         title: 'Drop-in, not dialed-in',
@@ -1624,27 +3298,167 @@ export const FEATURES = {
   },
   'theater': {
     eyebrow: 'Theater',
-    title: 'All-hands, reimagined as a live show',
-    hero: 'A stage, an audience, and reactions that actually feel like a room. Theater turns your company meeting into something people show up for.',
-    visual: <TheaterPreview />,
+    title: 'All The World’s a Stage',
+    hero: <>Successful people know their ideas are only as good as their ability to communicate them. Theater is your virtual venue for all-hands, town halls, and demos — a real stage, a real audience, and reactions that swell across the room.<br /><br />Up to 3,000 people, no thumbnail grid in sight.</>,
+    visual: <MapPreview initialFloor="TheaterHero" />,
     sections: [
       {
-        title: 'A real stage, with wings',
-        desc: 'Speakers walk on stage. Backstage is where the next presenters prep. The director has controls that feel like running a broadcast.',
+        type: 'quote',
+        quote: '“We are the music makers, and we are the dreamers of dreams.”',
+        author: 'Willy Wonka',
+        role: 'Willy Wonka & the Chocolate Factory',
+      },
+      {
+        title: 'An immersive, focused space',
+        desc: 'Theater darkens the room and pulls every eye to the stage — Broadway, the Apple Park theater, your favorite museum auditorium. Presenters get the spotlight; audiences get permission to actually pay attention.',
+        visual: (
+          <TheaterPreview
+            speakers={[videoPerson('Camila Torres', 'Female', 'Camila Torres')]}
+            audience={[
+              VIDEO_SPEAKERS[5],
+              VIDEO_SPEAKERS[2],
+              VIDEO_SPEAKERS[7],
+              VIDEO_SPEAKERS[0],
+              VIDEO_SPEAKERS[4],
+              VIDEO_SPEAKERS[1],
+              VIDEO_SPEAKERS[6],
+            ]}
+            backstage={[VIDEO_SPEAKERS[1]]}
+          />
+        ),
+      },
+      {
+        title: 'The Stage',
+        desc: 'Presenters walk on stage when it’s their turn. Pull a colleague up next to you mid-talk. Send someone backstage with a click. It feels like running a real show, because it is.',
         visual: <TheaterPreview />,
       },
       {
-        title: 'Whisper rows',
-        desc: 'Seatmates can chat quietly while the presenter stays focused on the message. Side-conversations become a feature, not a bug.',
+        type: 'quote',
+        quote: '“Make sure you have finished speaking before your audience has finished listening.”',
+        author: 'Dorothy Sarnoff',
+        role: 'American Theatre Actress',
       },
       {
-        title: 'Stereo reactions',
-        desc: 'Clapping, laughter, and the occasional well-earned boo swell across the audience as more people pile on.',
+        title: 'Whisper Rows',
+        desc: 'Pick a seat. Whisper with the people next to you while the presenter keeps going — the audio is private to your row, the presenter never hears it. Side conversations become a feature, not a distraction.',
+        visual: <WhisperPreview />,
       },
       {
-        title: 'Stadium mode',
-        desc: 'Scales up to hundreds of attendees without the whole thing turning into a thumbnail grid.',
+        title: 'Laugh, Clap & Boo in Stereo',
+        desc: 'Audience reactions amplify with the crowd. Five claps is a smattering. Five hundred is a roar. Theater renders applause, laughter, and the occasional well-earned boo in stereo, scaled to the size of the room.',
+        visual: <TheaterPreview stereoDemo speakers={STEREO_SPEAKERS} audience={STEREO_AUDIENCE} />,
       },
+      {
+        type: 'quote',
+        quote: '“Performance is not about getting your act together, but about opening up to the energy of the audience.”',
+        author: 'Benjamin Zander',
+        role: 'English Conductor',
+      },
+      {
+        title: 'Backstage',
+        desc: 'A coordination room only your presenters can see. Run the rundown, queue your slides, calm the nerves, and walk on when it’s time. The audience never sees the prep — only the show.',
+        visual: (
+          <TheaterPreview
+            speakers={[VIDEO_SPEAKERS[4]]}
+            audience={[
+              VIDEO_SPEAKERS[2],
+              VIDEO_SPEAKERS[0],
+              VIDEO_SPEAKERS[7],
+              VIDEO_SPEAKERS[3],
+              VIDEO_SPEAKERS[5],
+              VIDEO_SPEAKERS[1],
+              VIDEO_SPEAKERS[6],
+            ]}
+            backstage={[
+              videoPerson('Sophia Ramirez', 'Female', 'Sophia Ramirez'),
+              videoPerson('Daniel Russell', 'Male', 'Daniel Russell'),
+            ]}
+          />
+        ),
+      },
+      {
+        variant: 'flashcards',
+        flashcards: [
+          { supertitle: 'Showmanship', title: 'The Curtain', back: 'Add a moment of mystery. Drop the curtain right before you walk on, and let the audience feel the anticipation.', media: { type: 'image', src: '/feature/flashcards/flash-card-theater-front.png', src2x: '/feature/flashcards/flash-card-theater-front@2x.png' } },
+          { supertitle: 'Audience', title: 'Open Mic', back: 'Audio-only broadcast for audience members. Anyone can step up and address the whole theater, first-come-first-served.', media: { type: 'image', src: '/feature/flashcards/flash-card-theater-front.png', src2x: '/feature/flashcards/flash-card-theater-front@2x.png' } },
+          { supertitle: 'Showmanship', title: 'Walk-On Music', back: 'Set your own leitmotif. When you take the stage, your song plays. Make every entrance feel like an entrance.', media: { type: 'image', src: '/feature/flashcards/flash-card-theater-front.png', src2x: '/feature/flashcards/flash-card-theater-front@2x.png' } },
+          { supertitle: 'Showmanship', title: 'Exit Music', back: 'Walk off to a custom track. The cleanest way to end on a high note.', media: { type: 'image', src: '/feature/flashcards/flash-card-theater-front.png', src2x: '/feature/flashcards/flash-card-theater-front@2x.png' } },
+          { supertitle: 'Director', title: 'Stagehand Controls', back: 'Toggle backstage access, hand out the mic, mute reactions, generate a theater link. The presenter command center sits in your hands.', media: { type: 'image', src: '/feature/flashcards/flash-card-theater-front.png', src2x: '/feature/flashcards/flash-card-theater-front@2x.png' } },
+          { supertitle: 'Quality', title: 'HLS Media Player', back: 'High-quality video streaming with HLS encoding. Roll a polished pre-recorded segment in the middle of your show — broadcast-grade fidelity, no dropped frames.', media: { type: 'image', src: '/feature/flashcards/flash-card-theater-front.png', src2x: '/feature/flashcards/flash-card-theater-front@2x.png' } },
+        ],
+      },
+      {
+        title: 'Town Halls',
+        desc: 'Run a proper town hall — quiet, focused audience by default, raised hands for Q&A, and Open Mic when you want to invite anyone to speak. Big room energy without the chaos of an unmuted Zoom.',
+        visual: <MapPreview initialFloor="R&D" />,
+      },
+      {
+        title: 'Group Roundups',
+        desc: 'Multiple teams report out in a single show — engineering pods, product squads, regional offices. Each group takes the stage in turn while everyone else watches. The rest of the company finally sees what every team has been shipping.',
+        visual: <TheaterPreview />,
+      },
+      {
+        title: 'Magic Minutes for the whole audience',
+        desc: 'Every Theater session is captured by Magic Minutes. The full transcript, the video, and a group chat of every attendee lands in your AInbox the moment the curtain drops. Anyone who couldn’t make it gets caught up instantly.',
+        visual: <MagicMinutesPreview meeting={THEATER_ALL_HANDS_MEETING} />,
+      },
+      {
+        title: 'Stadium Mode',
+        desc: 'Cross 100 attendees and Theater automatically scales into Stadium Mode. The seating wraps, the audio model reshapes, and the stage stays sharp — up to 2,500 people in one room. No thumbnail grid. No crashed Zoom webinar.',
+        visual: <TheaterPreview />,
+      },
+      {
+        title: 'Recordings',
+        desc: 'Every Theater event is automatically recorded and dropped into Recordings. Browse by date, scrub through the show, and jump straight to a quoted moment — the way it should be.',
+        visual: <RecordingsPreview />,
+      },
+      {
+        variant: 'columns',
+        columns: [
+          {
+            title: 'Superior Audience Experience',
+            desc: 'Audiences instinctively know Theater isn’t a video call. The room reads as an event — they show up, they pay attention, they react.',
+          },
+          {
+            title: 'Superior Presenter Experience',
+            desc: 'Backstage prep, walk-on cues, stagehand controls, and an audience that’s actually focused. Presenting in Theater feels like presenting in real life — only easier.',
+          },
+          {
+            title: 'Lifelike Energy',
+            desc: 'Stereo reactions, whisper rows, and a stage worth walking on. The room feels alive, even when everyone’s remote.',
+          },
+        ],
+      },
+      {
+        type: 'quote',
+        quote: '“Music acts like a magic key, to which the most tightly closed heart opens.”',
+        author: 'Maria von Trapp',
+        role: 'Singer',
+      },
+      {
+        variant: 'lead',
+        leadContent: (
+          <>Roam Theater is your <strong>company’s stage</strong>. Every all-hands, every demo day, every keynote — held in a room that <em>feels like a room</em>, with reactions that <em>feel like reactions</em>.</>
+        ),
+      },
+      {
+        variant: 'explore',
+        title: 'Explore our Virtual Office Platform',
+        desc: '9 products for the price of one:',
+        items: [
+          'Company Visualization with the Virtual Office',
+          'Virtual Meeting Room with Drop-In Meetings',
+          'All-Hands Presentations with Theater',
+          'Enterprise Messaging with AInbox',
+          'Meeting Scheduler with Lobby',
+          'Screen Recorder with Magicast',
+          'AI Meeting Summarization with Magic Minutes',
+          'Your AI Assistant is On-It',
+          'Immersive Events with On-Air',
+        ],
+      },
+      { variant: 'reviews' },
+      STANDARD_PRICING_COMPARE,
     ],
   },
   'ainbox': {
@@ -1803,43 +3617,7 @@ export const FEATURES = {
           'Confidential Messages.',
         ],
       },
-      {
-        variant: 'compare',
-        left: {
-          title: 'Legacy Work',
-          subtitle: 'Manual, Not Integrated, $282/month',
-          rows: [
-            { name: 'Zoom', value: '$27/month', note: 'Endless 30-minute meetings' },
-            { name: 'Hopin', value: '$25/month', note: 'Outside your office' },
-            { name: 'Calendly', value: '$16/month', note: 'Can’t meet now' },
-            { name: 'Slack', value: '$32/month', note: 'No meetings' },
-            { name: 'Otter', value: '$29/month', note: 'Annoying bot' },
-            { name: 'Loom', value: '$20/month', note: 'Annoying extension' },
-            { name: 'Standalone AI Assistant', value: '$50/month', note: 'No office awareness' },
-            { name: 'Zoom Webinars', value: '$83/month', note: 'Yahoo-era webinars' },
-            { name: 'Cubicle', value: '$1,000/month', note: 'Commute, manual' },
-          ],
-          total: { label: 'Total', value: '$282/month', tone: 'negative' },
-        },
-        right: {
-          featured: true,
-          badge: 'Save 93%',
-          title: 'Virtual Office Super Bundle',
-          subtitle: 'AI-Powered, Integrated, $19.50/month',
-          rows: [
-            { name: 'Drop-In Meetings', href: '/drop-in-meetings', value: 'Included', note: '8-minute average' },
-            { name: 'Theater', href: '/theater', value: 'Included', note: 'In your office' },
-            { name: 'Lobby', href: '/lobby', value: 'Included', note: 'Meet now or later' },
-            { name: 'AInbox', href: '/ainbox', value: 'Included', note: 'Prompt your meetings' },
-            { name: 'Magic Minutes', href: '/magic-minutes', value: 'Included', note: 'No annoying bot' },
-            { name: 'Magicast', href: '/magicast', value: 'Included', note: 'No download' },
-            { name: 'On-It', href: '/on-it', value: 'Included', note: 'Office-aware AI' },
-            { name: 'On-Air', href: '/on-air', value: 'Included', note: 'Creator-era events' },
-            { name: 'Virtual Office', href: '/virtual-office', value: 'Included', note: 'Whole company, no commute' },
-          ],
-          total: { label: '9 products for the price of 1', value: '$19.50/month', tone: 'positive' },
-        },
-      },
+      STANDARD_PRICING_COMPARE,
     ],
   },
   'magic-minutes': {
@@ -1945,6 +3723,7 @@ export const FEATURES = {
 };
 
 export const FEATURE_ORDER = [
+  'virtual-office',
   'video-conferencing',
   'theater',
   'ainbox',
@@ -1995,7 +3774,105 @@ function CompareColumn({ side, data }) {
   );
 }
 
-function FeatureSection({ eyebrow, title, titleImage, desc, visual, icons, variant, cards, bullets, left, right }) {
+// Generates a URL-safe slug from a section title so each titled section can
+// be deep-linked. "Laugh, Clap & Boo in Stereo" → "laugh-clap-and-boo-in-stereo"
+const sectionSlug = (s) => String(s || '')
+  .toLowerCase()
+  .replace(/&amp;/g, 'and')
+  .replace(/&/g, 'and')
+  .replace(/[^a-z0-9]+/g, '-')
+  .replace(/^-|-$/g, '');
+
+// Inline link-copy button that appears next to a section title on hover and
+// writes a sharable deep link to the clipboard when clicked.
+function SectionLinkButton({ featureSlug, slug }) {
+  const [copied, setCopied] = useState(false);
+  if (!featureSlug || !slug) return null;
+  const handleClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const url = `${window.location.origin}${window.location.pathname}#/feature/${featureSlug}/${slug}`;
+    try {
+      if (navigator.clipboard?.writeText) navigator.clipboard.writeText(url);
+    } catch {}
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+  return (
+    <button
+      type="button"
+      className={`fp-section-link-btn ${copied ? 'fp-section-link-copied' : ''}`}
+      onClick={handleClick}
+      aria-label="Copy link to section"
+      title={copied ? '' : 'Copy link to section'}
+    >
+      <img src="/icons/link.svg" alt="" width="16" height="16" />
+      {copied && <span className="fp-section-link-toast">Copied</span>}
+    </button>
+  );
+}
+
+function FeatureSection({ eyebrow, title, subtitle, titleImage, desc, visual, icons, variant, cards, bullets, left, right, columns, leadContent, items, flashcards, featureSlug }) {
+  if (variant === 'reviews') {
+    return <HomepageReviews limit={items?.length || 6} />;
+  }
+  if (variant === 'flashcards' && flashcards && flashcards.length > 0) {
+    return (
+      <section className="fp-section fp-section-flashcards">
+        {flashcards.map((c, i) => (
+          <FlashCard key={i} supertitle={c.supertitle} title={c.title} media={c.media} back={c.back} />
+        ))}
+      </section>
+    );
+  }
+  if (variant === 'explore' && items && items.length > 0) {
+    return (
+      <section className="fp-section fp-section-explore">
+        <div className="fp-explore-text">
+          <h2 className="fp-explore-title">{title}</h2>
+          {desc && <p className="fp-explore-desc text-body">{desc}</p>}
+        </div>
+        <ul className="fp-explore-list">
+          {items.map((label, i) => (
+            <li key={i} className="fp-explore-item">
+              <svg className="fp-explore-chevron" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+                <path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <span>{label}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
+    );
+  }
+  if (variant === 'lead' && leadContent) {
+    return (
+      <section className="fp-section fp-section-lead">
+        <p className="fp-lead">{leadContent}</p>
+      </section>
+    );
+  }
+  if (variant === 'columns' && columns && columns.length > 0) {
+    return (
+      <section className="fp-section fp-section-columns">
+        {columns.map((c, i) => (
+          <div key={i} className="fp-col">
+            {c.visual && <div className="fp-col-visual">{c.visual}</div>}
+            {c.eyebrow && <div className="fp-col-eyebrow text-caption-strong">{c.eyebrow}</div>}
+            <h2 className="fp-col-title">{c.title}</h2>
+            {c.desc && <p className="fp-col-desc text-body">{c.desc}</p>}
+            {c.ctas && c.ctas.length > 0 && (
+              <div className="fp-cta-row">
+                {c.ctas.map((label, j) => (
+                  <button key={j} className="sc-promo-btn">{label}</button>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
+      </section>
+    );
+  }
   if (variant === 'compare' && left && right) {
     return (
       <section className="fp-section fp-section-compare">
@@ -2035,12 +3912,22 @@ function FeatureSection({ eyebrow, title, titleImage, desc, visual, icons, varia
       </section>
     );
   }
+  const slug = title ? sectionSlug(title) : null;
   return (
-    <section className={`fp-section ${variant ? `fp-section-${variant}` : ''}`}>
+    <section
+      id={slug || undefined}
+      className={`fp-section ${variant ? `fp-section-${variant}` : ''}`}
+    >
       <div className="fp-section-text">
         {eyebrow && <div className="fp-section-eyebrow text-caption-strong">{eyebrow}</div>}
         {titleImage && <img className="fp-section-title-image" src={titleImage.src} alt={titleImage.alt || ''} />}
-        <h2 className="fp-section-title">{title}</h2>
+        {title && (
+          <h2 className="fp-section-title">
+            <span className="fp-section-title-text">{title}</span>
+            <SectionLinkButton featureSlug={featureSlug} slug={slug} />
+          </h2>
+        )}
+        {subtitle && <div className="fp-section-subtitle">{subtitle}</div>}
         <p className="fp-section-desc text-body">{desc}</p>
         {icons && icons.length > 0 && (
           <div className="fp-section-icons">
@@ -2096,7 +3983,20 @@ function FeaturePageInner({ slug }) {
     };
   }, []);
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'instant' });
+    // If the URL points at a specific section (#/feature/<slug>/<section-slug>),
+    // scroll to that section after layout settles. Otherwise jump to top.
+    const m = window.location.hash.match(/^#\/feature\/[a-z0-9-]+\/([a-z0-9-]+)/i);
+    if (m) {
+      const id = m[1];
+      // Wait two frames so section visuals have laid out before scrolling.
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        const el = document.getElementById(id);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        else window.scrollTo({ top: 0, behavior: 'instant' });
+      }));
+    } else {
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    }
   }, [slug]);
   useEffect(() => {
     const html = document.documentElement;
@@ -2151,7 +4051,7 @@ function FeaturePageInner({ slug }) {
       {feature.sections.map((s, i) => (
         s.type === 'quote'
           ? <FeatureQuote key={i} {...s} />
-          : <FeatureSection key={i} {...s} />
+          : <FeatureSection key={i} featureSlug={slug} {...s} />
       ))}
 
       <div className="fp-footer-cta">

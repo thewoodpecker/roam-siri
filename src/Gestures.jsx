@@ -478,6 +478,17 @@ export function TileGestures({ isRoamaniac = false, occupantName = 'them', incom
     }
   }, [phase, active]);
 
+  // Hide the tile name pill while a gesture overlay is showing on top of it.
+  useEffect(() => {
+    const el = tileElRef.current;
+    if (!el) return;
+    if (active && (phase === 'waiting' || phase === 'reciprocated')) {
+      el.classList.add('tile-gesture-active');
+    } else {
+      el.classList.remove('tile-gesture-active');
+    }
+  }, [phase, active]);
+
   // Surface an incoming gesture from the controller.
   useEffect(() => {
     if (!incoming) return;

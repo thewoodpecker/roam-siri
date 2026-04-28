@@ -117,8 +117,11 @@ export default function StoryViewer({ stories, initialIndex = 0, onClose }) {
   };
 
   return (
-    <div className={`sv-overlay ${loaded ? 'sv-loaded' : 'sv-loading'} ${closing ? 'sv-closing' : ''}`} onClick={handleClose}>
-      <div className="sv-container" ref={containerRef} onClick={e => e.stopPropagation()} style={{ transform: `translate(${offset}px, -50%)` }}>
+    <div
+      className={`sv-overlay ${loaded ? 'sv-loaded' : 'sv-loading'} ${closing ? 'sv-closing' : ''}`}
+      onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}
+    >
+      <div className="sv-container" ref={containerRef} style={{ transform: `translate(${offset}px, -50%)` }}>
         {stories.map((story, i) => {
           const isCurrent = i === currentIndex;
           return (

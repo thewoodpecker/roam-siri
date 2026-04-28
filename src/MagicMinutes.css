@@ -10,7 +10,7 @@
   backdrop-filter: blur(30px);
   -webkit-backdrop-filter: blur(30px);
   border: 0.5px solid var(--border);
-  border-radius: var(--radius-2xl);
+  border-radius: var(--radius-xl);
   corner-shape: superellipse(1.6);
   display: flex;
   flex-direction: column;
@@ -762,4 +762,161 @@
 
 .mm-summary:hover::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.15);
+}
+
+/* ═══════════════════════════════════════
+   Light Mode
+   ═══════════════════════════════════════ */
+
+.sc-viewport[data-theme="light"] .mm-win {
+  background: rgba(255, 255, 255, 0.3);
+  color: var(--text-primary);
+}
+
+.sc-viewport[data-theme="light"] .mm-win-unfocused .mm-light-close,
+.sc-viewport[data-theme="light"] .mm-win-unfocused .mm-light-min,
+.sc-viewport[data-theme="light"] .mm-win-unfocused .mm-light-max {
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.sc-viewport[data-theme="light"] .mm-header-nav-btn,
+.sc-viewport[data-theme="light"] .mm-header-sidebar-btn,
+.sc-viewport[data-theme="light"] .mm-header-action {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.sc-viewport[data-theme="light"] .mm-header-nav-btn:hover,
+.sc-viewport[data-theme="light"] .mm-header-action:hover {
+  color: var(--text-primary);
+}
+
+.sc-viewport[data-theme="light"] .mm-search {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.sc-viewport[data-theme="light"] .mm-search span {
+  color: rgba(0, 0, 0, 0.4);
+}
+
+.sc-viewport[data-theme="light"] .mm-body {
+  background: var(--bg-surface-elevated-primary);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+.sc-viewport[data-theme="light"] .mm-left {
+  border-right-color: rgba(0, 0, 0, 0.1);
+}
+
+.sc-viewport[data-theme="light"] .mm-left-header {
+  border-bottom-color: rgba(0, 0, 0, 0.1);
+}
+
+.sc-viewport[data-theme="light"] .mm-left-auto,
+.sc-viewport[data-theme="light"] .mm-left-tab {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.sc-viewport[data-theme="light"] .mm-left-tab-active {
+  color: var(--text-primary);
+  border-bottom-color: var(--text-primary);
+}
+
+.sc-viewport[data-theme="light"] .mm-meta-row,
+.sc-viewport[data-theme="light"] .mm-meta-icon {
+  color: rgba(0, 0, 0, 0.55);
+}
+
+.sc-viewport[data-theme="light"] .mm-separator {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.sc-viewport[data-theme="light"] .mm-transcript-entry-active {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+.sc-viewport[data-theme="light"] .mm-transcript-name,
+.sc-viewport[data-theme="light"] .mm-transcript-text {
+  color: var(--text-primary);
+}
+
+.sc-viewport[data-theme="light"] .mm-transcript-time {
+  background: rgba(255, 152, 0, 0.12);
+  color: #b26a00;
+}
+
+.sc-viewport[data-theme="light"] .mm-transcript:hover::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.sc-viewport[data-theme="light"] .mm-ask {
+  border-top-color: rgba(0, 0, 0, 0.1);
+}
+
+.sc-viewport[data-theme="light"] .mm-ask-box {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+.sc-viewport[data-theme="light"] .mm-ask-box span,
+.sc-viewport[data-theme="light"] .mm-ask-send {
+  color: rgba(0, 0, 0, 0.55);
+}
+
+.sc-viewport[data-theme="light"] .mm-controls-time-current {
+  color: var(--text-primary);
+}
+
+.sc-viewport[data-theme="light"] .mm-controls-time-total {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.sc-viewport[data-theme="light"] .mm-control-btn {
+  color: rgba(0, 0, 0, 0.55);
+}
+
+.sc-viewport[data-theme="light"] .mm-control-btn:hover {
+  color: var(--text-primary);
+}
+
+.sc-viewport[data-theme="light"] .mm-timeline-section {
+  background: var(--bg-surface-elevated-primary);
+}
+
+.sc-viewport[data-theme="light"] .mm-ruler {
+  border-top-color: rgba(0, 0, 0, 0.1);
+  border-bottom-color: rgba(0, 0, 0, 0.1);
+}
+
+.sc-viewport[data-theme="light"] .mm-ruler-dot {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.sc-viewport[data-theme="light"] .mm-ruler-tick {
+  border-left-color: rgba(0, 0, 0, 0.2);
+}
+
+.sc-viewport[data-theme="light"] .mm-ruler-label {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.sc-viewport[data-theme="light"] .mm-timeline-handle-line {
+  background: var(--text-primary);
+}
+
+.sc-viewport[data-theme="light"] .mm-speaker-dot-wrap,
+.sc-viewport[data-theme="light"] .mm-speaker-track {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.sc-viewport[data-theme="light"] .mm-speaker-role {
+  color: rgba(0, 0, 0, 0.55);
+}
+
+.sc-viewport[data-theme="light"] .mm-show-more {
+  color: rgba(0, 0, 0, 0.55);
+}
+
+.sc-viewport[data-theme="light"] .mm-show-more:hover {
+  color: rgba(0, 0, 0, 0.75);
 }
