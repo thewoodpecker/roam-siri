@@ -13,7 +13,7 @@ const TYPE_DELAY = 100;
 const STEP_COMPLETE_DELAY = 100;
 const NEXT_STEP_DELAY = 250;
 
-function Typewriter({ text, animate, speed = TYPE_SPEED, delay = TYPE_DELAY, onComplete }) {
+function Typewriter({ text, animate, speed = TYPE_SPEED, delay = TYPE_DELAY, onComplete, onAdvance, advanceAt = 0.55 }) {
   const [display, setDisplay] = useState(animate ? '' : text);
 
   useEffect(() => {
@@ -21,9 +21,15 @@ function Typewriter({ text, animate, speed = TYPE_SPEED, delay = TYPE_DELAY, onC
     setDisplay('');
     let i = 0;
     let interval;
+    let advanced = false;
+    const advanceIdx = Math.max(1, Math.floor(text.length * advanceAt));
     const t = setTimeout(() => {
       interval = setInterval(() => {
         setDisplay(text.slice(0, i));
+        if (!advanced && i >= advanceIdx) {
+          advanced = true;
+          onAdvance && onAdvance();
+        }
         if (i++ >= text.length) {
           clearInterval(interval);
           onComplete && onComplete();
@@ -31,7 +37,7 @@ function Typewriter({ text, animate, speed = TYPE_SPEED, delay = TYPE_DELAY, onC
       }, speed);
     }, delay);
     return () => { clearTimeout(t); clearInterval(interval); };
-  }, [text, animate, speed, delay, onComplete]);
+  }, [text, animate, speed, delay, onComplete, onAdvance, advanceAt]);
 
   return <span className="onit-tw">{display}</span>;
 }
@@ -72,10 +78,20 @@ export default function OnItTaskPane({
   }, []);
 
   const onStepComplete = useCallback((i) => {
-    const t1 = setTimeout(() => setCompleted(i), STEP_COMPLETE_DELAY);
-    const t2 = setTimeout(() => setInProgress(i + 1), NEXT_STEP_DELAY);
-    timersRef.current.push(t1, t2);
-  }, []);
+    // Last-step path (or fallback): mark complete; next step won't exist for the final one.
+    setCompleted(prev => Math.max(prev, i));
+    if (i + 1 < steps.length) {
+      const t = setTimeout(() => setInProgress(prev => Math.max(prev, i + 1)), NEXT_STEP_DELAY);
+      timersRef.current.push(t);
+    }
+  }, [steps.length]);
+
+  const onStepAdvance = useCallback((i) => {
+    // Cascade: kick off the next step before the current finishes typing
+    if (i + 1 >= steps.length) return;
+    setCompleted(prev => Math.max(prev, i));
+    setInProgress(prev => Math.max(prev, i + 1));
+  }, [steps.length]);
 
   const allDone = completed >= steps.length - 1;
 
@@ -126,6 +142,7 @@ export default function OnItTaskPane({
                     text={step}
                     animate={isInProgress && i > completed}
                     onComplete={() => onStepComplete(i)}
+                    onAdvance={() => onStepAdvance(i)}
                   />
                 </span>
               </div>

@@ -1,6 +1,6 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import ReactDOM from 'react-dom';
-import ShowcaseMap, { HomepageReviews } from './ShowcaseMap';
+import ShowcaseMap, { HomepageReviews, OnItFeatureChat } from './ShowcaseMap';
 import { EditMapView } from './App';
 
 function RightControls({ theme, onToggleTheme, showGrid, onToggleGrid }) {
@@ -85,7 +85,7 @@ const noopWin = (id) => ({
   open: () => {}, close: () => {}, requestClose: () => {}, focus: () => {}, move: () => {},
 });
 
-function MeetingPreview({ roomName = 'Daily Standup', autoReactions = true, roamojiOpen = true, people, gesturesEnabled = true, incomingGesturesEnabled = false, captionsScript, compact = false }) {
+function MeetingPreview({ roomName = 'Daily Standup', autoReactions = true, roamojiOpen = true, people, gesturesEnabled = true, incomingGesturesEnabled = false, captionsScript, compact = false, mmCatchUp = false, lockViewMode = true }) {
   const resolvedPeople = people || VIDEO_SPEAKERS.filter(p => p.name !== 'Ethan Bishop' && p.name !== 'Hannah Bennett');
   return (
     <MeetingWindow
@@ -101,6 +101,8 @@ function MeetingPreview({ roomName = 'Daily Standup', autoReactions = true, roam
       incomingGesturesEnabled={incomingGesturesEnabled}
       captionsScript={captionsScript}
       compact={compact}
+      mmCatchUp={mmCatchUp}
+      lockViewMode={lockViewMode}
     />
   );
 }
@@ -156,6 +158,7 @@ const WHISPER_AUDIENCE = [
 ];
 
 function WhisperPreview() {
+  const HOWARD = { name: 'Howard L.', fullName: 'Howard Lerman', avatar: '/headshots/howard-lerman.jpg' };
   // 9 benches. idx 4 (center) is the "me" bench. Other entries are the
   // slot indices (0-4) within a 5-slot bench that should be filled.
   const benchPatterns = [
@@ -173,7 +176,7 @@ function WhisperPreview() {
   const pick = () => WHISPER_AUDIENCE[cursor++];
   const benches = benchPatterns.map((pattern) => {
     if (pattern === null) {
-      const slots = [null, pick(), JOE, pick(), null];
+      const slots = [null, pick(), HOWARD, pick(), null];
       return { slots, isMe: true };
     }
     const slots = Array(5).fill(null);
@@ -187,7 +190,7 @@ function WhisperPreview() {
         {benches.map((b, idx) => (
           <div key={idx} className={`fp-whisper-bench ${b.isMe ? 'fp-whisper-bench-me' : 'fp-whisper-bench-dimmed'}`}>
             {b.slots.map((p, si) => {
-              const isMe = b.isMe && p === JOE;
+              const isMe = b.isMe && p === HOWARD;
               return (
                 <div key={si} className={`fp-whisper-slot ${!p ? 'fp-whisper-slot-empty' : ''}`}>
                   {isMe && <div className="sc-private-talk-ring sc-talking" />}
@@ -215,17 +218,19 @@ const AINBOX_AH_SECTIONS = [
       { id: 'howard', name: 'Howard Lerman', avatar: '/headshots/howard-lerman.jpg', type: 'dm' },
       { id: 'grace', name: 'Grace Sutherland', avatar: '/headshots/grace-sutherland.jpg', type: 'dm' },
       { id: 'klas', name: 'Klas Leino', avatar: '/headshots/klas-leino.jpg', type: 'dm' },
-      { id: 'chelsea', name: 'Chelsea Turbin', avatar: '/headshots/chelsea-turbin.jpg', type: 'dm' },
-      { id: 'derek', name: 'Derek Cicerone', avatar: '/headshots/derek-cicerone.jpg', type: 'dm' },
-      { id: 'will', name: 'Will Houseberry', avatar: '/headshots/will-hou.jpg', type: 'dm' },
-      { id: 'jeff', name: 'Jeff Grossman', avatar: '/headshots/jeff-grossman.jpg', type: 'dm' },
     ],
   },
   {
     id: 'meetings', label: 'Meetings',
     items: [
-      { id: 'meet-board', name: 'Board Prep', type: 'meeting' },
+      { id: 'compute', name: 'Inference Architecture Sync', type: 'meeting' },
+      { id: 'meet-mm-launch', name: 'Magic Minutes Launch Review', type: 'meeting' },
+      { id: 'meet-eval', name: 'ML Eval Triage', type: 'meeting' },
+      { id: 'meet-pdf', name: 'Magic PDF Spec Review', type: 'meeting' },
+      { id: 'meet-ainbox-ship', name: 'AInbox Ship Date Sync', type: 'meeting' },
       { id: 'meet-q2', name: 'Q2 Planning', type: 'meeting' },
+      { id: 'meet-board', name: 'Board Prep', type: 'meeting' },
+      { id: 'meet-howard', name: 'Howard 1:1', type: 'meeting' },
     ],
   },
   {
@@ -259,6 +264,13 @@ const AINBOX_AH_MESSAGES = {
       {
         id: 1, sender: 'Howard Lerman', avatar: '/headshots/howard-lerman.jpg', time: 'Today 9:02 AM',
         text: "Team — what a quarter. We crossed 50,000 daily active users this week, up 3x since January. The product is resonating, the team is shipping faster than ever, and the energy across the office is unreal. Customers are telling us Roam has changed how their company works. This is the moment we've been building toward — and we're just getting started. Thank you for the relentless work. Q2 is going to be even bigger.",
+        reactions: [
+          { emoji: '🎉', count: 6, active: true },
+          { emoji: '📈', count: 4 },
+          { emoji: '🔥', count: 3 },
+          { emoji: '🚀', count: 5 },
+          { emoji: '💯', count: 2 },
+        ],
         thread: {
           count: 8, lastReply: 'today 11:42 AM',
           replies: [
@@ -339,6 +351,122 @@ const AINBOX_AH_MESSAGES = {
     ],
   },
 
+  compute: {
+    type: 'meeting', name: 'Inference Architecture Sync', memberCount: 4,
+    groupImg: '/icons/magic-quill.svg',
+    avatars: ['/headshots/klas-leino.jpg', '/headshots/john-beutner.jpg', '/headshots/thomas-grapperon.jpg', '/headshots/keegan-lanzillotta.jpg'],
+    messages: [
+      {
+        id: 1, sender: 'Klas Leino', avatar: '/headshots/klas-leino.jpg', time: 'Today 11:14 AM',
+        text: "Working through the speculative-decoding plumbing for the on-device Magic Minutes summarizer. 1.5B draft proposing tokens to a 14B target — getting ~2.4x throughput on the M4 Max, but the rejection rate cliffs past a 256-token speculative window because the draft drifts off the target's distribution. Question for the room: switch to a tree-based draft (Medusa-style heads) or keep the linear draft and shorten the window?",
+        reactions: [
+          { emoji: '🧠', count: 6, active: true },
+          { emoji: '🚀', count: 4 },
+          { emoji: '⚡️', count: 3 },
+          { emoji: '🔥', count: 5 },
+          { emoji: '🤖', count: 2 },
+        ],
+        thread: {
+          count: 6, lastReply: 'today 12:07 PM',
+          replies: [
+            { id: 'r1', sender: 'John Beutner', avatar: '/headshots/john-beutner.jpg', text: "Go Medusa. At our model sizes the linear draft has exactly the rejection cliff you're hitting — the tree expansion lets you keep the longer horizon while pruning bad branches early. Trick is the verification kernel: fuse the parallel verification tree into a single attention call or the kernel-launch overhead eats the speedup. I'll send the FlashAttention kernel I wrote for the Bocca decoder, same shape." },
+            { id: 'r2', sender: 'Kevin Hart', avatar: '/headshots/keegan-lanzillotta.jpg', text: "Second the Medusa direction — the linear draft's rejection variance kills P99 latency even when the average looks fine. Watch the KV-cache layout though: paged attention with 16-token blocks fragments under tree pruning and you bleed memory bandwidth. We dropped to 8-token pages and got it back." },
+            { id: 'r3', sender: 'Thomas Grapperon', avatar: '/headshots/thomas-grapperon.jpg', text: "One flag — M4 Max ANE only kicks in on the FP16 path. If you quantize the draft below FP16 you fall back to GPU and lose the pipelined dispatch. We saw a 30% throughput hit going FP16 → INT8 on the draft. Unified memory means no draft↔target KV copy, but you have to align tile sizes or CoreML splits it under the hood and you eat two copies anyway." },
+            { id: 'r4', sender: 'Klas Leino', avatar: '/headshots/klas-leino.jpg', text: "All useful. Thomas — yeah, I clocked the ANE drop. Was hoping to keep the draft INT8 to fit alongside the target in working memory. Maybe FP16 draft + NF4 target instead. John, please send the kernel — that kernel-launch tail is exactly what's killing P99. Kevin, repro'ing the 8-token paging today." },
+            { id: 'r5', sender: 'John Beutner', avatar: '/headshots/john-beutner.jpg', text: "Sent. Two more: tokenizer alignment between draft and target — if BPE merge order doesn't match you'll see systematic rejection at common bigrams. And the first ~50 tokens after a context switch are dominated by KV-cache materialization, so include warm-up in your benchmarks or the numbers look better than reality." },
+            { id: 'r6', sender: 'Thomas Grapperon', avatar: '/headshots/thomas-grapperon.jpg', text: "Last one — if you're targeting M4 Max and M3 Pro, the L2 cache geometry differs enough that the optimal tile size doesn't transfer. We ended up shipping two compiled variants and switching at runtime." },
+          ],
+        },
+      },
+    ],
+  },
+
+  'meet-mm-launch': {
+    type: 'meeting', name: 'Magic Minutes Launch Review', memberCount: 6,
+    groupImg: '/icons/magic-quill.svg',
+    avatars: ['/headshots/howard-lerman.jpg', '/headshots/lexi-bohonnon.jpg', '/headshots/grace-sutherland.jpg', '/headshots/chelsea-turbin.jpg'],
+    timeline: {
+      avatars: [
+        { src: '/headshots/lexi-bohonnon.jpg',     pos: 3 },
+        { src: '/headshots/howard-lerman.jpg',     pos: 7 },
+        { src: '/headshots/grace-sutherland.jpg',  pos: 19 },
+        { src: '/headshots/lexi-bohonnon.jpg',     pos: 23 },
+        { src: '/headshots/chelsea-turbin.jpg',    pos: 28 },
+        { src: '/headshots/howard-lerman.jpg',     pos: 41 },
+        { src: '/headshots/grace-sutherland.jpg',  pos: 49 },
+        { src: '/headshots/lexi-bohonnon.jpg',     pos: 53 },
+        { src: '/headshots/chelsea-turbin.jpg',    pos: 67 },
+        { src: '/headshots/grace-sutherland.jpg',  pos: 71 },
+        { src: '/headshots/howard-lerman.jpg',     pos: 84 },
+        { src: '/headshots/lexi-bohonnon.jpg',     pos: 92 },
+        { src: '/headshots/chelsea-turbin.jpg',    pos: 96 },
+      ],
+    },
+    messages: [
+      {
+        id: 1, sender: 'Lexi Bohonnon', avatar: '/headshots/lexi-bohonnon.jpg', time: 'Today 11:02 AM',
+        text: "Magic Minutes posted the recap. Headlines: on-device Whisper is in dogfood, EU residency unblocked for day one, summary template variants signed off. Full call brief and action items in the meeting itself.",
+      },
+      {
+        id: 2, sender: 'Magic Minutes', avatar: '/icons/magic-quill.svg', time: '11:02 AM',
+        text: "Highlight pinned at 02:34 — Grace confirmed legal sign-off on Stop & Shred. Highlight at 03:15 — Lexi committed to sending the data-flow diagram after standup. Tap any highlight to jump to that moment.",
+      },
+      {
+        id: 3, sender: 'Chelsea Turbin', avatar: '/headshots/chelsea-turbin.jpg', time: '11:08 AM',
+        text: "Pulled the 02:34 highlight as a Magicast — sending it to legal so they have the deletion behavior in their own words. Saved 20 min of writing it up.",
+      },
+      {
+        id: 4, sender: 'Howard Lerman', avatar: '/headshots/howard-lerman.jpg', time: '11:14 AM',
+        text: "Love it. The timeline view is the unlock — I scrub a 30-min standup in 90 seconds and still come away knowing what got committed.",
+      },
+      {
+        id: 5, sender: 'Grace Sutherland', avatar: '/headshots/grace-sutherland.jpg', time: '11:21 AM',
+        text: "Posted my 30-min slot with Lexi for the Stop & Shred deep-dive. Calendar invite landed; I also pinned the relevant transcript section so we walk in with the same context.",
+      },
+      {
+        id: 6, sender: 'Lexi Bohonnon', avatar: '/headshots/lexi-bohonnon.jpg', time: '11:24 AM',
+        text: "Data-flow diagram drafted. Going to clip the 03:15 explanation as a Magicast and attach it to the doc — easier than re-explaining over text.",
+      },
+      {
+        id: 7, sender: 'Howard Lerman', avatar: '/headshots/howard-lerman.jpg', time: '11:30 AM',
+        text: "Approved Frankfurt region spend in #ops. EU residency is officially day-one. Lexi — provisioning starts Thursday as discussed.",
+      },
+      {
+        id: 8, sender: 'Chelsea Turbin', avatar: '/headshots/chelsea-turbin.jpg', time: '11:38 AM',
+        text: "Launch checklist locked in #magic-minutes-launch. Anyone with risks, drop them in the thread before EOD Wednesday so we triage live in Friday's review.",
+      },
+    ],
+  },
+
+  'meet-ainbox-ship': {
+    type: 'meeting', name: 'AInbox Ship Date Sync', memberCount: 5,
+    groupImg: '/icons/magic-quill.svg',
+    avatars: ['/headshots/howard-lerman.jpg', '/headshots/grace-sutherland.jpg', '/headshots/jon-brod.jpg', '/headshots/derek-cicerone.jpg'],
+    messages: [
+      {
+        id: 1, sender: 'Howard Lerman', avatar: '/headshots/howard-lerman.jpg', time: 'Mar 12, 9:14 AM',
+        text: "Team — let's decide on the AInbox redesign ship date today. I'd like to have it out for the board on Friday.",
+        reactions: [
+          { emoji: '🚢', count: 6, active: true },
+          { emoji: '✅', count: 4 },
+          { emoji: '🎯', count: 3 },
+          { emoji: '🚀', count: 5 },
+          { emoji: '🔥', count: 2 },
+        ],
+        thread: {
+          count: 5, lastReply: 'Mar 12, 9:28 AM',
+          replies: [
+            { id: 'r1', sender: 'Grace Sutherland', avatar: '/headshots/grace-sutherland.jpg', text: "Design is 95% there. I'd love one more week on the icons and the empty states — Friday feels tight." },
+            { id: 'r2', sender: 'Jon Brod', avatar: '/headshots/jon-brod.jpg', text: "Friday is the right call IMO. We can fast-follow polish. The narrative moment matters more than the last 2% of icons." },
+            { id: 'r3', sender: 'Derek Cicerone', avatar: '/headshots/derek-cicerone.jpg', text: "Eng is ready. I can put it behind a feature flag and dark-launch to 10% first so we de-risk." },
+            { id: 'r4', sender: 'Howard Lerman', avatar: '/headshots/howard-lerman.jpg', text: "Love it. Ship Friday, 10% dark launch, polish fast-follow. Grace — you ok with that?" },
+            { id: 'r5', sender: 'Grace Sutherland', avatar: '/headshots/grace-sutherland.jpg', text: "Yeah, deal. I'll have the icon pass wrapped by Thursday EOD." },
+          ],
+        },
+      },
+    ],
+  },
+
   'meet-q2': {
     type: 'meeting', name: 'Q2 Planning', memberCount: 8,
     groupImg: '/icons/magic-quill.svg',
@@ -347,6 +475,13 @@ const AINBOX_AH_MESSAGES = {
       {
         id: 1, sender: 'Howard Lerman', avatar: '/headshots/howard-lerman.jpg', time: 'Today 10:42 AM',
         text: "Q2 Planning — AInbox ships Friday behind a 10% feature flag. Brand refresh and demo day lock for Friday. Next review Tuesday 10am.",
+        reactions: [
+          { emoji: '🚀', count: 6, active: true },
+          { emoji: '✅', count: 4 },
+          { emoji: '🎯', count: 3 },
+          { emoji: '📅', count: 2 },
+          { emoji: '🔥', count: 5 },
+        ],
         thread: {
           count: 6, lastReply: 'today 11:04 AM',
           replies: [
@@ -869,7 +1004,11 @@ function MagicMinutesThreadPreview() {
 
 function AInboxPreview({ overrides = false, view = 'thread', chatId = null, mmAutoPrompt = false, threadView = null, mmPrompts = null, initialSidebarView = 'inbox' } = {}) {
   if (overrides) {
-    const dmChatId = view === 'dm' ? (chatId || 'howard') : view === 'activity' ? (chatId || null) : null;
+    const dmChatId =
+      view === 'dm' ? (chatId || 'howard')
+      : view === 'activity' ? (chatId || null)
+      : view === 'chat' ? chatId
+      : null;
     const defaultThread = view === 'thread' ? { chatId: 'all-hands', messageId: 1 } : null;
     return (
       <AInbox
@@ -933,12 +1072,119 @@ function AInboxHeroAnimated(props) {
 }
 
 function MagicMinutesPreview({ meeting } = {}) {
+  const resolved = { defaultTab: 'transcript', ...(meeting || {}) };
   return (
     <div className="fp-mm-preview">
-      <MagicMinutes win={noopWin('magicminutes')} onDrag={() => {}} meeting={meeting} />
+      <MagicMinutes win={noopWin('magicminutes')} onDrag={() => {}} meeting={resolved} />
     </div>
   );
 }
+
+function HubSpotIntegrationPreview() {
+  const [autoSync, setAutoSync] = useState(true);
+  const [restrict, setRestrict] = useState(false);
+  return (
+    <div className="fp-mm-preview fp-hubspot-preview">
+      <MagicMinutes win={noopWin('magicminutes')} onDrag={() => {}} meeting={{ defaultTab: 'summary' }} />
+        <div className="fp-hubspot-scrim" aria-hidden="true" />
+        <div className="fp-hubspot-dialog" role="dialog" aria-modal="true" aria-labelledby="fp-hubspot-title">
+        <div className="fp-hubspot-header">
+          <button type="button" className="fp-hubspot-close" aria-label="Close">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M3.5 3.5L12.5 12.5M12.5 3.5L3.5 12.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          </button>
+          <div className="fp-hubspot-titles">
+            <div className="fp-hubspot-title" id="fp-hubspot-title">HubSpot</div>
+            <div className="fp-hubspot-subtitle">Export Magic Minute summaries to HubSpot</div>
+          </div>
+          <span className="fp-hubspot-actions-spacer" aria-hidden="true" />
+        </div>
+        <div className="fp-hubspot-body">
+          <div className="fp-hubspot-section-label">Admin</div>
+          <div className="fp-hubspot-row">
+            <div className="fp-hubspot-row-text">
+              <div className="fp-hubspot-row-title">HubSpot</div>
+              <div className="fp-hubspot-row-desc">Allow Roam to export Magic Minute summaries to HubSpot</div>
+            </div>
+            <button type="button" className="fp-hubspot-pill">
+              <span>Linked</span>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M4 6.5L8 10.5L12 6.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+          </div>
+          <div className="fp-hubspot-row">
+            <div className="fp-hubspot-row-text">
+              <div className="fp-hubspot-row-title">Automatic Sync</div>
+              <div className="fp-hubspot-row-desc">Automatically sync calendar meetings</div>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={autoSync}
+              className={`fp-hubspot-toggle ${autoSync ? 'fp-hubspot-toggle-on' : ''}`}
+              onClick={() => setAutoSync((v) => !v)}
+            >
+              <span className="fp-hubspot-toggle-knob" />
+            </button>
+          </div>
+          <div className="fp-hubspot-row">
+            <div className="fp-hubspot-row-text">
+              <div className="fp-hubspot-row-title">Restrict Sync to Selected Members</div>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={restrict}
+              className={`fp-hubspot-toggle ${restrict ? 'fp-hubspot-toggle-on' : ''}`}
+              onClick={() => setRestrict((v) => !v)}
+            >
+              <span className="fp-hubspot-toggle-knob" />
+            </button>
+          </div>
+        </div>
+        <div className="fp-hubspot-footer">
+          <button type="button" className="fp-hubspot-btn fp-hubspot-btn-secondary">Cancel</button>
+          <button type="button" className="fp-hubspot-btn fp-hubspot-btn-primary">Done</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const AINBOX_STANDUP_MEETING = {
+  title: 'AInbox Standup',
+  when: '9:30 AM - 9:45 AM',
+  calendarLabel: 'Daily AInbox Standup',
+  location: 'Commercial',
+  gridVideos: [
+    { video: '/videos/Female/camila_torres.mp4',  poster: '/videos/Female/camila_torres.png' },
+    { video: '/videos/Female/brooke_foster.mp4',  poster: '/videos/Female/brooke_foster.png' },
+    { video: '/videos/Male/daniel_russell.mp4',   poster: '/videos/Male/daniel_russell.png' },
+    { video: '/videos/Female/olivia_sanders.mp4', poster: '/videos/Female/olivia_sanders.png' },
+  ],
+  brief: "The AInbox team kicked off the day aligned on the threading rewrite and the confidential-messages rollout. Lexi shipped the new thread renderer behind the staff flag and is now wiring the @MagicMinutes prompt handler so any thread can be summarized inline. Howard pushed for a call to default confidential messages to a 24-hour TTL — the team agreed for the launch and will revisit. Chelsea closed the spec on folder reordering with drag-and-drop persistence and is taking the activity-view loading states to design today. Grace is running the legal review on guest-badge invites so external chat can ship at the same time.",
+  nextSteps: [
+    "Lexi to land the @MagicMinutes thread-prompt handler behind the staff flag by EOD Wednesday. 00:38",
+    "Howard to ratify 24-hour default TTL for confidential messages and document the carve-outs. 01:05",
+    "Chelsea to ship folder drag-and-drop reordering with server-side order persistence. 01:19",
+    "Chelsea to walk activity-view loading states with design today and post the recording in the AInbox. 01:59",
+    "Grace to close legal review on guest-badge invites so external chat ships at the same time. 02:34",
+    "Lexi to publish the new threading benchmark numbers in #ainbox-launch. 03:15",
+    "Team to drop launch risks in the thread before EOD Wednesday for triage in Friday's review. 03:40",
+  ],
+  transcript: [
+    { name: 'Lexi Bohonnon', avatar: '/headshots/lexi-bohonnon.jpg', time: '00:12', text: "Morning — kicking off the AInbox standup. Yesterday I shipped the new thread renderer behind the staff flag. Today I'm wiring up the @MagicMinutes prompt handler so any thread can be summarized inline. Blocker: I need a call from Howard on whether confidential messages default to a TTL or live forever." },
+    { name: 'Howard Lerman', avatar: '/headshots/howard-lerman.jpg', time: '00:38', text: "Default to 24-hour TTL for the launch. The whole point of confidential messages is they don't live forever — that's the differentiator vs. Slack. We can revisit if customers push back, but ship the opinionated default." },
+    { name: 'Chelsea Turbin', avatar: '/headshots/chelsea-turbin.jpg', time: '01:05', text: "Product side — yesterday I closed the spec on folder reordering. Drag-and-drop with server-side persistence so the order syncs across web and desktop. Today I'm walking the activity-view loading states with design. Open question: do we keep Activity as an opt-in view or surface it in onboarding?" },
+    { name: 'Howard Lerman', avatar: '/headshots/howard-lerman.jpg', time: '01:19', text: "Surface it in onboarding. Activity is the bridge for the iMessage-and-Gmail crowd — if we hide it, we lose them in week one. Make it the second screen of the AInbox tour." },
+    { name: 'Lexi Bohonnon', avatar: '/headshots/lexi-bohonnon.jpg', time: '01:59', text: "On threading — early benchmarks are 3.2x faster scroll on the staff dogfood, and memory's flat under 80MB even with 10k messages loaded. I'll post the full numbers in #ainbox-launch this afternoon once I've run it on the M1 baseline too." },
+    { name: 'Grace Sutherland', avatar: '/headshots/grace-sutherland.jpg', time: '02:34', text: "From the people side — I'm running legal review on guest-badge invites today so external chat can ship alongside the AInbox launch. Blocker on me: I need 15 minutes from Chelsea to confirm the exact data exposed to a guest before legal will sign off." },
+    { name: 'Chelsea Turbin', avatar: '/headshots/chelsea-turbin.jpg', time: '03:15', text: "I'll grab the 15 right after standup. Short version for the room — guests see the chat they're added to, the members of that chat, and the message history from the moment they were invited. They don't see other channels, the directory, or anything outside that chat." },
+    { name: 'Lexi Bohonnon', avatar: '/headshots/lexi-bohonnon.jpg', time: '03:40', text: "Last thing — I'll lock the AInbox launch checklist by Thursday and post in #ainbox-launch. Anyone with risks, drop them in the thread before EOD Wednesday so we can triage live in Friday's review. That's it from me." },
+  ],
+};
 
 // All-Hands themed Magic Minutes content for the Theater "Magic Minutes for
 // the whole audience" section visual.
@@ -1083,7 +1329,7 @@ function FlashCard({ supertitle, title, media, back }) {
 const MAGNIFY_TARGET_PERSON = 'Michael W.';
 const MAGNIFY_TARGET_CITY = 'SFO';
 
-function MapPreview({ spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, hideOnIt = false, onItAutoOpen = false, autoKnock = false, shelfAutoOpen = false, shareAutoOpen = false, initialFloor = 'Preview', showSidebar = false, autoCycleFloors = false, autoCycleDms = false, showPhysicalTags = false, spotlightSearch = false } = {}) {
+function MapPreview({ spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, hideOnIt = false, onItAutoOpen = false, autoKnock = false, shelfAutoOpen = false, shareAutoOpen = false, initialFloor = 'Preview', showSidebar = false, autoCycleFloors = false, autoCycleDms = false, showPhysicalTags = false, spotlightSearch = false, children = null } = {}) {
   const [pageTheme, setPageTheme] = useState(() =>
     typeof document !== 'undefined' ? document.documentElement.getAttribute('data-theme') || 'dark' : 'dark'
   );
@@ -1137,10 +1383,12 @@ function MapPreview({ spotifyAlwaysOpen = false, githubAlwaysOpen = false, figma
     autoCycleDms && 'fp-map-preview-dms',
     showPhysicalTags && 'fp-map-preview-tags',
     spotlightSearch && 'fp-map-preview-spotlight',
+    onItAutoOpen && 'fp-map-preview-onit-pin',
   ].filter(Boolean).join(' ');
   return (
     <div ref={wrapRef} className={className}>
       <ShowcaseMap embedded autoKnock={autoKnock} initialFloor={initialFloor} spotifyAlwaysOpen={spotifyAlwaysOpen} githubAlwaysOpen={githubAlwaysOpen} figmaAlwaysOpen={figmaAlwaysOpen} hideOnIt={hideOnIt} onItAutoOpen={onItAutoOpen} shelfAutoOpen={shelfAutoOpen} shareAutoOpen={shareAutoOpen} theme={pageTheme} autoCycleFloors={autoCycleFloors} autoCycleDms={autoCycleDms} showPhysicalTags={showPhysicalTags} />
+      {children}
       {spotlightSearch && (
         <>
           <div className="fp-spotlight-scrim" aria-hidden="true" />
@@ -1189,6 +1437,117 @@ function MapPreview({ spotifyAlwaysOpen = false, githubAlwaysOpen = false, figma
         magnifyHost
       )}
     </div>
+  );
+}
+
+function DesktopRecordingsPreview() {
+  return (
+    <div className="fp-desktop">
+      <div className="fp-desktop-menubar">
+        <div className="fp-desktop-menubar-blur" aria-hidden="true" />
+        <div className="fp-desktop-menubar-content">
+          <div className="fp-desktop-menus">
+            <div className="fp-desktop-menu-item fp-desktop-menu-apple">
+              <img src="/icons/apple-logo.svg" alt="" className="fp-desktop-apple" />
+            </div>
+            <div className="fp-desktop-menu-item fp-desktop-menu-active">Roam</div>
+            <div className="fp-desktop-menu-item">File</div>
+            <div className="fp-desktop-menu-item">Edit</div>
+            <div className="fp-desktop-menu-item">View</div>
+            <div className="fp-desktop-menu-item">Go</div>
+            <div className="fp-desktop-menu-item">Window</div>
+            <div className="fp-desktop-menu-item">Help</div>
+          </div>
+          <div className="fp-desktop-status">
+            <img src="/icons/desktop-menubar-notif.svg" alt="" className="fp-desktop-status-quill" />
+            <span className="fp-desktop-status-date">Sat Jun 10</span>
+            <span className="fp-desktop-status-time">9:41 AM</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="fp-desktop-dropdown" role="menu" aria-label="Roam menu">
+        <div className="fp-desktop-dropdown-row">
+          <span className="fp-desktop-dropdown-left">
+            <img src="/icons/desktop-chat.svg" alt="" className="fp-desktop-dropdown-icon" />
+            <span className="fp-desktop-dropdown-label">1 New Message</span>
+          </span>
+          <span className="fp-desktop-dropdown-shortcut">⇧⌘M</span>
+        </div>
+        <div className="fp-desktop-dropdown-separator" />
+        <div className="fp-desktop-dropdown-row">
+          <span className="fp-desktop-dropdown-left">
+            <img src="/icons/desktop-magic-quill.svg" alt="" className="fp-desktop-dropdown-icon" />
+            <span className="fp-desktop-dropdown-label">Recording Magic Minutes</span>
+          </span>
+          <span className="fp-desktop-dropdown-shortcut">⇧⌘R</span>
+        </div>
+        <div className="fp-desktop-dropdown-row">
+          <span className="fp-desktop-dropdown-left">
+            <img src="/icons/desktop-stop.svg" alt="" className="fp-desktop-dropdown-icon" />
+            <span className="fp-desktop-dropdown-label">Stop Magic Minutes</span>
+          </span>
+          <span className="fp-desktop-dropdown-shortcut">⇧⌘S</span>
+        </div>
+        <div className="fp-desktop-dropdown-row">
+          <span className="fp-desktop-dropdown-left">
+            <img src="/icons/desktop-delete.svg" alt="" className="fp-desktop-dropdown-icon" />
+            <span className="fp-desktop-dropdown-label">Stop and Shred</span>
+          </span>
+        </div>
+        <div className="fp-desktop-dropdown-separator" />
+        <div className="fp-desktop-dropdown-row">
+          <span className="fp-desktop-dropdown-left">
+            <img src="/icons/desktop-settings.svg" alt="" className="fp-desktop-dropdown-icon" />
+            <span className="fp-desktop-dropdown-label">Settings</span>
+          </span>
+        </div>
+        <div className="fp-desktop-dropdown-row">
+          <span className="fp-desktop-dropdown-left">
+            <img src="/icons/desktop-quit.svg" alt="" className="fp-desktop-dropdown-icon" />
+            <span className="fp-desktop-dropdown-label">Quit Roam</span>
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const COMPLETED_TASK_TIPS = [
+  { id: 'lexi', name: 'Lexi Bohonnon', avatar: '/headshots/lexi-bohonnon.jpg', task: 'Frankfurt EU bucket provisioned' },
+  { id: 'chelsea', name: 'Chelsea Turbin', avatar: '/headshots/chelsea-turbin.jpg', task: 'GA launch checklist locked' },
+  { id: 'grace', name: 'Grace Sutherland', avatar: '/headshots/grace-sutherland.jpg', task: 'Stop & Shred privacy review signed off' },
+  { id: 'klas', name: 'Klas Leino', avatar: '/headshots/klas-leino.jpg', task: 'Speculative-decoding eval harness shipped' },
+  { id: 'howard', name: 'Howard Lerman', avatar: '/headshots/howard-lerman.jpg', task: 'Top-10 enterprise outreach sent' },
+];
+
+const COMPLETED_TASK_POSITIONS = [
+  { left: '14%', top: '32%' },
+  { left: '38%', top: '60%' },
+  { left: '62%', top: '24%' },
+  { left: '78%', top: '54%' },
+  { left: '24%', top: '72%' },
+];
+
+function CompletedActionsMapPreview() {
+  return (
+    <MapPreview hideOnIt initialFloor="R&D">
+      <div className="fp-completed-overlay" aria-hidden="true">
+        {COMPLETED_TASK_TIPS.map((tip, i) => (
+          <div key={tip.id} className="fp-completed-tip" style={COMPLETED_TASK_POSITIONS[i]}>
+            <div className="fp-completed-check">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M3 7.5L5.5 10L11 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
+            <div className="fp-completed-text">
+              <div className="fp-completed-label">Complete</div>
+              <div className="fp-completed-task">{tip.task}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </MapPreview>
   );
 }
 
@@ -2541,6 +2900,7 @@ function WhiteboardPreview() {
           <span>Delete</span>
         </button>
       </div>
+      <SimulatedCursors containerRef={windowRef} count={2} />
       <MultiplayerCursor containerRef={windowRef} />
     </div>
   );
@@ -2829,6 +3189,7 @@ function MediaBoardPreview() {
           ))}
         </div>
       </div>
+      <SimulatedCursors containerRef={windowRef} count={2} />
       <MultiplayerCursor containerRef={windowRef} />
     </div>
   );
@@ -3377,63 +3738,33 @@ export const FEATURES = {
         ),
       },
       {
-        variant: 'flashcards',
-        flashcards: [
-          { supertitle: 'Showmanship', title: 'The Curtain', back: 'Add a moment of mystery. Drop the curtain right before you walk on, and let the audience feel the anticipation.', media: { type: 'image', src: '/feature/flashcards/flash-card-theater-front.png', src2x: '/feature/flashcards/flash-card-theater-front@2x.png' } },
-          { supertitle: 'Audience', title: 'Open Mic', back: 'Audio-only broadcast for audience members. Anyone can step up and address the whole theater, first-come-first-served.', media: { type: 'image', src: '/feature/flashcards/flash-card-theater-front.png', src2x: '/feature/flashcards/flash-card-theater-front@2x.png' } },
-          { supertitle: 'Showmanship', title: 'Walk-On Music', back: 'Set your own leitmotif. When you take the stage, your song plays. Make every entrance feel like an entrance.', media: { type: 'image', src: '/feature/flashcards/flash-card-theater-front.png', src2x: '/feature/flashcards/flash-card-theater-front@2x.png' } },
-          { supertitle: 'Showmanship', title: 'Exit Music', back: 'Walk off to a custom track. The cleanest way to end on a high note.', media: { type: 'image', src: '/feature/flashcards/flash-card-theater-front.png', src2x: '/feature/flashcards/flash-card-theater-front@2x.png' } },
-          { supertitle: 'Director', title: 'Stagehand Controls', back: 'Toggle backstage access, hand out the mic, mute reactions, generate a theater link. The presenter command center sits in your hands.', media: { type: 'image', src: '/feature/flashcards/flash-card-theater-front.png', src2x: '/feature/flashcards/flash-card-theater-front@2x.png' } },
-          { supertitle: 'Quality', title: 'HLS Media Player', back: 'High-quality video streaming with HLS encoding. Roll a polished pre-recorded segment in the middle of your show — broadcast-grade fidelity, no dropped frames.', media: { type: 'image', src: '/feature/flashcards/flash-card-theater-front.png', src2x: '/feature/flashcards/flash-card-theater-front@2x.png' } },
-        ],
-      },
-      {
-        title: 'Town Halls',
-        desc: 'Run a proper town hall — quiet, focused audience by default, raised hands for Q&A, and Open Mic when you want to invite anyone to speak. Big room energy without the chaos of an unmuted Zoom.',
-        visual: <MapPreview initialFloor="R&D" />,
-      },
-      {
-        title: 'Group Roundups',
-        desc: 'Multiple teams report out in a single show — engineering pods, product squads, regional offices. Each group takes the stage in turn while everyone else watches. The rest of the company finally sees what every team has been shipping.',
-        visual: <TheaterPreview />,
-      },
-      {
-        title: 'Magic Minutes for the whole audience',
-        desc: 'Every Theater session is captured by Magic Minutes. The full transcript, the video, and a group chat of every attendee lands in your AInbox the moment the curtain drops. Anyone who couldn’t make it gets caught up instantly.',
-        visual: <MagicMinutesPreview meeting={THEATER_ALL_HANDS_MEETING} />,
-      },
-      {
-        title: 'Stadium Mode',
-        desc: 'Cross 100 attendees and Theater automatically scales into Stadium Mode. The seating wraps, the audio model reshapes, and the stage stays sharp — up to 2,500 people in one room. No thumbnail grid. No crashed Zoom webinar.',
-        visual: <TheaterPreview />,
-      },
-      {
         title: 'Recordings',
         desc: 'Every Theater event is automatically recorded and dropped into Recordings. Browse by date, scrub through the show, and jump straight to a quoted moment — the way it should be.',
         visual: <RecordingsPreview />,
-      },
-      {
-        variant: 'columns',
-        columns: [
-          {
-            title: 'Superior Audience Experience',
-            desc: 'Audiences instinctively know Theater isn’t a video call. The room reads as an event — they show up, they pay attention, they react.',
-          },
-          {
-            title: 'Superior Presenter Experience',
-            desc: 'Backstage prep, walk-on cues, stagehand controls, and an audience that’s actually focused. Presenting in Theater feels like presenting in real life — only easier.',
-          },
-          {
-            title: 'Lifelike Energy',
-            desc: 'Stereo reactions, whisper rows, and a stage worth walking on. The room feels alive, even when everyone’s remote.',
-          },
-        ],
       },
       {
         type: 'quote',
         quote: '“Music acts like a magic key, to which the most tightly closed heart opens.”',
         author: 'Maria von Trapp',
         role: 'Singer',
+      },
+      {
+        variant: 'columns',
+        columnsStyle: 'cards',
+        columns: [
+          { title: 'The Curtain', desc: 'Add a moment of mystery. Drop the curtain right before you walk on, and let the audience feel the anticipation.' },
+          { title: 'Open Mic', desc: 'Audio-only broadcast for audience members. Anyone can step up and address the whole theater, first-come-first-served.' },
+          { title: 'Walk On and Exit Music', desc: 'Set your own leitmotif. Pick a Wagner overture or a Nintendo theme — your song plays when you take the stage, and a different one as you walk off. Every entrance feels like an entrance.' },
+          { title: 'Town Halls', desc: 'Run a proper town hall — quiet, focused audience by default, raised hands for Q&A, and Open Mic when you want to invite anyone to speak. Big room energy without the chaos of an unmuted Zoom.' },
+          { title: 'Group Roundups', desc: 'Multiple teams report out in a single show — engineering pods, product squads, regional offices. Each group takes the stage in turn while everyone else watches. The rest of the company finally sees what every team has been shipping.' },
+          { title: 'Magic Minutes', desc: 'Every Theater session is captured by Magic Minutes. The full transcript, the video, and a group chat of every attendee lands in your AInbox the moment the curtain drops. Anyone who couldn’t make it gets caught up instantly.' },
+          { title: 'Stadium Mode', desc: 'Cross 100 attendees and Theater automatically scales into Stadium Mode. The seating wraps, the audio model reshapes, and the stage stays sharp — up to 2,500 people in one room. No thumbnail grid. No crashed Zoom webinar.' },
+          { title: 'Media Player', desc: 'High-quality video streaming with HLS encoding. Roll a polished pre-recorded segment in the middle of your show — broadcast-grade fidelity, no dropped frames.' },
+          { title: 'Stagehand Controls', desc: 'Toggle backstage access, hand out the mic, mute reactions, generate a theater link. The presenter command center sits in your hands.' },
+          { title: 'Superior Audience Experience', desc: 'Audiences instinctively know Theater isn’t a video call. The room reads as an event — they show up, they pay attention, they react.' },
+          { title: 'Superior Presenter Experience', desc: 'Backstage prep, walk-on cues, stagehand controls, and an audience that’s actually focused. Presenting in Theater feels like presenting in real life — only easier.' },
+          { title: 'Lifelike Energy', desc: 'Stereo reactions, whisper rows, and a stage worth walking on. The room feels alive, even when everyone’s remote.' },
+        ],
       },
       {
         variant: 'lead',
@@ -3588,20 +3919,18 @@ export const FEATURES = {
         visual: <MapPreview githubAlwaysOpen hideOnIt />,
       },
       {
-        variant: 'cards',
-        cards: [
+        variant: 'columns',
+        columnsStyle: 'cards',
+        columns: [
           {
-            icon: '/icons/guest-badge.svg',
             title: 'External Guests',
             desc: 'Invite external guests by their email to chat in your organization. Invite as many as you like, free of charge.',
           },
           {
-            icon: '/icons/shield.svg',
             title: 'SSO/SAML',
             desc: 'Powerful controls to manage your organization. Integrates directly with SSO and SAML so you’re in real-time control over who has access to your chats.',
           },
           {
-            icon: '/icons/global-relay.svg',
             title: 'Archiving and Retrieval',
             desc: 'Integration with Global Relay available for messaging archive compliance.',
           },
@@ -3622,27 +3951,175 @@ export const FEATURES = {
   },
   'magic-minutes': {
     eyebrow: 'Magic Minutes',
-    title: 'Meeting notes that write themselves',
-    hero: 'Every Roam meeting ends with a clean summary, full transcript, and a list of action items — dropped into a group chat before you’ve closed your laptop.',
-    visual: <MagicMinutesPreview />,
+    title: 'AI Meeting Summarization, without the bot.',
+    hero: <>AI Meeting Summarization for every Roam meeting and every drop-in. No awkward bot showing up to your calls — Magic Minutes is built into the office itself.<br /><br />Every conversation ends with a clean summary, a full transcript, action items, and a group chat with the attendees — ready before you’ve closed your laptop.</>,
+    visual: <MagicMinutesPreview meeting={{ defaultTab: 'summary' }} />,
     sections: [
       {
-        title: 'AI summaries, instantly',
-        desc: 'What got decided, what’s outstanding, and who owns it — generated the moment you hit end. Nobody has to volunteer to take notes.',
-        visual: <MagicMinutesPreview />,
+        title: 'AI Summarization & Transcription',
+        desc: 'The moment a meeting ends, Magic Minutes drops a Call Brief, Next Steps, and a full speaker-attributed transcript — generated with state-of-the-art models and Deepgram-grade transcription. Nobody volunteers to take notes again, and you can still jump to the exact moment someone said the thing.',
+        visual: <MagicMinutesPreview meeting={AINBOX_STANDUP_MEETING} />,
       },
       {
-        title: 'Full transcript',
-        desc: 'Deepgram-powered transcripts let you jump to the exact moment someone said the thing. Search across every meeting ever.',
+        title: 'Group Chat for every meeting',
+        desc: 'Each meeting spawns a chat in your AInbox with everyone who attended. Follow-ups, decisions, and links land in the right thread automatically — no “where was that conversation?” later.',
+        visual: <AInboxPreview overrides view="thread" threadView={{ chatId: 'compute', messageId: 1 }} />,
       },
       {
-        title: 'Auto group chat',
-        desc: 'Each meeting spawns a thread with the attendees so follow-up conversations land in the right place automatically.',
+        title: 'Templates',
+        desc: 'Customize Magic Minutes for the kind of meeting it is. Sales calls get a discovery template, 1:1s get a coaching template, all-hands get an exec recap — pick a default per room or per calendar.',
+        visual: <MagicMinutesPreview meeting={{ defaultTab: 'summary', defaultTemplatesOpen: true, activeTemplate: 'auto' }} />,
       },
       {
         title: 'Prompt the minutes',
-        desc: 'Ask “what did Sarah commit to?” or “summarize the Q3 plan” and get an answer from the meeting itself — hours or months later.',
+        desc: 'Ask “what did Sarah commit to?” or “summarize the Q3 plan” and get an answer from the meeting itself — hours, weeks, or months later. Use @MagicMinutes right inside the meeting’s group chat.',
+        visual: (
+          <AInboxPreview
+            overrides
+            view="thread"
+            mmAutoPrompt
+            threadView={{ chatId: 'meet-ainbox-ship', messageId: 1 }}
+            mmPrompts={MM_PROMPTS}
+          />
+        ),
       },
+      {
+        title: 'Timeline & Highlights',
+        desc: 'A visual timeline of who spoke when, with the highlights pinned to the moments that matter. Scrub the meeting like a podcast and pull a clip out as a Magicast in one click.',
+        visual: <AInboxPreview overrides view="chat" chatId="meet-mm-launch" />,
+      },
+      {
+        title: 'Action Items',
+        desc: 'Magic Minutes detects commitments as they happen and assigns them to the right person — with the timestamp from the meeting attached so context is one click away.',
+        visual: <AInboxPreview overrides view="chat" chatId="_none" initialSidebarView="actions" />,
+      },
+      {
+        title: 'On-It picks up the slack',
+        desc: 'No volunteers? On-It, your AI Assistant, takes the action items nobody raised a hand for. It does the research, drafts the doc, books the meeting, and reports back in the group chat.',
+        visual: <OnItFeatureChat />,
+      },
+      {
+        title: 'Action Items in your AInbox',
+        desc: 'Every commitment from every meeting rolls up into one place. See what you owe, what you’re owed, and what’s overdue across the whole company — without chasing it through threads.',
+        visual: <AInboxPreview overrides view="chat" chatId="_none" initialSidebarView="actions" />,
+      },
+      {
+        title: 'Catch Up',
+        desc: 'Walked in late? Hit Catch Up and get a 30-second brief on what you missed — decisions made, action items so far, who’s on what. No more “can someone recap?”',
+        visual: (
+          <MeetingPreview
+            roomName="Magic Minutes Launch Review"
+            autoReactions={false}
+            roamojiOpen={false}
+            gesturesEnabled={false}
+            mmCatchUp
+            people={[
+              VIDEO_SPEAKERS[0],
+              VIDEO_SPEAKERS[1],
+              VIDEO_SPEAKERS[5],
+              VIDEO_SPEAKERS[6],
+            ]}
+          />
+        ),
+      },
+      {
+        title: 'Magic PDF',
+        desc: 'Drop a PDF into the meeting’s group chat and prompt it. Ask for the key numbers, the risks, the ask on the closing slide — the deck answers, in your AInbox.',
+        visual: (
+          <AInboxPreview
+            overrides
+            view="thread"
+            mmAutoPrompt
+            threadView={{ chatId: 'features', messageId: 1 }}
+            mmPrompts={[
+              {
+                q: "@MagicMinutes summarize this PDF for me",
+                a: "It's a 24-slide narrative: open on the 3x DAU growth, walk through revenue 18% ahead of plan, highlight Drop-Ins + AInbox as the drivers, preview Magic Minutes as the Q3 headline, and close with the raise plan and ask.",
+              },
+              {
+                q: "@MagicMinutes pull the key numbers",
+                a: "DAUs: 50,245 (+3.1x YoY). ARR: $24.6M, tracking 18% over plan. Net retention: 142%. NPS: +72 (up from +58 last quarter). Pipeline: $51M, 4x the Dec baseline.",
+              },
+              {
+                q: "@MagicMinutes any risks flagged?",
+                a: "Three risks on slide 21: enterprise sales cycle lengthening (62 → 74 days), competitive pressure from incumbent collaboration tools, and AI infra cost curve if model prices don't drop. Mitigations on slide 22.",
+              },
+            ]}
+          />
+        ),
+      },
+      {
+        variant: 'columns',
+        columnsStyle: 'cards',
+        columns: [
+          {
+            title: 'Magic Minutes Always On',
+            desc: 'Optionally choose to have Magic Minutes start automatically be default across your organization, floor or room type. You don’t need to remember to turn it on.',
+          },
+          {
+            title: 'Stop & Shred',
+            desc: 'At any time during a meeting, stop it, and shred the Magic Minutes. So they’ll never be saved or summarized.',
+          },
+          {
+            title: 'Global',
+            desc: 'Magic Minutes is available in 30+ languages including English, Spanish, Chinese, Portuguese, French, and many more!',
+          },
+        ],
+      },
+      {
+        title: 'Desktop Recordings',
+        desc: 'Capture meetings in Zoom, Teams, Meet, or WebEx with the Roam desktop app — no bot joining the call, no extra invite link. Magic Minutes processes them just like a Roam meeting.',
+        visual: <DesktopRecordingsPreview />,
+      },
+      {
+        title: 'HubSpot CRM Integration',
+        desc: 'One click syncs the call brief, transcript, and action items to the right HubSpot deal. Sales calls update the pipeline automatically — no copy-paste, no end-of-day reconciliation.',
+        visual: <HubSpotIntegrationPreview />,
+      },
+      {
+        variant: 'explore',
+        title: 'Why AI Meeting Summarization?',
+        itemMarker: 'bullet',
+        items: [
+          'Get accurate notes from all of your meetings and drop-in conversations.',
+          'Use AI to prompt your meeting notes with questions for things you’ve missed.',
+          'Meeting visualization shows quick information about what’s happened in the meeting.',
+          'Fully digitized meetings drive ultraproductivity from AI.',
+          'Use Magic Minutes to transcribe and summarize any meeting you have on your desktop computer — in Roam, or in another platform.',
+          'Full record of all your sales or support calls, synced into your CRM.',
+        ],
+      },
+      {
+        variant: 'explore',
+        title: 'Why Roam Magic Minutes vs. Otter, Fireflies, or others?',
+        itemMarker: 'bullet',
+        items: [
+          'No awkward bot showing up to your meetings. Magic Minutes is natively built into your HQ.',
+          'State-of-the-art models. Roam uses the state of the art LLM from OpenAI.',
+          'Fully integrated into your HQ. Catch all of your drop-in meetings and scheduled meetings.',
+          'Group Chat. You get a group chat in AInbox that’s in your normal chat workflow.',
+          'You are in total control. You turn Magic Minutes on and off. No "uninstall" games. There are whole Reddit threads about how to turn off nefarious meeting summarizers like read.ai.',
+          'Cost. Roam includes video conferencing, the map company visualization, group chat, scheduling and meeting summarization for just $19.50/month per active user. All of these features are bundled into a cheaper package than Fireflies which costs $19–$39/month and Otter ($20/month). They’re not as good, cost twice as much, and for just one of 6 features!',
+        ],
+      },
+      {
+        variant: 'explore',
+        title: 'Explore our Virtual Office Platform',
+        desc: '9 products for the price of one:',
+        items: [
+          'Company Visualization with the Virtual Office',
+          'Virtual Meeting Room with Drop-In Meetings',
+          'All-Hands Presentations with Theater',
+          'Enterprise Messaging with AInbox',
+          'Meeting Scheduler with Lobby',
+          'Screen Recorder with Magicast',
+          'AI Meeting Summarization with Magic Minutes',
+          'Your AI Assistant is On-It',
+          'Immersive Events with On-Air',
+        ],
+      },
+      { variant: 'reviews' },
+      STANDARD_PRICING_COMPARE,
     ],
   },
   'lobby': {
@@ -3812,7 +4289,7 @@ function SectionLinkButton({ featureSlug, slug }) {
   );
 }
 
-function FeatureSection({ eyebrow, title, subtitle, titleImage, desc, visual, icons, variant, cards, bullets, left, right, columns, leadContent, items, flashcards, featureSlug }) {
+function FeatureSection({ eyebrow, title, subtitle, titleImage, desc, visual, icons, variant, cards, bullets, left, right, columns, columnsStyle, leadContent, items, itemMarker, flashcards, featureSlug }) {
   if (variant === 'reviews') {
     return <HomepageReviews limit={items?.length || 6} />;
   }
@@ -3826,18 +4303,23 @@ function FeatureSection({ eyebrow, title, subtitle, titleImage, desc, visual, ic
     );
   }
   if (variant === 'explore' && items && items.length > 0) {
+    const useBullet = itemMarker === 'bullet';
     return (
       <section className="fp-section fp-section-explore">
         <div className="fp-explore-text">
           <h2 className="fp-explore-title">{title}</h2>
           {desc && <p className="fp-explore-desc text-body">{desc}</p>}
         </div>
-        <ul className="fp-explore-list">
+        <ul className={`fp-explore-list ${useBullet ? 'fp-explore-list-bullet' : ''}`}>
           {items.map((label, i) => (
             <li key={i} className="fp-explore-item">
-              <svg className="fp-explore-chevron" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
-                <path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
+              {useBullet ? (
+                <span className="fp-explore-bullet" aria-hidden="true" />
+              ) : (
+                <svg className="fp-explore-chevron" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+                  <path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              )}
               <span>{label}</span>
             </li>
           ))}
@@ -3854,7 +4336,7 @@ function FeatureSection({ eyebrow, title, subtitle, titleImage, desc, visual, ic
   }
   if (variant === 'columns' && columns && columns.length > 0) {
     return (
-      <section className="fp-section fp-section-columns">
+      <section className={`fp-section fp-section-columns${columnsStyle === 'cards' ? ' fp-section-columns-cards' : ''}`}>
         {columns.map((c, i) => (
           <div key={i} className="fp-col">
             {c.visual && <div className="fp-col-visual">{c.visual}</div>}

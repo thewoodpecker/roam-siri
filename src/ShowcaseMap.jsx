@@ -1422,7 +1422,7 @@ function DropInFeatureVisual({ theme, className }) {
   );
 }
 
-function OnItFeatureChat() {
+export function OnItFeatureChat() {
   const INITIAL = [
     { id: 1, self: true, text: 'Can you tell me if you see Sean MacIsaac and Thomas Grapperon meeting together?' },
     { id: 2, self: false, text: "I'm On-It! I'll notify you the next time I notice that Sean MacIsaac and Thomas Grapperon are meeting together." },
@@ -2597,7 +2597,7 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
         {layout === 'v2' && (
           <div className="sc-v2-hero">
             <img className="sc-v2-hero-icon" src="/icons/roam-gold-icon.png" alt="Roam" />
-            <h1 className="sc-v2-hero-title">Virtual Office that Thinks</h1>
+            <h1 className="sc-v2-hero-title">The Office That Thinks</h1>
             <div className="sc-v2-hero-rating" aria-label="G2 rating 4.8 out of 5">
               <span
                 className="sc-v2-hero-rating-g2"
@@ -2615,7 +2615,7 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
               </span>
               <span className="sc-v2-hero-rating-score">4.8/5</span>
             </div>
-            <p className="sc-v2-hero-subtitle">Roam is a Virtual Office Platform where remote work happens in the open and every action makes your company smarter.</p>
+            <p className="sc-v2-hero-subtitle">Roam is a Virtual Office Platform where humans and AI agents work together in the open.</p>
             <div className="sc-v2-hero-buttons">
               <button className="sc-promo-btn">Book Demo</button>
               <button className="sc-promo-btn">Free Trial</button>
@@ -2928,7 +2928,7 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
               <div
                 className="sc-toolbar-pill"
                 data-tooltip="Calendar"
-                onClick={(e) => {
+                onClick={embedded ? undefined : (e) => {
                   const pill = e.currentTarget.getBoundingClientRect();
                   const host = e.currentTarget.closest('.miniRoamOS') || e.currentTarget.closest('.sc-viewport');
                   const hostRect = host ? host.getBoundingClientRect() : { left: 0, top: 0, width: 0 };

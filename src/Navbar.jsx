@@ -5,26 +5,16 @@ const productsMenu = [
   {
     heading: "Virtual Office Platform",
     items: [
-      { title: "Virtual Office", description: "Company Visualization", href: "/virtual-office" },
-      { title: "Drop-In Meetings", description: "Virtual Meeting Rooms", href: "/drop-in-meetings" },
-      { title: "Theater", description: "All-Hands Presentations", href: "/theater" },
-      { title: "AInbox", description: "Enterprise Messaging", href: "/ainbox" },
-    ],
-  },
-  {
-    heading: "",
-    items: [
-      { title: "Lobby", description: "Meeting Scheduler", href: "/lobby" },
-      { title: "Magicast", description: "Integrated AI Screen Recorder", href: "/magicast" },
-      { title: "Magic Minutes", description: "AI Meeting Summarization", href: "/magic-minutes" },
-    ],
-  },
-  {
-    heading: "",
-    items: [
-      { title: "On-It", description: "Your AI Assistant", href: "/on-it" },
-      { title: "On-Air", description: "Immersive Events", href: "/on-air" },
-      { title: "Mobile", description: "Roam While You Roam", href: "/mobile" },
+      { title: "Virtual Office", description: "Company Visualization", href: "#/feature/virtual-office" },
+      { title: "Drop-In Meetings", description: "Virtual Meeting Rooms", href: "#/feature/drop-in-meetings" },
+      { title: "Theater", description: "All-Hands Presentations", href: "#/feature/theater" },
+      { title: "AInbox", description: "Enterprise Messaging", href: "#/feature/ainbox" },
+      { title: "Lobby", description: "Meeting Scheduler", href: "#/feature/lobby" },
+      { title: "Magicast", description: "Integrated AI Screen Recorder", href: "#/feature/magicast" },
+      { title: "Magic Minutes", description: "AI Meeting Summarization", href: "#/feature/magic-minutes" },
+      { title: "On-It", description: "Your AI Assistant", href: "#/feature/on-it" },
+      { title: "On-Air", description: "Immersive Events", href: "#/feature/on-air" },
+      { title: "Mobile", description: "Roam While You Roam", href: "#/feature/mobile" },
     ],
   },
 ];
@@ -172,35 +162,34 @@ function MegaMenu({ columns, align = "left", cascade = "none", spacious = false 
     const col3 = items.slice(colSize * 2);
 
     return (
-      <div className="flex gap-10 px-3 py-8">
-        {[col1, col2, col3].map((col, i) => (
-          <div key={i}>
-            {i === 0 && (
-              <h3 className={`mb-2 text-xs font-bold uppercase tracking-[0.5px] text-white/60 ${headingPadding}`} style={{ fontFamily: "var(--font-possibility), sans-serif", ...cascadeStyle(0) }}>
-                {columns[0].heading}
-              </h3>
-            )}
-            {i > 0 && <div className="mb-2 h-[16px]" />}
-            <ul className="flex flex-col">
-              {col.map((item, j) => (
-                <li key={item.title} style={cascadeStyle(j + 1)}>
-                  <a
-                    href={item.href}
-                    className={`group/link block ${itemPadding}`}
-                  >
-                    <span className="inline-flex items-center gap-1 text-sm font-medium text-white transition-colors group-hover/link:text-white/70">
-                      {item.title}
-                      <svg className="inline-block w-2.5 h-2.5 opacity-0 -translate-x-1 transition-all duration-200 group-hover/link:opacity-100 group-hover/link:translate-x-0 text-white/50" viewBox="0 0 12 12" fill="none"><path d="M2 6h8M7 3l3 3-3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                    </span>
-                    {item.description && (
-                      <span className="block text-xs text-white/40 mt-0.5">{item.description}</span>
-                    )}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
+      <div className="px-3 py-8">
+        <h3 className={`mb-4 text-xs font-bold uppercase tracking-[0.5px] text-white/60 ${headingPadding}`} style={{ fontFamily: "var(--font-possibility), sans-serif", ...cascadeStyle(0) }}>
+          {columns[0].heading}
+        </h3>
+        <div className="flex gap-10">
+          {[col1, col2, col3].map((col, i) => (
+            <div key={i}>
+              <ul className="flex flex-col">
+                {col.map((item, j) => (
+                  <li key={item.title} style={cascadeStyle(i * colSize + j + 1)}>
+                    <a
+                      href={item.href}
+                      className={`group/link block ${itemPadding}`}
+                    >
+                      <span className="inline-flex items-center gap-1 text-sm font-medium text-white transition-colors group-hover/link:text-white/70">
+                        {item.title}
+                        <svg className="inline-block w-2.5 h-2.5 opacity-0 -translate-x-1 transition-all duration-200 group-hover/link:opacity-100 group-hover/link:translate-x-0 text-white/50" viewBox="0 0 12 12" fill="none"><path d="M2 6h8M7 3l3 3-3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      </span>
+                      {item.description && (
+                        <span className="block text-xs text-white/40 mt-0.5">{item.description}</span>
+                      )}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }

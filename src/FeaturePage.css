@@ -191,15 +191,19 @@
 }
 
 /* Roamvision / Whiteboard / Media Board host sections drop the wallpaper for
-   a flat background-primary surface. */
+   a flat surface-raised background. */
 .fp-section-visual:has(.fp-rv-window),
 .fp-section-visual:has(.fp-wb-window),
-.fp-section-visual:has(.fp-mb-window),
+.fp-section-visual:has(.fp-mb-window) {
+  background-image: none;
+  background-color: var(--bg-surface-raised);
+}
+
 [data-theme="light"] .fp-section-visual:has(.fp-rv-window),
 [data-theme="light"] .fp-section-visual:has(.fp-wb-window),
 [data-theme="light"] .fp-section-visual:has(.fp-mb-window) {
   background-image: none;
-  background-color: var(--background-primary);
+  background-color: var(--graphite-50);
 }
 
 .fp-as-preview,
@@ -1213,17 +1217,17 @@
 }
 
 /* Sections containing an .fp-image-preview drop the wallpaper for a flat
-   background-primary surface so the screenshot reads cleanly. */
+   surface-raised background so the screenshot reads cleanly. */
 .fp-section-visual:has(.fp-image-preview) {
   background-image: none;
-  background-color: var(--background-primary);
+  background-color: var(--bg-surface-raised);
   padding-top: 0;
   padding-bottom: 0;
 }
 
 [data-theme="light"] .fp-section-visual:has(.fp-image-preview) {
   background-image: none;
-  background-color: var(--background-primary);
+  background-color: var(--graphite-50);
 }
 
 .fp-section-visual:has(.fp-image-preview-external-meetings) {
@@ -1236,6 +1240,243 @@
   width: 100%;
   display: flex;
   justify-content: center;
+}
+
+.fp-hubspot-scrim {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(((100% - 11 * var(--grid-gutter)) / 12) * 10 + 9 * var(--grid-gutter));
+  background: rgba(0, 0, 0, 0.55);
+  border-radius: var(--radius-xl);
+  corner-shape: superellipse(1.6);
+  z-index: 5;
+  pointer-events: none;
+}
+
+.fp-hubspot-dialog {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 480px;
+  max-width: calc(100% - 48px);
+  background: var(--bg-surface-elevated-primary, #1d1e20);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-xl);
+  corner-shape: superellipse(1.6);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3), 0 6px 10px 4px rgba(0, 0, 0, 0.2);
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  color: var(--text-primary);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.fp-hubspot-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-bottom: 0.5px solid var(--border);
+}
+
+.fp-hubspot-close {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 50%;
+  background: var(--background-primary);
+  border: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--icon-primary);
+  cursor: pointer;
+  flex-shrink: 0;
+  box-shadow: inset 0 0.5px 0 0 var(--border);
+}
+
+.fp-hubspot-close:hover {
+  background: var(--white-opacity-100);
+}
+
+:root[data-theme="light"] .fp-hubspot-close,
+.sc-viewport[data-theme="light"] .fp-hubspot-close {
+  box-shadow: none;
+}
+
+.fp-hubspot-titles {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+}
+
+.fp-hubspot-title {
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 24px;
+  letter-spacing: -0.32px;
+  color: var(--text-primary);
+}
+
+.fp-hubspot-subtitle {
+  font-size: 14px;
+  line-height: 20px;
+  letter-spacing: -0.15px;
+  color: var(--text-secondary);
+}
+
+.fp-hubspot-actions-spacer {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+}
+
+.fp-hubspot-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.fp-hubspot-section-label {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  letter-spacing: -0.15px;
+  color: var(--text-secondary);
+  padding: 16px 16px 4px;
+}
+
+.fp-hubspot-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 16px;
+}
+
+.fp-hubspot-row-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 12px 0;
+}
+
+.fp-hubspot-row:last-child .fp-hubspot-row-text {
+  padding: 16px 0;
+}
+
+.fp-hubspot-row-title {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  letter-spacing: -0.15px;
+  color: var(--text-primary);
+}
+
+.fp-hubspot-row-desc {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--text-secondary);
+  letter-spacing: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fp-hubspot-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px 4px 12px;
+  border-radius: 8px;
+  background: var(--background-primary);
+  border: 0;
+  color: var(--text-positive);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  letter-spacing: -0.15px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.fp-hubspot-toggle {
+  width: 40px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  background: var(--white-opacity-100);
+  position: relative;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s ease;
+}
+
+.fp-hubspot-toggle-on {
+  background: var(--indigo-500);
+}
+
+.fp-hubspot-toggle-knob {
+  position: absolute;
+  top: 50%;
+  left: 2px;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 3px 6px 2px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.3);
+  transition: left 0.15s ease;
+}
+
+.fp-hubspot-toggle-on .fp-hubspot-toggle-knob {
+  left: 18px;
+}
+
+.fp-hubspot-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 16px;
+  border-top: 0.5px solid var(--border);
+  background: var(--bg-surface-elevated-primary, #1d1e20);
+}
+
+.fp-hubspot-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 0;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  letter-spacing: -0.15px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.fp-hubspot-btn-secondary {
+  background: var(--background-primary);
+  color: var(--text-primary);
+  box-shadow: inset 0 0.5px 0 0 var(--border);
+}
+
+.fp-hubspot-btn-secondary:hover {
+  background: var(--white-opacity-100);
+}
+
+.fp-hubspot-btn-primary {
+  background: var(--bg-surface-secondary, #fff);
+  color: var(--text-primary-on-light, #000);
 }
 
 .fp-mm-preview .mm-win {
@@ -1614,6 +1855,10 @@
   transform: none !important;
   flex-shrink: 0;
   width: calc(((100% - 11 * var(--grid-gutter)) / 12) * 10 + 9 * var(--grid-gutter)) !important;
+  border: 0.5px solid var(--border) !important;
+  border-radius: var(--radius-xl) !important;
+  corner-shape: superellipse(1.6);
+  box-shadow: var(--shadow-5);
 }
 
 /* The meeting window is hardcoded to 780x580 in MeetingWindow.css; when the
@@ -1909,6 +2154,24 @@
 .fp-section-columns {
   row-gap: 48px;
 }
+
+/* Card-style columns variant — mirrors the social-post review cards. */
+.fp-section-columns-cards {
+  row-gap: var(--grid-gutter);
+}
+
+.fp-section-columns-cards .fp-col {
+  background: var(--graphite-800);
+  border: 0.5px solid var(--border);
+  padding: 24px;
+  gap: 12px;
+  min-height: 280px;
+}
+
+[data-theme="light"] .fp-section-columns-cards .fp-col {
+  background: var(--graphite-50);
+}
+
 
 .fp-section-lead .fp-lead {
   grid-column: 1 / span 12;
@@ -2286,6 +2549,34 @@
   transition: color 120ms ease;
 }
 
+.fp-explore-list-bullet .fp-explore-item {
+  cursor: default;
+  align-items: flex-start;
+}
+
+.fp-explore-list-bullet .fp-explore-item:hover span {
+  color: inherit;
+  text-decoration: none;
+}
+
+.fp-explore-bullet {
+  flex-shrink: 0;
+  width: 16px;
+  height: calc(1em * 1.4);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+}
+
+.fp-explore-bullet::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
 .fp-section-visual {
   grid-column: 1 / -1;
   width: 100%;
@@ -2318,7 +2609,11 @@
    his avatar; every other row is dimmed to 50%. */
 .fp-section-visual:has(.fp-whisper-preview) {
   background-image: none;
-  background-color: var(--background-primary);
+  background-color: var(--bg-surface-raised);
+}
+
+[data-theme="light"] .fp-section-visual:has(.fp-whisper-preview) {
+  background-color: var(--graphite-50);
 }
 
 .fp-whisper-preview {
@@ -2383,6 +2678,21 @@
   opacity: 0;
 }
 
+/* Whisper preview — beef up the talk ring so it reads at this scale. */
+.fp-whisper-slot .sc-private-talk-ring::after {
+  top: -16%;
+  bottom: -16%;
+  left: -16%;
+  right: -16%;
+}
+
+.fp-whisper-slot .sc-private-talk-ring::before {
+  top: -28%;
+  bottom: -28%;
+  left: -28%;
+  right: -28%;
+}
+
 /* Map preview — scope ShowcaseMap into this container, show only the map window */
 .fp-map-preview {
   position: relative;
@@ -2392,6 +2702,255 @@
   border-radius: var(--radius-2xl);
   corner-shape: superellipse(1.6);
   flex-shrink: 0;
+}
+
+
+/* ──────────────────────────────────────────
+   Desktop Recordings — fake macOS desktop
+   ────────────────────────────────────────── */
+.fp-desktop {
+  position: relative;
+  width: 100%;
+  flex-shrink: 0;
+  font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
+  color: #fff;
+  padding-bottom: 72px;
+}
+
+.fp-section-visual:has(.fp-desktop) {
+  padding-top: 0 !important;
+}
+
+.fp-desktop-menubar {
+  position: relative;
+  height: 36px;
+  z-index: 2;
+}
+
+.fp-desktop-menubar-blur {
+  display: none;
+}
+
+.fp-desktop-menubar-content {
+  position: relative;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10px;
+}
+
+.fp-desktop-menus {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.fp-desktop-menu-item {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 8px;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 500;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  white-space: nowrap;
+}
+
+.fp-desktop-menu-active {
+  font-weight: 700;
+}
+
+.fp-desktop-menu-apple {
+  padding: 0 6px;
+}
+
+.fp-desktop-apple {
+  display: block;
+  width: 22px;
+  height: 28px;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.15));
+}
+
+.fp-desktop-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.85);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+.fp-desktop-status-quill {
+  width: 22px;
+  height: 22px;
+  display: block;
+}
+
+.fp-desktop-status-date,
+.fp-desktop-status-time {
+  white-space: nowrap;
+}
+
+.fp-desktop-dropdown {
+  position: relative;
+  margin-left: auto;
+  margin-right: 12px;
+  width: 260px;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(50px) saturate(180%);
+  -webkit-backdrop-filter: blur(50px) saturate(180%);
+  border: 0.5px solid var(--border);
+  border-radius: 8px;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  z-index: 3;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  color: var(--text-primary);
+}
+
+:root[data-theme="light"] .fp-desktop-dropdown,
+.sc-viewport[data-theme="light"] .fp-desktop-dropdown {
+  background: rgba(255, 255, 255, 0.6);
+  border-color: rgba(0, 0, 0, 0.08);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.fp-desktop-dropdown-row:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+:root[data-theme="light"] .fp-desktop-dropdown-row:hover,
+.sc-viewport[data-theme="light"] .fp-desktop-dropdown-row:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.fp-desktop-dropdown-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.fp-desktop-dropdown-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.fp-desktop-dropdown-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  display: block;
+}
+
+:root[data-theme="light"] .fp-desktop-dropdown-icon,
+.sc-viewport[data-theme="light"] .fp-desktop-dropdown-icon {
+  filter: invert(1);
+}
+
+.fp-desktop-dropdown-label {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--text-primary);
+  letter-spacing: 0;
+}
+
+.fp-desktop-dropdown-shortcut {
+  font-size: 10px;
+  line-height: 12px;
+  letter-spacing: 0.12px;
+  color: var(--text-secondary);
+}
+
+.fp-desktop-dropdown-separator {
+  height: 0;
+  margin: 4px 0;
+  border-top: 0.5px solid rgba(255, 255, 255, 0.12);
+}
+
+/* Light-mode overrides for the menu bar (the Mac menu bar uses dark text on
+   a light wallpaper). */
+:root[data-theme="light"] .fp-desktop-menu-item,
+:root[data-theme="light"] .fp-desktop-status,
+.sc-viewport[data-theme="light"] .fp-desktop-menu-item,
+.sc-viewport[data-theme="light"] .fp-desktop-status {
+  color: rgba(0, 0, 0, 0.85);
+  text-shadow: none;
+}
+
+:root[data-theme="light"] .fp-desktop-apple,
+:root[data-theme="light"] .fp-desktop-status-quill,
+.sc-viewport[data-theme="light"] .fp-desktop-apple,
+.sc-viewport[data-theme="light"] .fp-desktop-status-quill {
+  filter: invert(1);
+}
+
+.fp-completed-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 8;
+}
+
+.fp-completed-tip {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px 10px 12px;
+  background: var(--bg-surface-elevated-primary, #1d1e20);
+  border: 0.5px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3), 0 6px 10px 4px rgba(0, 0, 0, 0.2);
+  white-space: nowrap;
+  animation: fp-completed-pop 320ms cubic-bezier(0.2, 0.7, 0.4, 1.2) both;
+}
+
+@keyframes fp-completed-pop {
+  0%   { opacity: 0; transform: translateY(6px) scale(0.92); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.fp-completed-check {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--bg-accented-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.fp-completed-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fp-completed-label {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+  line-height: 14px;
+}
+
+.fp-completed-task {
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.15px;
+  color: var(--text-primary);
+  line-height: 18px;
 }
 
 .fp-map-preview .sc-viewport {
@@ -2705,6 +3264,12 @@
   z-index: 9000 !important;
 }
 
+.fp-map-preview-onit-pin .mc-window,
+.fp-section-visual:has(.fp-map-preview-onit-pin) .mc-window {
+  left: 32px !important;
+  top: 32px !important;
+}
+
 .fp-tags-magnify {
   position: absolute !important;
   z-index: 50;
@@ -2731,10 +3296,14 @@
   flex-direction: column;
   gap: 16px;
   padding: 32px;
-  background: var(--bg-surface-raised);
+  background: var(--graphite-800);
   border: 0.5px solid var(--border);
   border-radius: 0;
   box-sizing: border-box;
+}
+
+[data-theme="light"] .fp-card {
+  background: var(--graphite-50);
 }
 
 .fp-card-icon {
@@ -2785,11 +3354,15 @@
   grid-template-columns: repeat(var(--grid-columns), 1fr);
   gap: var(--grid-gutter);
   align-items: start;
-  background: var(--bg-surface-raised);
+  background: var(--graphite-800);
   border: 0.5px solid var(--border);
   padding: 64px;
   box-sizing: border-box;
   width: 100%;
+}
+
+[data-theme="light"] .fp-split-inner {
+  background: var(--graphite-50);
 }
 
 .fp-split-title {
@@ -3280,10 +3853,14 @@
   grid-column: span 6;
   display: flex;
   flex-direction: column;
-  background: var(--bg-surface-raised);
+  background: var(--graphite-800);
   border: 0.5px solid var(--border);
   box-sizing: border-box;
   width: 100%;
+}
+
+[data-theme="light"] .fp-compare-col {
+  background: var(--graphite-50);
 }
 
 .fp-compare-head {
@@ -3420,6 +3997,18 @@
   color: var(--text-positive, #46D08F);
 }
 
+.fp-compare-row-positive.fp-compare-row-total .fp-compare-row-price {
+  display: inline-block;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  padding: 6px 10px;
+  color: var(--solid-black);
+  background: var(--accent);
+}
+
 @media (max-width: 900px) {
   .fp-compare-col {
     grid-column: 1 / -1;
@@ -3433,7 +4022,11 @@
 
 /* Compare: de-emphasize the legacy column; featured stays neutral with badge */
 .fp-compare-col-featured {
-  background: var(--bg-surface-raised);
+  background: var(--graphite-800);
+}
+
+[data-theme="light"] .fp-compare-col-featured {
+  background: var(--graphite-50);
 }
 
 .fp-compare-col-left .fp-compare-row-price,

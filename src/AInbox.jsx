@@ -1527,7 +1527,7 @@ const SIDEBAR_VIEW_ITEMS = [
   { id: 'guests', label: 'Guests', icon: '/icons/menu/IconPersonPass.svg' },
   { id: 'bookmarks', label: 'Bookmarks', icon: '/icons/menu/IconBookmark.svg' },
   'divider',
-  { id: 'actions', label: 'My Action Items', icon: '/icons/menu/IconChecklistSmall.svg' },
+  { id: 'actions', label: 'My Action Items', icon: '/icons/mm-task.svg' },
 ];
 
 const SIDEBAR_VIEW_LABELS = SIDEBAR_VIEW_ITEMS.reduce((acc, v) => {
@@ -1814,6 +1814,129 @@ const THREAD_REACTIONS = [
   { emoji: '👍', count: 6 }, { emoji: '✅', count: 4 },
   { emoji: '🔥', count: 3, active: true }, { emoji: '🚀', count: 5 }, { emoji: '💯', count: 2 },
 ];
+
+const ACTION_ITEMS = [
+  {
+    id: 'a1', done: false,
+    title: 'Approve Frankfurt region spend',
+    date: 'Today',
+    desc: 'Sign off in #ops so Lexi can provision the EU bucket Thursday and EU residency ships day-one with Magic Minutes GA.',
+    assignee: '/headshots/joe-woodward.jpg',
+  },
+  {
+    id: 'a2', done: false,
+    title: 'Land cloud summarizer fallback',
+    date: 'Today',
+    desc: 'Wire up the cloud path for meetings over 30 minutes so the on-device pipeline degrades gracefully on long calls.',
+    assignee: '/headshots/joe-woodward.jpg',
+  },
+  {
+    id: 'a3', done: true,
+    title: 'Auto-assign action items with one-click undo',
+    date: 'Yesterday',
+    desc: "Confirmed the auto-assign default for Magic Minutes summaries — owners are inferred from the transcript and an undo button surfaces in the meeting's group chat.",
+    assignee: '/headshots/joe-woodward.jpg',
+  },
+  {
+    id: 'a4', done: true,
+    title: 'Walk activity-view loading states with design',
+    date: 'Yesterday',
+    desc: 'Reviewed the empty/skeleton/loaded transitions for the Activity view onboarding tour. Recording posted in the AInbox.',
+    assignee: '/headshots/joe-woodward.jpg',
+  },
+  {
+    id: 'a5', done: true,
+    title: 'Run privacy review with legal',
+    date: 'Apr 21',
+    desc: 'Reviewed the Stop & Shred deletion paths with legal so the privacy docs publish alongside Magic Minutes GA — sign-off captured in the meeting transcript.',
+    assignee: '/headshots/joe-woodward.jpg',
+  },
+  {
+    id: 'a6', done: true,
+    title: 'Send data-flow diagram to Grace',
+    date: 'Apr 21',
+    desc: 'Diagram covers what Stop & Shred deletes downstream — recording, transcript, summary, auto-generated chat — and the 7-day backup tombstone window.',
+    assignee: '/headshots/joe-woodward.jpg',
+  },
+  {
+    id: 'a7', done: true,
+    title: 'Lock GA launch checklist',
+    date: 'Apr 21',
+    desc: 'Posted the locked checklist in #magic-minutes-launch. Risks land in the thread before EOD Wednesday for triage in Friday\'s review.',
+    assignee: '/headshots/joe-woodward.jpg',
+  },
+];
+
+function ActionItemsCheckIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+      <path d="M3 7.5L5.5 10L11 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function ActionItemsChevronIcon() {
+  return (
+    <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+      <path d="M2.5 4L5 6.5L7.5 4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function ActionItemsView() {
+  const [items, setItems] = useState(ACTION_ITEMS);
+  const toggle = (id) => {
+    setItems((prev) => prev.map((it) => (it.id === id ? { ...it, done: !it.done } : it)));
+  };
+  return (
+    <>
+      <div className="ainbox-detail-header">
+        <div className="ainbox-detail-header-left">
+          <img src="/headshots/joe-woodward.jpg" alt="" className="ainbox-detail-header-avatar" />
+          <span className="ainbox-detail-header-name">Joe Woodward</span>
+          <img src="/icons/roamaniac.svg" alt="" className="ainbox-action-verified" aria-hidden="true" />
+          <span className="ainbox-action-meta">
+            <span className="ainbox-action-meta-dot" /> Roam HQ <span>·</span> !nventors
+          </span>
+        </div>
+      </div>
+      <div className="ainbox-actions-list">
+        {items.map((item) => (
+          <div key={item.id} className={`ainbox-action-row ${item.done ? 'ainbox-action-row-done' : ''}`}>
+            <button
+              type="button"
+              className="ainbox-action-check-btn"
+              onClick={() => toggle(item.id)}
+              aria-pressed={item.done}
+              aria-label={item.done ? 'Mark task incomplete' : 'Mark task complete'}
+            >
+              <span
+                className={`ainbox-action-check ${item.done ? 'ainbox-action-check-done' : ''}`}
+                aria-hidden="true"
+              />
+            </button>
+            <div className="ainbox-action-body">
+              <div className="ainbox-action-title-row">
+                <span className="ainbox-action-title">{item.title}</span>
+                <span className="ainbox-action-date">{item.date}</span>
+              </div>
+              <p className="ainbox-action-desc">{item.desc}</p>
+            </div>
+            <button type="button" className="ainbox-action-assignee">
+              <img src={item.assignee} alt="" />
+              <ActionItemsChevronIcon />
+            </button>
+          </div>
+        ))}
+      </div>
+      <div className="ainbox-actions-footer">
+        <button type="button" className="ainbox-actions-new">
+          <span>New Action Item</span>
+        </button>
+      </div>
+    </>
+  );
+}
 
 export default function AInbox({ win, onDrag, onOpenMagicMinutes, initialThreadView = null, initialChatId = null, initialSearchActive = false, initialSearchQuery = '', sidebarScrollToBottom = false, staticMode = false, autoAddFolders = false, favoritesOverride = null, sectionsOverride = null, messagesOverride = null, mmAutoPrompt = false, mmPrompts = null, initialSidebarView = 'inbox' }) {
   const favorites = favoritesOverride || FAVORITES;
@@ -2937,6 +3060,9 @@ export default function AInbox({ win, onDrag, onOpenMagicMinutes, initialThreadV
 
         {/* ——— Detail pane ——— */}
         <div className="ainbox-detail">
+          {sidebarView === 'actions' && <ActionItemsView />}
+          {sidebarView !== 'actions' && (
+          <>
           {/* ——— Thread view ——— */}
           {threadView && (() => {
             const threadConvo = messages[threadView.chatId];
@@ -3194,6 +3320,8 @@ export default function AInbox({ win, onDrag, onOpenMagicMinutes, initialThreadV
               </div>
             </div>
           </div>
+          </>
+          )}
         </div>
       </div>
 

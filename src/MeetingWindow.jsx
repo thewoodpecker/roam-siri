@@ -178,7 +178,190 @@ const VIEW_MODES = [
   { id: 'speaker', label: 'Active Speaker' },
 ];
 
-export default function MeetingWindow({ win, onDrag, roomName, people: allPeople, onOpenChat, onOpenOnAir, onOpenMagicMinutes, locked, autoReactions = true, handsRaised = false, onClickHands, roamojiOpen: roamojiInitialOpen = true, gesturesEnabled = true, incomingGesturesEnabled = false, captionsScript, initialViewMode = 'gallery', initialViewMenuOpen = false, compact = false }) {
+const MM_INITIAL_RECAP = (
+  <>
+    <p>Welcome back, Joe — here’s what you missed in the last 18 minutes:</p>
+    <ul>
+      <li><strong>Decision:</strong> Magic Minutes ships GA on Friday with EU residency on day one. Howard signed off on the Frankfurt region spend live.</li>
+      <li><strong>Action items so far:</strong> Lexi is provisioning the EU bucket by Thursday. Chelsea is locking the launch checklist. Grace is closing the legal review on Stop &amp; Shred.</li>
+      <li><strong>Open question:</strong> auto-assign action items vs. suggestions — Howard called it: auto-assign with a one-click undo.</li>
+      <li><strong>Right now:</strong> the team is walking through the launch-day comms plan. Chelsea has the floor.</li>
+    </ul>
+  </>
+);
+
+const MM_RECAP_RESPONSES = [
+  (
+    <>
+      <p>Last minute recap:</p>
+      <ul>
+        <li>Chelsea walked through the launch-day comms plan — Tuesday teaser, Friday GA tweet, Sunday customer email.</li>
+        <li>Howard added that he’ll personally ping the top 10 enterprise accounts the night before launch.</li>
+        <li>Lexi flagged a tail-latency spike on the EU prefill path — being chased now, not a launch blocker.</li>
+      </ul>
+    </>
+  ),
+  (
+    <>
+      <p>Quick recap of the last 60 seconds:</p>
+      <ul>
+        <li>Grace confirmed legal sign-off on the Stop &amp; Shred docs — they’ll publish alongside GA.</li>
+        <li>Chelsea proposed defaulting the auto-summary template to “Stand-Up” for any room called *standup* — the team agreed.</li>
+        <li>Howard asked engineering to lock the launch checklist in #magic-minutes-launch by EOD Wednesday.</li>
+      </ul>
+    </>
+  ),
+  (
+    <>
+      <p>Here’s the last minute:</p>
+      <ul>
+        <li>Lexi reported the on-device Whisper pipeline is hitting 2.4× throughput on the M4 Max with the Medusa draft.</li>
+        <li>Open question on tokenizer alignment between draft + target — John Beutner taking it.</li>
+        <li>Chelsea closing the @MagicMinutes prompt-UI spec right now and posting it after standup.</li>
+      </ul>
+    </>
+  ),
+];
+
+const MM_PROMPT_RESPONSES = [
+  "Two commitments came up: Lexi will provision the EU bucket by Thursday, and Chelsea will lock the GA launch checklist by EOD Wednesday.",
+  "The team agreed to default confidential messages to a 24-hour TTL for launch — Howard wants it opinionated; they’ll revisit if customers push back.",
+  "Howard approved the Frankfurt region spend in #ops a few minutes ago, so EU residency is officially day-one for the GA.",
+  "Grace finished the privacy review with legal on Stop &amp; Shred — the docs publish alongside GA on Friday.",
+  "On the inference side: Medusa-style draft heads picked over the linear draft, with 8-token KV-cache pages so tree pruning doesn’t fragment memory bandwidth.",
+];
+
+function MagicMinutesCatchUpPanel() {
+  const [messages, setMessages] = useState(() => [
+    { id: 'init', from: 'mm', content: MM_INITIAL_RECAP },
+  ]);
+  const [input, setInput] = useState('');
+  const [thinking, setThinking] = useState(false);
+  const idRef = useRef(2);
+  const recapIdxRef = useRef(0);
+  const promptIdxRef = useRef(0);
+  const bodyRef = useRef(null);
+  const timersRef = useRef([]);
+
+  useEffect(() => () => { timersRef.current.forEach(clearTimeout); }, []);
+
+  useEffect(() => {
+    if (bodyRef.current) {
+      bodyRef.current.scrollTo({ top: bodyRef.current.scrollHeight, behavior: 'smooth' });
+    }
+  }, [messages, thinking]);
+
+  const respond = (content) => {
+    setThinking(true);
+    const t = setTimeout(() => {
+      setThinking(false);
+      setMessages((prev) => [...prev, { id: `mm-${idRef.current++}`, from: 'mm', content }]);
+    }, 700);
+    timersRef.current.push(t);
+  };
+
+  const sendUserMessage = (text) => {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+    setMessages((prev) => [...prev, { id: `me-${idRef.current++}`, from: 'me', content: trimmed }]);
+    setInput('');
+    const reply = MM_PROMPT_RESPONSES[promptIdxRef.current % MM_PROMPT_RESPONSES.length];
+    promptIdxRef.current += 1;
+    respond(reply);
+  };
+
+  const onRecap = () => {
+    setMessages((prev) => [...prev, { id: `me-${idRef.current++}`, from: 'me', content: 'Recap the last minute' }]);
+    const reply = MM_RECAP_RESPONSES[recapIdxRef.current % MM_RECAP_RESPONSES.length];
+    recapIdxRef.current += 1;
+    respond(reply);
+  };
+
+  const onKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      sendUserMessage(input);
+    }
+  };
+
+  return (
+    <div className="meeting-win-mm-panel">
+      <div className="meeting-win-mm-header">
+        <button type="button" className="meeting-win-mm-dismiss" aria-label="Close">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M3 3L11 11M11 3L3 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
+        </button>
+        <div className="meeting-win-mm-titles">
+          <div className="meeting-win-mm-title">Magic Minutes</div>
+          <div className="meeting-win-mm-subtitle">Catch Up</div>
+        </div>
+        <span aria-hidden="true" />
+      </div>
+
+      <div className="meeting-win-mm-body" ref={bodyRef}>
+        {messages.map((m) => (
+          m.from === 'mm' ? (
+            <div key={m.id} className="meeting-win-mm-msg">
+              <div className="meeting-win-mm-msg-avatar">
+                <img src="/icons/magic-quill.svg" alt="" />
+              </div>
+              <div className="meeting-win-mm-msg-bubble">
+                {typeof m.content === 'string' ? <p>{m.content}</p> : m.content}
+              </div>
+            </div>
+          ) : (
+            <div key={m.id} className="meeting-win-mm-msg meeting-win-mm-msg-self">
+              <div className="meeting-win-mm-msg-bubble meeting-win-mm-msg-bubble-self">
+                <p>{m.content}</p>
+              </div>
+            </div>
+          )
+        ))}
+
+        <div className="meeting-win-mm-privacy">Only you can see this</div>
+      </div>
+
+      <div className="meeting-win-mm-suggestions">
+        <button type="button" className="meeting-win-mm-suggestion" onClick={onRecap}>
+          <span className="meeting-win-mm-suggestion-icon" aria-hidden="true">↻</span>
+          <span>Recap the last minute</span>
+        </button>
+      </div>
+
+      <div className="meeting-win-mm-composer">
+        {thinking && (
+          <div className="meeting-win-mm-typing-indicator">
+            <span className="meeting-win-mm-typing-face">
+              <img src="/icons/magic-quill.svg" alt="" />
+            </span>
+            <div className="meeting-win-mm-typing-dots">
+              <span /><span /><span />
+            </div>
+          </div>
+        )}
+        <input
+          type="text"
+          className="meeting-win-mm-composer-field"
+          placeholder="Ask about this meeting…"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={onKeyDown}
+        />
+        <button
+          type="button"
+          className={`meeting-win-mm-composer-send ${input.trim() ? 'meeting-win-mm-composer-send-active' : ''}`}
+          aria-label="Send"
+          onClick={() => sendUserMessage(input)}
+        >
+          <img src="/icons/mm-send-btn.svg" alt="" width="16" height="16" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+export default function MeetingWindow({ win, onDrag, roomName, people: allPeople, onOpenChat, onOpenOnAir, onOpenMagicMinutes, locked, autoReactions = true, handsRaised = false, onClickHands, roamojiOpen: roamojiInitialOpen = true, gesturesEnabled = true, incomingGesturesEnabled = false, captionsScript, initialViewMode = 'gallery', initialViewMenuOpen = false, compact = false, mmCatchUp = false, lockViewMode = false }) {
   const people = useMemo(() => (allPeople || []).filter(p => p && (p.video || p.avatar)), [allPeople]);
   const [closing, setClosing] = useState(false);
   const [activeSpeaker, setActiveSpeaker] = useState(0);
@@ -407,12 +590,19 @@ export default function MeetingWindow({ win, onDrag, roomName, people: allPeople
           <span className="meeting-win-subtitle">Recording Magic Minutes</span>
         </div>
         <div className="meeting-win-header-right" ref={viewMenuRef}>
-          <div className="meeting-win-gallery-btn" onMouseDown={(e) => e.stopPropagation()} onClick={() => setViewMenuOpen(v => !v)}>
+          <div
+            className="meeting-win-gallery-btn"
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={lockViewMode ? undefined : () => setViewMenuOpen(v => !v)}
+            style={lockViewMode ? { cursor: 'default' } : undefined}
+          >
             <span className="meeting-win-gallery-icon">{VIEW_ICONS[viewMode]}</span>
             <span>{VIEW_MODES.find(m => m.id === viewMode)?.label}</span>
-            <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2.5 4L5 6.5L7.5 4" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            {!lockViewMode && (
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2.5 4L5 6.5L7.5 4" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            )}
           </div>
-          {viewMenuOpen && (
+          {!lockViewMode && viewMenuOpen && (
             <div className="meeting-win-view-menu">
               {VIEW_MODES.map(m => (
                 <div key={m.id} className={`meeting-win-view-item ${viewMode === m.id ? 'meeting-win-view-active' : ''}`} onClick={() => { setViewMode(m.id); setViewMenuOpen(false); }}>
@@ -426,7 +616,7 @@ export default function MeetingWindow({ win, onDrag, roomName, people: allPeople
       </div>
 
       {/* Video grid */}
-      <div className="meeting-win-body">
+      <div className={`meeting-win-body ${mmCatchUp ? 'meeting-win-body-mm' : ''}`}>
         {(() => {
           const renderTile = (person, i, { style, className = '' } = {}) => (
             <div
@@ -534,6 +724,9 @@ export default function MeetingWindow({ win, onDrag, roomName, people: allPeople
           </div>
         )}
 
+        {/* Magic Minutes Catch Up side panel */}
+        {mmCatchUp && <MagicMinutesCatchUpPanel />}
+
         {/* Live captions */}
         {captionsScript && captionsScript.length > 0 && (
           <LiveCaptions script={captionsScript} />
@@ -578,6 +771,7 @@ export default function MeetingWindow({ win, onDrag, roomName, people: allPeople
               <div className="meeting-win-pill-group">
                 <div className="meeting-win-pill" data-tooltip="Add People"><img src="/icons/add-people.svg" alt="" /></div>
                 <div className="meeting-win-pill" data-tooltip="Meeting Chat"><img src="/icons/meeting-chat.svg" alt="" /></div>
+                <div className={`meeting-win-pill ${mmCatchUp ? 'meeting-win-pill-active' : ''}`} data-tooltip="Magic Minutes"><img src="/icons/magic-quill.svg" alt="" /></div>
                 <div className="meeting-win-pill" data-tooltip="Floors"><img src="/icons/floors.svg" alt="" /></div>
               </div>
             </div>
