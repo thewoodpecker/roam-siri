@@ -1,6 +1,6 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import ReactDOM from 'react-dom';
-import ShowcaseMap, { HomepageReviews, OnItFeatureChat } from './ShowcaseMap';
+import ShowcaseMap, { HomepageReviews, OnItFeatureChat, MagicastFeatureVisual } from './ShowcaseMap';
 import { EditMapView } from './App';
 
 function RightControls({ theme, onToggleTheme, showGrid, onToggleGrid }) {
@@ -250,6 +250,18 @@ const AINBOX_AH_SECTIONS = [
     ],
   },
 ];
+
+const HOWARD_MAGICAST_SHARE_MESSAGE = {
+  id: 'howard-magicast',
+  sender: 'Howard Lerman',
+  avatar: '/headshots/howard-lerman.jpg',
+  time: 'Today 9:02 AM',
+  text: "Recorded a quick walkthrough of February's numbers and what we're shipping next. 4 minutes — give it a watch when you have a sec.",
+  magicast: {
+    title: 'March Investor Update',
+    cover: '/magicast/march-update-cover.gif',
+  },
+};
 
 const AINBOX_AH_MESSAGES = {
   'all-hands': {
@@ -510,6 +522,19 @@ const AINBOX_AH_MESSAGES = {
       { id: 7, self: false, text: "seems like it. stock popped 3% on the announcement btw" },
       { id: 8, self: true, text: "nice. first proper CEO change in what, 14 years?" },
       { id: 9, self: false, text: "yeah end of an era lol. gonna be a wild all-hands at Apple today" },
+    ],
+  },
+};
+
+// All-Hands chat with Howard's magicast share appended as the latest message
+const MAGICAST_SHARE_AH_MESSAGES = {
+  ...AINBOX_AH_MESSAGES,
+  'all-hands': {
+    ...AINBOX_AH_MESSAGES['all-hands'],
+    pinnedItems: [],
+    messages: [
+      ...AINBOX_AH_MESSAGES['all-hands'].messages,
+      HOWARD_MAGICAST_SHARE_MESSAGE,
     ],
   },
 };
@@ -1002,7 +1027,7 @@ function MagicMinutesThreadPreview() {
   );
 }
 
-function AInboxPreview({ overrides = false, view = 'thread', chatId = null, mmAutoPrompt = false, threadView = null, mmPrompts = null, initialSidebarView = 'inbox' } = {}) {
+function AInboxPreview({ overrides = false, view = 'thread', chatId = null, mmAutoPrompt = false, threadView = null, mmPrompts = null, initialSidebarView = 'inbox', messagesOverride = null, favoritesOverride = null, sectionsOverride = null, initialCollapsedSections = null } = {}) {
   if (overrides) {
     const dmChatId =
       view === 'dm' ? (chatId || 'howard')
@@ -1018,12 +1043,13 @@ function AInboxPreview({ overrides = false, view = 'thread', chatId = null, mmAu
         initialChatId={dmChatId}
         initialSearchActive={view === 'search'}
         initialSearchQuery={view === 'search' ? 'messages tab' : ''}
-        favoritesOverride={AINBOX_AH_FAVORITES}
-        sectionsOverride={AINBOX_AH_SECTIONS}
-        messagesOverride={AINBOX_AH_MESSAGES}
+        favoritesOverride={favoritesOverride || AINBOX_AH_FAVORITES}
+        sectionsOverride={sectionsOverride || AINBOX_AH_SECTIONS}
+        messagesOverride={messagesOverride || AINBOX_AH_MESSAGES}
         mmAutoPrompt={mmAutoPrompt}
         mmPrompts={mmPrompts}
         initialSidebarView={initialSidebarView}
+        initialCollapsedSections={initialCollapsedSections}
       />
     );
   }
@@ -1076,6 +1102,380 @@ function MagicMinutesPreview({ meeting } = {}) {
   return (
     <div className="fp-mm-preview">
       <MagicMinutes win={noopWin('magicminutes')} onDrag={() => {}} meeting={resolved} />
+    </div>
+  );
+}
+
+const TRANSLATION_MESSAGES = {
+  en: [
+    { time: '11:21 AM', body: "Posted my 30-min slot with Lexi for the Stop & Shred deep-dive. Calendar invite landed; I also pinned the relevant transcript section so we walk in with the same context." },
+    { time: '11:24 AM', body: "Data-flow diagram drafted. Going to clip the 03:15 explanation as a Magicast and attach it to the doc — easier than re-explaining over text." },
+    { time: '11:30 AM', body: "Approved Frankfurt region spend in #ops. EU residency is officially day-one. Lexi — provisioning starts Thursday as discussed." },
+    { time: '11:38 AM', body: "Launch checklist locked in #magic-minutes-launch. Anyone with risks, drop them in the thread before EOD Wednesday so we triage live in Friday's review." },
+  ],
+  fr: [
+    { time: '11:21', body: "J'ai publié mon créneau de 30 min avec Lexi pour le deep-dive Stop & Shred. L'invitation est partie ; j'ai aussi épinglé la section pertinente du transcript pour qu'on arrive avec le même contexte." },
+    { time: '11:24', body: "Le diagramme de flux est rédigé. Je vais découper l'explication de 03:15 en Magicast et l'attacher au doc — plus simple que de tout réexpliquer par écrit." },
+    { time: '11:30', body: "Dépense de la région Francfort approuvée dans #ops. La résidence des données UE est officiellement disponible dès le jour 1. Lexi — le provisionnement démarre jeudi comme convenu." },
+    { time: '11:38', body: "Checklist de lancement verrouillée dans #magic-minutes-launch. Si vous avez des risques, mettez-les dans le thread avant mercredi EOD pour qu'on les trie en direct vendredi." },
+  ],
+  de: [
+    { time: '11:21', body: "Meinen 30-Minuten-Slot mit Lexi für das Stop-&-Shred-Deep-Dive eingestellt. Kalendereinladung ist raus; ich habe außerdem den relevanten Transkriptabschnitt angeheftet, damit wir mit demselben Kontext einsteigen." },
+    { time: '11:24', body: "Datenflussdiagramm steht im Entwurf. Ich werde die Erklärung um 03:15 als Magicast schneiden und ans Dokument anhängen — einfacher als alles per Text neu zu erklären." },
+    { time: '11:30', body: "Frankfurt-Region-Spend in #ops freigegeben. EU-Datenresidenz ist offiziell ab Tag 1. Lexi — die Provisionierung startet wie besprochen am Donnerstag." },
+    { time: '11:38', body: "Launch-Checkliste in #magic-minutes-launch gesperrt. Wer Risiken hat, bitte vor Mittwoch EOD in den Thread posten, damit wir am Freitag live triagieren." },
+  ],
+  pt: [
+    { time: '11:21', body: "Publiquei meu slot de 30 min com a Lexi para o deep-dive de Stop & Shred. O convite no calendário já foi; também fixei a seção relevante do transcript para entrarmos com o mesmo contexto." },
+    { time: '11:24', body: "Diagrama de fluxo rascunhado. Vou recortar a explicação às 03:15 como Magicast e anexar ao doc — mais fácil do que reexplicar por texto." },
+    { time: '11:30', body: "Aprovado o gasto na região de Frankfurt em #ops. Residência de dados na UE é oficialmente day-one. Lexi — o provisionamento começa quinta-feira como combinado." },
+    { time: '11:38', body: "Checklist de lançamento travada em #magic-minutes-launch. Quem tiver riscos, jogue na thread até o final de quarta para triarmos ao vivo na sexta." },
+  ],
+  es: [
+    { time: '11:21', body: "Publiqué mi hueco de 30 min con Lexi para el deep-dive de Stop & Shred. El invite del calendario ya está; también fijé la sección relevante del transcript para que entremos con el mismo contexto." },
+    { time: '11:24', body: "Diagrama de flujo de datos en borrador. Voy a recortar la explicación de las 03:15 como Magicast y adjuntarla al doc — más fácil que volver a explicarlo por texto." },
+    { time: '11:30', body: "Aprobado el gasto de la región de Frankfurt en #ops. La residencia de datos de la UE es oficialmente day-one. Lexi — el aprovisionamiento empieza el jueves, como hablamos." },
+    { time: '11:38', body: "Checklist de lanzamiento cerrada en #magic-minutes-launch. Quien tenga riesgos, que los suelte en el thread antes del fin del miércoles para triarlos en vivo el viernes." },
+  ],
+  ja: [
+    { time: '11:21', body: "Stop & Shred のディープダイブ用に Lexi との30分の枠を投稿しました。カレンダー招待も送付済み。同じ前提で入れるよう、関連する文字起こしのセクションもピン留めしておきました。" },
+    { time: '11:24', body: "データフロー図のドラフトが完成。03:15の説明を Magicast として切り出してドキュメントに添付します。テキストで再説明するより楽です。" },
+    { time: '11:30', body: "#ops でフランクフルト リージョンの費用を承認しました。EU データレジデンシーは正式に Day-One 対応です。Lexi — プロビジョニングは予定どおり木曜から開始してください。" },
+    { time: '11:38', body: "ローンチ チェックリストを #magic-minutes-launch でロックしました。リスクがある方は水曜日の終業時刻までにスレッドへ投稿してください。金曜日のレビューでライブにトリアージュします。" },
+  ],
+  zh: [
+    { time: '上午11:21', body: "我已在日历里发出与 Lexi 关于 Stop & Shred 深度讨论的 30 分钟时段，邀请已发出；同时把相关的会议文字记录区段进行了置顶，方便大家以相同上下文进入。" },
+    { time: '上午11:24', body: "数据流图初稿已完成。我会把 03:15 的解释裁剪为 Magicast 并附在文档中——比再用文字重新解释更方便。" },
+    { time: '上午11:30', body: "已在 #ops 批准法兰克福区域支出。欧盟数据驻留正式 Day-One 上线。Lexi — 配置按计划周四开始。" },
+    { time: '上午11:38', body: "上线清单已在 #magic-minutes-launch 中锁定。各位若有风险，请在周三前提到线程，我们将在周五的复盘中实时分诊。" },
+  ],
+  ar: [
+    { time: '11:21', body: "نشرت موعد 30 دقيقة مع ليكسي للنقاش المعمّق حول Stop & Shred. دعوة التقويم وصلت؛ ثبّتُ كذلك القسم المرتبط من النص حتى ندخل جميعًا بنفس السياق." },
+    { time: '11:24', body: "اكتملت مسودة مخطط تدفق البيانات. سأقصّ شرح الدقيقة 03:15 كـ Magicast وأرفقه بالمستند — أسهل من إعادة الشرح كتابيًا." },
+    { time: '11:30', body: "تمت الموافقة على إنفاق منطقة فرانكفورت في #ops. إقامة بيانات الاتحاد الأوروبي متاحة رسميًا من اليوم الأول. ليكسي — التهيئة تبدأ الخميس كما اتفقنا." },
+    { time: '11:38', body: "قائمة الإطلاق مُقفلة في #magic-minutes-launch. من لديه مخاطر، فليُضِفها في الموضوع قبل نهاية الأربعاء حتى نراجعها مباشرةً يوم الجمعة." },
+  ],
+};
+
+const TRANSLATION_LANGUAGES = [
+  {
+    id: 'en', flag: '🇬🇧', label: 'English',
+    meetingName: 'Magic Minutes Launch Review',
+    senders: [
+      { sender: 'Grace Sutherland', avatar: '/headshots/grace-sutherland.jpg' },
+      { sender: 'Lexi Bohonnon',    avatar: '/headshots/lexi-bohonnon.jpg' },
+      { sender: 'Howard Lerman',    avatar: '/headshots/howard-lerman.jpg' },
+      { sender: 'Chelsea Turbin',   avatar: '/headshots/chelsea-turbin.jpg' },
+    ],
+  },
+  {
+    id: 'fr', flag: '🇫🇷', label: 'Français',
+    meetingName: 'Bilan du lancement Magic Minutes',
+    senders: [
+      { sender: 'Grâce Sauveterre', avatar: '/headshots/grace-sutherland.jpg' },
+      { sender: 'Léxie Beaumont',   avatar: '/headshots/lexi-bohonnon.jpg' },
+      { sender: 'Édouard Lemerle',  avatar: '/headshots/howard-lerman.jpg' },
+      { sender: 'Cécile Tournier',  avatar: '/headshots/chelsea-turbin.jpg' },
+    ],
+  },
+  {
+    id: 'de', flag: '🇩🇪', label: 'Deutsch',
+    meetingName: 'Magic Minutes Launch-Review',
+    senders: [
+      { sender: 'Grete Sudermann', avatar: '/headshots/grace-sutherland.jpg' },
+      { sender: 'Lena Bohnert',    avatar: '/headshots/lexi-bohonnon.jpg' },
+      { sender: 'Hartmut Lermann', avatar: '/headshots/howard-lerman.jpg' },
+      { sender: 'Käthe Turbin',    avatar: '/headshots/chelsea-turbin.jpg' },
+    ],
+  },
+  {
+    id: 'pt', flag: '🇵🇹', label: 'Português',
+    meetingName: 'Revisão do Lançamento do Magic Minutes',
+    senders: [
+      { sender: 'Graça Saldanha',    avatar: '/headshots/grace-sutherland.jpg' },
+      { sender: 'Lexa Bonifácio',    avatar: '/headshots/lexi-bohonnon.jpg' },
+      { sender: 'Eduardo Lermão',    avatar: '/headshots/howard-lerman.jpg' },
+      { sender: 'Cecília Trindade',  avatar: '/headshots/chelsea-turbin.jpg' },
+    ],
+  },
+  {
+    id: 'es', flag: '🇪🇸', label: 'Español',
+    meetingName: 'Revisión del Lanzamiento de Magic Minutes',
+    senders: [
+      { sender: 'Gracia Salvador',  avatar: '/headshots/grace-sutherland.jpg' },
+      { sender: 'Lexia Boldú',      avatar: '/headshots/lexi-bohonnon.jpg' },
+      { sender: 'Eduardo Larrazábal', avatar: '/headshots/howard-lerman.jpg' },
+      { sender: 'Celia Turró',      avatar: '/headshots/chelsea-turbin.jpg' },
+    ],
+  },
+  {
+    id: 'ja', flag: '🇯🇵', label: '日本語',
+    meetingName: 'Magic Minutes ローンチレビュー',
+    senders: [
+      { sender: 'グレース・佐藤',   avatar: '/headshots/grace-sutherland.jpg' },
+      { sender: 'レキシ・本郷',     avatar: '/headshots/lexi-bohonnon.jpg' },
+      { sender: 'ハワード・林田',   avatar: '/headshots/howard-lerman.jpg' },
+      { sender: 'チェルシー・津村', avatar: '/headshots/chelsea-turbin.jpg' },
+    ],
+  },
+  {
+    id: 'zh', flag: '🇨🇳', label: '中文',
+    meetingName: 'Magic Minutes 上线复盘',
+    senders: [
+      { sender: '葛蕾思',  avatar: '/headshots/grace-sutherland.jpg' },
+      { sender: '蕾茜',    avatar: '/headshots/lexi-bohonnon.jpg' },
+      { sender: '霍华德',  avatar: '/headshots/howard-lerman.jpg' },
+      { sender: '雪西',    avatar: '/headshots/chelsea-turbin.jpg' },
+    ],
+  },
+  {
+    id: 'ar', flag: '🇸🇦', label: 'العربية',
+    meetingName: 'مراجعة إطلاق Magic Minutes',
+    senders: [
+      { sender: 'غريس صالح',  avatar: '/headshots/grace-sutherland.jpg' },
+      { sender: 'ليكسي بهجت', avatar: '/headshots/lexi-bohonnon.jpg' },
+      { sender: 'هوارد لبيب',  avatar: '/headshots/howard-lerman.jpg' },
+      { sender: 'شيلسي طارق', avatar: '/headshots/chelsea-turbin.jpg' },
+    ],
+  },
+];
+
+const TRANSLATION_TRANSITION_MS = 240;
+
+const TRANSLATION_I18N = {
+  en: {
+    sectionLabels: { dms: 'Direct Messages', meetings: 'Meetings', groups: 'My Groups' },
+    favoritesShort: { howard: 'Howard', grace: 'Grace', 'all-hands': 'All-Hands' },
+    dms: { howard: 'Howard Lerman', grace: 'Grace Sutherland', klas: 'Klas Leino' },
+    meetings: {
+      compute: 'Inference Architecture Sync',
+      'meet-mm-launch': 'Magic Minutes Launch Review',
+      'meet-eval': 'ML Eval Triage',
+      'meet-pdf': 'Magic PDF Spec Review',
+      'meet-ainbox-ship': 'AInbox Ship Date Sync',
+      'meet-q2': 'Q2 Planning',
+      'meet-board': 'Board Prep',
+      'meet-howard': 'Howard 1:1',
+    },
+  },
+  fr: {
+    sectionLabels: { dms: 'Messages directs', meetings: 'Réunions', groups: 'Mes groupes' },
+    favoritesShort: { howard: 'Édouard', grace: 'Grâce', 'all-hands': 'Plénière' },
+    dms: { howard: 'Édouard Lemerle', grace: 'Grâce Sauveterre', klas: 'Klaus Lainé' },
+    meetings: {
+      compute: "Sync d'architecture d'inférence",
+      'meet-mm-launch': 'Bilan du lancement Magic Minutes',
+      'meet-eval': 'Triage des évaluations ML',
+      'meet-pdf': 'Revue de spec Magic PDF',
+      'meet-ainbox-ship': "Sync date d'expédition AInbox",
+      'meet-q2': 'Planification T2',
+      'meet-board': 'Préparation conseil',
+      'meet-howard': '1:1 avec Édouard',
+    },
+  },
+  de: {
+    sectionLabels: { dms: 'Direktnachrichten', meetings: 'Meetings', groups: 'Meine Gruppen' },
+    favoritesShort: { howard: 'Hartmut', grace: 'Grete', 'all-hands': 'All-Hands' },
+    dms: { howard: 'Hartmut Lermann', grace: 'Grete Sudermann', klas: 'Klaus Leinemann' },
+    meetings: {
+      compute: 'Inferenz-Architektur-Sync',
+      'meet-mm-launch': 'Magic Minutes Launch-Review',
+      'meet-eval': 'ML-Eval-Triage',
+      'meet-pdf': 'Magic PDF Spec-Review',
+      'meet-ainbox-ship': 'AInbox Liefertermin-Sync',
+      'meet-q2': 'Q2-Planung',
+      'meet-board': 'Board-Vorbereitung',
+      'meet-howard': '1:1 mit Hartmut',
+    },
+  },
+  pt: {
+    sectionLabels: { dms: 'Mensagens diretas', meetings: 'Reuniões', groups: 'Meus grupos' },
+    favoritesShort: { howard: 'Eduardo', grace: 'Graça', 'all-hands': 'Plenária' },
+    dms: { howard: 'Eduardo Lermão', grace: 'Graça Saldanha', klas: 'Klaus Leitão' },
+    meetings: {
+      compute: 'Sync de arquitetura de inferência',
+      'meet-mm-launch': 'Revisão do Lançamento do Magic Minutes',
+      'meet-eval': 'Triagem de avaliações ML',
+      'meet-pdf': 'Revisão de spec Magic PDF',
+      'meet-ainbox-ship': 'Sync da data de envio do AInbox',
+      'meet-q2': 'Planejamento do T2',
+      'meet-board': 'Preparação do conselho',
+      'meet-howard': '1:1 com Eduardo',
+    },
+  },
+  es: {
+    sectionLabels: { dms: 'Mensajes directos', meetings: 'Reuniones', groups: 'Mis grupos' },
+    favoritesShort: { howard: 'Eduardo', grace: 'Gracia', 'all-hands': 'General' },
+    dms: { howard: 'Eduardo Larrazábal', grace: 'Gracia Salvador', klas: 'Claudio Leinos' },
+    meetings: {
+      compute: 'Sync de arquitectura de inferencia',
+      'meet-mm-launch': 'Revisión del Lanzamiento de Magic Minutes',
+      'meet-eval': 'Triaje de evaluaciones ML',
+      'meet-pdf': 'Revisión de la spec de Magic PDF',
+      'meet-ainbox-ship': 'Sync de fecha de envío de AInbox',
+      'meet-q2': 'Planificación del T2',
+      'meet-board': 'Preparación del consejo',
+      'meet-howard': '1:1 con Eduardo',
+    },
+  },
+  ja: {
+    sectionLabels: { dms: 'ダイレクト メッセージ', meetings: 'ミーティング', groups: 'マイ グループ' },
+    favoritesShort: { howard: 'ハワード', grace: 'グレース', 'all-hands': '全社' },
+    dms: { howard: 'ハワード・林田', grace: 'グレース・佐藤', klas: 'クラス・李野' },
+    meetings: {
+      compute: '推論アーキテクチャ同期',
+      'meet-mm-launch': 'Magic Minutes ローンチレビュー',
+      'meet-eval': 'ML 評価トリアージ',
+      'meet-pdf': 'Magic PDF 仕様レビュー',
+      'meet-ainbox-ship': 'AInbox 出荷日同期',
+      'meet-q2': 'Q2 プランニング',
+      'meet-board': 'ボード準備',
+      'meet-howard': 'ハワードとの1on1',
+    },
+  },
+  zh: {
+    sectionLabels: { dms: '私信', meetings: '会议', groups: '我的群组' },
+    favoritesShort: { howard: '霍华德', grace: '葛蕾思', 'all-hands': '全员' },
+    dms: { howard: '霍华德·勒曼', grace: '葛蕾思·苏德兰', klas: '克拉斯·李诺' },
+    meetings: {
+      compute: '推理架构同步',
+      'meet-mm-launch': 'Magic Minutes 上线复盘',
+      'meet-eval': 'ML 评估分诊',
+      'meet-pdf': 'Magic PDF 规格评审',
+      'meet-ainbox-ship': 'AInbox 上线日期同步',
+      'meet-q2': 'Q2 规划',
+      'meet-board': '董事会筹备',
+      'meet-howard': '与霍华德的 1:1',
+    },
+  },
+  ar: {
+    sectionLabels: { dms: 'الرسائل المباشرة', meetings: 'الاجتماعات', groups: 'مجموعاتي' },
+    favoritesShort: { howard: 'هوارد', grace: 'غريس', 'all-hands': 'اجتماع شامل' },
+    dms: { howard: 'هوارد لبيب', grace: 'غريس صالح', klas: 'كلاس لينو' },
+    meetings: {
+      compute: 'مزامنة بنية الاستدلال',
+      'meet-mm-launch': 'مراجعة إطلاق Magic Minutes',
+      'meet-eval': 'فرز تقييمات التعلم الآلي',
+      'meet-pdf': 'مراجعة مواصفات Magic PDF',
+      'meet-ainbox-ship': 'مزامنة موعد إطلاق AInbox',
+      'meet-q2': 'تخطيط الربع الثاني',
+      'meet-board': 'تحضير مجلس الإدارة',
+      'meet-howard': 'اجتماع فردي مع هوارد',
+    },
+  },
+};
+
+function MagicMinutesTranslationsPreview() {
+  const [activeIdx, setActiveIdx] = useState(0);
+  const [pendingIdx, setPendingIdx] = useState(0);
+  const [phase, setPhase] = useState('in');
+  const [direction, setDirection] = useState('next');
+  const [paused, setPaused] = useState(false);
+  const lang = TRANSLATION_LANGUAGES[activeIdx];
+  const selectedIdx = phase === 'out' ? pendingIdx : activeIdx;
+
+  const transitionTo = (i) => {
+    if (i === activeIdx && phase === 'in') return;
+    setDirection(i > activeIdx ? 'next' : 'prev');
+    setPendingIdx(i);
+    setPhase('out');
+  };
+
+  useEffect(() => {
+    if (phase !== 'out') return;
+    const t = setTimeout(() => {
+      setActiveIdx(pendingIdx);
+      setPhase('in');
+    }, TRANSLATION_TRANSITION_MS);
+    return () => clearTimeout(t);
+  }, [phase, pendingIdx]);
+
+  useEffect(() => {
+    if (paused) return;
+    const t = setInterval(() => {
+      setDirection('next');
+      setPendingIdx((prev) => {
+        const base = phase === 'out' ? prev : activeIdx;
+        return (base + 1) % TRANSLATION_LANGUAGES.length;
+      });
+      setPhase('out');
+    }, 4000);
+    return () => clearInterval(t);
+  }, [paused, activeIdx, phase]);
+
+  const messages = useMemo(() => {
+    const baseSrc = AINBOX_AH_MESSAGES['meet-mm-launch'];
+    const langMsgs = TRANSLATION_MESSAGES[lang.id] || TRANSLATION_MESSAGES.en;
+    const senders = lang.senders || TRANSLATION_LANGUAGES[0].senders;
+    const messagesArr = langMsgs.map((m, i) => {
+      const sender = senders[i % senders.length];
+      return {
+        id: i + 1,
+        sender: sender.sender,
+        avatar: sender.avatar,
+        time: m.time,
+        text: m.body,
+      };
+    });
+    return {
+      ...AINBOX_AH_MESSAGES,
+      'meet-mm-launch': {
+        ...baseSrc,
+        name: lang.meetingName || baseSrc.name,
+        messages: messagesArr,
+      },
+    };
+  }, [lang.id]);
+
+  const i18n = TRANSLATION_I18N[lang.id] || TRANSLATION_I18N.en;
+
+  const favorites = useMemo(() => (
+    AINBOX_AH_FAVORITES.map((f) => ({ ...f, name: i18n.favoritesShort[f.id] || f.name }))
+  ), [lang.id]);
+
+  const sections = useMemo(() => (
+    AINBOX_AH_SECTIONS.map((section) => {
+      const label = i18n.sectionLabels[section.id] || section.label;
+      const items = section.items.map((item) => {
+        if (section.id === 'dms') return { ...item, name: i18n.dms[item.id] || item.name };
+        if (section.id === 'meetings') return { ...item, name: i18n.meetings[item.id] || item.name };
+        return item;
+      });
+      return { ...section, label, items };
+    })
+  ), [lang.id]);
+
+  return (
+    <div className="fp-mm-translations">
+      <div
+        className={`fp-mm-translations-stage fp-mm-translations-stage-${phase}-${direction}`}
+      >
+        <AInboxPreview
+          key={lang.id}
+          overrides
+          view="chat"
+          chatId="meet-mm-launch"
+          messagesOverride={messages}
+          favoritesOverride={favorites}
+          sectionsOverride={sections}
+        />
+      </div>
+      <div className="fp-mm-translations-flags" role="tablist" aria-label="Language">
+        {TRANSLATION_LANGUAGES.map((l, i) => (
+          <button
+            key={l.id}
+            type="button"
+            role="tab"
+            aria-selected={i === selectedIdx}
+            aria-label={l.label}
+            className={`fp-mm-translations-flag ${i === selectedIdx ? 'fp-mm-translations-flag-active' : ''}`}
+            onClick={() => { setPaused(true); transitionTo(i); }}
+          >
+            <span className="fp-mm-translations-flag-glyph">{l.flag}</span>
+            <span className="fp-mm-translations-flag-label">{l.label}</span>
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
@@ -1214,10 +1614,10 @@ const THEATER_ALL_HANDS_MEETING = {
   ],
 };
 
-function RecordingsPreview() {
+function RecordingsPreview({ initialTab } = {}) {
   return (
     <div className="fp-rec-preview">
-      <Recordings win={noopWin('recordings')} onDrag={() => {}} />
+      <Recordings win={noopWin('recordings')} onDrag={() => {}} initialTab={initialTab} />
     </div>
   );
 }
@@ -1230,8 +1630,595 @@ function CalendarPreview() {
   );
 }
 
-function LobbyPreview() {
-  return <Lobby win={noopWin('lobby')} onDrag={() => {}} />;
+function LobbyPreview({ initialNav, initialSelectedLinkId, initialDetailSection, initialLinks, scrollDetailToBottom } = {}) {
+  return (
+    <Lobby
+      win={noopWin('lobby')}
+      onDrag={() => {}}
+      initialNav={initialNav}
+      initialSelectedLinkId={initialSelectedLinkId}
+      initialDetailSection={initialDetailSection}
+      initialLinks={initialLinks}
+      scrollDetailToBottom={scrollDetailToBottom}
+    />
+  );
+}
+
+const MULTI_HOST_LINKS = [
+  {
+    id: 1,
+    name: 'Quarterly Business Review',
+    slug: 'ro.am/roam/qbr',
+    duration: '60m',
+    dropIn: false,
+    hasThumb: true,
+    active: true,
+    hosts: [
+      { name: 'John Moffa', email: 'john@ro.am', avatar: '/headshots/john-moffa.jpg' },
+      { name: 'Peter Lerman', email: 'peter@ro.am', avatar: '/headshots/peter-lerman.jpg' },
+    ],
+    roundRobinHosts: [
+      { name: 'Joe Woodward', email: 'joe@ro.am', avatar: '/headshots/joe-woodward.jpg' },
+    ],
+  },
+];
+
+const ROUND_ROBIN_LINKS = [
+  {
+    id: 1,
+    name: 'Talk to Sales',
+    slug: 'ro.am/roam/sales-rotation',
+    duration: '20m',
+    type: 'Round Robin',
+    dropIn: true,
+    hasThumb: true,
+    active: true,
+    hosts: [],
+    roundRobinHosts: [
+      { name: 'Joe Woodward',  email: 'joe@ro.am',     avatar: '/headshots/joe-woodward.jpg' },
+      { name: 'Peter Lerman',  email: 'peter@ro.am',   avatar: '/headshots/peter-lerman.jpg' },
+      { name: 'Howard Lerman', email: 'howard@ro.am',  avatar: '/headshots/howard-lerman.jpg' },
+      { name: 'Sean MacIsaac', email: 'sean@ro.am',    avatar: '/headshots/sean-macisaac.jpg' },
+      { name: 'Klas Leino',    email: 'klas@ro.am',    avatar: '/headshots/klas-leino.jpg' },
+    ],
+  },
+];
+
+const USE_CASE_LINKS = [
+  { id: 1, name: 'Sales Demo',         slug: 'ro.am/joe/sales',     duration: '30m', dropIn: true,  active: true,  thumb: '/lobby/lobby-purple.png' },
+  { id: 2, name: 'Customer Support',   slug: 'ro.am/joe/support',   duration: '15m', dropIn: true,  active: true,  thumb: '/lobby/lobby-green.png'  },
+  { id: 3, name: 'Recruiting Loop',    slug: 'ro.am/joe/hiring',    duration: '45m', dropIn: false, active: true,  thumb: '/lobby/lobby-thumb.png'  },
+  { id: 4, name: 'Office Hours',       slug: 'ro.am/joe/office',    duration: '20m', dropIn: true,  active: true,  thumb: '/lobby/lobby-green.png'  },
+  { id: 5, name: 'VIP Access',         slug: 'ro.am/joe/vip',       duration: '60m', dropIn: true,  active: false, thumb: '/lobby/lobby-purple.png' },
+];
+
+function LobbyBookingPreview() {
+  const [mode, setMode] = useState('minimal');
+  const [is24h, setIs24h] = useState(false);
+  const now = new Date();
+  const todayY = now.getFullYear();
+  const todayM = now.getMonth();
+  const todayD = now.getDate();
+  const [viewYear, setViewYear] = useState(todayY);
+  const [viewMonth, setViewMonth] = useState(todayM);
+  const [selected, setSelected] = useState({ y: todayY, m: todayM, d: todayD });
+  const [selectedSlotMins, setSelectedSlotMins] = useState(10 * 60);
+
+  const monthName = new Date(viewYear, viewMonth, 1).toLocaleDateString('en-US', { month: 'long' });
+  const firstDow = new Date(viewYear, viewMonth, 1).getDay();
+  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+  const cells = [];
+  for (let i = 0; i < firstDow; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+  while (cells.length % 7 !== 0) cells.push(null);
+  const days = [];
+  for (let i = 0; i < cells.length; i += 7) days.push(cells.slice(i, i + 7));
+
+  // Available days in the visible month = today + future weekdays (Mon–Fri).
+  const isPastMonth = viewYear < todayY || (viewYear === todayY && viewMonth < todayM);
+  const isCurrentMonth = viewYear === todayY && viewMonth === todayM;
+  const availableDays = new Set();
+  if (!isPastMonth) {
+    const startDay = isCurrentMonth ? todayD : 1;
+    for (let d = startDay; d <= daysInMonth; d++) {
+      const dow = new Date(viewYear, viewMonth, d).getDay();
+      if (dow !== 0 && dow !== 6) availableDays.add(d);
+    }
+  }
+  const selectedInView = selected.y === viewYear && selected.m === viewMonth ? selected.d : null;
+  const selectedDate = new Date(selected.y, selected.m, selected.d);
+  const selectedDow = selectedDate.toLocaleDateString('en-US', { weekday: 'short' });
+
+  const goPrev = () => {
+    const d = new Date(viewYear, viewMonth - 1, 1);
+    setViewYear(d.getFullYear());
+    setViewMonth(d.getMonth());
+  };
+  const goNext = () => {
+    const d = new Date(viewYear, viewMonth + 1, 1);
+    setViewYear(d.getFullYear());
+    setViewMonth(d.getMonth());
+  };
+  const slotMinutes = [9*60+30, 10*60, 10*60+30, 11*60, 11*60+30, 12*60, 12*60+30, 13*60, 13*60+30, 14*60, 14*60+30, 15*60];
+  const formatSlot = (mins) => {
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    if (is24h) return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+    const h12 = h % 12 || 12;
+    const ap = h < 12 ? 'am' : 'pm';
+    return `${h12}:${String(m).padStart(2, '0')}${ap}`;
+  };
+
+  return (
+    <div className="fp-lbk-stage">
+    <div className="fp-lbk-browser">
+      <div className="fp-lbk-chrome">
+        <div className="fp-lbk-lights">
+          <span className="fp-lbk-light fp-lbk-light-close" />
+          <span className="fp-lbk-light fp-lbk-light-min" />
+          <span className="fp-lbk-light fp-lbk-light-max" />
+        </div>
+        <div className="fp-lbk-urlbar">ro.am/howard</div>
+        <div className="fp-lbk-chrome-spacer" />
+      </div>
+      <div className={`fp-lbk-page ${mode === 'skeu' ? 'fp-lbk-page-skeu' : ''}`}>
+        <div className="fp-lbk-pane fp-lbk-pane-minimal" hidden={mode !== 'minimal'}>
+        <div className="fp-lbk-card">
+          <div className="fp-lbk-col fp-lbk-col-host">
+            <img className="fp-lbk-avatar" src="/headshots/howard-lerman.jpg" alt="" />
+            <p className="fp-lbk-host-name">Meet with Howard</p>
+            <div className="fp-lbk-host-meta">
+              <div className="fp-lbk-meta-row">
+                <ClockIcon16 />
+                <span>8 mins or Drop-In</span>
+              </div>
+              <div className="fp-lbk-meta-row">
+                <PinIcon16 />
+                <span>Roam HQ</span>
+              </div>
+              <div className="fp-lbk-meta-row">
+                <GlobeIcon16 />
+                <span>EST · New York</span>
+                <ChevronDown12 />
+              </div>
+            </div>
+            <a
+              href="https://ro.am/howard"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="fp-lbk-dropin"
+            >
+              <span className="fp-lbk-dropin-pulse" />
+              Drop-In Now
+            </a>
+          </div>
+          <div className="fp-lbk-col fp-lbk-col-month">
+            <div className="fp-lbk-month-head">
+              <div className="fp-lbk-month-label">
+                <span className="fp-lbk-month-name">{monthName}</span>
+                <span className="fp-lbk-month-year">{viewYear}</span>
+              </div>
+              <div className="fp-lbk-month-nav">
+                <button type="button" className="fp-lbk-icon-btn" onClick={goPrev} aria-label="Previous month"><ChevronLeft16 /></button>
+                <button type="button" className="fp-lbk-icon-btn" onClick={goNext} aria-label="Next month"><ChevronRight16 /></button>
+              </div>
+            </div>
+            <div className="fp-lbk-week">
+              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d) => (
+                <span key={d} className="fp-lbk-week-day">{d}</span>
+              ))}
+            </div>
+            {days.map((row, ri) => (
+              <div key={ri} className="fp-lbk-week">
+                {row.map((d, di) => {
+                  if (d == null) return <span key={di} className="fp-lbk-day fp-lbk-day-empty" />;
+                  const isSelected = d === selectedInView;
+                  const isAvailable = availableDays.has(d);
+                  if (!isAvailable && !isSelected) {
+                    return <span key={di} className="fp-lbk-day">{d}</span>;
+                  }
+                  const cls = isSelected
+                    ? 'fp-lbk-day fp-lbk-day-selected'
+                    : 'fp-lbk-day fp-lbk-day-available';
+                  return (
+                    <button
+                      key={di}
+                      type="button"
+                      className={cls}
+                      onClick={() => setSelected({ y: viewYear, m: viewMonth, d })}
+                    >
+                      {d}
+                    </button>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+          <div className="fp-lbk-col fp-lbk-col-slots">
+            <div className="fp-lbk-slots-head">
+              <div className="fp-lbk-month-label">
+                <span className="fp-lbk-month-name">{selectedDow}</span>
+                <span className="fp-lbk-month-year">{selected.d}</span>
+              </div>
+              <div className="fp-lbk-tabs">
+                <button
+                  type="button"
+                  className={`fp-lbk-tab ${!is24h ? 'fp-lbk-tab-active' : ''}`}
+                  onClick={() => setIs24h(false)}
+                >
+                  12h
+                </button>
+                <button
+                  type="button"
+                  className={`fp-lbk-tab ${is24h ? 'fp-lbk-tab-active' : ''}`}
+                  onClick={() => setIs24h(true)}
+                >
+                  24h
+                </button>
+              </div>
+            </div>
+            <div className="fp-lbk-slots">
+              {slotMinutes.map((mins) => (
+                <button
+                  key={mins}
+                  type="button"
+                  className={`fp-lbk-slot ${mins === selectedSlotMins ? 'fp-lbk-slot-selected' : ''}`}
+                  onClick={() => setSelectedSlotMins(mins)}
+                >
+                  {formatSlot(mins)}
+                </button>
+              ))}
+            </div>
+            <div className="fp-lbk-action">
+              <button type="button" className="fp-lbk-next">Next</button>
+            </div>
+          </div>
+        </div>
+        <img className="fp-lbk-roam-logo" src="/icons/roam-logo.png" alt="roam" />
+        </div>
+        <div className="fp-lbk-pane fp-lbk-pane-skeu" hidden={mode !== 'skeu'}>
+          <div className="fp-lbk-skeu">
+            <img className="fp-lbk-skeu-wordmark" src="/icons/roam-logo.png" alt="" aria-hidden="true" />
+            <div className="fp-lbk-skeu-id">
+              <img className="fp-lbk-skeu-avatar" src="/headshots/howard-lerman.jpg" alt="" />
+              <div className="fp-lbk-skeu-name-block">
+                <div className="fp-lbk-skeu-name">Howard Lerman</div>
+                <div className="fp-lbk-skeu-org">Roam</div>
+              </div>
+            </div>
+            <a
+              href="https://ro.am/howard"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="fp-lbk-skeu-cta"
+            >
+              <span className="fp-lbk-skeu-cta-pulse" />
+              <span>Drop-In Now</span>
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                <path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </a>
+
+            <div className="fp-lbk-skeu-card">
+              <div className="fp-lbk-skeu-section">
+                <div className="fp-lbk-skeu-card-title">Meet with Howard</div>
+                <div className="fp-lbk-skeu-meta">
+                  <div className="fp-lbk-skeu-meta-row"><PinIcon16 /><span>Roam HQ</span></div>
+                  <div className="fp-lbk-skeu-meta-row"><ClockIcon16 /><span>8 mins · One-on-One</span></div>
+                  <div className="fp-lbk-skeu-meta-row">
+                    <DropInIcon16 />
+                    <span>Drop-Ins</span>
+                    <span className="fp-lbk-skeu-pill">
+                      <span className="fp-lbk-skeu-pill-dot" />
+                      OPEN
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div className="fp-lbk-skeu-divider" />
+              <div className="fp-lbk-skeu-section">
+                <div className="fp-lbk-skeu-section-title">Select a Date &amp; Time</div>
+                <div className="fp-lbk-month-head">
+                  <div className="fp-lbk-month-label">
+                    <span className="fp-lbk-month-name">{monthName}</span>
+                    <span className="fp-lbk-month-year">{viewYear}</span>
+                  </div>
+                  <div className="fp-lbk-month-nav">
+                    <button type="button" className="fp-lbk-icon-btn" onClick={goPrev} aria-label="Previous month"><ChevronLeft16 /></button>
+                    <button type="button" className="fp-lbk-icon-btn" onClick={goNext} aria-label="Next month"><ChevronRight16 /></button>
+                  </div>
+                </div>
+                <div className="fp-lbk-skeu-cal-grid">
+                  {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d) => (
+                    <span key={d} className="fp-lbk-week-day">{d}</span>
+                  ))}
+                  {days.flat().map((d, i) => {
+                    if (d == null) return <span key={i} className="fp-lbk-day fp-lbk-day-empty" />;
+                    const isSelected = d === selectedInView;
+                    const isAvailable = availableDays.has(d);
+                    if (!isAvailable && !isSelected) {
+                      return <span key={i} className="fp-lbk-day">{d}</span>;
+                    }
+                    const cls = isSelected
+                      ? 'fp-lbk-day fp-lbk-day-selected'
+                      : 'fp-lbk-day fp-lbk-day-available';
+                    return (
+                      <button
+                        key={i}
+                        type="button"
+                        className={cls}
+                        onClick={() => setSelected({ y: viewYear, m: viewMonth, d })}
+                      >
+                        {d}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div className="fp-lbk-mode-tabs" role="tablist" aria-label="Lobby design">
+      <button
+        type="button"
+        role="tab"
+        aria-selected={mode === 'minimal'}
+        className={`fp-lbk-mode-tab ${mode === 'minimal' ? 'fp-lbk-mode-tab-active' : ''}`}
+        onClick={() => setMode('minimal')}
+      >
+        Minimal
+      </button>
+      <button
+        type="button"
+        role="tab"
+        aria-selected={mode === 'skeu'}
+        className={`fp-lbk-mode-tab ${mode === 'skeu' ? 'fp-lbk-mode-tab-active' : ''}`}
+        onClick={() => setMode('skeu')}
+      >
+        Skeumorphic
+      </button>
+    </div>
+    </div>
+  );
+}
+
+function DropInIcon16() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <path fill="currentColor" d="M9.64638 7.64648L8.49994 8.79293L8.49994 2.50003C8.49994 2.22389 8.27608 2.00003 7.99994 2.00003C7.7238 2.00003 7.49994 2.22389 7.49994 2.50003L7.49994 8.79292L6.35349 7.64648C6.15823 7.45122 5.84165 7.45122 5.64638 7.64648C5.45112 7.84174 5.45112 8.15832 5.64638 8.35358L7.64638 10.3536C7.84165 10.5488 8.15823 10.5488 8.35349 10.3536L10.3535 8.35359C10.5488 8.15832 10.5488 7.84174 10.3535 7.64648C10.1582 7.45122 9.84165 7.45122 9.64638 7.64648Z" />
+      <path fill="currentColor" d="M4.11081 11.2891C3.91555 11.0938 3.59897 11.0938 3.40371 11.2891C3.20845 11.4844 3.20845 11.8009 3.40371 11.9962C5.94212 14.5346 10.0577 14.5346 12.5961 11.9962C12.7914 11.8009 12.7914 11.4844 12.5961 11.2891C12.4008 11.0938 12.0843 11.0938 11.889 11.2891C9.7411 13.437 6.2587 13.437 4.11081 11.2891Z" />
+    </svg>
+  );
+}
+
+function ClockIcon16() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <path fill="currentColor" d="m8 2c3.3137 0 6 2.68629 6 6 0 3.3137-2.6863 6-6 6-3.31371 0-6-2.6863-6-6 0-3.31371 2.68629-6 6-6zm0 1c-2.76142 0-5 2.23858-5 5 0 2.7614 2.23858 5 5 5 2.7614 0 5-2.2386 5-5 0-2.76142-2.2386-5-5-5zm-.49847 2c.24546 0 .44961.17688.49194.41012l.00806.08988v2.5h1.49847c.27614 0 .5.22386.5.5 0 .24546-.17688.44961-.41012.49194l-.08988.00806h-1.99847c-.24546 0-.44961-.17688-.49195-.41012l-.00805-.08988v-3c0-.27614.22385-.5.5-.5z" />
+    </svg>
+  );
+}
+function PinIcon16() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path fill="currentColor" d="m12 3.33838c-3.73631 0-6.75 2.99092-6.75 6.66172 0 2.8853 1.71237 5.4554 3.5414 7.3633.90378.9427 1.81 1.6964 2.4908 2.2144.2859.2174.5309.3925.7178.5217.1869-.1292.4319-.3043.7178-.5217.6808-.518 1.587-1.2717 2.4908-2.2144 1.829-1.9079 3.5414-4.478 3.5414-7.3633 0-3.6708-3.0137-6.66172-6.75-6.66172zm0 17.66162c-.395.6375-.3955.6373-.3955.6373l-.0024-.0016-.0056-.0035-.0193-.0121c-.0163-.0103-.0395-.0251-.0692-.0444-.0594-.0384-.1446-.0946-.252-.1676-.2148-.1461-.5187-.3601-.882-.6365-.72539-.5519-1.69418-1.3571-2.6654-2.3702-1.92097-2.0038-3.9586-4.9336-3.9586-8.4013 0-4.51592 3.70204-8.16172 8.25-8.16172 4.548 0 8.25 3.6458 8.25 8.16172 0 3.4677-2.0376 6.3975-3.9586 8.4013-.9712 1.0131-1.94 1.8183-2.6654 2.3702-.3633.2764-.6672.4904-.882.6365-.1074.073-.1926.1292-.252.1676-.0297.0193-.0529.0341-.0692.0444l-.0193.0121-.0056.0035-.0018.0012s-.0011.0006-.3961-.6369zm0 0 .395.6375c-.242.15-.5485.1497-.7905-.0002z" />
+    </svg>
+  );
+}
+function GlobeIcon16() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <path fill="currentColor" d="m14 8c0 3.3137-2.6863 6-6 6-3.31371 0-6-2.6863-6-6 0-3.31371 2.68629-6 6-6 3.3137 0 6 2.68629 6 6zm-1.0247.5h-2.4846c-.0764 2.0266-.6169 3.3761-1.29711 4.3566 2.02821-.4967 3.57071-2.2308 3.78171-4.3566zm-4.97527 4.2668c.73239-.8505 1.40107-2.0916 1.48997-4.2668h-2.97999c.08891 2.1752.75762 3.4163 1.49002 4.2668zm-1.19356.0899c-.68023-.9806-1.22079-2.3301-1.29721-4.3567h-2.48457c.21106 2.1258 1.75356 3.8599 3.78178 4.3567zm-.29647-5.3567h2.97999c-.08891-2.17522-.75762-3.41632-1.49002-4.26677-.73238.85046-1.40107 2.09156-1.48997 4.26677zm-1.00074 0c.0764-2.02661.61694-3.37607 1.29715-4.35664-2.0282.49675-3.57066 2.23086-3.78172 4.35664zm7.46604 0c-.2111-2.1258-1.7535-3.85992-3.78177-4.35666.68023.98057 1.22077 2.33003 1.29717 4.35666z" />
+    </svg>
+  );
+}
+function ChevronDown12() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+      <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+function LobbyShelfPreview() {
+  const items = [
+    { src: '/shelf/wonka.avif',             alt: 'Movie poster' },
+    { src: '/shelf/walt.webp',              alt: 'Walt Disney portrait' },
+    { src: '/shelf/ready-player-one.jpeg',  alt: 'Movie poster' },
+    { src: '/shelf/epcot.jpg',              alt: 'Spaceship Earth' },
+    { src: '/shelf/moon.jpeg',              alt: 'Moon' },
+  ];
+  return (
+    <div className="fp-lobby-shelf">
+      <div className="fp-lobby-shelf-stage">
+        <div className="fp-lobby-shelf-items">
+          {items.map((it, i) => (
+            <div key={i} className="fp-lobby-shelf-item">
+              <img src={it.src} alt={it.alt} />
+            </div>
+          ))}
+        </div>
+        <div className="fp-lobby-shelf-base" />
+      </div>
+    </div>
+  );
+}
+
+function LobbyEmbedPreview() {
+  const [config, setConfig] = useState('booking_only');
+  const [theme, setTheme] = useState('dark');
+  const [accent, setAccent] = useState('blue');
+  const baseUrl = 'https://ro.am/joe/lobby-7';
+  const accentHex = {
+    red:    '#FF4D4F',
+    orange: '#FFB020',
+    green:  '#22C55E',
+    blue:   '#0059DC',
+    purple: '#7C3AED',
+  }[accent];
+  const snippet = config === 'drop_in_button'
+    ? `<!-- Roam inline widget begin -->
+<div id="roam-lobby" style="width: 300px;"></div>
+<script type="text/javascript" src="https://ro.am/lobbylinks/embed.js"></script>
+<script>
+  const parentElement = document.getElementById("roam-lobby");
+  Roam.initLobbyEmbed({
+    url: "${baseUrl}",
+    parentElement,
+    lobbyConfiguration: "${config}",
+    theme: "${theme}",
+  });
+</script>
+<!-- Roam inline widget end -->`
+    : `<!-- Roam inline widget begin -->
+<div id="roam-lobby" style="min-width: 320px;"></div>
+<script type="text/javascript" src="https://ro.am/lobbylinks/embed.js"></script>
+<script>
+  const parentElement = document.getElementById("roam-lobby");
+  Roam.initLobbyEmbed({
+    url: "${baseUrl}",
+    parentElement,
+    lobbyConfiguration: "${config}",
+    accentColor: "${accentHex}",
+    theme: "${theme}",
+</script>
+<!-- Roam inline widget end -->`;
+
+  return (
+    <div className="fp-emb-stage">
+      <div className="fp-emb-frame">
+        <LobbyPreview
+          initialNav="my-links"
+          initialSelectedLinkId={1}
+          initialDetailSection="basics"
+          initialLinks={MULTI_HOST_LINKS}
+        />
+        <div className="fp-emb-scrim" />
+        <div className="fp-emb-dialog">
+        <header className="fp-emb-header">
+          <button type="button" className="fp-emb-close" aria-label="Close">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+              <path d="M3.5 3.5L12.5 12.5M12.5 3.5L3.5 12.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+            </svg>
+          </button>
+          <h3 className="fp-emb-title">Embed Lobby</h3>
+        </header>
+        <div className="fp-emb-body">
+          <div className="fp-emb-configs">
+            <EmbedConfig
+              label="Calendar"
+              selected={config === 'booking_only'}
+              accent={accentHex}
+              variant="calendar"
+              onClick={() => setConfig('booking_only')}
+            />
+            <EmbedConfig
+              label="Button"
+              selected={config === 'drop_in_button'}
+              accent={accentHex}
+              variant="button"
+              onClick={() => setConfig('drop_in_button')}
+            />
+            <EmbedConfig
+              label="Both"
+              selected={config === 'default'}
+              accent={accentHex}
+              variant="both"
+              onClick={() => setConfig('default')}
+            />
+          </div>
+          <div className="fp-emb-row">
+            <span className="fp-emb-row-label">Theme</span>
+            <button type="button" className="fp-emb-picker" onClick={() => setTheme((t) => t === 'dark' ? 'light' : 'dark')}>
+              <span>{theme === 'dark' ? 'Dark' : 'Light'}</span>
+            </button>
+          </div>
+          {config !== 'drop_in_button' && (
+            <div className="fp-emb-row">
+              <span className="fp-emb-row-label">Accent Color</span>
+              <div className="fp-emb-colors">
+                {(['red','orange','green','blue','purple']).map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    className={`fp-emb-color ${accent === c ? 'fp-emb-color-active' : ''}`}
+                    style={{ background: { red:'#FF4D4F', orange:'#FFB020', green:'#22C55E', blue:'#0059DC', purple:'#7C3AED' }[c] }}
+                    onClick={() => setAccent(c)}
+                    aria-label={c}
+                  >
+                    {accent === c && (
+                      <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
+                        <path d="M2.5 6.25L4.75 8.5L9.5 3.75" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    )}
+                  </button>
+                ))}
+                <div className="fp-emb-color-add">
+                  <svg width="10" height="10" viewBox="0 0 16 16" fill="none">
+                    <path d="M8 3V13M3 8H13" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          )}
+          <div className="fp-emb-row fp-emb-row-link">
+            <span className="fp-emb-row-label">Advanced Configuration</span>
+            <span className="fp-emb-chev">
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+                <path d="M6 4L10 8L6 12" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </span>
+          </div>
+          <pre className="fp-emb-snippet">{snippet}</pre>
+        </div>
+        <footer className="fp-emb-footer">
+          <button type="button" className="fp-emb-btn fp-emb-btn-secondary">Cancel</button>
+          <button type="button" className="fp-emb-btn fp-emb-btn-primary">Copy Code</button>
+        </footer>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function EmbedConfig({ label, selected, accent, variant, onClick }) {
+  return (
+    <button type="button" className={`fp-emb-config ${selected ? 'fp-emb-config-selected' : ''}`} onClick={onClick}>
+      <div className="fp-emb-config-card">
+        {variant !== 'button' && (
+          <div className="fp-emb-config-cal">
+            <div className="fp-emb-config-grid" style={{ color: accent }}>
+              {Array.from({ length: 12 }).map((_, i) => <span key={i} />)}
+            </div>
+            <div className="fp-emb-config-list">
+              <span /><span /><span /><span />
+            </div>
+          </div>
+        )}
+        {variant !== 'calendar' && (
+          <div className="fp-emb-config-btn" style={{ background: accent }}>Drop-In →</div>
+        )}
+      </div>
+      <span className="fp-emb-config-label">{label}</span>
+    </button>
+  );
+}
+
+function ChevronLeft16() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <path d="M10 4L6 8L10 12" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+function ChevronRight16() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <path d="M6 4L10 8L6 12" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
 }
 
 function OnAirPreview() {
@@ -1242,6 +2229,643 @@ function TodoPreview({ label = 'TODO' } = {}) {
   return (
     <div className="fp-todo-preview">
       <span className="fp-todo-label">{label}</span>
+    </div>
+  );
+}
+
+function formatTrimTime(seconds) {
+  const safe = Math.max(0, Math.floor(seconds));
+  const m = Math.floor(safe / 60);
+  const s = safe % 60;
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
+
+const MAGICAST_TRANSCRIPT = [
+  { time: '0:00', sec: 0, text: 'What\'s up, everyone?' },
+  { time: '0:01', sec: 1, text: 'I appreciate you taking a break from your Claude coding this Sunday morning to watch the Roam February investor update.' },
+  { time: '0:10', sec: 10, text: 'So let\'s get right to it.' },
+  { time: '0:13', sec: 13, text: 'We had our fastest growth month ever in February.' },
+  { time: '0:17', sec: 17, text: 'Roam grew ARR by 14% from January to February.' },
+  { time: '0:22', sec: 22, text: 'This puts our annual growth at right around a 115%.' },
+  { time: '0:25', sec: 25, text: 'We\'re right around $3,000,000 of ARR.' },
+  { time: '0:28', sec: 28, text: 'We were right about 1,000,000 a year ago.' },
+  { time: '0:30', sec: 30, text: 'We intend to be on this classic SaaS triple triple double double double growth rate.' },
+  { time: '0:37', sec: 37, text: 'I actually think we\'re gonna accelerate growth in the upcoming year, probably hitting 10,000,000 or more by the end of the year based on some things we are seeing.' },
+  { time: '0:46', sec: 46, text: 'So we are very encouraged by our progress there.' },
+  { time: '0:49', sec: 49, text: 'Usage for the month was really pretty solid considering that February is a shorter month with three fewer days, but we still saw meetings go up by three and a half percent for the month and chat grow up go up by 4% for the month.' },
+  { time: '1:04', sec: 64, text: 'So usage was good.' },
+  { time: '1:05', sec: 65, text: 'And retention was really a great bright spot for us.' },
+  { time: '1:09', sec: 69, text: 'We saw retention, NDR, net dollar retention at a 116% for the quarter.' },
+  { time: '1:15', sec: 75, text: 'This is right in line with our lifetime average.' },
+  { time: '1:18', sec: 78, text: 'Up ticked up two points, from the prior period, which is pretty solid.' },
+  { time: '1:23', sec: 83, text: 'And the way we compute this is we look at the logos that were with us twelve months ago, and for every dollar they spent, what this means is they spent those same logos, that same cohort spent a buck 16 with us in this period.' },
+  { time: '1:35', sec: 95, text: 'So customers are loving Roam, and they\'re expanding with Roam and they\'re seeing success.' },
+  { time: '1:41', sec: 101, text: 'They\'re seeing incredible productivity.' },
+  { time: '1:43', sec: 103, text: 'Meeting times on average were less than eight minutes.' },
+  { time: '1:47', sec: 107, text: 'On the invention side, we continue to add unbelievable features to Roam.' },
+  { time: '1:52', sec: 112, text: 'We just launched On Air, which is our immersive virtual events platform designed for the creator era.' },
+  { time: '2:00', sec: 120, text: 'It\'s simple enough for anyone to use.' },
+  { time: '2:03', sec: 123, text: 'It obliterates the sort of webinar Yahoo era stuff that\'s complicated and it is the ninth invention in our virtual office super bundle which is very unique.' },
+  { time: '2:15', sec: 135, text: 'It includes nine products.' },
+  { time: '2:17', sec: 137, text: 'You can cancel eight other software products when you use Roam.' },
+  { time: '2:21', sec: 141, text: 'You can cancel Zoom and Calendly.' },
+  { time: '2:23', sec: 143, text: 'You can cancel Loom.' },
+  { time: '2:25', sec: 145, text: 'You can cancel Slack.' },
+  { time: '2:26', sec: 146, text: 'You can cancel now webinar software.' },
+  { time: '2:29', sec: 149, text: 'You can cancel which is expensive and cost a thousand or more per year.' },
+  { time: '2:33', sec: 153, text: 'You can cancel even any AI notetaker you have because Magic Minutes can record all calls on any platform not just Roam calls and this is a very unique place.' },
+  { time: '2:43', sec: 163, text: 'We, you know, have engineered Roam intentionally as part of our pricing and packaging so that you don\'t have to choose between the absolute best and the absolute price point that makes sense for your business.' },
+  { time: '2:57', sec: 177, text: 'And so at Roam, we now offer all the incredible productivity and elite culture that companies benefit from from using our virtual office map, eight minute meetings and AI powered note takers and everything integrated into one thing at the cheapest cost, at the most customer friendly pricing model.' },
+  { time: '3:16', sec: 196, text: 'It\'s billed monthly.' },
+  { time: '3:17', sec: 197, text: 'There\'s one price.' },
+  { time: '3:18', sec: 198, text: 'There\'s no upsells, and you can literally save 93 percent by adopting something that\'s better.' },
+  { time: '3:24', sec: 204, text: 'Roam is better and Roam is cheaper.' },
+  { time: '3:29', sec: 209, text: 'It was a long time ago my dream to have an office building in the middle of New York City and that dream came true, but it was not all it was cracked up to be.' },
+  { time: '3:40', sec: 220, text: 'And then AI came along and I realized that the future belongs to virtual companies in virtual offices with AI woven into every interaction.' },
+  { time: '3:52', sec: 232, text: 'This office is not AI native and you don\'t wanna have one of these.' },
+  { time: '3:57', sec: 237, text: 'What you want is one of these.' },
+  { time: '4:00', sec: 240, text: 'You want a virtual office to power your company\'s productivity to give them elite culture with talent anywhere in the world and instant connection and spontaneous ability to collaborate from anywhere with AI built in the entire way.' },
+  { time: '4:16', sec: 256, text: 'That is what we were building at Roam, one component at a time.' },
+  { time: '4:20', sec: 260, text: 'We now have nine of these components we\'ve built.' },
+  { time: '4:22', sec: 262, text: 'We\'ve got three more incredible components in the works and I can\'t wait to launch them for all of you.' },
+  { time: '4:29', sec: 269, text: 'Thanks for coming along and I will see you on April 1.' },
+];
+
+const MAGICAST_COMMENTS = [
+  {
+    id: 1,
+    name: 'Howard Lerman',
+    avatar: '/headshots/howard-lerman.jpg',
+    time: '00:14',
+    body: 'Strong opener — let’s lead the next call with this same hook 🔥',
+  },
+  {
+    id: 2,
+    name: 'Rob Figueiredo',
+    avatar: '/headshots/rob-figueiredo.jpg',
+    time: '00:42',
+    body: 'Pause here a beat so the ARR number lands.',
+  },
+  {
+    id: 3,
+    name: 'Jeff Grossman',
+    avatar: '/headshots/jeff-grossman.jpg',
+    time: '01:18',
+    body: 'Trim the umm at 1:22, otherwise this is ready to send.',
+  },
+];
+
+const MV_VIDEO_SRC = '/magicast/march-investor-update.mp4';
+const MV_THUMB_COUNT = 8;
+const MV_MIN_GAP = 0.04;
+
+const mvFmt = (sec, padMin = false) => {
+  const safe = Math.max(0, Math.floor(sec));
+  const m = Math.floor(safe / 60);
+  return `${padMin ? String(m).padStart(2, '0') : m}:${String(safe % 60).padStart(2, '0')}`;
+};
+
+const mvMask = (url) => ({ WebkitMaskImage: `url(${url})`, maskImage: `url(${url})` });
+
+const mvHighlight = (text, q) => {
+  if (!q) return text;
+  const lower = text.toLowerCase();
+  const out = [];
+  let cursor = 0;
+  let idx = lower.indexOf(q);
+  let key = 0;
+  while (idx !== -1) {
+    if (idx > cursor) out.push(<span key={key++}>{text.slice(cursor, idx)}</span>);
+    out.push(<mark key={key++} className="fp-mv-tx-mark">{text.slice(idx, idx + q.length)}</mark>);
+    cursor = idx + q.length;
+    idx = lower.indexOf(q, cursor);
+  }
+  if (cursor < text.length) out.push(<span key={key++}>{text.slice(cursor)}</span>);
+  return out;
+};
+
+function MagicastViewerWindow({ initialTrimOpen = true, initialSideTab = 'comments', searchAnimationTerms = null } = {}) {
+  const videoRef = useRef(null);
+  const trackRef = useRef(null);
+  const transcriptListRef = useRef(null);
+  const draggingRef = useRef(null);
+
+  // Trim state
+  const [trimOpen, setTrimOpen] = useState(initialTrimOpen);
+  const [trimStart, setTrimStart] = useState(0.27);
+  const [trimEnd, setTrimEnd] = useState(0.4);
+  const [thumbs, setThumbs] = useState([]);
+
+  // Video state
+  const [duration, setDuration] = useState(35);
+  const [playhead, setPlayhead] = useState(0.14);
+  const [playing, setPlaying] = useState(true);
+  const [muted, setMuted] = useState(true);
+
+  // Sidebar state
+  const [sideTab, setSideTab] = useState(initialSideTab);
+  const [transcriptQuery, setTranscriptQuery] = useState('');
+  const [comments, setComments] = useState(MAGICAST_COMMENTS);
+  const [draft, setDraft] = useState('');
+
+  // ——— Search demo: type → hold → delete → loop ———
+  useEffect(() => {
+    if (!searchAnimationTerms?.length) return;
+    let cancelled = false;
+    const timeouts = [];
+    const wait = (ms) => new Promise((resolve) => {
+      timeouts.push(setTimeout(resolve, ms));
+    });
+    (async () => {
+      for (let termIdx = 0; !cancelled; termIdx++) {
+        const term = searchAnimationTerms[termIdx % searchAnimationTerms.length];
+        for (let i = 1; i <= term.length && !cancelled; i++) {
+          setTranscriptQuery(term.slice(0, i));
+          await wait(110);
+        }
+        await wait(4000);
+        for (let i = term.length; i >= 0 && !cancelled; i--) {
+          setTranscriptQuery(term.slice(0, i));
+          await wait(55);
+        }
+        await wait(500);
+      }
+    })();
+    return () => { cancelled = true; timeouts.forEach(clearTimeout); };
+  }, [searchAnimationTerms]);
+
+  // ——— Video lifecycle: metadata, play/pause, playhead RAF ———
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    const onMeta = () => Number.isFinite(v.duration) && v.duration > 0 && setDuration(v.duration);
+    const onPlay = () => setPlaying(true);
+    const onPause = () => setPlaying(false);
+    onMeta();
+    setPlaying(!v.paused);
+    v.addEventListener('loadedmetadata', onMeta);
+    v.addEventListener('play', onPlay);
+    v.addEventListener('pause', onPause);
+    let raf = 0;
+    const tick = () => {
+      const dur = Number.isFinite(v.duration) && v.duration > 0 ? v.duration : 0;
+      if (dur > 0) setPlayhead(v.currentTime / dur);
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => {
+      cancelAnimationFrame(raf);
+      v.removeEventListener('loadedmetadata', onMeta);
+      v.removeEventListener('play', onPlay);
+      v.removeEventListener('pause', onPause);
+    };
+  }, []);
+
+  // ——— Capture evenly-spaced thumbnails for the trim strip ———
+  useEffect(() => {
+    const video = Object.assign(document.createElement('video'), {
+      src: MV_VIDEO_SRC, muted: true, playsInline: true, preload: 'auto',
+    });
+    const canvas = Object.assign(document.createElement('canvas'), { width: 240, height: 135 });
+    const ctx = canvas.getContext('2d');
+    let cancelled = false;
+    const waitFor = (event) => new Promise((resolve, reject) => {
+      video.addEventListener(event, resolve, { once: true });
+      video.addEventListener('error', reject, { once: true });
+    });
+    (async () => {
+      try {
+        await waitFor('loadedmetadata');
+        if (cancelled) return;
+        const dur = Number.isFinite(video.duration) ? video.duration : 0;
+        if (dur <= 0) return;
+        const frames = [];
+        for (let i = 0; i < MV_THUMB_COUNT && !cancelled; i++) {
+          video.currentTime = MV_THUMB_COUNT === 1
+            ? 0
+            : Math.min((i / (MV_THUMB_COUNT - 1)) * dur, dur - 0.05);
+          await waitFor('seeked');
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          frames.push(canvas.toDataURL('image/jpeg', 0.82));
+        }
+        if (!cancelled) setThumbs(frames);
+      } catch { /* ignore — placeholder shows */ }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  // ——— Active transcript row + auto-scroll into view ———
+  const activeTranscriptIdx = useMemo(() => {
+    const sec = playhead * duration;
+    let idx = 0;
+    for (let i = 0; i < MAGICAST_TRANSCRIPT.length; i++) {
+      if (MAGICAST_TRANSCRIPT[i].sec <= sec) idx = i;
+    }
+    return idx;
+  }, [playhead, duration]);
+
+  useEffect(() => {
+    if (sideTab !== 'transcript' || transcriptQuery.trim()) return;
+    const list = transcriptListRef.current;
+    const row = list?.querySelector(`[data-transcript-idx="${activeTranscriptIdx}"]`);
+    if (!list || !row) return;
+    const listRect = list.getBoundingClientRect();
+    const rowRect = row.getBoundingClientRect();
+    const targetTop = rowRect.top - listRect.top + list.scrollTop - list.clientHeight / 2 + rowRect.height / 2;
+    list.scrollTo({ top: targetTop, behavior: 'smooth' });
+  }, [activeTranscriptIdx, sideTab, transcriptQuery]);
+
+  // ——— Filtered transcript ———
+  const filteredTranscript = useMemo(() => {
+    const q = transcriptQuery.trim().toLowerCase();
+    const all = MAGICAST_TRANSCRIPT.map((entry, i) => ({ entry, i }));
+    return q ? all.filter(({ entry }) => entry.text.toLowerCase().includes(q)) : all;
+  }, [transcriptQuery]);
+
+  // ——— Player controls ———
+  const togglePlay = () => {
+    const v = videoRef.current;
+    if (!v) return;
+    if (v.paused) v.play().catch(() => {});
+    else v.pause();
+  };
+  const toggleMute = () => {
+    const v = videoRef.current;
+    if (!v) return;
+    v.muted = !v.muted;
+    setMuted(v.muted);
+  };
+  const seekTo = (sec) => {
+    const v = videoRef.current;
+    if (!v) return;
+    v.currentTime = sec;
+    v.play().catch(() => {});
+  };
+
+  // ——— Trim handle drag ———
+  const fromClientX = (clientX) => {
+    const rect = trackRef.current?.getBoundingClientRect();
+    if (!rect) return 0;
+    return Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+  };
+  const updateHandle = (handle, clientX) => {
+    const x = fromClientX(clientX);
+    if (handle === 'start') setTrimStart(Math.min(x, trimEnd - MV_MIN_GAP));
+    else setTrimEnd(Math.max(x, trimStart + MV_MIN_GAP));
+  };
+  const onHandleDown = (handle) => (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+    draggingRef.current = handle;
+    updateHandle(handle, e.clientX);
+  };
+  const onHandleMove = (e) => {
+    if (!draggingRef.current) return;
+    if (e.pointerType && !e.currentTarget.hasPointerCapture?.(e.pointerId)) return;
+    updateHandle(draggingRef.current, e.clientX);
+  };
+  const onHandleUp = (e) => {
+    e.currentTarget.releasePointerCapture?.(e.pointerId);
+    draggingRef.current = null;
+  };
+
+  // ——— Comments composer ———
+  const submitComment = () => {
+    const text = draft.trim();
+    if (!text) return;
+    setComments((prev) => [
+      ...prev,
+      {
+        id: Date.now(),
+        name: 'You',
+        avatar: '/headshots/joe-woodward.jpg',
+        time: mvFmt(playhead * duration, true),
+        body: text,
+      },
+    ]);
+    setDraft('');
+  };
+
+  return (
+    <div className="fp-mv-win">
+      <div className="fp-mv-titlebar">
+        <div className="fp-mv-lights" aria-hidden="true">
+          <span className="fp-mv-light fp-mv-light-close" />
+          <span className="fp-mv-light fp-mv-light-min" />
+          <span className="fp-mv-light fp-mv-light-max" />
+        </div>
+        <div className="fp-mv-title-text">
+          <div className="fp-mv-title">March Investor Update</div>
+          <div className="fp-mv-subtitle">Howard Lerman · April 11, 5:02 PM</div>
+        </div>
+        <div className="fp-mv-title-actions">
+          {[
+            { label: 'Download', icon: '/icons/magicast-titlebar/download.svg' },
+            { label: 'Closed captions', icon: '/icons/magicast-titlebar/closed-captions.svg' },
+            { label: 'Copy link', icon: '/icons/magicast-titlebar/link.svg' },
+            { label: 'Send to', icon: '/icons/mm-send-btn.svg' },
+          ].map(({ label, icon }) => (
+            <button key={label} type="button" className="fp-mv-icon-btn" aria-label={label}>
+              <span className="fp-mv-icon-glyph" style={mvMask(icon)} aria-hidden="true" />
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="fp-mv-body">
+        <div className="fp-mv-main">
+          <div className="fp-mv-stage-pad">
+            <div className="fp-mv-stage">
+              <video
+                ref={videoRef}
+                className="fp-mv-video"
+                src={MV_VIDEO_SRC}
+                autoPlay
+                loop
+                muted
+                playsInline
+                onClick={togglePlay}
+              />
+              {!playing && (
+                <button
+                  type="button"
+                  className="fp-mv-stage-play-overlay"
+                  aria-label="Play"
+                  onClick={togglePlay}
+                >
+                  <svg width="56" height="56" viewBox="0 0 56 56" fill="#ffffff" aria-hidden="true">
+                    <path d="M18 12l24 16-24 16z" />
+                  </svg>
+                </button>
+              )}
+              <div className="fp-mv-stage-fade" />
+              <div className="fp-mv-controls">
+                <span className="fp-mv-time">
+                  <span>{mvFmt(playhead * duration)}</span>
+                  <span className="fp-mv-time-sep">/</span>
+                  <span>{mvFmt(duration)}</span>
+                </span>
+                <div className="fp-mv-controls-spacer" />
+                <button type="button" className="fp-mv-icon-btn fp-mv-icon-btn-light" aria-label="Set cover">
+                  <span className="fp-mv-icon-glyph" style={mvMask('/magicast/player-image.svg')} aria-hidden="true" />
+                </button>
+                <button
+                  type="button"
+                  className={`fp-mv-icon-btn fp-mv-icon-btn-light ${trimOpen ? 'fp-mv-icon-btn-active' : ''}`}
+                  aria-label="Trim"
+                  aria-pressed={trimOpen}
+                  onClick={() => setTrimOpen((v) => !v)}
+                >
+                  <span className="fp-mv-icon-glyph" style={mvMask('/magicast/player-trim.svg')} aria-hidden="true" />
+                </button>
+                <button
+                  type="button"
+                  className="fp-mv-icon-btn fp-mv-icon-btn-light"
+                  aria-label={muted ? 'Unmute' : 'Mute'}
+                  onClick={toggleMute}
+                >
+                  <span
+                    className="fp-mv-icon-glyph"
+                    style={mvMask(muted ? '/magicast/player-muted.svg' : '/magicast/player-volume.svg')}
+                    aria-hidden="true"
+                  />
+                </button>
+                <button type="button" className="fp-mv-icon-btn fp-mv-icon-btn-light" aria-label="Fullscreen">
+                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M3 6.75V3h3.75M11.25 3H15v3.75M15 11.25V15h-3.75M6.75 15H3v-3.75" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                </button>
+              </div>
+            </div>
+            <div
+              className={`fp-mv-trim-collapse ${trimOpen ? 'fp-mv-trim-collapse-open' : ''}`}
+              aria-hidden={!trimOpen}
+            >
+              <div className="fp-mv-trim-collapse-inner">
+                <div className="fp-mv-trim-track" ref={trackRef}>
+                  <div className="fp-mv-trim-thumbs">
+                    {Array.from({ length: MV_THUMB_COUNT }).map((_, i) => (
+                      <div
+                        key={i}
+                        className="fp-mv-trim-thumb"
+                        style={thumbs[i] ? { backgroundImage: `url(${thumbs[i]})` } : undefined}
+                      />
+                    ))}
+                  </div>
+                  <div className="fp-mv-trim-shade" style={{ width: `${trimStart * 100}%` }} />
+                  <div className="fp-mv-trim-shade" style={{ left: `${trimEnd * 100}%`, right: 0 }} />
+                  <div
+                    className="fp-mv-trim-selection"
+                    style={{ left: `${trimStart * 100}%`, right: `${100 - trimEnd * 100}%` }}
+                  />
+                  <button
+                    type="button"
+                    className="fp-mv-trim-handle fp-mv-trim-handle-start"
+                    style={{ left: `${trimStart * 100}%` }}
+                    aria-label="Trim start"
+                    tabIndex={trimOpen ? 0 : -1}
+                    onPointerDown={onHandleDown('start')}
+                    onPointerMove={onHandleMove}
+                    onPointerUp={onHandleUp}
+                  />
+                  <button
+                    type="button"
+                    className="fp-mv-trim-handle fp-mv-trim-handle-end"
+                    style={{ left: `${trimEnd * 100}%` }}
+                    aria-label="Trim end"
+                    tabIndex={trimOpen ? 0 : -1}
+                    onPointerDown={onHandleDown('end')}
+                    onPointerMove={onHandleMove}
+                    onPointerUp={onHandleUp}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+          <div
+            className={`fp-mv-actions-collapse ${trimOpen ? 'fp-mv-actions-collapse-open' : ''}`}
+            aria-hidden={!trimOpen}
+          >
+            <div className="fp-mv-actions-collapse-inner">
+              <div className="fp-mv-actions">
+                <div className="fp-mv-actions-spacer" />
+                <button
+                  type="button"
+                  className="fp-mv-btn fp-mv-btn-secondary"
+                  onClick={() => setTrimOpen(false)}
+                  tabIndex={trimOpen ? 0 : -1}
+                >Cancel</button>
+                <button
+                  type="button"
+                  className="fp-mv-btn fp-mv-btn-primary"
+                  onClick={() => setTrimOpen(false)}
+                  tabIndex={trimOpen ? 0 : -1}
+                >Trim</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="fp-mv-side">
+          <div className="fp-mv-side-tabs">
+            <button
+              type="button"
+              className={`fp-mv-tab ${sideTab === 'comments' ? 'fp-mv-tab-active' : ''}`}
+              onClick={() => setSideTab('comments')}
+            >Comments</button>
+            <button
+              type="button"
+              className={`fp-mv-tab ${sideTab === 'transcript' ? 'fp-mv-tab-active' : ''}`}
+              onClick={() => setSideTab('transcript')}
+            >Transcript</button>
+          </div>
+          {sideTab === 'transcript' && (
+            <>
+              <div className="fp-mv-tx-search">
+                {searchAnimationTerms ? (
+                  <div className="fp-mv-tx-search-faux" aria-hidden="true">
+                    <span className="fp-mv-tx-search-faux-text">{transcriptQuery}</span>
+                    <span className="fp-mv-tx-search-cursor" />
+                  </div>
+                ) : (
+                  <input
+                    type="text"
+                    className="fp-mv-tx-search-input"
+                    placeholder="Search"
+                    value={transcriptQuery}
+                    onChange={(e) => setTranscriptQuery(e.target.value)}
+                  />
+                )}
+              </div>
+              <div className="fp-mv-tx-list" ref={transcriptListRef}>
+                {filteredTranscript.length === 0 ? (
+                  <div className="fp-mv-tx-empty">No matches for &ldquo;{transcriptQuery}&rdquo;</div>
+                ) : filteredTranscript.map(({ entry, i }) => (
+                  <button
+                    key={i}
+                    type="button"
+                    data-transcript-idx={i}
+                    className={`fp-mv-tx-row ${i === activeTranscriptIdx ? 'fp-mv-tx-row-active' : ''}`}
+                    onClick={() => seekTo(entry.sec)}
+                  >
+                    <span className="fp-mv-time-pill">{entry.time}</span>
+                    <span className="fp-mv-tx-body">{mvHighlight(entry.text, transcriptQuery.trim().toLowerCase())}</span>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+          {sideTab === 'comments' && (
+            <>
+          <div className="fp-mv-side-body">
+            {comments.map((c) => (
+              <div key={c.id} className="fp-mv-comment">
+                <img className="fp-mv-comment-avatar" src={c.avatar} alt="" />
+                <div className="fp-mv-comment-content">
+                  <div className="fp-mv-comment-name">{c.name}</div>
+                  <div className="fp-mv-comment-line">
+                    <span className="fp-mv-time-pill">{c.time}</span>
+                    <span className="fp-mv-comment-body">{c.body}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="fp-mv-composer">
+            <div className="fp-mv-composer-toolbar">
+              <button type="button" className="fp-mv-composer-btn fp-mv-composer-btn-tempo" aria-label="Timecode">
+                <span className="fp-mv-composer-glyph" style={mvMask('/magicast/composer-clock-stop.svg')} aria-hidden="true" />
+              </button>
+              <button type="button" className="fp-mv-composer-btn" aria-label="Emoji">
+                <span className="fp-mv-composer-glyph" style={mvMask('/magicast/composer-emoji.svg')} aria-hidden="true" />
+              </button>
+            </div>
+            <div className="fp-mv-composer-input">
+              <span className="fp-mv-time-pill">{mvFmt(playhead * duration, true)}</span>
+              <input
+                className="fp-mv-composer-field"
+                type="text"
+                placeholder="Leave Your Comment…"
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); submitComment(); } }}
+              />
+              <button
+                type="button"
+                className={`fp-mv-composer-send ${draft.trim() ? 'fp-mv-composer-send-active' : ''}`}
+                aria-label="Send"
+                onClick={submitComment}
+                disabled={!draft.trim()}
+              >
+                <span className="fp-mv-composer-glyph" style={mvMask('/icons/composer/Send.svg')} aria-hidden="true" />
+              </button>
+            </div>
+          </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MagicastShareSection() {
+  const [copied, setCopied] = useState(false);
+  const [requirePassword, setRequirePassword] = useState(false);
+  const url = 'https://ro.am/share/indxotgx-12kpzwa3-1rl013bl-npl909dx';
+  const onCopy = () => {
+    try {
+      navigator.clipboard?.writeText(url);
+    } catch {}
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+  return (
+    <div className="fp-mvs-stage">
+      <div className="fp-mvs-frame">
+        <MagicastViewerWindow initialTrimOpen={false} />
+        <div className="fp-mvs-scrim" />
+        <div className="fp-mvs-dialog" role="dialog" aria-label="Share Magicast">
+        <header className="fp-mvs-header">
+          <button type="button" className="fp-mvs-close" aria-label="Close">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+              <path d="M3.5 3.5L12.5 12.5M12.5 3.5L3.5 12.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+            </svg>
+          </button>
+          <h3 className="fp-mvs-title">Share Magicast</h3>
+        </header>
+        <div className="fp-mvs-body">
+          <div className="fp-mvs-section">
+            <div className="fp-mvs-section-label">Share Link</div>
+            <div className="fp-mvs-link-row">
+              <span className="fp-mvs-link-url">{url}</span>
+              <button
+                type="button"
+                className="fp-mvs-link-copy-btn"
+                onClick={onCopy}
+                aria-label={copied ? 'Copied' : 'Copy link'}
+                title={copied ? 'Copied' : 'Copy link'}
+              >
+                <span
+                  className="fp-mvs-link-copy-glyph"
+                  style={mvMask(copied ? '/magicast/copied.svg' : '/magicast/copy.svg')}
+                  aria-hidden="true"
+                />
+              </button>
+            </div>
+          </div>
+          <div className="fp-mvs-row">
+            <span className="fp-mvs-row-label">Require Password</span>
+            <button
+              type="button"
+              className={`fp-mvs-toggle ${requirePassword ? 'fp-mvs-toggle-on' : ''}`}
+              onClick={() => setRequirePassword((v) => !v)}
+              aria-pressed={requirePassword}
+              aria-label="Require Password"
+            >
+              <span className="fp-mvs-toggle-knob" />
+            </button>
+          </div>
+        </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -4049,6 +5673,11 @@ export const FEATURES = {
         ),
       },
       {
+        title: 'Transcriptions & Translations in 16+ Languages',
+        desc: 'Magic Minutes boasts extensive multilingual capabilities, empowering users to generate written content across a broad spectrum of languages. Available in 30+ languages including English, Spanish, Chinese, Portuguese, French, and many more.',
+        visual: <MagicMinutesTranslationsPreview />,
+      },
+      {
         variant: 'columns',
         columnsStyle: 'cards',
         columns: [
@@ -4059,10 +5688,6 @@ export const FEATURES = {
           {
             title: 'Stop & Shred',
             desc: 'At any time during a meeting, stop it, and shred the Magic Minutes. So they’ll never be saved or summarized.',
-          },
-          {
-            title: 'Global',
-            desc: 'Magic Minutes is available in 30+ languages including English, Spanish, Chinese, Portuguese, French, and many more!',
           },
         ],
       },
@@ -4124,52 +5749,250 @@ export const FEATURES = {
   },
   'lobby': {
     eyebrow: 'Lobby',
-    title: 'Scheduling, with a drop-in door',
-    hero: 'A scheduling link that also lets guests walk in the second you’re free. Like a booking page, but with a doorbell.',
-    visual: <LobbyPreview />,
+    title: 'A booking page with a doorbell.',
+    hero: 'A scheduling link that also lets guests walk in the second you’re free.',
+    visual: <LobbyBookingPreview />,
     sections: [
       {
-        title: 'Your personal Lobby',
-        desc: 'A branded link you can hand to anyone. They pick a time, or — if you’re around — they just knock on the door right now.',
-        visual: <LobbyPreview />,
+        title: 'Set Your Lobby Link',
+        desc: 'Pick your unique handle on the ro.am URL — any name that’s available, first come first serve. Verified Roamaniacs get special rights to a Premium Reserve handle, including first names and rare words. Hand out something like ro.am/henryford instead of a 40-character Calendly link.',
+        visual: <LobbyPreview initialNav="my-links" initialSelectedLinkId={1} initialDetailSection="basics" />,
       },
       {
-        title: 'Rules that fit your rhythm',
-        desc: 'Set buffers, daily caps, minimum notice, and meeting-type limits. No more back-to-back days you didn’t sign up for.',
+        title: 'Scheduling Settings',
+        desc: 'Buffers, minimum notice, daily caps, and a custom availability window — per Lobby. Set it once and your calendar stops getting trampled.',
+        visual: <LobbyPreview initialNav="my-links" initialSelectedLinkId={1} initialDetailSection="scheduling" />,
       },
       {
-        title: 'Multiple Lobbies',
-        desc: 'Spin up separate links for sales, support, hiring, or office hours — each with its own settings and its own visual identity.',
+        title: 'Drop-In Meetings',
+        desc: 'Roam knows when you’re free and flips your Lobby to available automatically. Guests skip the calendar dance and walk in right away. Software shouldn’t be sold like shoes — make it easy to talk to a human the second you’re ready.',
+        visual: <LobbyPreview initialNav="my-links" initialSelectedLinkId={1} initialDetailSection="availability" />,
       },
       {
-        title: 'Drop-in mode',
-        desc: 'Flip a toggle and the Lobby shows you as available. Guests skip the calendar dance and walk in right away.',
+        title: 'Different Lobbies for Different Use Cases',
+        desc: 'Spin up separate links for sales, support, hiring, or office hours — each with its own availability, its own design, its own routing. VIPs get a different door than everyone else.',
+        visual: <LobbyPreview initialLinks={USE_CASE_LINKS} />,
       },
+      {
+        title: 'Design Your Lobby',
+        desc: 'Add your logo, pick a background color, choose a texture, and toggle the verification badge. Your Lobby looks like you, not like a generic booking page.',
+        visual: <LobbyPreview initialNav="my-links" initialSelectedLinkId={1} initialDetailSection="design" />,
+      },
+      {
+        title: 'Custom Form',
+        desc: 'Add custom fields to the pre-booking form to collect exactly the information you want. Qualify the lead, capture the use case, or just ask for the company size — before the meeting starts.',
+        visual: <LobbyPreview initialNav="my-links" initialSelectedLinkId={1} initialDetailSection="booking-form" />,
+      },
+      {
+        title: 'Set Guest Destination',
+        desc: 'Route guests to your Private Office, a fully-featured video conferencing room, or a shared Reception room. Dynamic routing means inbound leads land where they need to be without you babysitting the inbox.',
+        visual: <LobbyPreview initialNav="my-links" initialSelectedLinkId={1} initialDetailSection="destination" />,
+      },
+      {
+        title: 'Multiple Hosts',
+        desc: 'Add multiple required hosts to a Lobby. Roam shows guests only the slots where everyone is free — no more six-person Doodle polls.',
+        visual: <LobbyPreview initialNav="my-links" initialSelectedLinkId={1} initialDetailSection="basics" initialLinks={MULTI_HOST_LINKS} />,
+      },
+      {
+        title: 'Round Robin Hosts',
+        desc: 'Pool availability across a group — sales, support, recruiting — and Roam routes the booking to whoever picks up next. Great for keeping queues moving without a coordinator.',
+        visual: <LobbyPreview initialNav="my-links" initialSelectedLinkId={1} initialDetailSection="basics" initialLinks={ROUND_ROBIN_LINKS} scrollDetailToBottom />,
+      },
+      {
+        title: 'Embed',
+        desc: 'Drop your Lobby — drop-in button included — straight into your website. Copy the snippet, paste it in, done.',
+        visual: <LobbyEmbedPreview />,
+      },
+      {
+        title: 'Company Lobby Links',
+        desc: 'Team-wide links that share availability across your company, all on the same ro.am domain. One set of links your whole company can hand out.',
+        visual: <LobbyPreview initialNav="hq-links" />,
+      },
+      {
+        title: 'Virtual Shelf on Company Lobby',
+        desc: 'Show off awards, photos, press, and product moments in the virtual waiting room while guests wait for the meeting to start. Your Lobby does the work of the front desk and the trophy case.',
+        visual: <LobbyShelfPreview />,
+      },
+      {
+        variant: 'explore',
+        title: 'Why Lobby?',
+        itemMarker: 'bullet',
+        items: [
+          'Take back control of your calendar — the rules you set, every time.',
+          'Drop-in capability turns scheduled meetings into right-now conversations.',
+          'Selectively share availability — VIPs, customers, and the public each get their own door.',
+          'A branded, professional Lobby that looks like your company, not a generic form.',
+          'Multiple hosts, round robin, and reception flows handle the messy real-world cases.',
+        ],
+      },
+      {
+        variant: 'explore',
+        title: 'Why Roam Lobby vs. Calendly, Zoom Scheduler, or Google Meet?',
+        itemMarker: 'bullet',
+        items: [
+          'Drop-in meetings — Roam is the only scheduler where guests can walk in the second you’re free.',
+          'Native to your Virtual HQ — bookings land in your office, not a random video link.',
+          'Overflow-aware — your Lobby knows when you’re actually slammed and adjusts.',
+          'Cost — Roam Lobby is included in $19.50/month per active member, alongside 8 other products. Calendly is $16/month for scheduling alone.',
+        ],
+      },
+      {
+        variant: 'explore',
+        title: 'Explore our Virtual Office Platform',
+        desc: '9 products for the price of one:',
+        items: [
+          'Company Visualization with the Virtual Office',
+          'Virtual Meeting Room with Drop-In Meetings',
+          'All-Hands Presentations with Theater',
+          'Enterprise Messaging with AInbox',
+          'Meeting Scheduler with Lobby',
+          'Screen Recorder with Magicast',
+          'AI Meeting Summarization with Magic Minutes',
+          'Your AI Assistant is On-It',
+          'Immersive Events with On-Air',
+        ],
+      },
+      { variant: 'reviews' },
+      STANDARD_PRICING_COMPARE,
     ],
   },
   'magicast': {
     eyebrow: 'Magicast',
     title: 'Record, edit, and share — without leaving Roam',
-    hero: 'A built-in screen recorder with picture-in-picture video, instant transcripts, and one-click sharing to any chat.',
-    visual: <MagicastPreview />,
+    hero: 'Create polished, professional videos in seconds, right from Roam. A built-in screen recorder with picture-in-picture video, instant transcripts, and one-click sharing to any chat. No external tool, no upload step.',
+    visual: <MagicastFeatureVisual theme="dark" anchor="bottom-right" bare />,
     sections: [
       {
-        title: 'Capture anything on screen',
-        desc: 'Click record. Talk through your demo. Stop. That’s a finished Magicast — no external tool, no upload step.',
-        visual: <MagicastPreview />,
+        title: 'Perfect Your Appearance with Magicast Effects',
+        desc: 'Touch up your face, add background blur, or swap in a virtual background. Look ready even if the room behind you isn’t.',
+        visual: <MagicastFeatureVisual theme="dark" bare effectsOpen hideBubble />,
       },
       {
-        title: 'On-camera without the drama',
-        desc: 'Touch-ups, background blur, and swappable backgrounds keep you looking ready even if the room behind you isn’t.',
+        title: 'Trim Your Magicast',
+        desc: 'Start with a bang and end with emphasis! Snip the fumbles off both ends so every Magicast lands crisp. Transcripts update automatically as you cut.',
+        visual: <MagicastViewerWindow />,
       },
       {
-        title: 'Trim the dead air',
-        desc: 'Snip the fumbles off both ends so every Magicast lands crisp. Transcripts update automatically as you cut.',
+        title: 'Integrated with AInbox',
+        desc: 'Share your Magicast recordings natively with groups and DMs through AInbox. The recording lives where the conversation happens.',
+        visual: (
+          <AInboxPreview
+            overrides
+            view="chat"
+            chatId="all-hands"
+            messagesOverride={MAGICAST_SHARE_AH_MESSAGES}
+            initialCollapsedSections={{ meetings: true }}
+          />
+        ),
       },
       {
-        title: 'Share anywhere',
-        desc: 'Drop into a group chat, DM a colleague, or send a public link to someone outside the company. Every recording comes with a searchable transcript.',
+        title: 'Share Your Magicast',
+        desc: 'Send a link with your Magicast to anyone, anywhere. Drop into a group chat, DM a colleague, or send a public link to someone outside the company.',
+        visual: <MagicastShareSection />,
       },
+      {
+        title: 'Interactive Transcription',
+        desc: 'Within seconds, get a fully interactive transcript of your Magicast. Click any line to jump to that part of the recording.',
+        visual: <MagicastViewerWindow initialTrimOpen={false} initialSideTab="transcript" />,
+      },
+      {
+        title: 'Search Magicast Transcript',
+        desc: 'Jump right to a specific moment in your Magicast with powerful transcript search.',
+        visual: (
+          <MagicastViewerWindow
+            initialTrimOpen={false}
+            initialSideTab="transcript"
+            searchAnimationTerms={['ARR', 'retention', 'Slack', 'growth', 'Magic Minutes']}
+          />
+        ),
+      },
+      {
+        title: 'AI Assistant Integration',
+        desc: 'Direct your AI Assistant to share Magicast recordings effortlessly. Instruct it to send a Product Demo video to a prospect or share a bug report with a developer. Coming soon.',
+        visual: (
+          <OnItFeatureChat
+            initialMessages={[
+              { id: 1, self: true, text: 'Can you share my March Investor Update Magicast with Sean MacIsaac, Klas Leino, and Thomas Grapperon?' },
+              { id: 2, self: false, text: "I'm On-It! Sending the Magicast to Sean, Klas, and Thomas now — I'll let you know once they've all opened it." },
+            ]}
+            taskSummary="Share March Investor Update with Sean, Klas, and Thomas"
+            taskSteps={[
+              'Resolving Sean, Klas, and Thomas in the company directory',
+              'Pulling the March Investor Update from your Magicasts',
+              'Generating a share link with comments enabled',
+              'Sending the link to each of them via DM',
+              'Watching for opens and notifying You',
+            ]}
+          />
+        ),
+      },
+      {
+        variant: 'split',
+        title: 'Why Roam Magicast?',
+        bullets: [
+          'Embedded directly in your Virtual HQ — no extension, no separate desktop app to install.',
+          'Picture-in-picture video with circle, square, and custom shape options.',
+          'Native AInbox integration — share into any group or DM in one click.',
+          'Interactive transcripts you can search and click to scrub.',
+          'AI Assistant can share Magicasts on your behalf.',
+          'Just $19.50/month per active member, bundled with 8 other products. Loom alone is $20/month.',
+        ],
+      },
+      {
+        variant: 'compare-table',
+        columns: [
+          { label: 'Magicast' },
+          { label: 'Loom' },
+        ],
+        rows: [
+          { left: 'Nothing to install. Embedded in existing Roam app.', right: 'Download separate app.' },
+          { left: 'No clunky browser extension. Just embedded right in Roam.', right: 'Clunky browser extension always in your face.' },
+          { left: 'AInbox Integration. Prompt your meetings, chats, and media including Magicast transcripts.', right: 'Not native.' },
+          { left: 'Fully included in the Virtual Office Super Bundle.', right: '$20.00/month' },
+          { left: 'Monthly billing.', right: 'Annual upfront.' },
+          {
+            left: {
+              lead: 'AI Agents',
+              items: [
+                'Tell your AI Agent to email a Magicast.',
+                'Tell your AI Agent to submit a bug report.',
+              ],
+            },
+            right: 'Not native.',
+          },
+        ],
+      },
+      {
+        variant: 'explore',
+        title: 'Screen Recording Use Cases',
+        itemMarker: 'bullet',
+        items: [
+          'Investor updates — share a quick walkthrough instead of scheduling another meeting.',
+          'Bug reports — record the repro once, send the link to engineering.',
+          'Sales pitches — leave a personalized demo for prospects to watch on their time.',
+          'Customer support — show the fix instead of writing a five-paragraph email.',
+          'Design ideas — talk through the mock while the team is asleep.',
+          'Onboarding — record once, ramp every new hire.',
+        ],
+      },
+      {
+        variant: 'explore',
+        title: 'Explore our Virtual Office Platform',
+        desc: '9 products for the price of one:',
+        items: [
+          'Company Visualization with the Virtual Office',
+          'Virtual Meeting Room with Drop-In Meetings',
+          'All-Hands Presentations with Theater',
+          'Enterprise Messaging with AInbox',
+          'Meeting Scheduler with Lobby',
+          'Screen Recorder with Magicast',
+          'AI Meeting Summarization with Magic Minutes',
+          'Your AI Assistant is On-It',
+          'Immersive Events with On-Air',
+        ],
+      },
+      { variant: 'reviews' },
+      STANDARD_PRICING_COMPARE,
     ],
   },
   'on-air': {
@@ -4289,7 +6112,7 @@ function SectionLinkButton({ featureSlug, slug }) {
   );
 }
 
-function FeatureSection({ eyebrow, title, subtitle, titleImage, desc, visual, icons, variant, cards, bullets, left, right, columns, columnsStyle, leadContent, items, itemMarker, flashcards, featureSlug }) {
+function FeatureSection({ eyebrow, title, subtitle, titleImage, desc, visual, icons, variant, cards, bullets, left, right, columns, columnsStyle, leadContent, items, itemMarker, flashcards, featureSlug, rows }) {
   if (variant === 'reviews') {
     return <HomepageReviews limit={items?.length || 6} />;
   }
@@ -4336,7 +6159,7 @@ function FeatureSection({ eyebrow, title, subtitle, titleImage, desc, visual, ic
   }
   if (variant === 'columns' && columns && columns.length > 0) {
     return (
-      <section className={`fp-section fp-section-columns${columnsStyle === 'cards' ? ' fp-section-columns-cards' : ''}`}>
+      <section className={`fp-section fp-section-columns${columnsStyle === 'cards' ? ' fp-section-columns-cards' : ''} fp-section-columns-${columns.length}`}>
         {columns.map((c, i) => (
           <div key={i} className="fp-col">
             {c.visual && <div className="fp-col-visual">{c.visual}</div>}
@@ -4360,6 +6183,49 @@ function FeatureSection({ eyebrow, title, subtitle, titleImage, desc, visual, ic
       <section className="fp-section fp-section-compare">
         <CompareColumn side="left" data={left} />
         <CompareColumn side="right" data={right} />
+      </section>
+    );
+  }
+  if (variant === 'compare-table' && columns && rows) {
+    const renderCell = (cell) => {
+      if (cell && typeof cell === 'object' && Array.isArray(cell.items)) {
+        return (
+          <div className="fp-cmp-cell-stack">
+            {cell.lead && <div className="fp-cmp-cell-lead">{cell.lead}</div>}
+            <ul className="fp-cmp-cell-items">
+              {cell.items.map((it, i) => <li key={i}>{it}</li>)}
+            </ul>
+          </div>
+        );
+      }
+      return <span className="fp-cmp-cell-text">{cell}</span>;
+    };
+    return (
+      <section className="fp-section fp-section-compare-table">
+        {title && <h2 className="fp-cmp-title">{title}</h2>}
+        <div className="fp-cmp-table">
+          <div className="fp-cmp-row fp-cmp-row-head">
+            {columns.map((c, i) => (
+              <div key={i} className="fp-cmp-head-cell">{c.label}</div>
+            ))}
+          </div>
+          {rows.map((row, ri) => (
+            <div key={ri} className="fp-cmp-row">
+              <div className="fp-cmp-cell fp-cmp-cell-pos">
+                <span className="fp-cmp-mark fp-cmp-mark-pos" aria-hidden="true">
+                  <span className="fp-cmp-mark-glyph" style={mvMask('/magicast/cmp-checkmark.svg')} />
+                </span>
+                {renderCell(row.left)}
+              </div>
+              <div className="fp-cmp-cell fp-cmp-cell-neg">
+                <span className="fp-cmp-mark fp-cmp-mark-neg" aria-hidden="true">
+                  <span className="fp-cmp-mark-glyph" style={mvMask('/magicast/cmp-dismiss.svg')} />
+                </span>
+                {renderCell(row.right)}
+              </div>
+            </div>
+          ))}
+        </div>
       </section>
     );
   }

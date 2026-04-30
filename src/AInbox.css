@@ -1816,6 +1816,117 @@
   letter-spacing: -0.15px;
 }
 
+/* Shared magicast embed inside a group message */
+.ainbox-magicast-embed {
+  width: 400px;
+  max-width: 100%;
+  background: var(--bg-surface-elevated-secondary);
+  border: 0.5px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  margin-top: 4px;
+}
+
+.ainbox-magicast-embed-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px 8px 8px;
+}
+
+.ainbox-magicast-embed-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: var(--background-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ainbox-magicast-embed-glyph {
+  display: block;
+  width: 24px;
+  height: 24px;
+  background: var(--icon-primary);
+  -webkit-mask-image: url('/icons/magicast.svg');
+  mask-image: url('/icons/magicast.svg');
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.ainbox-magicast-embed-titles {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.ainbox-magicast-embed-brand {
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 24px;
+  letter-spacing: -0.32px;
+  color: var(--text-primary);
+}
+
+.ainbox-magicast-embed-name {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ainbox-magicast-embed-cover {
+  position: relative;
+  margin: 0 8px 8px;
+  border-radius: 8px;
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+  background: #000;
+}
+
+.ainbox-magicast-embed-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.ainbox-magicast-embed-play {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.ainbox-magicast-embed-play::before {
+  content: '';
+  position: absolute;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.ainbox-magicast-embed-play > svg {
+  position: relative;
+  color: #ffffff;
+  width: 24px;
+  height: 24px;
+}
+
 /* ═══════════════════════════════════════
    Thread view
    ═══════════════════════════════════════ */

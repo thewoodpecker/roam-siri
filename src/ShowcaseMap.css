@@ -3884,6 +3884,10 @@
   color: var(--text-primary);
 }
 
+.mc-win-row-active {
+  background: rgba(255, 255, 255, 0.08);
+}
+
 .mc-win-row-icon {
   display: block;
   width: 20px;
@@ -3943,6 +3947,267 @@
 
 .mc-win-record:hover {
   background: #e53935;
+}
+
+/* ===== Effects pane (right column when Effects is open) ===== */
+.mc-win-effects-open {
+  width: 800px;
+}
+
+.mc-win-effects-open .mc-win-body {
+  flex-direction: row;
+  padding-top: 0;
+  align-items: stretch;
+}
+
+.mc-win-left {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+.mc-win-effects-open .mc-win-left {
+  width: 400px;
+  padding-top: 16px;
+  border-right: 0.5px solid var(--border);
+}
+
+.mc-win-effects-open .mc-win-left .mc-win-record {
+  margin-top: auto;
+}
+
+.mc-eff {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 8px 16px 16px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 14px;
+  letter-spacing: -0.15px;
+  color: var(--text-primary);
+  overflow: hidden;
+}
+
+.mc-eff-section {
+  padding: 8px 0;
+}
+
+.mc-eff-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 20px;
+  padding: 8px 0;
+}
+
+.mc-eff-label-with-radio {
+  color: var(--text-primary);
+}
+
+.mc-eff-radio {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1.5px solid #ff4f9e;
+  background: transparent;
+  display: inline-block;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.mc-eff-radio-on::after {
+  content: '';
+  position: absolute;
+  inset: 2.5px;
+  border-radius: 50%;
+  background: #ff4f9e;
+}
+
+.mc-eff-shapes {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.mc-eff-shape {
+  width: 64px;
+  height: 64px;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  padding: 0;
+  position: relative;
+  display: block;
+  color: var(--text-secondary);
+  transition: color 120ms ease;
+}
+
+.mc-eff-shape:hover,
+.mc-eff-shape-active { color: var(--text-primary); }
+
+.mc-eff-shape-svg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  display: block;
+}
+
+.mc-eff-shape-fill {
+  position: absolute;
+  inset: 0;
+  display: block;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: 100%;
+  mask-size: 100%;
+  overflow: hidden;
+}
+
+.mc-eff-shape-fill > video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.mc-eff-vbg {
+  display: flex;
+  gap: 8px;
+}
+
+.mc-eff-vbg-tile {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-md);
+  corner-shape: superellipse(1.6);
+  border: 2px solid var(--border);
+  background: var(--background-primary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  color: var(--text-primary);
+  transition: border-color 120ms ease;
+}
+
+.mc-eff-vbg-tile:hover,
+.mc-eff-vbg-tile-active {
+  border-color: var(--text-primary);
+}
+
+.mc-eff-vbg-glyph {
+  display: block;
+  width: 24px;
+  height: 24px;
+  background: var(--text-primary);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.mc-eff-vbg-tile-image {
+  background-image: url('/magicast/vbg-garden.png');
+  background-size: cover;
+  background-position: center;
+}
+
+.mc-eff-slider {
+  position: relative;
+  width: 100%;
+  height: 16px;
+  border-radius: 12px;
+  background: var(--background-primary);
+  border: 0.5px solid var(--border);
+  margin-top: 4px;
+  cursor: pointer;
+  user-select: none;
+  touch-action: none;
+}
+
+.mc-eff-slider-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  height: 100%;
+  background: var(--text-primary);
+  border-radius: 8px 0 0 8px;
+  pointer-events: none;
+}
+
+.mc-eff-slider-knob {
+  position: absolute;
+  top: 50%;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--text-primary);
+  transform: translate(-50%, -50%);
+  box-shadow: 0 3px 6px 2px rgba(0, 0, 0, 0.10), 0 1px 2px 0 rgba(0, 0, 0, 0.30);
+  pointer-events: none;
+}
+
+.mc-eff-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 16px -16px 0;
+}
+
+.mc-eff-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 0;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 14px;
+  line-height: 20px;
+  letter-spacing: -0.15px;
+  color: var(--text-primary);
+}
+
+.mc-eff-row-label {
+  flex: 1;
+  text-align: left;
+}
+
+.mc-eff-toggle {
+  position: relative;
+  width: 40px;
+  height: 24px;
+  border-radius: 999px;
+  background: var(--background-secondary, rgba(120, 120, 120, 0.32));
+  flex-shrink: 0;
+  transition: background 160ms ease;
+}
+
+.mc-eff-toggle-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  transition: left 160ms ease;
+}
+
+.mc-eff-toggle-on {
+  background: #34c759;
+}
+
+.mc-eff-toggle-on .mc-eff-toggle-knob {
+  left: 18px;
 }
 
 /* Magicast recording border — fixed overlay on the entire viewport */

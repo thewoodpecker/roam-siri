@@ -1142,13 +1142,14 @@ const MAGICAST_SHAPES = [
   { id: 'square', mask: '/magicast/squareMask.svg' },
 ];
 
-function MagicastBubble({ onPositionChange, closing, initialSize = 260, initialPos = { x: 820, y: 340 }, shape, onShapeChange }) {
+function MagicastBubble({ onPositionChange, closing, initialSize = 260, initialPos = { x: 820, y: 340 }, anchor, shape, onShapeChange }) {
   const [size, setSize] = useState(initialSize);
   const [pos, setPos] = useState(null);
   const setShape = onShapeChange;
   const [hovered, setHovered] = useState(false);
   const resizing = useRef(null);
   const dragging = useRef(null);
+  const bubbleRef = useRef(null);
 
   const maskUrl = MAGICAST_SHAPES.find(s => s.id === shape)?.mask || MAGICAST_SHAPES[0].mask;
 
@@ -1196,8 +1197,19 @@ function MagicastBubble({ onPositionChange, closing, initialSize = 260, initialP
   const startDrag = (e) => {
     if (resizing.current) return;
     e.preventDefault();
-    const currentPos = pos || defaultPos;
-    if (!pos) setPos(defaultPos);
+    let currentPos = pos;
+    if (!currentPos) {
+      // If anchored (right/bottom-pinned), capture the rendered pixel
+      // position so subsequent drags continue from where the bubble sits.
+      if (anchor && bubbleRef.current && bubbleRef.current.offsetParent) {
+        const rect = bubbleRef.current.getBoundingClientRect();
+        const parentRect = bubbleRef.current.offsetParent.getBoundingClientRect();
+        currentPos = { x: rect.left - parentRect.left, y: rect.top - parentRect.top };
+      } else {
+        currentPos = defaultPos;
+      }
+      setPos(currentPos);
+    }
     dragging.current = { startX: currentPos.x, startY: currentPos.y, mouseX: e.clientX, mouseY: e.clientY };
   };
 
@@ -1207,10 +1219,17 @@ function MagicastBubble({ onPositionChange, closing, initialSize = 260, initialP
     resizing.current = { mouseX: e.clientX, mouseY: e.clientY, startSize: size, startPosX: pos.x, startPosY: pos.y, corner };
   };
 
+  const bubbleStyle = pos
+    ? { left: pos.x, top: pos.y, width: size, height: size }
+    : anchor === 'bottom-right'
+      ? { right: 56, bottom: 56, width: size, height: size }
+      : { left: defaultPos.x, top: defaultPos.y, width: size, height: size };
+
   return (
     <div
+      ref={bubbleRef}
       className={`mc-bubble ${closing ? 'mc-bubble-closing' : ''}`}
-      style={pos ? { left: pos.x, top: pos.y, width: size, height: size } : { left: defaultPos.x, top: defaultPos.y, width: size, height: size }}
+      style={bubbleStyle}
       onMouseDown={startDrag}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => { if (!resizing.current && !dragging.current) setHovered(false); }}
@@ -1248,7 +1267,169 @@ function MagicastBubble({ onPositionChange, closing, initialSize = 260, initialP
   );
 }
 
-function MagicastWindow({ win, onDrag, pipPos, shape = 'circle' }) {
+function MagicastSlider({ value, onChange }) {
+  const trackRef = useRef(null);
+  const draggingRef = useRef(false);
+
+  const setFromClientX = (clientX) => {
+    const track = trackRef.current;
+    if (!track) return;
+    const rect = track.getBoundingClientRect();
+    const next = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+    onChange(next);
+  };
+
+  useEffect(() => {
+    const onMove = (e) => {
+      if (!draggingRef.current) return;
+      const x = e.touches ? e.touches[0].clientX : e.clientX;
+      setFromClientX(x);
+    };
+    const onUp = () => { draggingRef.current = false; };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    window.addEventListener('touchmove', onMove, { passive: true });
+    window.addEventListener('touchend', onUp);
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+      window.removeEventListener('touchmove', onMove);
+      window.removeEventListener('touchend', onUp);
+    };
+  }, []);
+
+  const onDown = (e) => {
+    e.stopPropagation();
+    draggingRef.current = true;
+    const x = e.touches ? e.touches[0].clientX : e.clientX;
+    setFromClientX(x);
+  };
+
+  const pct = `${value * 100}%`;
+  return (
+    <div
+      ref={trackRef}
+      className="mc-eff-slider"
+      onMouseDown={onDown}
+      onTouchStart={onDown}
+    >
+      <div className="mc-eff-slider-fill" style={{ width: pct }} />
+      <div className="mc-eff-slider-knob" style={{ left: pct }} />
+    </div>
+  );
+}
+
+function MagicastEffectsPane({ shape, onShapeChange }) {
+  const [vbg, setVbg] = useState('none');
+  const [showSelf, setShowSelf] = useState(false);
+  const [mirror, setMirror] = useState(false);
+  const [blur, setBlur] = useState(0.62);
+  const [touchup, setTouchup] = useState(0.54);
+  const SURROUND_PENTAGON_D = 'm26.4274 1.90393c3.275-2.538568 7.8702-2.538575 11.1452-.00001l22.9448 17.78538c3.0119 2.3346 4.2232 6.295 3.0272 9.8978l-9.3733 28.2375c-1.2233 3.6853-4.6909 6.1754-8.5997 6.1754h-27.1431c-3.9089 0-7.3764-2.49-8.59979-6.1754l-9.373313-28.2375c-1.195951-3.6028.01529-7.5632 3.027173-9.8978z';
+  const SURROUND_SCALLOPED_D = 'm28.6219 1.40226c1.864-1.86968 4.8922-1.869681 6.7562 0 1.3659 1.37005 3.424 1.77944 5.2102 1.03638 2.4376-1.01404 5.2353.14479 6.2419 2.58547.7376 1.78847 2.4824 2.9543 4.417 2.95135 2.6401-.00401 4.7814 2.13724 4.7773 4.77734-.0029 1.9346 1.1629 3.6794 2.9514 4.417 2.4407 1.0066 3.5995 3.8043 2.5855 6.2419-.7431 1.7862-.3337 3.8443 1.0363 5.2102 1.8697 1.864 1.8697 4.8922 0 6.7562-1.37 1.3659-1.7794 3.424-1.0363 5.2102 1.014 2.4376-.1448 5.2353-2.5855 6.2419-1.7885.7376-2.9543 2.4824-2.9514 4.417.0041 2.6401-2.1372 4.7814-4.7773 4.7773-1.9346-.0029-3.6794 1.1629-4.417 2.9514-1.0066 2.4407-3.8043 3.5995-6.2419 2.5855-1.7862-.7431-3.8443-.3337-5.2102 1.0363-1.864 1.8697-4.8922 1.8697-6.7562 0-1.3659-1.37-3.424-1.7794-5.2102-1.0363-2.4376 1.014-5.2353-.1448-6.2419-2.5855-.7376-1.7885-2.4824-2.9543-4.417-2.9514-2.6401.0041-4.78135-2.1372-4.77734-4.7773.00295-1.9346-1.16288-3.6794-2.95135-4.417-2.44068-1.0066-3.59951-3.8043-2.58547-6.2419.74306-1.7862.33367-3.8443-1.03638-5.2102-1.86968-1.864-1.869681-4.8922 0-6.7562 1.37005-1.3659 1.77944-3.424 1.03638-5.2102-1.01404-2.4376.14479-5.2353 2.58547-6.2419 1.78847-.7376 2.9543-2.4824 2.95135-4.417-.00401-2.6401 2.13724-4.78135 4.77734-4.77734 1.9346.00295 3.6794-1.16288 4.417-2.95135 1.0066-2.44068 3.8043-3.59951 6.2419-2.58547 1.7862.74306 3.8443.33367 5.2102-1.03638z';
+  const SHAPES = [
+    { id: 'circle', mask: '/magicast/circleMask.svg', render: () => <circle cx="32" cy="32" r="31" stroke="currentColor" strokeWidth="2" fill="none" /> },
+    { id: 'square', mask: '/magicast/squareMask.svg', render: () => <rect x="1" y="1" width="62" height="62" rx="11" stroke="currentColor" strokeWidth="2" fill="none" /> },
+    { id: 'pentagon', mask: '/magicast/pentagonMask.svg', render: () => <path d={SURROUND_PENTAGON_D} stroke="currentColor" strokeWidth="2" fill="none" strokeLinejoin="round" /> },
+    { id: 'circleScalloped', mask: '/magicast/circleScallopedMask.svg', render: () => <path d={SURROUND_SCALLOPED_D} stroke="currentColor" strokeWidth="2" fill="none" strokeLinejoin="round" /> },
+  ];
+  return (
+    <div className="mc-eff">
+      <div className="mc-eff-section">
+        <div className="mc-eff-label">Surround</div>
+        <div className="mc-eff-shapes">
+          {SHAPES.map(s => (
+            <button
+              key={s.id}
+              className={`mc-eff-shape ${shape === s.id ? 'mc-eff-shape-active' : ''}`}
+              onClick={(e) => { e.stopPropagation(); onShapeChange?.(s.id); }}
+              aria-label={s.id}
+            >
+              {shape === s.id ? (
+                <span
+                  className="mc-eff-shape-fill"
+                  style={{ WebkitMaskImage: `url(${s.mask})`, maskImage: `url(${s.mask})` }}
+                >
+                  <video src="/videos/Female/sophia_ramirez.mp4" autoPlay loop muted playsInline />
+                </span>
+              ) : (
+                <svg className="mc-eff-shape-svg" width="64" height="64" viewBox="-2 -2 68 68" aria-hidden="true">
+                  {s.render()}
+                </svg>
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="mc-eff-section">
+        <div className="mc-eff-label">Virtual Background</div>
+        <div className="mc-eff-vbg">
+          <button
+            className={`mc-eff-vbg-tile ${vbg === 'none' ? 'mc-eff-vbg-tile-active' : ''}`}
+            onClick={(e) => { e.stopPropagation(); setVbg('none'); }}
+            aria-label="No background"
+          >
+            <span
+              className="mc-eff-vbg-glyph"
+              style={{ WebkitMaskImage: 'url(/magicast/vbg-no-entry.svg)', maskImage: 'url(/magicast/vbg-no-entry.svg)' }}
+              aria-hidden="true"
+            />
+          </button>
+          <button
+            className={`mc-eff-vbg-tile ${vbg === 'upload' ? 'mc-eff-vbg-tile-active' : ''}`}
+            onClick={(e) => { e.stopPropagation(); setVbg('upload'); }}
+            aria-label="Upload background"
+          >
+            <span
+              className="mc-eff-vbg-glyph"
+              style={{ WebkitMaskImage: 'url(/magicast/vbg-image.svg)', maskImage: 'url(/magicast/vbg-image.svg)' }}
+              aria-hidden="true"
+            />
+          </button>
+          <button
+            className={`mc-eff-vbg-tile mc-eff-vbg-tile-image ${vbg === 'garden' ? 'mc-eff-vbg-tile-active' : ''}`}
+            onClick={(e) => { e.stopPropagation(); setVbg('garden'); }}
+            aria-label="Garden background"
+          />
+        </div>
+      </div>
+      <div className="mc-eff-section">
+        <div className="mc-eff-label">Background Blur</div>
+        <MagicastSlider value={blur} onChange={setBlur} />
+      </div>
+      <div className="mc-eff-section">
+        <div className="mc-eff-label">Touchup</div>
+        <MagicastSlider value={touchup} onChange={setTouchup} />
+      </div>
+      <div className="mc-eff-divider" />
+      <div className="mc-eff-section">
+        <div className="mc-eff-label">My Video</div>
+      </div>
+      <button
+        type="button"
+        className="mc-eff-row"
+        onClick={(e) => { e.stopPropagation(); setShowSelf(v => !v); }}
+      >
+        <span className="mc-eff-row-label">Show Self View</span>
+        <span className={`mc-eff-toggle ${showSelf ? 'mc-eff-toggle-on' : ''}`} aria-hidden="true">
+          <span className="mc-eff-toggle-knob" />
+        </span>
+      </button>
+      <button
+        type="button"
+        className="mc-eff-row"
+        onClick={(e) => { e.stopPropagation(); setMirror(v => !v); }}
+      >
+        <span className="mc-eff-row-label">Mirror My Video</span>
+        <span className={`mc-eff-toggle ${mirror ? 'mc-eff-toggle-on' : ''}`} aria-hidden="true">
+          <span className="mc-eff-toggle-knob" />
+        </span>
+      </button>
+    </div>
+  );
+}
+
+function MagicastWindow({ win, onDrag, pipPos, shape = 'circle', onShapeChange, effectsOpen = false }) {
   const maskUrl = MAGICAST_SHAPES.find(s => s.id === shape)?.mask || MAGICAST_SHAPES[0].mask;
   const [closing, setClosing] = useState(false);
   const handleClose = () => {
@@ -1260,7 +1441,7 @@ function MagicastWindow({ win, onDrag, pipPos, shape = 'circle' }) {
   }, [win.closeRequestId]);
   return (
     <div
-      className={`mc-win ${!win.isFocused ? 'mc-win-unfocused' : ''} ${closing ? 'mc-win-closing' : ''}`}
+      className={`mc-win ${effectsOpen ? 'mc-win-effects-open' : ''} ${!win.isFocused ? 'mc-win-unfocused' : ''} ${closing ? 'mc-win-closing' : ''}`}
       style={{ left: win.position.x, top: win.position.y, zIndex: win.zIndex }}
       onMouseDown={() => win.focus()}
     >
@@ -1273,6 +1454,7 @@ function MagicastWindow({ win, onDrag, pipPos, shape = 'circle' }) {
         <span className="mc-win-title">Magicast</span>
       </div>
       <div className="mc-win-body">
+        <div className="mc-win-left">
         <div className="mc-win-preview">
           <img className="mc-win-preview-bg" src="/magicast/preview.png" alt="" />
           <div className="mc-win-preview-overlay" />
@@ -1300,13 +1482,15 @@ function MagicastWindow({ win, onDrag, pipPos, shape = 'circle' }) {
           <span className="mc-win-row-value">Entire Screen</span>
           <svg className="mc-win-row-chev-right" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 4L10 8L6 12" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
         </div>
-        <div className="mc-win-row">
+        <div className={`mc-win-row ${effectsOpen ? 'mc-win-row-active' : ''}`}>
           <span className="mc-win-row-icon" style={{ WebkitMaskImage: 'url(/magicast/effects.svg)', maskImage: 'url(/magicast/effects.svg)' }} />
           <span className="mc-win-row-label">Effects</span>
           <span className="mc-win-row-value">Background Blur</span>
           <svg className="mc-win-row-chev-right" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 4L10 8L6 12" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
         </div>
         <button className="mc-win-record">Start Recording</button>
+        </div>
+        {effectsOpen && <MagicastEffectsPane shape={shape} onShapeChange={onShapeChange} />}
       </div>
     </div>
   );
@@ -1422,12 +1606,12 @@ function DropInFeatureVisual({ theme, className }) {
   );
 }
 
-export function OnItFeatureChat() {
-  const INITIAL = [
+export function OnItFeatureChat({ initialMessages, taskSummary, taskSteps } = {}) {
+  const DEFAULT_INITIAL = [
     { id: 1, self: true, text: 'Can you tell me if you see Sean MacIsaac and Thomas Grapperon meeting together?' },
     { id: 2, self: false, text: "I'm On-It! I'll notify you the next time I notice that Sean MacIsaac and Thomas Grapperon are meeting together." },
   ];
-  const [messages, setMessages] = useState(INITIAL);
+  const [messages, setMessages] = useState(initialMessages || DEFAULT_INITIAL);
   const [inputText, setInputText] = useState('');
   const messagesRef = useRef(null);
   useEffect(() => {
@@ -1499,7 +1683,7 @@ export function OnItFeatureChat() {
           </div>
         </div>
         <div className="sc-onit-task-col">
-          <OnItTaskPane />
+          <OnItTaskPane summary={taskSummary} steps={taskSteps} />
         </div>
       </div>
     </div>
@@ -1571,14 +1755,22 @@ export function HomepageReviews({ limit } = {}) {
   );
 }
 
-function MagicastFeatureVisual({ theme, className }) {
+export function MagicastFeatureVisual({ theme, className, anchor, bare = false, effectsOpen = false, hideBubble = false }) {
   const [shape, setShape] = useState('circle');
+  if (bare) {
+    return (
+      <>
+        <MagicastWindow win={{ position: { x: 0, y: 0 }, zIndex: 1, isFocused: true, focus: () => {}, close: () => {}, open: () => {} }} onDrag={() => {}} shape={shape} onShapeChange={setShape} effectsOpen={effectsOpen} />
+        {!hideBubble && <MagicastBubble initialSize={240} initialPos={{ x: 530, y: 420 }} anchor={anchor} shape={shape} onShapeChange={setShape} />}
+      </>
+    );
+  }
   return (
     <div className={`sc-feature-visual${className ? ' ' + className : ''}`} style={{ position: 'relative' }}>
       <div className="sc-feature-wallpaper" style={{ backgroundImage: `url(/wallpapers/wallpaper-${theme}.png)` }}>
-        <MagicastWindow win={{ position: { x: 0, y: 0 }, zIndex: 1, isFocused: true, focus: () => {}, close: () => {}, open: () => {} }} onDrag={() => {}} shape={shape} />
+        <MagicastWindow win={{ position: { x: 0, y: 0 }, zIndex: 1, isFocused: true, focus: () => {}, close: () => {}, open: () => {} }} onDrag={() => {}} shape={shape} onShapeChange={setShape} effectsOpen={effectsOpen} />
       </div>
-      <MagicastBubble initialSize={240} initialPos={{ x: 530, y: 420 }} shape={shape} onShapeChange={setShape} />
+      {!hideBubble && <MagicastBubble initialSize={240} initialPos={{ x: 530, y: 420 }} anchor={anchor} shape={shape} onShapeChange={setShape} />}
     </div>
   );
 }

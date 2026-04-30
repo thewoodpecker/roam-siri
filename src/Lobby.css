@@ -1195,6 +1195,7 @@
   gap: 16px;
   padding: 16px 16px 24px;
   overflow-y: auto;
+  background: var(--bg-surface-elevated-primary-subdued);
 }
 
 .lbd-preview {
@@ -1401,6 +1402,14 @@
   line-height: 16px;
   letter-spacing: -0.15px;
   color: var(--text-secondary);
+}
+
+.lbd-host-caption {
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: -0.15px;
+  color: var(--text-secondary);
+  padding: 0 4px 8px;
 }
 
 .lbd-divider {

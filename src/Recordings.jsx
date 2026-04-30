@@ -384,9 +384,9 @@ const PlusIcon = () => (
   </svg>
 );
 
-export default function Recordings({ win, onDrag }) {
+export default function Recordings({ win, onDrag, initialTab = 'Meetings' }) {
   const [closing, setClosing] = useState(false);
-  const [activeTab, setActiveTab] = useState('Meetings');
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [collapsed, setCollapsed] = useState({});
   const [openedMeeting, setOpenedMeeting] = useState(null);
 

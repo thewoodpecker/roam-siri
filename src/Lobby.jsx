@@ -225,13 +225,17 @@ function Toggle({ active, onChange }) {
   );
 }
 
-export default function Lobby({ win, onDrag }) {
+export default function Lobby({ win, onDrag, initialNav = 'my-links', initialSelectedLinkId = null, initialDetailSection = 'design', initialLinks = null, scrollDetailToBottom = false }) {
   const [closing, setClosing] = useState(false);
-  const [activeNav, setActiveNav] = useState('my-links');
-  const [links, setLinks] = useState(INITIAL_LINKS);
+  const [activeNav, setActiveNav] = useState(initialNav);
+  const [links, setLinks] = useState(initialLinks || INITIAL_LINKS);
   const [hqLinks, setHqLinks] = useState(INITIAL_HQ_LINKS);
-  const [selectedLink, setSelectedLink] = useState(null);
-  const [detailSection, setDetailSection] = useState('design');
+  const [selectedLink, setSelectedLink] = useState(() => {
+    if (initialSelectedLinkId == null) return null;
+    const pool = initialNav === 'hq-links' ? INITIAL_HQ_LINKS : (initialLinks || INITIAL_LINKS);
+    return pool.find((l) => l.id === initialSelectedLinkId) || null;
+  });
+  const [detailSection, setDetailSection] = useState(initialDetailSection);
   const [isCompact, setIsCompact] = useState(false);
   const winRef = useRef(null);
 
@@ -330,6 +334,7 @@ export default function Lobby({ win, onDrag }) {
             compact={isCompact}
             activeSection={detailSection}
             setActiveSection={setDetailSection}
+            scrollToBottom={scrollDetailToBottom}
           />
         ) : (
         <>
@@ -371,7 +376,7 @@ export default function Lobby({ win, onDrag }) {
             {(activeNav === 'hq-links' ? hqLinks.slice(0, 3) : links).map((link) => (
               <div key={link.id} className="lb-card" onClick={() => setSelectedLink(link)}>
                 <div className="lb-thumb">
-                  <img src={activeNav === 'hq-links' ? (link.id === 2 ? '/lobby/lobby-green.png' : '/lobby/lobby-thumb.png') : THUMBS[link.id % THUMBS.length]} alt="" />
+                  <img src={link.thumb || (activeNav === 'hq-links' ? (link.id === 2 ? '/lobby/lobby-green.png' : '/lobby/lobby-thumb.png') : THUMBS[link.id % THUMBS.length])} alt="" />
                 </div>
                 <div className="lb-card-info">
                   <div className="lb-card-title-row">

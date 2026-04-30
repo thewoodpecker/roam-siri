@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 /* Icons (copied verbatim from roam-lobby source) */
 const ArrowLeftIcon = () => (
@@ -172,10 +172,16 @@ export const NAV_SECTIONS = [
   { key: 'advanced',     label: 'Advanced',           subtitle: () => 'SEO, Booking Emails', icon: MoreIcon },
 ];
 
-export default function LobbyDetail({ link, onBack, compact = false, activeSection: activeSectionProp, setActiveSection: setActiveSectionProp }) {
+export default function LobbyDetail({ link, onBack, compact = false, activeSection: activeSectionProp, setActiveSection: setActiveSectionProp, scrollToBottom = false }) {
   const [activeSectionLocal, setActiveSectionLocal] = useState('design');
   const activeSection = activeSectionProp !== undefined ? activeSectionProp : activeSectionLocal;
   const setActiveSection = setActiveSectionProp || setActiveSectionLocal;
+  const contentRef = useRef(null);
+  useEffect(() => {
+    if (scrollToBottom && contentRef.current) {
+      contentRef.current.scrollTop = contentRef.current.scrollHeight;
+    }
+  }, [scrollToBottom, activeSection]);
   const [designBg, setDesignBg] = useState(true);
   const [designLogo, setDesignLogo] = useState(true);
   const [designLogoSize, setDesignLogoSize] = useState('L');
@@ -226,7 +232,7 @@ export default function LobbyDetail({ link, onBack, compact = false, activeSecti
         </aside>
         )}
 
-        <div className="lbd-content">
+        <div className="lbd-content" ref={contentRef}>
           {activeSection === 'design' ? (
             <>
               <div className="lbd-preview">
@@ -361,19 +367,51 @@ function BasicsSection({ link }) {
         </div>
       </div>
 
-      <SectionHeader label="Host" />
-      <div className="lbd-panel">
-        <div className="lbd-host-row">
-          <img src="/headshots/joe-woodward.jpg" alt="" className="lbd-host-avatar-img" />
-          <div className="lbd-host-info">
-            <span className="lbd-host-name">Joe Woodward (You)</span>
-            <span className="lbd-host-email">joe@ro.am</span>
+      {(!link.hosts || link.hosts.length > 0) && (
+        <>
+          <SectionHeader label="Host" />
+          {link.hosts && link.hosts.length > 0 && (
+            <div className="lbd-row-muted lbd-host-caption">{link.hosts.length} hosts will always attend:</div>
+          )}
+          <div className="lbd-panel">
+            {(link.hosts && link.hosts.length > 0 ? link.hosts : [{ name: 'Joe Woodward (You)', email: 'joe@ro.am', avatar: '/headshots/joe-woodward.jpg' }]).map((h) => (
+              <div key={h.email} className="lbd-host-row">
+                <img src={h.avatar} alt="" className="lbd-host-avatar-img" />
+                <div className="lbd-host-info">
+                  <span className="lbd-host-name">{h.name}</span>
+                  <span className="lbd-host-email">{h.email}</span>
+                </div>
+                <button type="button" className="lbd-hicon"><XIcon /></button>
+              </div>
+            ))}
+            <div className="lbd-row lbd-add-row">
+              <span className="lbd-row-placeholder">Add Host</span>
+            </div>
           </div>
-        </div>
-        <div className="lbd-row lbd-add-row">
-          <span className="lbd-row-placeholder">Add Host</span>
-        </div>
-      </div>
+        </>
+      )}
+
+      {link.roundRobinHosts && link.roundRobinHosts.length > 0 && (
+        <>
+          <SectionHeader label="Round Robin Hosts" />
+          <div className="lbd-row-muted lbd-host-caption">Alongside 1 host from this rotation:</div>
+          <div className="lbd-panel">
+            {link.roundRobinHosts.map((h) => (
+              <div key={h.email} className="lbd-host-row">
+                <img src={h.avatar} alt="" className="lbd-host-avatar-img" />
+                <div className="lbd-host-info">
+                  <span className="lbd-host-name">{h.name}</span>
+                  <span className="lbd-host-email">{h.email}</span>
+                </div>
+                <button type="button" className="lbd-hicon"><XIcon /></button>
+              </div>
+            ))}
+            <div className="lbd-row lbd-add-row">
+              <span className="lbd-row-placeholder">Add Round Robin Host</span>
+            </div>
+          </div>
+        </>
+      )}
     </>
   );
 }

@@ -104,7 +104,7 @@ const allMenuItems = [
   { label: "Existing Members", href: "#", menu: existingMembersMenu },
 ];
 
-function MegaMenu({ columns, align = "left", cascade = "none", spacious = false }) {
+function MegaMenu({ columns, align = "left", cascade = "none", spacious = false, onItemClick }) {
   const isSingleColumn = columns.length === 1;
   const cascadeStyle = (index) => {
     if (cascade === "in") return {
@@ -137,7 +137,7 @@ function MegaMenu({ columns, align = "left", cascade = "none", spacious = false 
             <ul className="flex flex-col">
               {items.map((item, i) => (
                 <li key={item.title} style={cascadeStyle(i + 1)}>
-                  <a href={item.href} className={`group/link block py-1.5 px-5`}>
+                  <a href={item.href} onClick={() => onItemClick && onItemClick()} className={`group/link block py-1.5 px-5`}>
                     <span className={`inline-flex items-center gap-1 text-sm font-medium text-white transition-colors group-hover/link:text-white/70 ${isRight ? "flex-row-reverse" : ""}`}>
                       {item.title}
                       {isRight ? (
@@ -174,6 +174,7 @@ function MegaMenu({ columns, align = "left", cascade = "none", spacious = false 
                   <li key={item.title} style={cascadeStyle(i * colSize + j + 1)}>
                     <a
                       href={item.href}
+                      onClick={() => onItemClick && onItemClick()}
                       className={`group/link block ${itemPadding}`}
                     >
                       <span className="inline-flex items-center gap-1 text-sm font-medium text-white transition-colors group-hover/link:text-white/70">
@@ -206,6 +207,7 @@ function MegaMenu({ columns, align = "left", cascade = "none", spacious = false 
               <li key={item.title} style={cascadeStyle(i + 1)}>
                 <a
                   href={item.href}
+                  onClick={() => onItemClick && onItemClick()}
                   className="group/link block py-1.5 px-5"
                 >
                   <span className="inline-flex items-center gap-1 text-sm font-medium text-white transition-colors group-hover/link:text-white/70">
@@ -507,7 +509,7 @@ export default function Navbar() {
                     const itemCascade = isActive ? cascadeState : "none";
                     return (
                       <div key={navItem.label} data-menu={navItem.label} className="absolute inset-x-0 top-0" style={{ opacity: isActive && isAnimating ? 1 : 0, transform: `translateX(${isActive ? "0px" : translateX})`, pointerEvents: isActive ? "auto" : "none", transition: `opacity 150ms ease-out, transform ${transitionDuration} ease-out` }}>
-                        <MegaMenu columns={navItem.menu} align={navItem.label === "Existing Members" ? "right" : "left"} cascade={itemCascade} spacious />
+                        <MegaMenu columns={navItem.menu} align={navItem.label === "Existing Members" ? "right" : "left"} cascade={itemCascade} spacious onItemClick={() => setActiveMenu(null)} />
                       </div>
                     );
                   })}
@@ -704,6 +706,7 @@ export default function Navbar() {
                     align={navItem.label === "Existing Members" ? "right" : "left"}
                     cascade={itemCascade}
                     spacious={isEnhanced}
+                    onItemClick={() => setActiveMenu(null)}
                   />
                 </div>
               );

@@ -1443,8 +1443,33 @@ function GroupMessage({ msg, onThreadClick }) {
           <span className="ainbox-group-msg-name">{msg.sender}</span>
           <span className="ainbox-group-msg-time">{msg.time}</span>
         </div>
-        <p className="ainbox-group-msg-text">{msg.text}</p>
+        {msg.text && <p className="ainbox-group-msg-text">{msg.text}</p>}
+        {msg.magicast && <MagicastShareEmbed magicast={msg.magicast} />}
         {msg.thread && <ThreadIndicator thread={msg.thread} onClick={() => onThreadClick && onThreadClick(msg)} />}
+      </div>
+    </div>
+  );
+}
+
+function MagicastShareEmbed({ magicast }) {
+  return (
+    <div className="ainbox-magicast-embed">
+      <div className="ainbox-magicast-embed-header">
+        <div className="ainbox-magicast-embed-icon">
+          <span className="ainbox-magicast-embed-glyph" aria-hidden="true" />
+        </div>
+        <div className="ainbox-magicast-embed-titles">
+          <div className="ainbox-magicast-embed-brand">Magicast</div>
+          {magicast.title && <div className="ainbox-magicast-embed-name">{magicast.title}</div>}
+        </div>
+      </div>
+      <div className="ainbox-magicast-embed-cover">
+        <img src={magicast.cover} alt="" />
+        <div className="ainbox-magicast-embed-play" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M6 4.5l9 5.5-9 5.5z" />
+          </svg>
+        </div>
       </div>
     </div>
   );
@@ -1938,12 +1963,12 @@ function ActionItemsView() {
   );
 }
 
-export default function AInbox({ win, onDrag, onOpenMagicMinutes, initialThreadView = null, initialChatId = null, initialSearchActive = false, initialSearchQuery = '', sidebarScrollToBottom = false, staticMode = false, autoAddFolders = false, favoritesOverride = null, sectionsOverride = null, messagesOverride = null, mmAutoPrompt = false, mmPrompts = null, initialSidebarView = 'inbox' }) {
+export default function AInbox({ win, onDrag, onOpenMagicMinutes, initialThreadView = null, initialChatId = null, initialSearchActive = false, initialSearchQuery = '', sidebarScrollToBottom = false, staticMode = false, autoAddFolders = false, favoritesOverride = null, sectionsOverride = null, messagesOverride = null, mmAutoPrompt = false, mmPrompts = null, initialSidebarView = 'inbox', initialCollapsedSections = null }) {
   const favorites = favoritesOverride || FAVORITES;
   const sidebarSections = sectionsOverride || SIDEBAR_SECTIONS;
   const defaultSelected = sidebarSections[0]?.items?.[0]?.id || 'design';
   const [selectedChat, setSelectedChat] = useState(initialChatId || initialThreadView?.chatId || (sectionsOverride ? defaultSelected : 'design'));
-  const [collapsedSections, setCollapsedSections] = useState({});
+  const [collapsedSections, setCollapsedSections] = useState(initialCollapsedSections || {});
   const [inputText, setInputText] = useState('');
   const [sidebarView, setSidebarView] = useState(initialSidebarView);
   const [sidebarMenuOpen, setSidebarMenuOpen] = useState(false);
