@@ -264,13 +264,13 @@ function formatClock(d) {
   return `${h}:${String(m).padStart(2, '0')}`;
 }
 
-export default function MobileWindow({ win, onDrag, onOpenStories }) {
+export default function MobileWindow({ win, onDrag, onOpenStories, initialTab = 'roam', initialView = 'overworld', initialPlatform = 'ios' }) {
   const [closing, setClosing] = useState(false);
-  const [activeTab, setActiveTab] = useState('roam');
-  const [viewStack, setViewStack] = useState(['overworld']);
+  const [activeTab, setActiveTab] = useState(initialTab);
+  const [viewStack, setViewStack] = useState(initialTab === 'roam' && initialView === 'map' ? ['overworld', 'map'] : ['overworld']);
   const currentView = viewStack[viewStack.length - 1];
   const [clock, setClock] = useState(() => formatClock(new Date()));
-  const [platform, setPlatform] = useState('ios');
+  const [platform, setPlatform] = useState(initialPlatform);
 
   useEffect(() => {
     const tick = () => setClock(formatClock(new Date()));

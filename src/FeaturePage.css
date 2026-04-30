@@ -1532,6 +1532,20 @@
   justify-content: center;
 }
 
+/* Mobile feature page preview — strips the MobileWindow's absolute
+   positioning so it can render inline as a section visual. */
+.fp-mobile-preview {
+  position: relative;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+.fp-mobile-preview .mw-win {
+  position: relative;
+  left: auto !important;
+  top: auto !important;
+}
+
 .fp-cal-preview .cal-win {
   position: relative;
   left: auto !important;

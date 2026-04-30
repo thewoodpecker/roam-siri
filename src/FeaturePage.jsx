@@ -52,6 +52,7 @@ import Calendar from './Calendar';
 import Lobby from './Lobby';
 import Magnify from './Magnify';
 import OnAir from './OnAir';
+import MobileWindow from './MobileWindow';
 import { WindowManagerProvider } from './WindowManager';
 import { ChatProvider } from './ChatContext';
 import './FeaturePage.css';
@@ -2111,6 +2112,24 @@ function RecordingsPreview({ initialTab, onAirRecording } = {}) {
   return (
     <div className="fp-rec-preview">
       <Recordings win={noopWin('recordings')} onDrag={() => {}} initialTab={initialTab} onAirRecording={onAirRecording} />
+    </div>
+  );
+}
+
+/* Mobile feature page preview — wraps the existing MobileWindow component
+   in a stage so the iPhone/Pixel mock can drive each section's visual.
+   `initialTab` and `initialView` let us point at the overworld, the map,
+   the AInbox, or the camera roll without keeping per-section markup. */
+function MobilePreview({ initialTab = 'roam', initialView = 'overworld', initialPlatform = 'ios' } = {}) {
+  return (
+    <div className="fp-mobile-preview">
+      <MobileWindow
+        win={noopWin('mobile')}
+        onDrag={() => {}}
+        initialTab={initialTab}
+        initialView={initialView}
+        initialPlatform={initialPlatform}
+      />
     </div>
   );
 }
@@ -7564,6 +7583,134 @@ export const FEATURES = {
       STANDARD_PRICING_COMPARE,
     ],
   },
+  'mobile': {
+    eyebrow: 'Mobile',
+    title: 'Roam While You Roam',
+    hero: 'iOS and Android apps are your Virtual HQ in your pocket. The full Roam experience — overworld, map, AInbox, theater, magic minutes, stories, and your On-It assistant — wherever you are.',
+    visual: <MobilePreview />,
+    sections: [
+      {
+        title: 'Never miss a moment with Live View',
+        desc: "It's a dynamic view of your Virtual Office, right on your lockscreen. See everything as people come and go, meet with others.",
+        visual: <MobilePreview initialTab="roam" initialView="overworld" />,
+      },
+      {
+        title: 'Overworld',
+        desc: 'Join any Roam you have access to from the Overworld.',
+        visual: <MobilePreview initialTab="roam" initialView="overworld" />,
+      },
+      {
+        title: 'Fully Interactive Map',
+        desc: 'See everything happening in your virtual office from your phone: who is there, who is meeting with who, and who will return at what time. Use the trackpad to navigate around the full map. Pinch and zoom to size to taste.',
+        visual: <MobilePreview initialTab="roam" initialView="map" />,
+      },
+      {
+        title: 'Drop-In Meetings',
+        desc: 'Tap any room to drop into a voice or video meeting.',
+        visual: <MobilePreview initialTab="roam" initialView="map" />,
+      },
+      {
+        title: 'Switch Floors from the Elevator',
+        desc: 'See the entire multi-floor company at a glance. Swipe up or down to scroll each floor. Tap to jump to any floor you want to visit.',
+        visual: <MobilePreview initialTab="roam" initialView="map" initialPlatform="android" />,
+      },
+      {
+        title: 'Theater',
+        desc: "Attend a presentation in Roam's unique theater. In the audience you can whisper with others in your audience row and ask a question. You can also go backstage, and of course, join the stage as a presenter!",
+        visual: (
+          <TheaterPreview
+            speakers={[VIDEO_SPEAKERS[4]]}
+            audience={[
+              VIDEO_SPEAKERS[2],
+              VIDEO_SPEAKERS[0],
+              VIDEO_SPEAKERS[7],
+              VIDEO_SPEAKERS[3],
+              VIDEO_SPEAKERS[5],
+              VIDEO_SPEAKERS[1],
+              VIDEO_SPEAKERS[6],
+            ]}
+          />
+        ),
+      },
+      {
+        title: 'AInbox',
+        desc: "DMs, group chats, threads, and replies in the same folders you've organized on desktop — in the palm of your hand.",
+        visual: <MobilePreview initialTab="ainbox" />,
+      },
+      {
+        title: 'Magic Minutes',
+        desc: 'Get Magic Minutes from a meeting on your mobile device. Prompt your Magic Minutes with questions.',
+        visual: <MagicMinutesPreview />,
+      },
+      {
+        title: 'Guest Badges',
+        desc: "Grant guest badges to your contacts to chat with people outside your organization and allow them to visit you in Roam. They're free!",
+        visual: <MobilePreview initialTab="ainbox" />,
+      },
+      {
+        title: 'Stories',
+        desc: "Keep your co-workers up to date on what's up by posting short-form pictures and videos that last for 24 hours.",
+        visual: <MobilePreview initialTab="camera" />,
+      },
+      {
+        title: 'On-It is On-It!',
+        desc: "On-It is your AI Assistant, included in Roam. Bring your On-It with you wherever you are. Tell your On-It to schedule a meeting, follow up with people, or run any routine it's been trained to do — right from your phone.",
+        visual: <MobilePreview initialTab="ainbox" />,
+      },
+      {
+        title: 'Apple Watch',
+        desc: 'Watch from your Watch. The live view of your office appears right on your watch.',
+        visual: <MobilePreview initialTab="roam" initialView="overworld" />,
+      },
+      {
+        title: 'CarPlay',
+        desc: "You're in the driver's seat. Vrrrrrrrrooooaaaaam! Your office in your car. Join meetings with audio while you drive. Watch the live office while you drive. Just keep your eyes on the road!",
+        visual: <MobilePreview initialTab="roam" initialView="overworld" />,
+      },
+      {
+        variant: 'explore',
+        title: 'Why Roam Mobile?',
+        itemMarker: 'bullet',
+        items: [
+          'Sales, Marketing, and Customer Success — your job often takes you on the road. Roam Mobile lets you Roam While You Roam, with your Virtual Office in your pocket.',
+          "Share Your Story — Instagram, Snapchat, and TikTok proved short-form, time-boxed Stories are a powerful mobile format. Whether you're at a conference, with a customer, or at an event, Roam lets you share your story from mobile right to your desktop virtual office.",
+          "Never Miss a Moment — heading to a meeting? Live View keeps you on top of everything happening in the office. And everyone in the office can see you're watching from the desktop map, so they know you're engaged.",
+        ],
+      },
+      {
+        variant: 'explore',
+        title: 'Mobile, the way it should be',
+        itemMarker: 'bullet',
+        items: [
+          'Live View on your lockscreen — your office is always one glance away.',
+          'Pinch-and-zoom map navigation — fully interactive, just like desktop.',
+          'Drop into rooms with a tap — voice or video, no extra setup.',
+          'AInbox folders, DMs, and threads stay in sync between phone and desktop.',
+          'Magic Minutes summaries and prompts in your pocket.',
+          'Apple Watch and CarPlay support — your office on every screen.',
+          'Bundled in the Virtual Office Super Bundle — no separate seat license.',
+        ],
+      },
+      {
+        variant: 'explore',
+        title: 'Explore our Virtual Office Platform',
+        desc: '9 products for the price of one:',
+        items: [
+          'Company Visualization with the Virtual Office',
+          'Virtual Meeting Room with Drop-In Meetings',
+          'All-Hands Presentations with Theater',
+          'Enterprise Messaging with AInbox',
+          'Meeting Scheduler with Lobby',
+          'Screen Recorder with Magicast',
+          'AI Meeting Summarization with Magic Minutes',
+          'Your AI Assistant is On-It',
+          'Immersive Events with On-Air',
+        ],
+      },
+      { variant: 'reviews' },
+      STANDARD_PRICING_COMPARE,
+    ],
+  },
 };
 
 export const FEATURE_ORDER = [
@@ -7576,6 +7723,7 @@ export const FEATURE_ORDER = [
   'magicast',
   'on-it',
   'on-air',
+  'mobile',
 ];
 
 function CompareColumn({ side, data }) {
