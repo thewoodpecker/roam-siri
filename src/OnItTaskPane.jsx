@@ -42,12 +42,7 @@ function Typewriter({ text, animate, speed = TYPE_SPEED, delay = TYPE_DELAY, onC
   return <span className="onit-tw">{display}</span>;
 }
 
-export default function OnItTaskPane({
-  summary = 'Watch for Sean and Thomas meeting together',
-  steps = DEFAULT_STEPS,
-  agentName = 'On-It',
-  agentAvatar = '/on-it-agent.png',
-}) {
+function TaskBlock({ summary, steps, agentName, agentAvatar }) {
   const rootRef = useRef(null);
   const [runId, setRunId] = useState(0);
   const [inProgress, setInProgress] = useState(-1);
@@ -78,7 +73,6 @@ export default function OnItTaskPane({
   }, []);
 
   const onStepComplete = useCallback((i) => {
-    // Last-step path (or fallback): mark complete; next step won't exist for the final one.
     setCompleted(prev => Math.max(prev, i));
     if (i + 1 < steps.length) {
       const t = setTimeout(() => setInProgress(prev => Math.max(prev, i + 1)), NEXT_STEP_DELAY);
@@ -87,7 +81,6 @@ export default function OnItTaskPane({
   }, [steps.length]);
 
   const onStepAdvance = useCallback((i) => {
-    // Cascade: kick off the next step before the current finishes typing
     if (i + 1 >= steps.length) return;
     setCompleted(prev => Math.max(prev, i));
     setInProgress(prev => Math.max(prev, i + 1));
@@ -96,7 +89,7 @@ export default function OnItTaskPane({
   const allDone = completed >= steps.length - 1;
 
   return (
-    <div className="onit-pane" ref={rootRef}>
+    <div className="onit-task" ref={rootRef}>
       <div className="onit-summary">
         <span className={`onit-summary-icon ${allDone ? 'onit-summary-icon-done' : ''}`} aria-hidden="true">
           {allDone ? <IconTaskCircleChecked /> : <IconTaskCircleUnchecked />}
@@ -150,6 +143,29 @@ export default function OnItTaskPane({
           })}
         </div>
       </div>
+    </div>
+  );
+}
+
+export default function OnItTaskPane({
+  summary = 'Watch for Sean and Thomas meeting together',
+  steps = DEFAULT_STEPS,
+  tasks = null,
+  agentName = 'On-It',
+  agentAvatar = '/on-it-agent.png',
+}) {
+  const taskList = tasks?.length ? tasks : [{ summary, steps }];
+  return (
+    <div className="onit-pane">
+      {taskList.map((t, i) => (
+        <TaskBlock
+          key={i}
+          summary={t.summary}
+          steps={t.steps}
+          agentName={agentName}
+          agentAvatar={agentAvatar}
+        />
+      ))}
     </div>
   );
 }

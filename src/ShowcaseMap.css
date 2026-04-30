@@ -4418,6 +4418,32 @@
   overflow-y: auto;
 }
 
+/* Compact On-It chat: chat-only, narrower window for cross-context demos.
+   Matches the standard MiniChat window dimensions used elsewhere. */
+.sc-onit-window-compact {
+  width: 320px;
+  height: 520px;
+}
+
+.sc-onit-body-compact .sc-onit-chat-col {
+  flex: 1 1 100%;
+  border-right: none;
+}
+
+/* PDF attachment inside an mc-msg bubble */
+.mc-msg-attachment {
+  display: flex;
+  margin-bottom: 4px;
+}
+
+.mc-msg-attachment-self {
+  justify-content: flex-end;
+}
+
+.mc-msg-attachment .ainbox-pdf-attachment {
+  max-width: 280px;
+}
+
 /* ——— Homepage customer reviews — aligned to the 12-col showcase grid ——— */
 .sc-reviews-section {
   width: 100%;

@@ -4,11 +4,17 @@
 .onit-pane {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 20px;
   padding: 16px;
   user-select: none;
   width: 100%;
   box-sizing: border-box;
+}
+
+.onit-task {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 /* ——— Summary row (header) ——— */

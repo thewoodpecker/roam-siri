@@ -254,6 +254,7 @@
   font-weight: 600;
   line-height: 40px;
   letter-spacing: 0;
+  text-wrap: balance;
 }
 .text-title-2 {
   font-family: var(--font-family-primary);
@@ -261,6 +262,7 @@
   font-weight: 600;
   line-height: 32px;
   letter-spacing: 0;
+  text-wrap: balance;
 }
 .text-title-3 {
   font-family: var(--font-family-primary);
@@ -268,6 +270,7 @@
   font-weight: 600;
   line-height: 28px;
   letter-spacing: 0;
+  text-wrap: balance;
 }
 .text-title-4 {
   font-family: var(--font-family-primary);
@@ -275,6 +278,7 @@
   font-weight: 600;
   line-height: 24px;
   letter-spacing: 0;
+  text-wrap: balance;
 }
 .text-headline {
   font-family: var(--font-family-primary);
@@ -282,6 +286,7 @@
   font-weight: 600;
   line-height: 24px;
   letter-spacing: 0;
+  text-wrap: balance;
 }
 .text-body {
   font-family: var(--font-family-primary);

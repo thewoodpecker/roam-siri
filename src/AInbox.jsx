@@ -1445,7 +1445,47 @@ function GroupMessage({ msg, onThreadClick }) {
         </div>
         {msg.text && <p className="ainbox-group-msg-text">{msg.text}</p>}
         {msg.magicast && <MagicastShareEmbed magicast={msg.magicast} />}
+        {msg.actionItems && <OnItActionItemsCard items={msg.actionItems} />}
         {msg.thread && <ThreadIndicator thread={msg.thread} onClick={() => onThreadClick && onThreadClick(msg)} />}
+      </div>
+    </div>
+  );
+}
+
+/* Action Items follow-up card posted by On-It in a meeting chat —
+   matches Figma node 61435:22440 in Product Design. */
+function OnItActionItemsCard({ items = [] }) {
+  return (
+    <div className="ainbox-aic">
+      <div className="ainbox-aic-header">
+        <span className="ainbox-aic-quill" aria-hidden="true">
+          <img src="/icons/mm-task.svg" alt="" width="20" height="20" />
+        </span>
+        <span className="ainbox-aic-title">Action Items</span>
+      </div>
+      <div className="ainbox-aic-list">
+        {items.map((it, i) => (
+          <div key={i} className="ainbox-aic-row">
+            <span className="ainbox-aic-check" aria-hidden="true" />
+            <div className="ainbox-aic-body">
+              <div className="ainbox-aic-task-title">{it.title}</div>
+              <p className="ainbox-aic-task-desc">{it.desc}</p>
+            </div>
+            <button type="button" className="ainbox-aic-btn">
+              <span className="ainbox-aic-btn-onit">
+                <span className="ainbox-aic-btn-onit-avatar">
+                  <img src="/on-it-agent.png" alt="" />
+                </span>
+                <span className="ainbox-aic-btn-chevron" aria-hidden="true">
+                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                    <path d="M2.5 4L5 6.5L7.5 4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </span>
+              </span>
+              <span className="ainbox-aic-btn-label">{it.action}</span>
+            </button>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -2995,6 +3035,10 @@ export default function AInbox({ win, onDrag, onOpenMagicMinutes, initialThreadV
                         <img key={i} src={src} alt="" className="ainbox-fav-group-img" style={{ zIndex: 2 - i }} />
                       ))}
                     </div>
+                  ) : fav.id === 'onit' ? (
+                    <div className="ainbox-fav-avatar ainbox-fav-avatar-onit">
+                      <img src={fav.avatar} alt="" className="ainbox-fav-avatar-onit-img" />
+                    </div>
                   ) : (
                     <img src={fav.avatar} alt="" className="ainbox-fav-avatar" />
                   )}
@@ -3084,7 +3128,71 @@ export default function AInbox({ win, onDrag, onOpenMagicMinutes, initialThreadV
         </div>
 
         {/* ——— Detail pane ——— */}
-        <div className="ainbox-detail">
+        {(() => {
+        const isOnitView = !threadView && convo?.type === 'onit';
+        const composerEl = (
+          <div className="ainbox-composer">
+            {threadView
+              ? convo?.threadTypingAvatars?.[threadView.messageId] && (
+                  <TypingIndicator avatars={convo.threadTypingAvatars[threadView.messageId]} />
+                )
+              : convo?.typingAvatars && (
+                  <TypingIndicator avatars={convo.typingAvatars} />
+                )}
+            <div className={`ainbox-composer-box ${composerFocused ? 'ainbox-composer-box-focused' : ''}`}>
+              <div className={`ainbox-composer-field ${inputText.includes('@MagicMinutes') ? 'ainbox-composer-field-mm' : ''}`}>
+                <input
+                  ref={composerInputRef}
+                  placeholder="Write a Message..."
+                  value={inputText}
+                  readOnly={mmAutoPrompt}
+                  tabIndex={mmAutoPrompt ? -1 : 0}
+                  onChange={(e) => { if (!mmAutoPrompt) setInputText(e.target.value); }}
+                  onKeyDown={(e) => { if (!mmAutoPrompt && e.key === 'Enter') sendMessage(); }}
+                  onFocus={() => setComposerFocused(true)}
+                  onBlur={() => setComposerFocused(false)}
+                />
+                {inputText.includes('@MagicMinutes') && (
+                  <div className="ainbox-composer-mm-overlay" aria-hidden="true">
+                    {inputText.split(/(@MagicMinutes)/g).map((p, i) =>
+                      p === '@MagicMinutes'
+                        ? <span key={i} className="mm-mention">@MagicMinutes</span>
+                        : <span key={i}>{p}</span>
+                    )}
+                  </div>
+                )}
+              </div>
+              <div className="ainbox-composer-toolbar">
+                <div className="ainbox-toolbar-plus">
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1V11M1 6H11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                </div>
+                <div className="ainbox-toolbar-group">
+                  <img src="/icons/composer/Bold.svg" alt="" className="ainbox-toolbar-img" title="Bold" />
+                  <img src="/icons/composer/Italic.svg" alt="" className="ainbox-toolbar-img" title="Italic" />
+                  <img src="/icons/composer/Strikethrough.svg" alt="" className="ainbox-toolbar-img" title="Strikethrough" />
+                  <img src="/icons/composer/Code Inline.svg" alt="" className="ainbox-toolbar-img" title="Code" />
+                </div>
+                <div className="ainbox-toolbar-divider" />
+                <div className="ainbox-toolbar-group">
+                  <img src="/icons/composer/Number List.svg" alt="" className="ainbox-toolbar-img" title="Numbered list" />
+                  <img src="/icons/composer/Bullet List.svg" alt="" className="ainbox-toolbar-img" title="Bullet list" />
+                  <img src="/icons/composer/Checklist.svg" alt="" className="ainbox-toolbar-img" title="Checklist" />
+                  <img src="/icons/composer/Blockquotes.svg" alt="" className="ainbox-toolbar-img" title="Quote" />
+                </div>
+                <div className="ainbox-toolbar-divider" />
+                <div className="ainbox-toolbar-group">
+                  <img src="/icons/composer/Link.svg" alt="" className="ainbox-toolbar-img" title="Link" />
+                </div>
+                <div className="ainbox-toolbar-spacer" />
+                <div className="ainbox-toolbar-group">
+                  <img src="/icons/composer/Send.svg" alt="" className={`ainbox-toolbar-img ainbox-send-icon ${inputText.trim() ? 'ainbox-send-active' : ''}`} title="Send" onClick={() => { if (!mmAutoPrompt) sendMessage(); }} />
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+        return (
+        <div className={`ainbox-detail ${isOnitView ? 'ainbox-detail-onit' : ''}`}>
           {sidebarView === 'actions' && <ActionItemsView />}
           {sidebarView !== 'actions' && (
           <>
@@ -3245,11 +3353,13 @@ export default function AInbox({ win, onDrag, onOpenMagicMinutes, initialThreadV
                       <DmMessage key={msg.id} msg={msg} isFirstInGroup={msg.isFirstInGroup} isLastInGroup={msg.isLastInGroup} />
                     ))}
                   </div>
+                  {composerEl}
                 </div>
                 <div className="ainbox-onit-task">
                   <OnItTaskPane
                     summary={convo.taskSummary}
                     steps={convo.taskSteps}
+                    tasks={convo.tasks}
                     agentName={convo.name}
                     agentAvatar={convo.avatar}
                   />
@@ -3281,73 +3391,13 @@ export default function AInbox({ win, onDrag, onOpenMagicMinutes, initialThreadV
             </>
           )}
 
-          {/* Composer */}
-          <div className="ainbox-composer">
-            {threadView
-              ? convo?.threadTypingAvatars?.[threadView.messageId] && (
-                  <TypingIndicator avatars={convo.threadTypingAvatars[threadView.messageId]} />
-                )
-              : convo?.typingAvatars && (
-                  <TypingIndicator avatars={convo.typingAvatars} />
-                )}
-            <div className={`ainbox-composer-box ${composerFocused ? 'ainbox-composer-box-focused' : ''}`}>
-              <div className={`ainbox-composer-field ${inputText.includes('@MagicMinutes') ? 'ainbox-composer-field-mm' : ''}`}>
-                <input
-                  ref={composerInputRef}
-                  placeholder="Write a Message..."
-                  value={inputText}
-                  readOnly={mmAutoPrompt}
-                  tabIndex={mmAutoPrompt ? -1 : 0}
-                  onChange={(e) => { if (!mmAutoPrompt) setInputText(e.target.value); }}
-                  onKeyDown={(e) => { if (!mmAutoPrompt && e.key === 'Enter') sendMessage(); }}
-                  onFocus={() => setComposerFocused(true)}
-                  onBlur={() => setComposerFocused(false)}
-                />
-                {inputText.includes('@MagicMinutes') && (
-                  <div className="ainbox-composer-mm-overlay" aria-hidden="true">
-                    {inputText.split(/(@MagicMinutes)/g).map((p, i) =>
-                      p === '@MagicMinutes'
-                        ? <span key={i} className="mm-mention">@MagicMinutes</span>
-                        : <span key={i}>{p}</span>
-                    )}
-                  </div>
-                )}
-              </div>
-              <div className="ainbox-composer-toolbar">
-                {/* Plus button */}
-                <div className="ainbox-toolbar-plus">
-                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1V11M1 6H11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
-                </div>
-                {/* Formatting icons */}
-                <div className="ainbox-toolbar-group">
-                  <img src="/icons/composer/Bold.svg" alt="" className="ainbox-toolbar-img" title="Bold" />
-                  <img src="/icons/composer/Italic.svg" alt="" className="ainbox-toolbar-img" title="Italic" />
-                  <img src="/icons/composer/Strikethrough.svg" alt="" className="ainbox-toolbar-img" title="Strikethrough" />
-                  <img src="/icons/composer/Code Inline.svg" alt="" className="ainbox-toolbar-img" title="Code" />
-                </div>
-                <div className="ainbox-toolbar-divider" />
-                <div className="ainbox-toolbar-group">
-                  <img src="/icons/composer/Number List.svg" alt="" className="ainbox-toolbar-img" title="Numbered list" />
-                  <img src="/icons/composer/Bullet List.svg" alt="" className="ainbox-toolbar-img" title="Bullet list" />
-                  <img src="/icons/composer/Checklist.svg" alt="" className="ainbox-toolbar-img" title="Checklist" />
-                  <img src="/icons/composer/Blockquotes.svg" alt="" className="ainbox-toolbar-img" title="Quote" />
-                </div>
-                <div className="ainbox-toolbar-divider" />
-                <div className="ainbox-toolbar-group">
-                  <img src="/icons/composer/Link.svg" alt="" className="ainbox-toolbar-img" title="Link" />
-                </div>
-                {/* Spacer */}
-                <div className="ainbox-toolbar-spacer" />
-                {/* Right icons */}
-                <div className="ainbox-toolbar-group">
-                  <img src="/icons/composer/Send.svg" alt="" className={`ainbox-toolbar-img ainbox-send-icon ${inputText.trim() ? 'ainbox-send-active' : ''}`} title="Send" onClick={() => { if (!mmAutoPrompt) sendMessage(); }} />
-                </div>
-              </div>
-            </div>
-          </div>
+          {/* Composer (skipped for onit view — rendered inline in chat column) */}
+          {!isOnitView && composerEl}
           </>
           )}
         </div>
+        );
+        })()}
       </div>
 
       {searchActive && (

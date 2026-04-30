@@ -1271,6 +1271,21 @@
   object-fit: cover;
 }
 
+.ainbox-fav-avatar-onit {
+  background: var(--background-primary, #000);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ainbox-fav-avatar-onit-img {
+  width: 125%;
+  height: 125%;
+  object-fit: cover;
+  display: block;
+}
+
 .ainbox-fav-group-avatar {
   width: 40px;
   height: 40px;
@@ -1814,6 +1829,157 @@
   color: var(--text-primary);
   line-height: 20px;
   letter-spacing: -0.15px;
+}
+
+/* On-It Action Items follow-up card inside a meeting chat —
+   matches Figma "Action Items" node 61435:22440 in Product Design. */
+.ainbox-aic {
+  margin-top: 8px;
+  width: 560px;
+  max-width: 100%;
+  background: var(--bg-surface-elevated-secondary);
+  border: 0.5px solid var(--border);
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.ainbox-aic-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px 8px 8px;
+  border-bottom: 0.5px solid var(--border);
+}
+
+.ainbox-aic-quill {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 6px;
+  display: inline-flex;
+}
+
+[data-theme="light"] .ainbox-aic-quill {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.ainbox-aic-title {
+  flex: 1 0 0;
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 500;
+  color: var(--text-primary);
+  letter-spacing: -0.2px;
+}
+
+.ainbox-aic-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.ainbox-aic-row {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  padding: 16px;
+}
+
+.ainbox-aic-check {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  margin: 4px;
+  border-radius: 50%;
+  border: 1.5px solid var(--text-secondary);
+  opacity: 0.5;
+}
+
+.ainbox-aic-body {
+  flex: 1 0 0;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.ainbox-aic-task-title {
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 500;
+  color: var(--text-primary);
+  letter-spacing: -0.2px;
+}
+
+.ainbox-aic-task-desc {
+  margin: 0;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--text-secondary);
+  letter-spacing: -0.1px;
+}
+
+.ainbox-aic-btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: stretch;
+  background: #ffffff;
+  border: 0;
+  padding: 0;
+  border-radius: 32px;
+  overflow: hidden;
+  cursor: pointer;
+  box-shadow:
+    0 4px 4px 0 rgba(0, 0, 0, 0.15),
+    -5px -5px 15px 0 rgba(102, 67, 242, 0.12),
+    3px 10px 30px 0 rgba(218, 37, 156, 0.07),
+    0 3px 15px 0 rgba(125, 20, 208, 0.12);
+}
+
+.ainbox-aic-btn-onit {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 4px;
+}
+
+.ainbox-aic-btn-onit-avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #000;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ainbox-aic-btn-onit-avatar > img {
+  width: 125%;
+  height: 125%;
+  object-fit: cover;
+  display: block;
+}
+
+.ainbox-aic-btn-chevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 12px;
+  height: 12px;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.ainbox-aic-btn-label {
+  border-left: 0.5px solid var(--graphite-100, #e7e8e9);
+  display: inline-flex;
+  align-items: center;
+  padding: 0 8px;
+  height: 28px;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+  color: #000;
+  white-space: nowrap;
 }
 
 /* Shared magicast embed inside a group message */

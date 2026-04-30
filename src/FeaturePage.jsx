@@ -526,6 +526,132 @@ const AINBOX_AH_MESSAGES = {
   },
 };
 
+// On-It pinned at the top of favorites for the AInbox preview on the On-It page
+const ONIT_AINBOX_FAVORITES = [
+  { id: 'onit', name: 'On-It', avatar: '/on-it-agent.png', type: 'onit' },
+  { id: 'howard', name: 'Howard', avatar: '/headshots/howard-lerman.jpg', type: 'dm' },
+  { id: 'all-hands', name: 'All-Hands', avatar: '/groups/Group Roam.png', type: 'group' },
+];
+
+// On-It chat with company-recap conversation for the "Lives in your AInbox" section
+const ONIT_AINBOX_MESSAGES = {
+  ...AINBOX_AH_MESSAGES,
+  onit: {
+    type: 'onit',
+    name: 'On-It',
+    subtitle: 'AI Assistant',
+    avatar: '/on-it-agent.png',
+    taskSummary: 'Pulling the Q3 priorities from yesterday’s exec sync',
+    taskSteps: [
+      'Locating yesterday’s Exec Sync Magic Minutes',
+      'Reading the speaker-attributed transcript',
+      'Compiling the Q3 priority list',
+      'Drafting the recap for You',
+    ],
+    tasks: [
+      {
+        summary: 'Pulling the Q3 priorities from yesterday’s exec sync',
+        steps: [
+          'Locating yesterday’s Exec Sync Magic Minutes',
+          'Reading the speaker-attributed transcript',
+          'Compiling the Q3 priority list',
+          'Drafting the recap for You',
+        ],
+      },
+      {
+        summary: 'Checking Lexi’s status on the threading rewrite',
+        steps: [
+          'Finding Lexi’s most recent threading-rewrite update',
+          'Cross-referencing the staff flag rollout state',
+          'Pinging Klas for staging confirmation',
+          'Drafting a status reply for You',
+        ],
+      },
+    ],
+    messages: [
+      { id: 1, self: true, text: 'What’s our ARR right now?' },
+      { id: 2, self: false, text: 'We crossed $3M ARR last week — up 14% from January. Want me to drop the trend chart in this thread?' },
+      { id: 3, self: true, text: 'How did Q3 planning land in yesterday’s exec sync?' },
+      { id: 4, self: false, text: 'The team locked in three priorities: Magic Minutes GA, AInbox ship date of May 14, and pulling the EU office launch into Q4. I can post the full call brief if helpful.' },
+      { id: 5, self: true, text: 'What’s blocking Lexi on the threading rewrite?' },
+      { id: 6, self: false, text: 'She’s waiting on the staff flag rollout — Klas pushed it to staging yesterday, so she should be unblocked by EOD. I’ll ping you the moment she flips it on.' },
+    ],
+  },
+};
+
+// Meeting chat with On-It posting an Action Items follow-up — used in the
+// "On-It with Magic Minutes" feature visual.
+const ONIT_MM_MESSAGES = {
+  ...AINBOX_AH_MESSAGES,
+  'meet-design': {
+    type: 'meeting',
+    name: 'Inbox Design Discussion',
+    groupImg: '/icons/magic-quill.svg',
+    avatars: ['/headshots/grace-sutherland.jpg', '/headshots/howard-lerman.jpg', '/headshots/joe-woodward.jpg'],
+    memberCount: 5,
+    pinnedItems: [],
+    messages: [
+      { id: 1, sender: 'Grace Sutherland', avatar: '/headshots/grace-sutherland.jpg', time: 'Today 9:00 AM', text: "Let’s kick off the inbox design discussion. I’ve prepared some wireframes based on the user feedback." },
+      { id: 2, sender: 'Howard Lerman', avatar: '/headshots/howard-lerman.jpg', time: 'Today 9:05 AM', text: "Great, I’ve been thinking about the folder system. Users really want drag-and-drop reordering." },
+      { id: 3, sender: 'Joe Woodward', avatar: '/headshots/joe-woodward.jpg', time: 'Today 9:10 AM', text: "Agreed. The pinned items and collapsible sections tested really well in the prototype." },
+      { id: 4, sender: 'Rob Figueiredo', avatar: '/headshots/rob-figueiredo.jpg', time: 'Today 9:15 AM', text: "I can start on the API for custom folder ordering this sprint. Should be straightforward." },
+      {
+        id: 5,
+        sender: 'On-It',
+        avatar: '/on-it-agent.png',
+        time: 'Today 9:32 AM',
+        actionItems: [
+          {
+            title: 'Schedule Kick Off Meeting with Max and Joe',
+            desc: 'Arrange an initial meeting with Max and Joe to discuss project goals, timelines, and roles, ensuring alignment and clear next steps.',
+            action: 'Schedule?',
+          },
+          {
+            title: 'Get Video Assets from Grace',
+            desc: 'Request and collect necessary video files or materials from Grace to support project deliverables or marketing efforts.',
+            action: 'Email?',
+          },
+          {
+            title: 'Follow Up with Chelsea about SMS Notifications',
+            desc: 'Schedule Roam dashboard UI review. Email Jeff and Joe with mockups.',
+            action: 'Schedule?',
+          },
+        ],
+      },
+    ],
+  },
+};
+
+const ONIT_MM_FAVORITES = [
+  { id: 'howard-fav', name: 'Howard', avatar: '/headshots/howard-lerman.jpg', type: 'dm' },
+  { id: 'all-hands-fav', name: 'All-Hands', avatar: '/groups/Group Roam.png', type: 'group' },
+];
+
+const ONIT_MM_SECTIONS = [
+  {
+    id: 'dms', label: 'Direct Messages',
+    items: [
+      { id: 'onit', name: 'On-It', avatar: '/on-it-agent.png', type: 'onit' },
+      { id: 'howard', name: 'Howard Lerman', avatar: '/headshots/howard-lerman.jpg', type: 'dm' },
+      { id: 'grace', name: 'Grace Sutherland', avatar: '/headshots/grace-sutherland.jpg', type: 'dm' },
+      { id: 'klas', name: 'Klas Leino', avatar: '/headshots/klas-leino.jpg', type: 'dm' },
+    ],
+  },
+  {
+    id: 'meetings', label: 'Meetings',
+    items: [
+      { id: 'meet-design', name: 'Inbox Design Discussion', type: 'meeting' },
+    ],
+  },
+  {
+    id: 'groups', label: 'My Groups',
+    items: [
+      { id: 'all-hands', name: 'All-Hands', groupImg: '/groups/Group Roam.png', type: 'group', memberCount: 45 },
+      { id: 'exec', name: 'Exec', groupImg: '/groups/Group Exec.png', type: 'group', memberCount: 7 },
+    ],
+  },
+];
+
 // All-Hands chat with Howard's magicast share appended as the latest message
 const MAGICAST_SHARE_AH_MESSAGES = {
   ...AINBOX_AH_MESSAGES,
@@ -5995,6 +6121,250 @@ export const FEATURES = {
       STANDARD_PRICING_COMPARE,
     ],
   },
+  'on-it': {
+    eyebrow: 'On-It',
+    title: 'Your AI assistant, on the org chart',
+    hero: 'On-It is the AI agent that lives in your Virtual HQ. It sees the office, joins meetings, picks up action items, shares recordings, and chats back in your AInbox — all without leaving Roam.',
+    visual: <OnItFeatureChat />,
+    sections: [
+      {
+        title: 'On-It is Your Eyes & Ears',
+        desc: 'In a legacy office, one of the most valuable things an executive assistant does is act as your “eyes and ears” within the company. They observe who is talking to who, they can let you know when someone frees up, they can keep you posted when someone enters the office. This scales only to what is immediately observable to the person. Unfortunately, in digital environments, this subtle signaling is lost. When companies are distributed and people are in the field or remote, there’s no sense of where anyone is, or who is present, or what people are doing. Of course, since Roam is in a digital environment, On-It’s ability to observe spans the entire company, not just what a real person can see in their immediate vicinity!',
+        subBullets: [
+          'Tell you when someone enters the office.',
+          'Tell you when it sees a certain set of people talking.',
+          'Tell you when a certain meeting is over and the people free up.',
+        ],
+        visual: <MapPreview onItAutoOpen initialFloor="R&D" />,
+      },
+      {
+        title: 'On-It Can Schedule',
+        desc: 'How much time do you spend scheduling meetings? How much do you estimate your team spends? Swapping links back and forth between people, endlessly discussing and pushing back times. This is the perfect kind of task to be handled by On-It.',
+        subBullets: [
+          'Ask On-It about your calendar.',
+          'Schedule with people in the company.',
+          'Schedule with people outside the company.',
+        ],
+        visual: (
+          <OnItFeatureChat
+            initialMessages={[
+              { id: 1, self: true, text: 'Find a 30-min slot this week to meet with Sean MacIsaac and Klas Leino, then send invites.' },
+              { id: 2, self: false, text: "I'm On-It! Thursday at 2pm works for all three of you — I'll send the invite with a Lobby room and confirm once they accept." },
+            ]}
+            taskSummary="Schedule a 30-min sync with Sean and Klas"
+            taskSteps={[
+              'Pulling everyone’s availability for the next 5 days',
+              'Finding the first 30-min slot all three are free',
+              'Booking a Lobby room and drafting the invite',
+              'Sending invites and watching for accepts',
+            ]}
+          />
+        ),
+      },
+      {
+        title: 'On-It Can Follow Up with Chat & Email',
+        desc: 'In a legacy office, a candidate interviewing for a job may meet 6 people at the company during their interview day. A recruiting coordinator solicits feedback from all 6 people and then compiles it for review. Or, a manager may ask their 10 or 12 direct reports for a status update on a project or their accomplishments that week. On-It can now just do all this for you, as a Follow Up:',
+        subBullets: [
+          'Message people within your company.',
+          'Send an email to any email address.',
+          'Send a templated “Knowledge” email tailored for the circumstance.',
+        ],
+        visual: (
+          <OnItFeatureChat
+            initialMessages={[
+              { id: 1, self: true, text: 'Collect feedback from yesterday’s 6 interview panelists for Maya Chen, then email Maya a status update.' },
+              { id: 2, self: false, text: "I'm On-It! DMing each panelist for written feedback now — once it’s all in, I’ll compile a summary and send Maya a status email from your address." },
+            ]}
+            taskSummary="Gather interview feedback for Maya Chen and email her a status update"
+            taskSteps={[
+              'Pulling yesterday’s 6 interview panelists from the calendar',
+              'DMing each panelist for written feedback',
+              'Compiling the feedback into a summary',
+              'Drafting a status email to Maya from your address',
+              'Sending the email and watching for a reply',
+            ]}
+          />
+        ),
+      },
+      {
+        title: 'On-It with Magic Minutes',
+        desc: 'Magic Minutes provides AI-promptable transcripts, meeting summaries and proposed action item assignments in a chat group for everyone in the meeting. On-It is smart enough to volunteer to do your tasks when it has the skills! All you have to do is click the button and they’re on it!',
+        subBullets: [
+          'Volunteer for action items it can complete.',
+          'Pull context from any past meeting transcript.',
+          'Post a follow-up summary back in the meeting chat.',
+        ],
+        visual: (
+          <AInboxPreview
+            overrides
+            view="chat"
+            chatId="meet-design"
+            favoritesOverride={ONIT_MM_FAVORITES}
+            sectionsOverride={ONIT_MM_SECTIONS}
+            messagesOverride={ONIT_MM_MESSAGES}
+          />
+        ),
+      },
+      {
+        title: 'On-It Can Prompt All Your Meetings',
+        desc: 'On-It has the knowledge from all of your meetings. You can prompt On-It to use all your meetings as context.',
+        visual: (
+          <OnItFeatureChat
+            initialMessages={[
+              { id: 1, self: true, text: 'Who from sales is meeting with Howard right now?' },
+              { id: 2, self: false, text: "Peter Lerman, Mike Walrath, and Jon Brod are with Howard in the War Room — they jumped in 6 minutes ago." },
+            ]}
+            taskSummary="Look up who is meeting with Howard right now"
+            taskSteps={[
+              'Locating Howard on the map',
+              'Reading the room he’s in (War Room)',
+              'Filtering attendees by sales team',
+              'Reporting back to You',
+            ]}
+          />
+        ),
+      },
+      {
+        title: 'Upload Individual Knowledge, Company Knowledge',
+        desc: 'If you have sales templates, company policies, or recruiting templates, simply upload to On-It and it will include that knowledge as context when assisting you. Individuals can upload their own knowledge, and company administrators can upload company knowledge that will apply universally to all assistants in the company.',
+        visual: (
+          <OnItFeatureChat
+            compact
+            initialMessages={[
+              {
+                id: 1,
+                self: true,
+                attachment: { type: 'pdf', name: 'Q1 Board Update.pdf' },
+                text: 'Can you summarize the key risks in this deck?',
+              },
+              {
+                id: 2,
+                self: false,
+                text: 'Three risks stand out: ARR concentration in the top 10 customers (38%), AInbox launch slipping to mid-May, and EU office hiring behind plan. Want me to draft talking points for the board?',
+              },
+              {
+                id: 3,
+                self: true,
+                text: 'Just the customer concentration one — what changed since last quarter?',
+              },
+              {
+                id: 4,
+                self: false,
+                text: 'Top 10 were 31% of ARR last quarter — up 7 points. Driven by Notion expansion and the new Vercel contract. Klas flagged it in last week’s exec sync.',
+              },
+            ]}
+          />
+        ),
+      },
+      {
+        title: 'Watch the Chain of Thought',
+        desc: 'See the substatus of the tasks On-It is working on in your AInbox.',
+        visual: (
+          <OnItFeatureChat
+            initialMessages={[
+              { id: 1, self: true, text: 'What did Klas decide about the auth rewrite in yesterday’s RFC review?' },
+              { id: 2, self: false, text: "I'm On-It! Pulling the RFC thread and the Magic Minutes from yesterday's review — give me a sec to walk through it." },
+            ]}
+            taskSummary="Find Klas’s decision on the auth rewrite"
+            taskSteps={[
+              'Locating the RFC thread in #engineering',
+              'Loading Magic Minutes from yesterday’s RFC review',
+              'Cross-referencing Klas’s comments with the call decision',
+              'Drafting the answer for You',
+            ]}
+          />
+        ),
+      },
+      {
+        title: 'Lives in your AInbox',
+        desc: 'On-It is just another conversation in your AInbox. Chat, ask follow-ups, attach files, and pull up the answer history exactly like you would with a teammate.',
+        visual: (
+          <AInboxPreview
+            overrides
+            view="dm"
+            chatId="onit"
+            favoritesOverride={ONIT_AINBOX_FAVORITES}
+            messagesOverride={ONIT_AINBOX_MESSAGES}
+          />
+        ),
+      },
+      {
+        variant: 'prose',
+        title: 'An Assistant for All',
+        body: [
+          'In a legacy office, only senior people like executives and Vice Presidents have the luxury of an assistant. But in Roam, everyone can enjoy the great benefits of their own Executive Assistant. Imagine how much more productive your company would be if every single person in the company were assisted, not just the few at the top.',
+          'This is just another reason why Roam is a productivity 8x.',
+        ],
+      },
+      {
+        variant: 'prose',
+        title: 'The Future of On-It',
+        body: [
+          'The potential of AI to transform your company is not a futuristic dream, it’s here today.',
+          'The AI-powered Virtual Office Super Bundle is designed to 8x your productivity and 8x your savings overnight, with 8 fully integrated AI products for the price of 1 to power your AI work.',
+          'On-It’s job is to serve as your admin in your AI Office. This is its full purpose — basic office skills: observation, follow-ups, email, scheduling, greeting. We’re going to leave it to you to build with other AIs and custom Coworkers. On-It is just the start.',
+          'We’re going to be totally focused on building your AI Office for people and AIs to collaborate in the Office of the Future. You’re going to build the future.',
+        ],
+      },
+      {
+        variant: 'explore',
+        title: 'Why On-It?',
+        itemMarker: 'bullet',
+        items: [
+          'Office-aware — knows who is in which room, what meetings ran, and what was decided.',
+          'Native to Roam — no separate app, no copy-pasting transcripts.',
+          'Promptable across meetings, chats, and Magicasts.',
+          'Picks up unowned action items and reports back in the group chat.',
+          'Just $19.50/month per active member, bundled with 8 other products. A standalone AI assistant runs $50/month.',
+        ],
+      },
+      {
+        variant: 'explore',
+        title: 'AI Assistant Use Cases',
+        itemMarker: 'bullet',
+        items: [
+          'Stand-up notes — draft the team’s daily summary from yesterday’s meetings.',
+          'Research — get a one-pager on a prospect before the next sales call.',
+          'Inbox triage — surface the threads that actually need your reply.',
+          'Calendar wrangling — find a 30-min slot with three execs across timezones.',
+          'Knowledge lookup — “what did we decide about pricing in last week’s exec sync?”',
+          'Executive comms — share the latest investor update with the board.',
+        ],
+      },
+      {
+        variant: 'explore',
+        title: 'Explore our Virtual Office Platform',
+        desc: '9 products for the price of one:',
+        items: [
+          'Company Visualization with the Virtual Office',
+          'Virtual Meeting Room with Drop-In Meetings',
+          'All-Hands Presentations with Theater',
+          'Enterprise Messaging with AInbox',
+          'Meeting Scheduler with Lobby',
+          'Screen Recorder with Magicast',
+          'AI Meeting Summarization with Magic Minutes',
+          'Your AI Assistant is On-It',
+          'Immersive Events with On-Air',
+        ],
+      },
+      {
+        variant: 'compare-table',
+        columns: [
+          { label: 'On-It in Roam' },
+          { label: 'Standalone AI Assistant' },
+        ],
+        rows: [
+          { left: 'Lives in your Virtual HQ. Sees who is in which room and what is happening right now.', right: 'No office context. Stares at a blank chat window.' },
+          { left: 'Reads your meetings, chats, PDFs, and Magicast transcripts.', right: 'Re-paste everything, every time.' },
+          { left: 'Acts on your behalf — sends DMs, books meetings, shares Magicasts.', right: 'Drafts you a message you have to send yourself.' },
+          { left: 'Picks up unowned action items from Magic Minutes.', right: 'Doesn’t know your meetings ever happened.' },
+          { left: 'Bundled in the Virtual Office Super Bundle.', right: '$50.00/month' },
+        ],
+      },
+      { variant: 'reviews' },
+      STANDARD_PRICING_COMPARE,
+    ],
+  },
   'on-air': {
     eyebrow: 'On-Air',
     title: 'Host a live event the crowd can actually feel',
@@ -6030,6 +6400,7 @@ export const FEATURE_ORDER = [
   'magic-minutes',
   'lobby',
   'magicast',
+  'on-it',
   'on-air',
 ];
 
@@ -6112,7 +6483,7 @@ function SectionLinkButton({ featureSlug, slug }) {
   );
 }
 
-function FeatureSection({ eyebrow, title, subtitle, titleImage, desc, visual, icons, variant, cards, bullets, left, right, columns, columnsStyle, leadContent, items, itemMarker, flashcards, featureSlug, rows }) {
+function FeatureSection({ eyebrow, title, subtitle, titleImage, desc, visual, icons, variant, cards, bullets, left, right, columns, columnsStyle, leadContent, items, itemMarker, flashcards, featureSlug, rows, body, subBullets }) {
   if (variant === 'reviews') {
     return <HomepageReviews limit={items?.length || 6} />;
   }
@@ -6147,6 +6518,20 @@ function FeatureSection({ eyebrow, title, subtitle, titleImage, desc, visual, ic
             </li>
           ))}
         </ul>
+      </section>
+    );
+  }
+  if (variant === 'prose' && body && body.length > 0) {
+    return (
+      <section className="fp-section fp-section-explore fp-section-prose">
+        <div className="fp-explore-text">
+          <h2 className="fp-explore-title">{title}</h2>
+        </div>
+        <div className="fp-prose-body">
+          {body.map((p, i) => (
+            <p key={i} className="text-body">{p}</p>
+          ))}
+        </div>
       </section>
     );
   }
@@ -6277,6 +6662,11 @@ function FeatureSection({ eyebrow, title, subtitle, titleImage, desc, visual, ic
         )}
         {subtitle && <div className="fp-section-subtitle">{subtitle}</div>}
         <p className="fp-section-desc text-body">{desc}</p>
+        {subBullets && subBullets.length > 0 && (
+          <ul className="fp-section-sub-bullets text-body">
+            {subBullets.map((b, i) => <li key={i}>{b}</li>)}
+          </ul>
+        )}
         {icons && icons.length > 0 && (
           <div className="fp-section-icons">
             {icons.map((src, i) => (

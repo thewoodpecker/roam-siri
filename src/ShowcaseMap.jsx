@@ -1606,7 +1606,7 @@ function DropInFeatureVisual({ theme, className }) {
   );
 }
 
-export function OnItFeatureChat({ initialMessages, taskSummary, taskSteps } = {}) {
+export function OnItFeatureChat({ initialMessages, taskSummary, taskSteps, compact = false } = {}) {
   const DEFAULT_INITIAL = [
     { id: 1, self: true, text: 'Can you tell me if you see Sean MacIsaac and Thomas Grapperon meeting together?' },
     { id: 2, self: false, text: "I'm On-It! I'll notify you the next time I notice that Sean MacIsaac and Thomas Grapperon are meeting together." },
@@ -1629,16 +1629,32 @@ export function OnItFeatureChat({ initialMessages, taskSummary, taskSteps } = {}
     const isFirstInGroup = !prev || prev.self !== m.self;
     const radiusIn = isFirstInGroup ? '18px 18px 18px 4px' : '4px 18px 18px 4px';
     const radiusOut = isFirstInGroup ? '20px 20px 4px 20px' : '20px 4px 4px 20px';
+    const hasPdf = m.attachment?.type === 'pdf';
     return (
       <div key={m.id} className={`mc-msg ${m.self ? 'mc-msg-self' : ''} ${!isFirstInGroup ? 'mc-msg-consecutive' : ''}`}>
-        <div className={`mc-msg-bubble ${m.self ? 'mc-msg-bubble-self' : ''}`} style={{ borderRadius: m.self ? radiusOut : radiusIn }}>
-          <p>{m.text}</p>
-        </div>
+        {hasPdf && (
+          <div className={`mc-msg-attachment ${m.self ? 'mc-msg-attachment-self' : ''}`}>
+            <div className="ainbox-pdf-attachment">
+              <div className="ainbox-pdf-icon-box">
+                <span className="ainbox-pdf-icon" aria-hidden="true" />
+              </div>
+              <div className="ainbox-pdf-meta">
+                <div className="ainbox-pdf-name">{(m.attachment.name || '').replace(/\.pdf$/i, '')}</div>
+                <div className="ainbox-pdf-ext">PDF</div>
+              </div>
+            </div>
+          </div>
+        )}
+        {m.text && (
+          <div className={`mc-msg-bubble ${m.self ? 'mc-msg-bubble-self' : ''}`} style={{ borderRadius: m.self ? radiusOut : radiusIn }}>
+            <p>{m.text}</p>
+          </div>
+        )}
       </div>
     );
   };
   return (
-    <div className="mc-window sc-onit-window" style={{ position: 'relative', left: 0, top: 0 }}>
+    <div className={`mc-window sc-onit-window ${compact ? 'sc-onit-window-compact' : ''}`} style={{ position: 'relative', left: 0, top: 0 }}>
       <div className="mc-header">
         <div className="mc-traffic-lights">
           <div className="mc-light mc-light-close" />
@@ -1650,7 +1666,7 @@ export function OnItFeatureChat({ initialMessages, taskSummary, taskSteps } = {}
           <span className="mc-header-name">On-It</span>
         </div>
       </div>
-      <div className="mc-body sc-onit-body">
+      <div className={`mc-body sc-onit-body ${compact ? 'sc-onit-body-compact' : ''}`}>
         <div className="sc-onit-chat-col">
           <div className="mc-messages" ref={messagesRef}>
             {messages.map((m, i) => renderBubble(m, messages[i - 1]))}
@@ -1682,9 +1698,11 @@ export function OnItFeatureChat({ initialMessages, taskSummary, taskSteps } = {}
             </div>
           </div>
         </div>
-        <div className="sc-onit-task-col">
-          <OnItTaskPane summary={taskSummary} steps={taskSteps} />
-        </div>
+        {!compact && (
+          <div className="sc-onit-task-col">
+            <OnItTaskPane summary={taskSummary} steps={taskSteps} />
+          </div>
+        )}
       </div>
     </div>
   );
@@ -2092,7 +2110,7 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
           type: 'dm', name: 'On-It', subtitle: 'AI Executive Assistant',
           avatar: '/on-it-agent.png',
           messages: [
-            { id: 1, self: false, text: "Hey Joe 👋 I'm On-It, your AI executive assistant." },
+            { id: 1, self: false, text: "Hey 👋 I'm On-It, your AI executive assistant." },
             { id: 2, self: false, text: "I can schedule meetings, watch for colleagues or events, draft follow-ups (internal or external), complete Magic Minutes action items for you, and tap into your team's templates + knowledge base." },
             { id: 3, self: false, text: "What can I help you with?" },
           ],
