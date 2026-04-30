@@ -474,7 +474,9 @@
 /* Handwritten "Explore this demo" annotation */
 .sc-hint {
   position: absolute;
-  z-index: 2147483647;
+  /* Sit below the navbar (z-index: 10000) so dropdown menus float above
+     the hint, but still above the showcase content. */
+  z-index: 100;
   pointer-events: none;
   transition: opacity 400ms ease-out;
 }

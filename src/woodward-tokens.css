@@ -47,7 +47,7 @@
   --icon-secondary: var(--white-opacity-500);
   --icon-primary-on-light: var(--solid-black);
   --text-primary-on-light: var(--solid-black);
-  --text-secondary-on-light: var(--white-opacity-500);
+  --text-secondary-on-light: var(--black-opacity-500);
 
   /* ——— Labels ——— */
   --label-primary: var(--solid-white);
@@ -245,6 +245,26 @@
   /* ——— Typography (Nebula UI) ——— */
   --font-family-primary: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-family-mono: 'Roboto Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+/* Light-theme token overrides — applied either via :root (when <html>
+   carries data-theme) or via .sc-viewport / .fp-page (the FeaturePage
+   wrapper carries data-theme on its root div), so the tokens flip in
+   either context. */
+:root[data-theme="light"],
+[data-theme="light"] {
+  --text-primary-on-light: var(--solid-white);
+  --text-secondary-on-light: var(--white-opacity-500);
+
+  /* Background / Surface — flipped per the design system spec */
+  --bg-surface-primary: var(--solid-white);
+  --bg-surface-secondary: var(--graphite-900);
+  --bg-surface-raised: var(--solid-white);
+  --bg-surface-elevated-primary: var(--solid-white);
+  --bg-surface-elevated-secondary: var(--solid-white);
+  --bg-surface-elevated-tertiary: var(--solid-white);
+  --bg-surface-primary-subdued: var(--graphite-25);
+  --bg-surface-elevated-primary-subdued: var(--graphite-25);
 }
 
 /* Nebula UI typography styles — apply via class. */

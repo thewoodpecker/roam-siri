@@ -71,10 +71,20 @@ const AINBOX_GROUPS = [
 ];
 
 function PodCoreLogo({ kind }) {
-  if (kind === 'roam') {
-    return <img src="/icons/mobile-tabs/roam-planet-logo.svg" alt="" className="mw-pod-core-svg" />;
-  }
-  return <img src="/icons/mobile-tabs/design-inc-logo.svg" alt="" className="mw-pod-core-svg" />;
+  const src = kind === 'roam'
+    ? '/icons/mobile-tabs/roam-planet-logo.svg'
+    : '/icons/mobile-tabs/design-inc-logo.svg';
+  return (
+    <span
+      className="mw-pod-core-svg"
+      aria-hidden="true"
+      style={{
+        WebkitMaskImage: `url(${src})`,
+        maskImage: `url(${src})`,
+        backgroundColor: 'var(--icon-primary)',
+      }}
+    />
+  );
 }
 
 function PodDots({ count, seed }) {
@@ -264,13 +274,16 @@ function formatClock(d) {
   return `${h}:${String(m).padStart(2, '0')}`;
 }
 
-export default function MobileWindow({ win, onDrag, onOpenStories, initialTab = 'roam', initialView = 'overworld', initialPlatform = 'ios' }) {
+export default function MobileWindow({ win, onDrag, onOpenStories, initialTab = 'roam', initialView = 'overworld', initialPlatform = 'ios', lockscreen = false, theater = false, mapContent = null }) {
   const [closing, setClosing] = useState(false);
   const [activeTab, setActiveTab] = useState(initialTab);
   const [viewStack, setViewStack] = useState(initialTab === 'roam' && initialView === 'map' ? ['overworld', 'map'] : ['overworld']);
   const currentView = viewStack[viewStack.length - 1];
   const [clock, setClock] = useState(() => formatClock(new Date()));
   const [platform, setPlatform] = useState(initialPlatform);
+  // Tapping the Theater room on the mobile map opens the full-screen Theater
+  // overlay (same as the `theater` prop) without leaving the simulator.
+  const [theaterOpen, setTheaterOpen] = useState(theater);
 
   useEffect(() => {
     const tick = () => setClock(formatClock(new Date()));
@@ -304,6 +317,15 @@ export default function MobileWindow({ win, onDrag, onOpenStories, initialTab = 
       style={{ left: win.position.x, top: win.position.y, zIndex: win.zIndex }}
       onMouseDown={() => win.focus()}
     >
+      <svg width="0" height="0" style={{ position: 'absolute', overflow: 'hidden', pointerEvents: 'none' }} aria-hidden="true">
+        <defs>
+          <filter id="mw-liquid-glass" x="0%" y="0%" width="100%" height="100%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.008 0.008" numOctaves="2" seed="92" result="turbulence" />
+            <feGaussianBlur in="turbulence" stdDeviation="2" result="softMap" />
+            <feDisplacementMap in="SourceGraphic" in2="softMap" scale="45" xChannelSelector="R" yChannelSelector="G" />
+          </filter>
+        </defs>
+      </svg>
       <div className="mw-chrome" onMouseDown={onDrag}>
         <div className="mw-chrome-lights">
           <button className="mw-light mw-light-close" onMouseDown={(e) => e.stopPropagation()} onClick={handleClose} aria-label="Close" />
@@ -340,16 +362,19 @@ export default function MobileWindow({ win, onDrag, onOpenStories, initialTab = 
       </div>
 
       <div className="mw-phone">
-        <div className="mw-phone-frame">
+        <div className={`mw-phone-frame ${lockscreen ? 'mw-phone-frame-lock' : ''}`}>
           <div className="mw-notch" />
           <div className="mw-screen">
-            {(activeTab === 'roam' || activeTab === 'ainbox') && <div className="mw-topbar-bg" aria-hidden="true" />}
-            <div className="mw-status">
+            {!lockscreen && !theaterOpen && (activeTab === 'roam' || activeTab === 'ainbox') && <div className="mw-topbar-bg" aria-hidden="true" />}
+            <div className={`mw-status ${lockscreen ? 'mw-status-lock' : ''}`}>
               <span className="mw-time">{clock}</span>
               <img className="mw-status-icons" src={platform === 'ios' ? '/icons/mobile-tabs/status.svg' : '/icons/mobile-tabs/android-status.svg'} alt="" />
             </div>
 
-            {activeTab === 'roam' && currentView === 'overworld' && (
+            {lockscreen && <LockScreenView />}
+            {theaterOpen && <TheaterView onClose={() => setTheaterOpen(false)} />}
+
+            {!lockscreen && !theaterOpen && activeTab === 'roam' && currentView === 'overworld' && (
               <div className="mw-content mw-overworld">
                 <div className="mw-top-nav">
                   <img className="mw-top-avatar" src="/headshots/joe-woodward.jpg" alt="" />
@@ -369,7 +394,7 @@ export default function MobileWindow({ win, onDrag, onOpenStories, initialTab = 
               </div>
             )}
 
-            {activeTab === 'roam' && currentView === 'map' && (
+            {!lockscreen && !theaterOpen && activeTab === 'roam' && currentView === 'map' && (
               <div className="mw-content mw-map">
                 <div className="mw-top-nav">
                   <button className="mw-top-avatar mw-top-back" onClick={goBack} aria-label="Back">
@@ -377,11 +402,11 @@ export default function MobileWindow({ win, onDrag, onOpenStories, initialTab = 
                   </button>
                   <img className="mw-top-logo" src="/icons/mobile-tabs/logo-with-wordmark.svg" alt="Roam" />
                 </div>
-                <MobileMapGrid />
+                {mapContent ? <div className="mw-map-embed">{mapContent}</div> : <MobileMapGrid onOpenTheater={() => setTheaterOpen(true)} />}
               </div>
             )}
 
-            {activeTab === 'ainbox' && (
+            {!lockscreen && !theaterOpen && activeTab === 'ainbox' && (
               <div className="mw-content mw-ainbox">
                 <div className="mw-ainbox-header">
                   <img className="mw-ainbox-profile" src="/headshots/joe-woodward.jpg" alt="" />
@@ -393,63 +418,75 @@ export default function MobileWindow({ win, onDrag, onOpenStories, initialTab = 
                     <img src="/icons/mobile-tabs/Compose.svg" alt="" width="20" height="20" />
                   </button>
                 </div>
-                <div className="mw-ainbox-featured">
-                  {AINBOX_FEATURED.map((u) => (
-                    <div key={u.id} className="mw-featured-user">
-                      <div className="mw-featured-avatar-wrap">
-                        {u.label && (
-                          <div className="mw-featured-label">
-                            <span>{u.label}</span>
-                          </div>
-                        )}
-                        {u.groupKind === 'design' ? (
-                          <GroupAvatar kind="design" size={60} />
-                        ) : (
-                          <img className="mw-featured-avatar" src={u.avatar} alt="" />
-                        )}
+                <AinboxScroller>
+                  <div className="mw-ainbox-featured">
+                    {AINBOX_FEATURED.map((u) => (
+                      <div key={u.id} className="mw-featured-user">
+                        <div className="mw-featured-avatar-wrap">
+                          {u.label && (
+                            <div className="mw-featured-label">
+                              <span>{u.label}</span>
+                            </div>
+                          )}
+                          {u.groupKind === 'design' ? (
+                            <GroupAvatar kind="design" size={60} />
+                          ) : (
+                            <img className="mw-featured-avatar" src={u.avatar} alt="" />
+                          )}
+                        </div>
+                        <span className="mw-featured-name">{u.name}</span>
                       </div>
-                      <span className="mw-featured-name">{u.name}</span>
-                    </div>
-                  ))}
-                </div>
-                <AinboxSection title="Direct Messages">
-                  {AINBOX_DMS.map((d) => (
-                    <div key={d.id} className="mw-list-cell">
-                      <img className="mw-list-avatar" src={d.avatar} alt="" />
-                      <span className="mw-list-name">{d.name}</span>
-                    </div>
-                  ))}
-                </AinboxSection>
-                <AinboxSection title="Meetings">
-                  {AINBOX_MEETINGS.map((m) => (
-                    <div key={m.id} className={`mw-list-cell ${m.read ? 'mw-list-cell-read' : ''}`}>
-                      <MagicQuillAvatar />
-                      <span className="mw-list-name">{m.name}</span>
-                    </div>
-                  ))}
-                </AinboxSection>
-                <AinboxSection title="Threads">
-                  {AINBOX_THREADS.map((t) => (
-                    <div key={t.id} className={`mw-list-cell ${t.read ? 'mw-list-cell-read' : ''}`}>
-                      <img className="mw-list-avatar" src={t.avatar} alt="" />
-                      <span className="mw-list-name">{t.text}</span>
-                    </div>
-                  ))}
-                </AinboxSection>
-                <AinboxSection title="My Groups">
-                  {AINBOX_GROUPS.map((g) => (
-                    <div key={g.id} className="mw-list-cell">
-                      <GroupAvatar kind={g.kind} size={24} />
-                      <span className="mw-list-name">{g.name}</span>
-                    </div>
-                  ))}
-                </AinboxSection>
+                    ))}
+                  </div>
+                  <AinboxSection title="Direct Messages">
+                    {AINBOX_DMS.map((d) => (
+                      <div key={d.id} className="mw-list-cell">
+                        <img className="mw-list-avatar" src={d.avatar} alt="" />
+                        <span className="mw-list-name">{d.name}</span>
+                      </div>
+                    ))}
+                  </AinboxSection>
+                  <AinboxSection title="Meetings">
+                    {AINBOX_MEETINGS.map((m) => (
+                      <div key={m.id} className={`mw-list-cell ${m.read ? 'mw-list-cell-read' : ''}`}>
+                        <MagicQuillAvatar />
+                        <span className="mw-list-name">{m.name}</span>
+                      </div>
+                    ))}
+                  </AinboxSection>
+                  <AinboxSection title="Threads">
+                    {AINBOX_THREADS.map((t) => (
+                      <div key={t.id} className={`mw-list-cell ${t.read ? 'mw-list-cell-read' : ''}`}>
+                        <img className="mw-list-avatar" src={t.avatar} alt="" />
+                        <span className="mw-list-name">{t.text}</span>
+                      </div>
+                    ))}
+                  </AinboxSection>
+                  <AinboxSection title="My Groups">
+                    {AINBOX_GROUPS.map((g) => (
+                      <div key={g.id} className="mw-list-cell">
+                        <GroupAvatar kind={g.kind} size={24} />
+                        <span className="mw-list-name">{g.name}</span>
+                      </div>
+                    ))}
+                  </AinboxSection>
+                </AinboxScroller>
               </div>
             )}
 
-            {activeTab === 'camera' && (
+            {!lockscreen && !theaterOpen && activeTab === 'camera' && (
               <div className="mw-content mw-camera">
-                <div className="mw-camera-viewfinder" />
+                <div className="mw-camera-viewfinder">
+                  <video
+                    className="mw-camera-video"
+                    src="/mobile/disney-world.mp4"
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    aria-hidden="true"
+                  />
+                </div>
                 <div className="mw-camera-controls">
                   <div className="mw-camera-thumb"><img src="/stories/story-2.png" alt="" /></div>
                   <button className="mw-camera-shutter" aria-label="Capture" />
@@ -460,7 +497,7 @@ export default function MobileWindow({ win, onDrag, onOpenStories, initialTab = 
               </div>
             )}
 
-            <div className="mw-tabbar">
+            {!lockscreen && !theaterOpen && <div className="mw-tabbar">
               <div className="mw-tabbar-main">
                 <button className={`mw-tab ${activeTab === 'ainbox' ? 'mw-tab-active' : ''}`} onClick={() => selectTab('ainbox')} aria-label="AInbox">
                   <span className="mw-tab-icon" style={{ WebkitMaskImage: 'url(/icons/mobile-tabs/Chat.svg)', maskImage: 'url(/icons/mobile-tabs/Chat.svg)' }} />
@@ -475,7 +512,7 @@ export default function MobileWindow({ win, onDrag, onOpenStories, initialTab = 
               <button className="mw-tab mw-tab-eye" aria-label="Presence">
                 <span className="mw-tab-icon" style={{ WebkitMaskImage: 'url(/icons/mobile-tabs/Eye.svg)', maskImage: 'url(/icons/mobile-tabs/Eye.svg)' }} />
               </button>
-            </div>
+            </div>}
           </div>
         </div>
       </div>
@@ -483,7 +520,257 @@ export default function MobileWindow({ win, onDrag, onOpenStories, initialTab = 
   );
 }
 
-function MapRoom({ room }) {
+/* ----------------------------------------------------------------------
+   Lock screen view — single composite image (wallpaper + Roam HQ Live
+   Activity widget + bottom controls baked in) with a real-time clock and
+   date rendered on top.
+   ---------------------------------------------------------------------- */
+function formatLockDate(d) {
+  const weekday = d.toLocaleDateString('en-US', { weekday: 'short' });
+  const month = d.toLocaleDateString('en-US', { month: 'short' });
+  return `${weekday} ${month} ${d.getDate()}`;
+}
+function formatLockTime(d) {
+  const h = ((d.getHours() + 11) % 12) + 1;
+  const m = String(d.getMinutes()).padStart(2, '0');
+  return `${h}:${m}`;
+}
+
+function LockScreenView() {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const tick = () => setNow(new Date());
+    tick();
+    const id = setInterval(tick, 15000);
+    return () => clearInterval(id);
+  }, []);
+  return (
+    <div className="mw-lock" aria-hidden="true">
+      <img className="mw-lock-image" src="/mobile/lockscreen.png" alt="" />
+      <div className="mw-lock-clock">
+        <div className="mw-lock-date">{formatLockDate(now)}</div>
+        <div className="mw-lock-time">{formatLockTime(now)}</div>
+      </div>
+    </div>
+  );
+}
+
+/* ----------------------------------------------------------------------
+   Mobile theater view — adaptation of the website Figma (5061:30883).
+   Two video feeds stacked vertically + bottom controls bar.
+   ---------------------------------------------------------------------- */
+const MW_THEATER_VIDEO_SPEAKERS = [
+  { name: 'Camila Torres', video: '/videos/Female/camila_torres.mp4' },
+  { name: 'Daniel Russell', video: '/videos/Male/daniel_russell.mp4' },
+];
+const MW_THEATER_AUDIENCE = [
+  '/headshots/grace-sutherland.jpg',
+  '/headshots/john-huffsmith.jpg',
+  '/headshots/john-beutner.jpg',
+  '/headshots/michael-walrath.jpg',
+];
+
+function MwIconChevron() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M15.5 6.5L9.5 12L15.5 17.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+function MwIconDoor() {
+  return <span className="mw-theater-icon-mask mw-theater-icon-door" aria-hidden="true" />;
+}
+function MwIconMicTilted() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M16.5 4.5l-1.4 1.4a3 3 0 0 0-.6 3.5l-1.5 1.5-3.5-3.5L11 5.9a3 3 0 0 0 3.5-.6l1.4-1.4a1.4 1.4 0 0 1 2 2L17.5 7.3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M3 21l8-8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M9 11l4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+function MwIconVolume() {
+  return <span className="mw-theater-icon-mask mw-theater-icon-volume" aria-hidden="true" />;
+}
+function MwIconMicMuted() {
+  return <img className="mw-theater-mic-muted-img" src="/icons/microphone.svg" alt="" width="22" height="22" />;
+}
+function MwIconEmoji() {
+  return <span className="mw-theater-icon-mask mw-theater-icon-emoji" aria-hidden="true" />;
+}
+function MwIconChat() {
+  return <span className="mw-theater-icon-mask mw-theater-icon-chat" aria-hidden="true" />;
+}
+function MwIconStage() {
+  return <span className="mw-theater-icon-mask mw-theater-icon-stage" aria-hidden="true" />;
+}
+function MwIconEllipsis() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="5" cy="12" r="1.5" fill="currentColor" />
+      <circle cx="12" cy="12" r="1.5" fill="currentColor" />
+      <circle cx="19" cy="12" r="1.5" fill="currentColor" />
+    </svg>
+  );
+}
+function MwIconMicSmall() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M9.5 4.5C9.5 3.4 10.4 2.5 11.5 2.5h1c1.1 0 2 .9 2 2v6.5c0 1.1-.9 2-2 2h-1c-1.1 0-2-.9-2-2V4.5z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+      <path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M3 3l18 18" stroke="#ef5350" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function TheaterView({ onClose }) {
+  return (
+    <div className="mw-theater" aria-hidden={!onClose}>
+      {/* Office controls — back / title / leave */}
+      <div className="mw-theater-controls">
+        <button type="button" className="mw-theater-icon-btn" aria-label="Back" onClick={onClose}>
+          <MwIconChevron />
+        </button>
+        <div className="mw-theater-title-stack">
+          <span className="mw-theater-title">Theater</span>
+        </div>
+        <button type="button" className="mw-theater-icon-btn" tabIndex={-1} aria-label="Leave">
+          <MwIconDoor />
+        </button>
+      </div>
+
+      {/* Stage — two video feeds stacked vertically */}
+      <div className="mw-theater-stage">
+        {MW_THEATER_VIDEO_SPEAKERS.map((s) => (
+          <div key={s.name} className="mw-theater-feed">
+            <video src={s.video} autoPlay loop muted playsInline />
+          </div>
+        ))}
+      </div>
+
+      {/* Bottom tab — audience pill + ask question + icon row */}
+      <div className="mw-theater-tab">
+        <div className="mw-theater-row mw-theater-row-top">
+          <div className="mw-theater-audience">
+            {MW_THEATER_AUDIENCE.map((src, i) => (
+              <img key={i} src={src} alt="" />
+            ))}
+          </div>
+          <div className="mw-theater-ask">
+            <span>Ask a Question</span>
+          </div>
+        </div>
+        <div className="mw-theater-row mw-theater-row-bottom">
+          <button type="button" className="mw-theater-tabicon" tabIndex={-1} aria-label="Volume"><MwIconVolume /></button>
+          <button type="button" className="mw-theater-tabicon mw-theater-tabicon-muted" tabIndex={-1} aria-label="Microphone"><MwIconMicMuted /></button>
+          <button type="button" className="mw-theater-tabicon" tabIndex={-1} aria-label="Reactions"><MwIconEmoji /></button>
+          <button type="button" className="mw-theater-tabicon" tabIndex={-1} aria-label="Chat"><MwIconChat /></button>
+          <button type="button" className="mw-theater-tabicon" tabIndex={-1} aria-label="Stage"><MwIconStage /></button>
+          <button type="button" className="mw-theater-tabicon" tabIndex={-1} aria-label="More"><MwIconEllipsis /></button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* Theater & meeting backgrounds — same audience seat layout + diagonal-stripe
+   meeting-room-lines pattern as the desktop showcase, just stripped of
+   reactions / talking animation so the mobile map preview stays static. */
+const MW_THEATER_SPEAKERS = [
+  { name: 'Camila T.', avatar: '/videos/Female/camila_torres.png' },
+  { name: 'Megan T.', avatar: '/videos/Female/megan_taylor.png' },
+  { name: 'Hannah B.', avatar: '/videos/Female/hannah_bennett.png' },
+];
+const MW_THEATER_AUDIENCE_ROWS = [
+  [2, 4, 3, 4],
+  [4, 3, 4, 2],
+  [3, 4, 2, 3],
+  [4, 2, 3, 4],
+];
+
+function MapRoomTheater({ room }) {
+  return (
+    <div className="big-meeting-card-inner" style={{ height: '100%' }}>
+      <div className="meeting-room-card" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <div className="card-header sc-theater-card-header">
+          <h3 className="office-name">{room.name}</h3>
+        </div>
+        <div className="theater-preview">
+          <div className="theater-preview-stage sc-theater-stage">
+            {MW_THEATER_SPEAKERS.map((s) => (
+              <div key={s.name} className="sc-theater-speaker">
+                <img className="sc-theater-speaker-img" src={s.avatar} alt="" />
+              </div>
+            ))}
+          </div>
+          <div className="theater-preview-audience">
+            {MW_THEATER_AUDIENCE_ROWS.map((row, rowIdx) => (
+              <div key={rowIdx} className="theater-preview-row">
+                {row.map((count, benchIdx) => (
+                  <div key={benchIdx} className="theater-preview-bench">
+                    {count > 0 && (
+                      <div className="theater-preview-dots">
+                        {Array.from({ length: count }).map((_, dotIdx) => (
+                          <div key={dotIdx} className="theater-preview-dot" />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MapRoomMeeting({ room }) {
+  const visible = (room.people || []).filter((p) => p && p.avatar).slice(0, 6);
+  return (
+    <div className="big-meeting-card-inner" style={{ height: '100%' }}>
+      <div className="meeting-room-card" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <div className="card-header">
+          <h3 className="office-name">{room.name}</h3>
+        </div>
+        <div className="meeting-room-people">
+          {visible.map((person, i) => (
+            <div key={person.name + i} className="person meeting-room-person">
+              <img className="avatar" src={person.avatar} alt="" />
+            </div>
+          ))}
+        </div>
+        <div className="meeting-room-lines" />
+      </div>
+    </div>
+  );
+}
+
+function MapRoomGame({ room }) {
+  const visible = (room.people || []).filter((p) => p && p.avatar).slice(0, 4);
+  return (
+    <div className="big-meeting-card-inner" style={{ height: '100%' }}>
+      <div className="meeting-room-card" style={{ height: '100%', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+        <div className="game-room-lines"><div className="game-room-zigzag" /></div>
+        <div className="card-header">
+          <h3 className="office-name">{room.name}</h3>
+        </div>
+        {visible.length > 0 && (
+          <div className="game-room-roster mw-game-roster">
+            {visible.map((person, i) => (
+              <div key={person.name + i} className="mw-game-hex-mini">
+                <img src={person.avatar} alt="" />
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function MapRoomPrivate({ room }) {
   const [talking, setTalking] = useState({});
   const hasTalk = room.people.length > 1;
 
@@ -531,47 +818,273 @@ function MapRoom({ room }) {
   );
 }
 
-function MobileMapGrid() {
-  const rooms = FLOORS['R&D'] || [];
-  const viewportRef = useRef(null);
-  const INITIAL_Y = 100;
-  const [pos, setPos] = useState({ x: 0, y: INITIAL_Y });
-  const drag = useRef(null);
+function MapRoom({ room }) {
+  if (room.type === 'theater') return <MapRoomTheater room={room} />;
+  if (room.type === 'meeting') return <MapRoomMeeting room={room} />;
+  if (room.type === 'game') return <MapRoomGame room={room} />;
+  return <MapRoomPrivate room={room} />;
+}
 
-  const onMouseDown = (e) => {
-    drag.current = { startX: e.clientX, startY: e.clientY, origX: pos.x, origY: pos.y };
+// Extra mobile-only rooms — appended below the R&D floor so the phone map
+// shows more of the office than the desktop's 5-row layout.
+const MW_EXTRA_ROOMS = [
+  // Row 5
+  { id: 'mwx-r5-0', type: 'private', name: 'Garima K.', people: [{ name: 'Garima K.', avatar: '/headshots/garima-kewlani.jpg' }], pos: { col: 0, row: 5 }, span: 1 },
+  { id: 'mwx-r5-1', type: 'private', name: 'Ava L.', people: [{ name: 'Ava L.', avatar: '/headshots/ava-lee.jpg' }], pos: { col: 1, row: 5 }, span: 1 },
+  { id: 'mwx-r5-2', type: 'private', name: 'Arnav B.', people: [{ name: 'Arnav B.', avatar: '/headshots/arnav-bansal.jpg' }], pos: { col: 2, row: 5 }, span: 1 },
+  { id: 'mwx-r5-3', type: 'private', name: 'Thomas G.', people: [{ name: 'Thomas G.', avatar: '/headshots/thomas-grapperon.jpg' }], pos: { col: 3, row: 5 }, span: 1 },
+  { id: 'mwx-r5-4', type: 'private', name: 'John H.', people: [{ name: 'John H.', avatar: '/headshots/john-huffsmith.jpg' }], pos: { col: 4, row: 5 }, span: 1 },
+  { id: 'mwx-r5-5', type: 'private', name: 'John B.', people: [{ name: 'John B.', avatar: '/headshots/john-beutner.jpg' }], pos: { col: 5, row: 5 }, span: 1 },
+  // Row 6
+  { id: 'mwx-r6-0', type: 'private', name: 'Tom D.', people: [{ name: 'Tom D.', avatar: '/headshots/tom-dixon.jpg' }], pos: { col: 0, row: 6 }, span: 1 },
+  { id: 'mwx-r6-1', type: 'private', name: 'Chelsea T.', people: [{ name: 'Chelsea T.', avatar: '/headshots/chelsea-turbin.jpg' }], pos: { col: 1, row: 6 }, span: 1 },
+  { id: 'mwx-r6-2', type: 'private', name: 'Lexi B.', people: [{ name: 'Lexi B.', avatar: '/headshots/lexi-bohonnon.jpg' }], pos: { col: 2, row: 6 }, span: 1 },
+  { id: 'mwx-r6-3', type: 'private', name: 'Will H.', people: [{ name: 'Will H.', avatar: '/headshots/will-hou.jpg' }], pos: { col: 3, row: 6 }, span: 1 },
+  { id: 'mwx-r6-4', type: 'private', name: 'Michael M.', people: [{ name: 'Michael M.', avatar: '/headshots/michael-miller.jpg' }], pos: { col: 4, row: 6 }, span: 1 },
+  { id: 'mwx-r6-5', type: 'private', name: 'Jack D.', people: [], pos: { col: 5, row: 6 }, span: 1 },
+  // Row 7
+  { id: 'mwx-r7-0', type: 'private', name: 'Theo O.', people: [], pos: { col: 0, row: 7 }, span: 1 },
+  { id: 'mwx-r7-1', type: 'private', name: 'Vincent L.', people: [], pos: { col: 1, row: 7 }, span: 1 },
+  { id: 'mwx-r7-2', type: 'private', name: 'Max G.', people: [], pos: { col: 2, row: 7 }, span: 1 },
+  { id: 'mwx-r7-3', type: 'private', name: 'Sarah M.', people: [{ name: 'Sarah M.', avatar: '/videos/Female/sarah_mitchell.png' }], pos: { col: 3, row: 7 }, span: 1 },
+  { id: 'mwx-r7-4', type: 'private', name: 'Mia C.', people: [{ name: 'Mia C.', avatar: '/videos/Female/mia_chen.png' }], pos: { col: 4, row: 7 }, span: 1 },
+  { id: 'mwx-r7-5', type: 'private', name: 'Olivia S.', people: [{ name: 'Olivia S.', avatar: '/videos/Female/olivia_sanders.png' }], pos: { col: 5, row: 7 }, span: 1 },
+];
+
+// Room IDs that should render as empty offices on the mobile map — the
+// avatar disappears and the name renders in --text-disabled. Gives the floor
+// the realistic "some people are out today" feel.
+const MW_EMPTY_ROOM_IDS = new Set([
+  'r3',          // John M.
+  'r5',          // Keegan L.
+  'r8',          // Rob F.
+  'r17',         // Ethan B.
+  'mwx-r5-1',    // Ava L.
+  'mwx-r5-3',    // Thomas G.
+  'mwx-r6-2',    // Lexi B.
+  'mwx-r6-4',    // Michael M.
+]);
+
+function MobileMapGrid({ onOpenTheater } = {}) {
+  // Walk rooms in array order, dropping any person whose name was already
+  // claimed by an earlier room (or by the theater's hardcoded speakers).
+  // Each face only appears in one place on the floor — so a person sitting
+  // in the meeting room won't also appear in their personal office.
+  const seen = new Set(MW_THEATER_SPEAKERS.map((s) => s.name));
+  const rooms = [...(FLOORS['R&D'] || []), ...MW_EXTRA_ROOMS].map((room) => {
+    // Mobile-only override: the desktop's "Game Room" (standup) renders as a
+    // second meeting room called "Planatarium" on the phone map.
+    let r = room.id === 'standup'
+      ? { ...room, name: 'Planatarium', type: 'meeting' }
+      : room;
+    if (MW_EMPTY_ROOM_IDS.has(r.id)) return { ...r, people: [] };
+    const people = (r.people || []).filter((p) => {
+      if (!p?.name) return true;
+      if (seen.has(p.name)) return false;
+      seen.add(p.name);
+      return true;
+    });
+    return { ...r, people };
+  });
+  const viewportRef = useRef(null);
+  const canvasRef = useRef(null);
+  const INITIAL_Y = 80;
+
+  // Pan state lives in refs (not React state) so the rAF loop can mutate the
+  // transform 60× per second without scheduling re-renders. The transform is
+  // written directly to the canvas DOM node.
+  const posRef = useRef({ x: 0, y: INITIAL_Y });
+  const velRef = useRef({ x: 0, y: 0 });
+  const dragRef = useRef(null);
+  const samplesRef = useRef([]);
+  const rafRef = useRef(0);
+
+  // Apply current pos to the canvas transform.
+  const writeTransform = () => {
+    const el = canvasRef.current;
+    if (!el) return;
+    el.style.transform = `translate3d(${posRef.current.x}px, ${posRef.current.y}px, 0)`;
+  };
+
+  // Compute current pan bounds based on viewport + canvas size.
+  const getBounds = () => {
+    const vp = viewportRef.current;
+    const canvas = canvasRef.current;
+    if (!vp || !canvas) return { minX: 0, maxX: 0, minY: 0, maxY: 0 };
+    const maxX = 0;
+    const minX = Math.min(0, vp.clientWidth - canvas.offsetWidth);
+    const maxY = INITIAL_Y;
+    const minY = Math.min(INITIAL_Y, vp.clientHeight - canvas.offsetHeight - 80);
+    return { minX, maxX, minY, maxY };
+  };
+
+  // Rubber-band resistance: as the canvas drags past a bound, divide the
+  // excess by an increasing factor so motion gets stiffer the further out it
+  // goes (matches the curve UIScrollView uses).
+  const rubberBand = (delta, dimension) => {
+    const c = 0.55;
+    const x = Math.abs(delta);
+    return (Math.sign(delta) * (1 - 1 / (x * c / dimension + 1))) * dimension;
+  };
+
+  const clampWithRubber = (raw, min, max, dim) => {
+    if (raw > max) return max + rubberBand(raw - max, dim);
+    if (raw < min) return min - rubberBand(min - raw, dim);
+    return raw;
+  };
+
+  // Momentum + spring-back loop. Runs each frame: applies velocity with
+  // friction; when out of bounds applies a spring force toward the boundary
+  // (over-damped enough to not oscillate). Stops when motion settles.
+  const animate = () => {
+    const { minX, maxX, minY, maxY } = getBounds();
+    const FRICTION = 0.92;
+    const SPRING = 0.18;
+    const DAMP = 0.65;
+    const STOP = 0.02;
+
+    let { x, y } = posRef.current;
+    let vx = velRef.current.x;
+    let vy = velRef.current.y;
+
+    // Free-flight: while inside bounds, decay velocity by friction.
+    if (x <= maxX && x >= minX) vx *= FRICTION;
+    if (y <= maxY && y >= minY) vy *= FRICTION;
+
+    // Spring back when out of bounds — pull toward nearest edge.
+    if (x > maxX) { vx += (maxX - x) * SPRING; vx *= DAMP; }
+    if (x < minX) { vx += (minX - x) * SPRING; vx *= DAMP; }
+    if (y > maxY) { vy += (maxY - y) * SPRING; vy *= DAMP; }
+    if (y < minY) { vy += (minY - y) * SPRING; vy *= DAMP; }
+
+    x += vx;
+    y += vy;
+
+    posRef.current = { x, y };
+    velRef.current = { x: vx, y: vy };
+    writeTransform();
+
+    const settled = Math.abs(vx) < STOP && Math.abs(vy) < STOP
+      && x <= maxX && x >= minX && y <= maxY && y >= minY;
+    if (settled) {
+      rafRef.current = 0;
+      return;
+    }
+    rafRef.current = requestAnimationFrame(animate);
+  };
+
+  // Cancel any in-flight momentum loop (e.g. when the user grabs again).
+  const stopAnimation = () => {
+    if (rafRef.current) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = 0;
+    }
+  };
+
+  // Pointer-event flow — works for both mouse and touch via the unified
+  // PointerEvent API. The move/up listeners attach to `window` after the
+  // initial pointerdown so the gesture survives the cursor leaving the
+  // viewport (release outside the simulator frame, off the page, etc.).
+  const moveHandlerRef = useRef(null);
+  const upHandlerRef = useRef(null);
+
+  const detachWindowListeners = () => {
+    if (moveHandlerRef.current) {
+      window.removeEventListener('pointermove', moveHandlerRef.current);
+      window.removeEventListener('pointerup', upHandlerRef.current);
+      window.removeEventListener('pointercancel', upHandlerRef.current);
+      moveHandlerRef.current = null;
+      upHandlerRef.current = null;
+    }
+  };
+
+  const onPointerDown = (e) => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    stopAnimation();
+    dragRef.current = {
+      pointerId: e.pointerId,
+      startX: e.clientX,
+      startY: e.clientY,
+      origX: posRef.current.x,
+      origY: posRef.current.y,
+    };
+    samplesRef.current = [{ t: performance.now(), x: e.clientX, y: e.clientY }];
+    velRef.current = { x: 0, y: 0 };
+
+    detachWindowListeners();
+
+    const onMove = (ev) => {
+      const drag = dragRef.current;
+      if (!drag || drag.pointerId !== ev.pointerId) return;
+      const { minX, maxX, minY, maxY } = getBounds();
+      const vp = viewportRef.current;
+      const dx = ev.clientX - drag.startX;
+      const dy = ev.clientY - drag.startY;
+      const rawX = drag.origX + dx;
+      const rawY = drag.origY + dy;
+
+      posRef.current = {
+        x: clampWithRubber(rawX, minX, maxX, vp?.clientWidth || 320),
+        y: clampWithRubber(rawY, minY, maxY, vp?.clientHeight || 480),
+      };
+      writeTransform();
+
+      const now = performance.now();
+      const samples = samplesRef.current;
+      samples.push({ t: now, x: ev.clientX, y: ev.clientY });
+      while (samples.length > 1 && now - samples[0].t > 120) samples.shift();
+    };
+
+    const onUp = (ev) => {
+      const drag = dragRef.current;
+      if (!drag || drag.pointerId !== ev.pointerId) return;
+      dragRef.current = null;
+
+      // Fling velocity from the last ~120ms of samples.
+      const samples = samplesRef.current;
+      if (samples.length >= 2) {
+        const first = samples[0];
+        const last = samples[samples.length - 1];
+        const dt = Math.max(16, last.t - first.t);
+        const FRAME_MS = 16.67;
+        velRef.current = {
+          x: ((last.x - first.x) / dt) * FRAME_MS,
+          y: ((last.y - first.y) / dt) * FRAME_MS,
+        };
+      }
+      samplesRef.current = [];
+
+      detachWindowListeners();
+
+      if (!rafRef.current) {
+        rafRef.current = requestAnimationFrame(animate);
+      }
+    };
+
+    moveHandlerRef.current = onMove;
+    upHandlerRef.current = onUp;
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onUp);
     e.preventDefault();
   };
 
-  useEffect(() => {
-    const onMove = (e) => {
-      if (!drag.current) return;
-      const dx = e.clientX - drag.current.startX;
-      const dy = e.clientY - drag.current.startY;
-      const vp = viewportRef.current;
-      if (!vp) return;
-      const content = vp.firstElementChild;
-      const maxX = 0;
-      const minX = Math.min(0, vp.clientWidth - content.offsetWidth);
-      const maxY = INITIAL_Y;
-      const minY = Math.min(INITIAL_Y, vp.clientHeight - content.offsetHeight - 80);
-      setPos({
-        x: Math.max(minX, Math.min(maxX, drag.current.origX + dx)),
-        y: Math.max(minY, Math.min(maxY, drag.current.origY + dy)),
-      });
-    };
-    const onUp = () => { drag.current = null; };
-    window.addEventListener('mousemove', onMove);
-    window.addEventListener('mouseup', onUp);
-    return () => {
-      window.removeEventListener('mousemove', onMove);
-      window.removeEventListener('mouseup', onUp);
-    };
+  useEffect(() => () => {
+    stopAnimation();
+    detachWindowListeners();
   }, []);
 
   return (
-    <div className="mw-map-viewport" ref={viewportRef} onMouseDown={onMouseDown}>
-      <div className="mw-map-canvas" style={{ transform: `translate(${pos.x}px, ${pos.y}px)` }}>
+    <div
+      className="mw-map-viewport"
+      ref={viewportRef}
+      onPointerDown={onPointerDown}
+    >
+      <div
+        className="mw-map-canvas"
+        ref={canvasRef}
+        style={{ transform: `translate3d(0px, ${INITIAL_Y}px, 0)` }}
+      >
         <div className="sc-map">
           <div className="sc-grid mw-map-sc-grid">
             {rooms.map((room) => {
@@ -581,13 +1094,15 @@ function MobileMapGrid() {
               const gridRow = room.rowSpan
                 ? `${room.pos.row + 1} / span ${room.rowSpan}`
                 : `${room.pos.row + 1}`;
+              const isTheater = room.type === 'theater';
               return (
                 <div
                   key={room.id}
                   className="sc-grid-cell sc-room-card"
                   data-room-type={room.type}
                   data-room-name={room.name}
-                  style={{ gridColumn, gridRow }}
+                  style={{ gridColumn, gridRow, cursor: isTheater ? 'pointer' : undefined }}
+                  onClick={isTheater ? (e) => { e.stopPropagation(); onOpenTheater?.(); } : undefined}
                 >
                   <MapRoom room={room} />
                 </div>
@@ -595,6 +1110,172 @@ function MobileMapGrid() {
             })}
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+/* Vertical pan/fling scroller for the AInbox tab — same gesture model as
+   MobileMapGrid (rubber-band overscroll, momentum decay, spring-back, window
+   pointer listeners so release outside the simulator still completes), but
+   locked to the Y axis. */
+function AinboxScroller({ children, topInset = 94 }) {
+  const viewportRef = useRef(null);
+  const canvasRef = useRef(null);
+  const posRef = useRef({ x: 0, y: topInset });
+  const velRef = useRef({ x: 0, y: 0 });
+  const dragRef = useRef(null);
+  const samplesRef = useRef([]);
+  const rafRef = useRef(0);
+  const moveHandlerRef = useRef(null);
+  const upHandlerRef = useRef(null);
+
+  const writeTransform = () => {
+    const el = canvasRef.current;
+    if (!el) return;
+    el.style.transform = `translate3d(0px, ${posRef.current.y}px, 0)`;
+  };
+
+  // Y bounds — top is the topInset so the first row sits below the header.
+  // Bottom: the canvas may be taller than the viewport, so minY pulls up by
+  // the difference (so the last row stops at the bottom of the visible area).
+  const getBounds = () => {
+    const vp = viewportRef.current;
+    const canvas = canvasRef.current;
+    if (!vp || !canvas) return { minY: 0, maxY: topInset };
+    const maxY = topInset;
+    const overflow = canvas.offsetHeight - vp.clientHeight;
+    const minY = overflow > 0 ? -overflow : topInset;
+    return { minY, maxY };
+  };
+
+  const rubberBand = (delta, dimension) => {
+    const c = 0.55;
+    const x = Math.abs(delta);
+    return (Math.sign(delta) * (1 - 1 / (x * c / dimension + 1))) * dimension;
+  };
+  const clampWithRubber = (raw, min, max, dim) => {
+    if (raw > max) return max + rubberBand(raw - max, dim);
+    if (raw < min) return min - rubberBand(min - raw, dim);
+    return raw;
+  };
+
+  const animate = () => {
+    const { minY, maxY } = getBounds();
+    const FRICTION = 0.92;
+    const SPRING = 0.18;
+    const DAMP = 0.65;
+    const STOP = 0.02;
+
+    let { x, y } = posRef.current;
+    let vy = velRef.current.y;
+    if (y <= maxY && y >= minY) vy *= FRICTION;
+    if (y > maxY) { vy += (maxY - y) * SPRING; vy *= DAMP; }
+    if (y < minY) { vy += (minY - y) * SPRING; vy *= DAMP; }
+
+    y += vy;
+    posRef.current = { x, y };
+    velRef.current = { x: 0, y: vy };
+    writeTransform();
+
+    const settled = Math.abs(vy) < STOP && y <= maxY && y >= minY;
+    if (settled) {
+      rafRef.current = 0;
+      return;
+    }
+    rafRef.current = requestAnimationFrame(animate);
+  };
+
+  const stopAnimation = () => {
+    if (rafRef.current) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = 0;
+    }
+  };
+
+  const detachWindowListeners = () => {
+    if (moveHandlerRef.current) {
+      window.removeEventListener('pointermove', moveHandlerRef.current);
+      window.removeEventListener('pointerup', upHandlerRef.current);
+      window.removeEventListener('pointercancel', upHandlerRef.current);
+      moveHandlerRef.current = null;
+      upHandlerRef.current = null;
+    }
+  };
+
+  const onPointerDown = (e) => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    stopAnimation();
+    dragRef.current = {
+      pointerId: e.pointerId,
+      startY: e.clientY,
+      origY: posRef.current.y,
+    };
+    samplesRef.current = [{ t: performance.now(), y: e.clientY }];
+    velRef.current = { x: 0, y: 0 };
+    detachWindowListeners();
+
+    const onMove = (ev) => {
+      const drag = dragRef.current;
+      if (!drag || drag.pointerId !== ev.pointerId) return;
+      const { minY, maxY } = getBounds();
+      const vp = viewportRef.current;
+      const dy = ev.clientY - drag.startY;
+      const rawY = drag.origY + dy;
+      posRef.current = {
+        x: 0,
+        y: clampWithRubber(rawY, minY, maxY, vp?.clientHeight || 480),
+      };
+      writeTransform();
+      const now = performance.now();
+      const samples = samplesRef.current;
+      samples.push({ t: now, y: ev.clientY });
+      while (samples.length > 1 && now - samples[0].t > 120) samples.shift();
+    };
+
+    const onUp = (ev) => {
+      const drag = dragRef.current;
+      if (!drag || drag.pointerId !== ev.pointerId) return;
+      dragRef.current = null;
+      const samples = samplesRef.current;
+      if (samples.length >= 2) {
+        const first = samples[0];
+        const last = samples[samples.length - 1];
+        const dt = Math.max(16, last.t - first.t);
+        const FRAME_MS = 16.67;
+        velRef.current = {
+          x: 0,
+          y: ((last.y - first.y) / dt) * FRAME_MS,
+        };
+      }
+      samplesRef.current = [];
+      detachWindowListeners();
+      if (!rafRef.current) {
+        rafRef.current = requestAnimationFrame(animate);
+      }
+    };
+
+    moveHandlerRef.current = onMove;
+    upHandlerRef.current = onUp;
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onUp);
+    e.preventDefault();
+  };
+
+  useEffect(() => () => {
+    stopAnimation();
+    detachWindowListeners();
+  }, []);
+
+  return (
+    <div className="mw-ainbox-scroller" ref={viewportRef} onPointerDown={onPointerDown}>
+      <div
+        className="mw-ainbox-scroller-canvas"
+        ref={canvasRef}
+        style={{ transform: `translate3d(0, ${topInset}px, 0)` }}
+      >
+        {children}
       </div>
     </div>
   );

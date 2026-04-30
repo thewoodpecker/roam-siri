@@ -2120,7 +2120,15 @@ function RecordingsPreview({ initialTab, onAirRecording } = {}) {
    in a stage so the iPhone/Pixel mock can drive each section's visual.
    `initialTab` and `initialView` let us point at the overworld, the map,
    the AInbox, or the camera roll without keeping per-section markup. */
-function MobilePreview({ initialTab = 'roam', initialView = 'overworld', initialPlatform = 'ios' } = {}) {
+function MobilePreview({ initialTab = 'roam', initialView = 'overworld', initialPlatform = 'ios', lockscreen = false, theater = false, richMap = false } = {}) {
+  // When `richMap` is set we hand the desktop ShowcaseMap into MobileWindow via
+  // the `mapContent` prop so the phone's map view shows the same rich room
+  // treatment (badges, theater seats, game-room leaderboard, etc) as the
+  // desktop showcase. CSS in MobileWindow.css clips the embedded map's chrome
+  // so only the floor renders inside the phone screen.
+  const mapContent = richMap && initialView === 'map'
+    ? <MapPreview initialFloor="R&D" />
+    : null;
   return (
     <div className="fp-mobile-preview">
       <MobileWindow
@@ -2129,6 +2137,9 @@ function MobilePreview({ initialTab = 'roam', initialView = 'overworld', initial
         initialTab={initialTab}
         initialView={initialView}
         initialPlatform={initialPlatform}
+        lockscreen={lockscreen}
+        theater={theater}
+        mapContent={mapContent}
       />
     </div>
   );
@@ -7590,19 +7601,14 @@ export const FEATURES = {
     visual: <MobilePreview />,
     sections: [
       {
-        title: 'Never miss a moment with Live View',
-        desc: "It's a dynamic view of your Virtual Office, right on your lockscreen. See everything as people come and go, meet with others.",
-        visual: <MobilePreview initialTab="roam" initialView="overworld" />,
-      },
-      {
-        title: 'Overworld',
-        desc: 'Join any Roam you have access to from the Overworld.',
-        visual: <MobilePreview initialTab="roam" initialView="overworld" />,
-      },
-      {
         title: 'Fully Interactive Map',
         desc: 'See everything happening in your virtual office from your phone: who is there, who is meeting with who, and who will return at what time. Use the trackpad to navigate around the full map. Pinch and zoom to size to taste.',
         visual: <MobilePreview initialTab="roam" initialView="map" />,
+      },
+      {
+        title: 'Never miss a moment with Live View',
+        desc: "It's a dynamic view of your Virtual Office, right on your lockscreen. See everything as people come and go, meet with others.",
+        visual: <MobilePreview lockscreen />,
       },
       {
         title: 'Drop-In Meetings',
@@ -7617,20 +7623,7 @@ export const FEATURES = {
       {
         title: 'Theater',
         desc: "Attend a presentation in Roam's unique theater. In the audience you can whisper with others in your audience row and ask a question. You can also go backstage, and of course, join the stage as a presenter!",
-        visual: (
-          <TheaterPreview
-            speakers={[VIDEO_SPEAKERS[4]]}
-            audience={[
-              VIDEO_SPEAKERS[2],
-              VIDEO_SPEAKERS[0],
-              VIDEO_SPEAKERS[7],
-              VIDEO_SPEAKERS[3],
-              VIDEO_SPEAKERS[5],
-              VIDEO_SPEAKERS[1],
-              VIDEO_SPEAKERS[6],
-            ]}
-          />
-        ),
+        visual: <MobilePreview theater />,
       },
       {
         title: 'AInbox',
@@ -7660,12 +7653,20 @@ export const FEATURES = {
       {
         title: 'Apple Watch',
         desc: 'Watch from your Watch. The live view of your office appears right on your watch.',
-        visual: <MobilePreview initialTab="roam" initialView="overworld" />,
+        visual: (
+          <div className="fp-mobile-image-stage">
+            <img className="fp-mobile-image fp-mobile-image-watch" src="/mobile/apple-watch.png" alt="Apple Watch showing the live Roam office view" />
+          </div>
+        ),
       },
       {
         title: 'CarPlay',
         desc: "You're in the driver's seat. Vrrrrrrrrooooaaaaam! Your office in your car. Join meetings with audio while you drive. Watch the live office while you drive. Just keep your eyes on the road!",
-        visual: <MobilePreview initialTab="roam" initialView="overworld" />,
+        visual: (
+          <div className="fp-mobile-image-stage">
+            <img className="fp-mobile-image fp-mobile-image-carplay" src="/mobile/carplay.png" alt="CarPlay dashboard with the Roam office on screen" />
+          </div>
+        ),
       },
       {
         variant: 'explore',

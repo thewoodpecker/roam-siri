@@ -1546,6 +1546,45 @@
   top: auto !important;
 }
 
+/* Static image visuals for the Apple Watch + CarPlay mobile sections. */
+.fp-mobile-image-stage {
+  position: relative;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.fp-mobile-image {
+  display: block;
+  height: auto;
+  object-fit: contain;
+}
+.fp-mobile-image-watch {
+  max-width: 320px;
+  width: 100%;
+}
+.fp-mobile-image-carplay {
+  max-width: 720px;
+  width: 100%;
+  border-radius: var(--radius-2xl);
+  corner-shape: superellipse(1.6);
+}
+
+/* Mobile feature page — every section visual uses a flat surface-raised
+   background instead of the wallpaper image. Lighter graphite-50 in light
+   mode for the same effect against light surfaces. */
+.fp-page[data-slug="mobile"] .fp-section-visual,
+.fp-page[data-slug="mobile"] .fp-hero-stage {
+  background-image: none;
+  background-color: var(--bg-surface-raised);
+}
+.fp-page[data-slug="mobile"][data-theme="light"] .fp-section-visual,
+.fp-page[data-slug="mobile"][data-theme="light"] .fp-hero-stage {
+  background-image: none;
+  background-color: var(--graphite-50);
+}
+
+
 .fp-cal-preview .cal-win {
   position: relative;
   left: auto !important;
@@ -7848,10 +7887,7 @@ button.fp-lbk-day {
 .fp-oas-download-sub {
   font-size: 12px;
   line-height: 16px;
-  color: var(--white-opacity-500);
-}
-:root[data-theme="light"] .fp-oas-download-sub {
-  color: var(--white-opacity-500);
+  color: var(--text-secondary-on-light);
 }
 
 /* ---------- On-Air Text Blasts dialog ---------- */
