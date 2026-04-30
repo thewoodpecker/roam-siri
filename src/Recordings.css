@@ -281,6 +281,23 @@
   transform: translate(-50%, -50%);
 }
 
+/* Multi-avatar centered row — used when an On-Air recording has 2+ hosts. */
+.rec-thumb-avatars {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.rec-thumb-avatar-stacked {
+  position: static;
+  transform: none;
+  width: 32px;
+  height: 32px;
+}
+
 .rec-call-body {
   flex: 1;
   min-width: 0;

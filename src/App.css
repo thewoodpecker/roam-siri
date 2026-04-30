@@ -1456,7 +1456,7 @@
 .crowd-item {
   position: relative;
   isolation: isolate;
-  transition: all 1s ease-in-out, transform 0.15s ease;
+  transition: opacity 1s ease-in-out, filter 1s ease-in-out, transform 0.15s ease;
   animation: dotArrive 0.3s ease-out both;
   cursor: pointer;
 }
@@ -2029,7 +2029,7 @@
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 999px;
   padding: 4px;
-  transition: all 0.25s ease;
+  transition: background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
 }
 
 .toolbar-btn {

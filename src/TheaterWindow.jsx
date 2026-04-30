@@ -253,9 +253,15 @@ export default function TheaterWindow({ win, onDrag, speakers: rawSpeakers = [],
       {/* Header */}
       <div className="meeting-win-header" onMouseDown={onDrag}>
         <div className="meeting-win-lights">
-          <div className="meeting-win-light meeting-win-light-close" onClick={(e) => { e.stopPropagation(); handleClose(); }} />
-          <div className="meeting-win-light meeting-win-light-min" />
-          <div className="meeting-win-light meeting-win-light-max" />
+          <button
+            type="button"
+            aria-label="Close theater"
+            className="unbutton meeting-win-light meeting-win-light-close"
+            onClick={(e) => { e.stopPropagation(); handleClose(); }}
+            onMouseDown={(e) => e.stopPropagation()}
+          />
+          <span aria-hidden="true" className="meeting-win-light meeting-win-light-min" />
+          <span aria-hidden="true" className="meeting-win-light meeting-win-light-max" />
         </div>
         <div className="meeting-win-header-center">
           <span className="meeting-win-title">Theater</span>
@@ -300,13 +306,13 @@ export default function TheaterWindow({ win, onDrag, speakers: rawSpeakers = [],
         {/* Action buttons — aligned to audience width */}
         <div className="theater-win-actions">
           <div className="theater-win-actions-inner" style={{ width: audienceCols * 144 + (audienceCols - 1) * 8 }}>
-            <button className="theater-win-action-btn">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M11.4341 14.748C11.5711 14.5082 11.4878 14.2028 11.2481 14.0658C8.71284 12.6171 8.5 9.99779 8.5 7.99996L8.50004 2.7071L11.1464 5.35352C11.3417 5.54879 11.6583 5.54879 11.8536 5.35353C12.0488 5.15827 12.0488 4.84169 11.8536 4.64643L8.35361 1.14645C8.25984 1.05268 8.13266 1 8.00005 0.999999C7.86744 0.999998 7.74027 1.05268 7.6465 1.14644L4.14645 4.64642C3.95119 4.84168 3.95118 5.15826 4.14644 5.35352C4.34171 5.54879 4.65829 5.54879 4.85355 5.35353L7.50004 2.70709L7.5 7.99996C7.5 10.0021 7.68716 13.1827 10.7519 14.934C10.9917 15.071 11.2971 14.9877 11.4341 14.748Z" fill="currentColor"/></svg>
+            <button type="button" className="theater-win-action-btn">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M11.4341 14.748C11.5711 14.5082 11.4878 14.2028 11.2481 14.0658C8.71284 12.6171 8.5 9.99779 8.5 7.99996L8.50004 2.7071L11.1464 5.35352C11.3417 5.54879 11.6583 5.54879 11.8536 5.35353C12.0488 5.15827 12.0488 4.84169 11.8536 4.64643L8.35361 1.14645C8.25984 1.05268 8.13266 1 8.00005 0.999999C7.86744 0.999998 7.74027 1.05268 7.6465 1.14644L4.14645 4.64642C3.95119 4.84168 3.95118 5.15826 4.14644 5.35352C4.34171 5.54879 4.65829 5.54879 4.85355 5.35353L7.50004 2.70709L7.5 7.99996C7.5 10.0021 7.68716 13.1827 10.7519 14.934C10.9917 15.071 11.2971 14.9877 11.4341 14.748Z" fill="currentColor"/></svg>
               <span>To Backstage</span>
             </button>
-            <button className="theater-win-action-btn">
+            <button type="button" className="theater-win-action-btn" aria-haspopup="menu">
               <span>Ask a Question</span>
-              <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style={{ marginLeft: 2, opacity: 0.6 }}><path d="M2.5 4L5 6.5L7.5 4" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true" style={{ marginLeft: 2, opacity: 0.6 }}><path d="M2.5 4L5 6.5L7.5 4" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </button>
           </div>
         </div>
@@ -357,23 +363,23 @@ export default function TheaterWindow({ win, onDrag, speakers: rawSpeakers = [],
         <div className="theater-win-toolbar-wrap">
           <div className="meeting-win-toolbar">
             {/* Left — chat button */}
-            <div className="theater-win-avatar-btn" onClick={onOpenChat}>
-              <img src="/icons/chat.svg" alt="" />
-            </div>
+            <button type="button" aria-label="Open chat" className="unbutton theater-win-avatar-btn" onClick={onOpenChat}>
+              <img src="/icons/chat.svg" alt="" width="20" height="20" />
+            </button>
 
             {/* Center pill group */}
             <div className="meeting-win-pill-group">
-              <div className={`meeting-win-pill ${roamojiOpen ? 'meeting-win-pill-active' : ''}`} data-tooltip="Roamoji" onClick={() => setRoamojiOpen(o => !o)}><img src="/icons/emoji.svg" alt="" /></div>
-              <div className="meeting-win-pill meeting-win-pill-muted" data-tooltip="Microphone"><img src="/icons/microphone.svg" alt="" /></div>
-              <div className="meeting-win-pill" data-tooltip="Magic Minutes"><img src="/icons/magic-quill.svg" alt="" /></div>
-              <div className="meeting-win-pill meeting-win-pill-leave" data-tooltip="Leave" onClick={handleClose}><img src="/icons/door.svg" alt="" /></div>
+              <button type="button" aria-label="Roamoji" aria-pressed={roamojiOpen} className={`unbutton meeting-win-pill ${roamojiOpen ? 'meeting-win-pill-active' : ''}`} data-tooltip="Roamoji" onClick={() => setRoamojiOpen(o => !o)}><img src="/icons/emoji.svg" alt="" width="20" height="20" /></button>
+              <button type="button" aria-label="Microphone muted" aria-pressed="true" className="unbutton meeting-win-pill meeting-win-pill-muted" data-tooltip="Microphone"><img src="/icons/microphone.svg" alt="" width="20" height="20" /></button>
+              <button type="button" aria-label="Magic Minutes" className="unbutton meeting-win-pill" data-tooltip="Magic Minutes"><img src="/icons/magic-quill.svg" alt="" width="20" height="20" /></button>
+              <button type="button" aria-label="Leave theater" className="unbutton meeting-win-pill meeting-win-pill-leave" data-tooltip="Leave" onClick={handleClose}><img src="/icons/door.svg" alt="" width="20" height="20" /></button>
             </div>
 
             {/* Right pill group */}
             <div className="meeting-win-toolbar-right">
               <div className="meeting-win-pill-group">
-                <div className="meeting-win-pill" data-tooltip="Theater Chat"><img src="/icons/meeting-chat.svg" alt="" /></div>
-                <div className="meeting-win-pill" data-tooltip="Floors"><img src="/icons/floors.svg" alt="" /></div>
+                <button type="button" aria-label="Theater chat" className="unbutton meeting-win-pill" data-tooltip="Theater Chat"><img src="/icons/meeting-chat.svg" alt="" width="20" height="20" /></button>
+                <button type="button" aria-label="Floors" className="unbutton meeting-win-pill" data-tooltip="Floors"><img src="/icons/floors.svg" alt="" width="20" height="20" /></button>
               </div>
             </div>
           </div>

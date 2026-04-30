@@ -103,7 +103,7 @@ export default function FloatingCTA({ title = 'Ready to meet Roam?', sub = 'Give
           <path d="M3 3L9 9M9 3L3 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
         </svg>
       </button>
-      <img className="fp-floating-cta-icon" src="/icons/roam-gold-icon.png" alt="" />
+      <img className="fp-floating-cta-icon" src="/icons/roam-gold-icon.png" alt="" width="40" height="40" loading="lazy" decoding="async" />
       <div className="fp-floating-cta-text">
         <h3 className="fp-floating-cta-title">{title}</h3>
         <p className="fp-floating-cta-sub">{sub}</p>

@@ -182,14 +182,14 @@ export default function StoryViewer({ stories, initialIndex = 0, onClose }) {
                         )}
                       </button>
                     )}
-                    <button className="sv-close" onClick={handleClose}>
-                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <button type="button" aria-label="Close story" className="sv-close" onClick={handleClose}>
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                         <path d="M4 4L12 12M12 4L4 12" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
                       </svg>
                     </button>
                   </div>
-                  <div className="sv-click-prev" onClick={goPrev} />
-                  <div className="sv-click-next" onClick={goNext} />
+                  <button type="button" aria-label="Previous story" className="unbutton sv-click-prev" onClick={goPrev} />
+                  <button type="button" aria-label="Next story" className="unbutton sv-click-next" onClick={goNext} />
                 </>
               )}
               {!isCurrent && (

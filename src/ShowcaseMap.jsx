@@ -274,6 +274,29 @@ export const FLOORS = {
     { id: 'di24', type: 'private', name: 'Madison R.', people: [p('Madison R.'), p('Rachel C.')], pos: { col: 3, row: 4 }, span: 1 },
     { id: 'di-demo', type: 'meeting', name: 'Demo Prep', people: [p('Thomas G.'), p('Klas L.'), p('Mattias L.')], pos: { col: 4, row: 4 }, colSpan: 2, rowSpan: 1 },
   ],
+  // Hero layout for the On-Air feature page — same as TheaterHero but with
+  // the ON-AIR tag enabled on the theater room.
+  'TheaterOnAir': [
+    { id: 'oa-t1', type: 'private', name: 'Klas L.', people: [], pos: { col: 0, row: 0 }, span: 1 },
+    { id: 'oa-t2', type: 'private', name: 'Derek C.', people: [], pos: { col: 1, row: 0 }, span: 1 },
+    { id: 'oa-t3', type: 'private', name: 'John M.', people: [], pos: { col: 2, row: 0 }, span: 1 },
+    { id: 'oa-t4', type: 'private', name: 'Howard L.', people: [], pos: { col: 3, row: 0 }, span: 1 },
+    { id: 'oa-t5', type: 'private', name: 'Keegan L.', people: [], pos: { col: 4, row: 0 }, span: 1 },
+    { id: 'oa-t6', type: 'private', name: 'Jon B.', people: [], pos: { col: 5, row: 0 }, span: 1 },
+    { id: 'oa-l1', type: 'private', name: 'Grace S.', people: [], pos: { col: 0, row: 1 }, span: 1 },
+    { id: 'oa-theater', type: 'theater', name: 'World Cup 2026 Final Watch Party', people: [], pos: { col: 1, row: 1 }, colSpan: 4, rowSpan: 3, onAir: true },
+    { id: 'oa-r1', type: 'private', name: 'Rob F.', people: [], pos: { col: 5, row: 1 }, span: 1 },
+    { id: 'oa-l2', type: 'private', name: 'Jeff G.', people: [], pos: { col: 0, row: 2 }, span: 1 },
+    { id: 'oa-r2', type: 'private', name: 'Joe W.', people: [], pos: { col: 5, row: 2 }, span: 1 },
+    { id: 'oa-l3', type: 'private', name: 'Peter L.', people: [], pos: { col: 0, row: 3 }, span: 1 },
+    { id: 'oa-r3', type: 'private', name: 'Sean M.', people: [], pos: { col: 5, row: 3 }, span: 1 },
+    { id: 'oa-b1', type: 'private', name: 'Aaron W.', people: [], pos: { col: 0, row: 4 }, span: 1 },
+    { id: 'oa-b2', type: 'private', name: 'Mattias L.', people: [], pos: { col: 1, row: 4 }, span: 1 },
+    { id: 'oa-b3', type: 'private', name: 'Ethan B.', people: [], pos: { col: 2, row: 4 }, span: 1 },
+    { id: 'oa-b4', type: 'private', name: 'Daniel R.', people: [], pos: { col: 3, row: 4 }, span: 1 },
+    { id: 'oa-b5', type: 'private', name: 'Thomas G.', people: [], pos: { col: 4, row: 4 }, span: 1 },
+    { id: 'oa-b6', type: 'private', name: 'John H.', people: [], pos: { col: 5, row: 4 }, span: 1 },
+  ],
   // Hero layout for the Theater feature page — large theater in the middle,
   // empty offices around it (everyone has gone to the show).
   'TheaterHero': [
@@ -834,8 +857,18 @@ function TheaterRoomCard({ room, speakers = [], onPersonClick, speakerStories = 
     <div className="sc-room-card" onClick={() => onRoomClick && onRoomClick(room)} style={{ cursor: 'pointer' }}>
       <div className="big-meeting-card-inner" style={{ height: '100%' }}>
         <div className="meeting-room-card" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-          <div className="card-header" style={{ padding: '0 12px' }}>
+          <div className="card-header sc-theater-card-header" style={{ padding: '0 12px' }}>
             <h3 className="office-name">{room.name}</h3>
+            {room.onAir && (
+              <span className="sc-onair-tag" aria-label="On-Air event">
+                <span
+                  className="sc-onair-tag-icon"
+                  aria-hidden="true"
+                  style={{ WebkitMaskImage: 'url(/icons/on-air.svg)', maskImage: 'url(/icons/on-air.svg)' }}
+                />
+                <span className="sc-onair-tag-text">ON-AIR</span>
+              </span>
+            )}
           </div>
           <div className="theater-preview">
             <div className="theater-preview-stage sc-theater-stage">
@@ -1447,9 +1480,15 @@ function MagicastWindow({ win, onDrag, pipPos, shape = 'circle', onShapeChange, 
     >
       <div className="mc-win-titlebar" onMouseDown={onDrag}>
         <div className="mc-win-lights">
-          <div className="mc-win-light mc-win-light-close" onClick={(e) => { e.stopPropagation(); handleClose(); }} />
-          <div className="mc-win-light mc-win-light-min" />
-          <div className="mc-win-light mc-win-light-max" />
+          <button
+            type="button"
+            aria-label="Close"
+            className="unbutton mc-win-light mc-win-light-close"
+            onClick={(e) => { e.stopPropagation(); handleClose(); }}
+            onMouseDown={(e) => e.stopPropagation()}
+          />
+          <span aria-hidden="true" className="mc-win-light mc-win-light-min" />
+          <span aria-hidden="true" className="mc-win-light mc-win-light-max" />
         </div>
         <span className="mc-win-title">Magicast</span>
       </div>
@@ -1840,9 +1879,15 @@ function ShelfWindow({ win, onDrag, photoIdx, direction, onPrev, onNext }) {
     >
       <div className="shelf-win-titlebar" onMouseDown={onDrag}>
         <div className="shelf-win-lights">
-          <div className="shelf-win-light shelf-win-light-close" onClick={(e) => { e.stopPropagation(); handleClose(); }} />
-          <div className="shelf-win-light shelf-win-light-min" />
-          <div className="shelf-win-light shelf-win-light-max" />
+          <button
+            type="button"
+            aria-label="Close"
+            className="unbutton shelf-win-light shelf-win-light-close"
+            onClick={(e) => { e.stopPropagation(); handleClose(); }}
+            onMouseDown={(e) => e.stopPropagation()}
+          />
+          <span aria-hidden="true" className="shelf-win-light shelf-win-light-min" />
+          <span aria-hidden="true" className="shelf-win-light shelf-win-light-max" />
         </div>
         <div className="shelf-win-title">
           <button className="shelf-win-nav" aria-label="Previous" onClick={(e) => { e.stopPropagation(); onPrev(); }}>
@@ -1863,11 +1908,11 @@ function ShelfWindow({ win, onDrag, photoIdx, direction, onPrev, onNext }) {
 }
 
 // Main showcase component
-export default function ShowcaseMap({ initialFloor = 'R&D', embedded = false, autoKnock = false, spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, hideOnIt = false, onItAutoOpen = false, shelfAutoOpen = false, shareAutoOpen = false, theme, autoCycleFloors = false, autoCycleDms = false, showPhysicalTags = false } = {}) {
+export default function ShowcaseMap({ initialFloor = 'R&D', embedded = false, autoKnock = false, spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, hideOnIt = false, onItAutoOpen = false, shelfAutoOpen = false, shareAutoOpen = false, theme, autoCycleFloors = false, autoCycleDms = false, showPhysicalTags = false, onAirOverride = null } = {}) {
   return (
     <ChatProvider>
       <WindowManagerProvider initialWindows={INITIAL_WINDOWS}>
-        <ShowcaseMapInner initialFloor={initialFloor} embedded={embedded} autoKnock={autoKnock} spotifyAlwaysOpen={spotifyAlwaysOpen} githubAlwaysOpen={githubAlwaysOpen} figmaAlwaysOpen={figmaAlwaysOpen} hideOnIt={hideOnIt} onItAutoOpen={onItAutoOpen} shelfAutoOpen={shelfAutoOpen} shareAutoOpen={shareAutoOpen} themeOverride={theme} autoCycleFloors={autoCycleFloors} autoCycleDms={autoCycleDms} showPhysicalTags={showPhysicalTags} />
+        <ShowcaseMapInner initialFloor={initialFloor} embedded={embedded} autoKnock={autoKnock} spotifyAlwaysOpen={spotifyAlwaysOpen} githubAlwaysOpen={githubAlwaysOpen} figmaAlwaysOpen={figmaAlwaysOpen} hideOnIt={hideOnIt} onItAutoOpen={onItAutoOpen} shelfAutoOpen={shelfAutoOpen} shareAutoOpen={shareAutoOpen} themeOverride={theme} autoCycleFloors={autoCycleFloors} autoCycleDms={autoCycleDms} showPhysicalTags={showPhysicalTags} onAirOverride={onAirOverride} />
       </WindowManagerProvider>
     </ChatProvider>
   );
@@ -2031,7 +2076,7 @@ function useTargetHintStyle(targetRef, active, offset = { top: -30, left: 'cente
   return style;
 }
 
-function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = false, spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, hideOnIt = false, onItAutoOpen = false, shelfAutoOpen = false, shareAutoOpen = false, themeOverride = null, autoCycleFloors = false, autoCycleDms = false, showPhysicalTags = false }) {
+function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = false, spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, hideOnIt = false, onItAutoOpen = false, shelfAutoOpen = false, shareAutoOpen = false, themeOverride = null, autoCycleFloors = false, autoCycleDms = false, showPhysicalTags = false, onAirOverride = null }) {
   const [themeState, setThemeState] = useState('dark');
   const theme = themeOverride || themeState;
   const setTheme = themeOverride ? () => {} : setThemeState;
@@ -2412,11 +2457,23 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
         const incoming = Array.isArray(movements.added[room.id]) ? movements.added[room.id] : [movements.added[room.id]];
         people = [...people, ...incoming.map(p => ({ ...p, _new: true }))];
       }
-      return { ...room, people, _anim: movements.anim[room.id] || null };
+      // For the on-air floor, allow the FeaturePage to override the theater
+      // room's display name with the active event's title.
+      let name = room.name;
+      if (room.id === 'oa-theater' && onAirOverride?.title) {
+        name = onAirOverride.title;
+      }
+      return { ...room, name, people, _anim: movements.anim[room.id] || null };
     });
-  }, [activeFloor, movements]);
+  }, [activeFloor, movements, onAirOverride]);
 
-  const theaterSpeakers = useMemo(() => [p('Camila T.'), p('Megan T.'), p('Hannah B.')], []);
+  const theaterSpeakers = useMemo(() => {
+    if (activeFloor === 'TheaterOnAir') {
+      const names = onAirOverride?.stageNames || ['Joe W.', 'Will H.'];
+      return names.map(n => p(n));
+    }
+    return [p('Camila T.'), p('Megan T.'), p('Hannah B.')];
+  }, [activeFloor, onAirOverride]);
   const speakerStories = {};
 
   const allStoryRooms = useMemo(() => {
@@ -2510,16 +2567,33 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
     };
   }, [mapWin.position.x, mapWin.position.y, layout]);
   const [mapMounted, setMapMounted] = useState(false);
-  const [wallpaperLoaded, setWallpaperLoaded] = useState(false);
+  const [wallpaperDarkLoaded, setWallpaperDarkLoaded] = useState(false);
+  const [wallpaperLightLoaded, setWallpaperLightLoaded] = useState(false);
   useEffect(() => {
     const t = setTimeout(() => setMapMounted(true), 500);
     return () => clearTimeout(t);
   }, []);
   useEffect(() => {
-    const src = theme === 'light' ? '/wallpapers/wallpaper-light.png' : '/wallpapers/wallpaper-dark.png';
-    const img = new Image();
-    img.onload = () => setWallpaperLoaded(true);
-    img.src = src;
+    const dark = new Image();
+    dark.decoding = 'async';
+    const onDarkReady = () => requestAnimationFrame(() => setWallpaperDarkLoaded(true));
+    if (typeof dark.decode === 'function') {
+      dark.src = '/wallpapers/wallpaper-dark.png';
+      dark.decode().then(onDarkReady).catch(onDarkReady);
+    } else {
+      dark.onload = onDarkReady;
+      dark.src = '/wallpapers/wallpaper-dark.png';
+    }
+    const light = new Image();
+    light.decoding = 'async';
+    const onLightReady = () => requestAnimationFrame(() => setWallpaperLightLoaded(true));
+    if (typeof light.decode === 'function') {
+      light.src = '/wallpapers/wallpaper-light.png';
+      light.decode().then(onLightReady).catch(onLightReady);
+    } else {
+      light.onload = onLightReady;
+      light.src = '/wallpapers/wallpaper-light.png';
+    }
   }, []);
   const pulseMapWindow = useCallback(() => {
     setMapPulse(false);
@@ -2802,8 +2876,8 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
       </div>
 
       <div className="miniRoamOS" ref={miniRoamRef} onClick={() => hintVisible && setHintVisible(false)}>
-        <div className="sc-wallpaper sc-wallpaper-dark" style={{ opacity: theme === 'dark' && wallpaperLoaded ? 1 : 0 }} />
-        <div className="sc-wallpaper sc-wallpaper-light" style={{ opacity: theme === 'light' && wallpaperLoaded ? 1 : 0 }} />
+        <div className="sc-wallpaper sc-wallpaper-dark" style={{ opacity: theme === 'dark' && wallpaperDarkLoaded ? 1 : 0 }} />
+        <div className="sc-wallpaper sc-wallpaper-light" style={{ opacity: theme === 'light' && wallpaperLightLoaded ? 1 : 0 }} />
         {layout === 'v2' && (
           <div className="sc-v2-hero">
             <img className="sc-v2-hero-icon" src="/icons/roam-gold-icon.png" alt="Roam" />

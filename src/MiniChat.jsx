@@ -276,9 +276,15 @@ export default function MiniChat({ personName, personAvatar, chatId, position, o
       {/* Header / Titlebar */}
       <div className="mc-header" onMouseDown={handleDrag}>
         <div className="mc-traffic-lights">
-          <div className="mc-light mc-light-close" onClick={handleClose} />
-          <div className="mc-light mc-light-minimize" />
-          <div className="mc-light mc-light-maximize" />
+          <button
+            type="button"
+            aria-label="Close"
+            className="unbutton mc-light mc-light-close"
+            onClick={handleClose}
+            onMouseDown={(e) => e.stopPropagation()}
+          />
+          <span aria-hidden="true" className="mc-light mc-light-minimize" />
+          <span aria-hidden="true" className="mc-light mc-light-maximize" />
         </div>
         <div className="mc-header-center">
           <img src={personAvatar} alt="" className="mc-header-avatar" />

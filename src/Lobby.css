@@ -417,7 +417,7 @@
 }
 
 .lb-toggle:active .lb-toggle-knob {
-  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.08), var(--shadow-1);
+  box-shadow: 0 0 0 4px var(--white-opacity-100), var(--shadow-1);
 }
 
 .lb-toggle-on .lb-toggle-knob {

@@ -284,9 +284,15 @@ export default function Lobby({ win, onDrag, initialNav = 'my-links', initialSel
       {/* Sidebar — blur bg */}
       <aside className="lb-sidebar" onMouseDown={onDrag}>
         <div className="lb-lights">
-          <div className="lb-light lb-light-close" onClick={(e) => { e.stopPropagation(); handleClose(); }} />
-          <div className="lb-light lb-light-min" />
-          <div className="lb-light lb-light-max" />
+          <button
+            type="button"
+            aria-label="Close"
+            className="unbutton lb-light lb-light-close"
+            onClick={(e) => { e.stopPropagation(); handleClose(); }}
+            onMouseDown={(e) => e.stopPropagation()}
+          />
+          <span aria-hidden="true" className="lb-light lb-light-min" />
+          <span aria-hidden="true" className="lb-light lb-light-max" />
         </div>
         {isCompact && selectedLink ? (
           <nav className="lb-nav lb-nav-sections">
@@ -376,7 +382,7 @@ export default function Lobby({ win, onDrag, initialNav = 'my-links', initialSel
             {(activeNav === 'hq-links' ? hqLinks.slice(0, 3) : links).map((link) => (
               <div key={link.id} className="lb-card" onClick={() => setSelectedLink(link)}>
                 <div className="lb-thumb">
-                  <img src={link.thumb || (activeNav === 'hq-links' ? (link.id === 2 ? '/lobby/lobby-green.png' : '/lobby/lobby-thumb.png') : THUMBS[link.id % THUMBS.length])} alt="" />
+                  <img src={link.thumb || (activeNav === 'hq-links' ? (link.id === 2 ? '/lobby/lobby-green.png' : '/lobby/lobby-thumb.png') : THUMBS[link.id % THUMBS.length])} alt="" width="96" height="64" loading="lazy" decoding="async" />
                 </div>
                 <div className="lb-card-info">
                   <div className="lb-card-title-row">
@@ -405,7 +411,7 @@ export default function Lobby({ win, onDrag, initialNav = 'my-links', initialSel
           </div>
         ) : activeNav === 'calendar-settings' ? (
           <div className="lb-calsettings">
-            {[{ email: 'joe@ro.am' }, { email: 'joe.c.woodward@gmail.com' }].map((c) => (
+            {[{ email: 'avery.lin@northwind.io' }, { email: 'avery.lin.work@gmail.com' }].map((c) => (
               <div key={c.email} className="lb-calsettings-row">
                 <div className="lb-calsettings-icon">
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
@@ -452,7 +458,7 @@ export default function Lobby({ win, onDrag, initialNav = 'my-links', initialSel
                       </div>
                       <span className="lb-schedule-event-time">{ev.time}</span>
                       <div className="lb-schedule-thumb">
-                        <img src={THUMBS[ev.id % THUMBS.length]} alt="" />
+                        <img src={THUMBS[ev.id % THUMBS.length]} alt="" width="48" height="48" loading="lazy" decoding="async" />
                       </div>
                     </div>
                   ))}

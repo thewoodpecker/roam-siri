@@ -578,9 +578,15 @@ export default function MeetingWindow({ win, onDrag, roomName, people: allPeople
       {/* Header */}
       <div className="meeting-win-header" onMouseDown={onDrag}>
         <div className="meeting-win-lights">
-          <div className="meeting-win-light meeting-win-light-close" onClick={(e) => { e.stopPropagation(); handleClose(); }} />
-          <div className="meeting-win-light meeting-win-light-min" />
-          <div className="meeting-win-light meeting-win-light-max" />
+          <button
+            type="button"
+            aria-label="Close meeting"
+            className="unbutton meeting-win-light meeting-win-light-close"
+            onClick={(e) => { e.stopPropagation(); handleClose(); }}
+            onMouseDown={(e) => e.stopPropagation()}
+          />
+          <span aria-hidden="true" className="meeting-win-light meeting-win-light-min" />
+          <span aria-hidden="true" className="meeting-win-light meeting-win-light-max" />
         </div>
         <div className="meeting-win-header-center">
           <span className="meeting-win-title">
@@ -590,25 +596,36 @@ export default function MeetingWindow({ win, onDrag, roomName, people: allPeople
           <span className="meeting-win-subtitle">Recording Magic Minutes</span>
         </div>
         <div className="meeting-win-header-right" ref={viewMenuRef}>
-          <div
-            className="meeting-win-gallery-btn"
+          <button
+            type="button"
+            className="unbutton meeting-win-gallery-btn"
             onMouseDown={(e) => e.stopPropagation()}
             onClick={lockViewMode ? undefined : () => setViewMenuOpen(v => !v)}
+            disabled={lockViewMode}
+            aria-haspopup="menu"
+            aria-expanded={viewMenuOpen}
             style={lockViewMode ? { cursor: 'default' } : undefined}
           >
-            <span className="meeting-win-gallery-icon">{VIEW_ICONS[viewMode]}</span>
+            <span className="meeting-win-gallery-icon" aria-hidden="true">{VIEW_ICONS[viewMode]}</span>
             <span>{VIEW_MODES.find(m => m.id === viewMode)?.label}</span>
             {!lockViewMode && (
-              <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2.5 4L5 6.5L7.5 4" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true"><path d="M2.5 4L5 6.5L7.5 4" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"/></svg>
             )}
-          </div>
+          </button>
           {!lockViewMode && viewMenuOpen && (
-            <div className="meeting-win-view-menu">
+            <div className="meeting-win-view-menu" role="menu">
               {VIEW_MODES.map(m => (
-                <div key={m.id} className={`meeting-win-view-item ${viewMode === m.id ? 'meeting-win-view-active' : ''}`} onClick={() => { setViewMode(m.id); setViewMenuOpen(false); }}>
-                  <span className="meeting-win-view-icon">{VIEW_ICONS[m.id]}</span>
+                <button
+                  key={m.id}
+                  type="button"
+                  role="menuitemradio"
+                  aria-checked={viewMode === m.id}
+                  className={`unbutton meeting-win-view-item ${viewMode === m.id ? 'meeting-win-view-active' : ''}`}
+                  onClick={() => { setViewMode(m.id); setViewMenuOpen(false); }}
+                >
+                  <span className="meeting-win-view-icon" aria-hidden="true">{VIEW_ICONS[m.id]}</span>
                   <span>{m.label}</span>
-                </div>
+                </button>
               ))}
             </div>
           )}
@@ -737,15 +754,18 @@ export default function MeetingWindow({ win, onDrag, roomName, people: allPeople
           <div className="meeting-win-toolbar">
             {/* Left */}
             <div className="meeting-win-pill-group">
-              <div className="meeting-win-pill" data-tooltip="Chat" onClick={onOpenChat}><img src="/icons/chat.svg" alt="" /></div>
+              <button type="button" aria-label="Chat" className="unbutton meeting-win-pill" data-tooltip="Chat" onClick={onOpenChat}><img src="/icons/chat.svg" alt="" width="20" height="20" /></button>
             </div>
             {/* Center */}
             <div className="meeting-win-pill-group">
-              <div className="meeting-win-pill meeting-win-pill-muted" data-tooltip="Video"><img src="/icons/video-off.svg" alt="" /></div>
-              <div className="meeting-win-pill" data-tooltip="Microphone"><img src="/icons/microphone.svg" alt="" /></div>
-              <div className="meeting-win-pill" data-tooltip="Share Screen" onClick={() => setShareOpen(true)}><img src="/icons/screenshare.svg" alt="" /></div>
-              <div
-                className={`meeting-win-pill ${handsRaised ? 'meeting-win-pill-hands-raised' : ''}`}
+              <button type="button" aria-label="Video off" aria-pressed="true" className="unbutton meeting-win-pill meeting-win-pill-muted" data-tooltip="Video"><img src="/icons/video-off.svg" alt="" width="20" height="20" /></button>
+              <button type="button" aria-label="Microphone" className="unbutton meeting-win-pill" data-tooltip="Microphone"><img src="/icons/microphone.svg" alt="" width="20" height="20" /></button>
+              <button type="button" aria-label="Share Screen" className="unbutton meeting-win-pill" data-tooltip="Share Screen" onClick={() => setShareOpen(true)}><img src="/icons/screenshare.svg" alt="" width="20" height="20" /></button>
+              <button
+                type="button"
+                aria-label={handsRaised ? 'Lower hand' : 'Raise hand'}
+                aria-pressed={handsRaised}
+                className={`unbutton meeting-win-pill ${handsRaised ? 'meeting-win-pill-hands-raised' : ''}`}
                 data-tooltip={handsRaised ? 'Raised Hands' : 'Raise Hand'}
                 onClick={onClickHands}
                 data-hand-pill="true"
@@ -754,25 +774,25 @@ export default function MeetingWindow({ win, onDrag, roomName, people: allPeople
                   className={`meeting-win-hand-glyph ${handsRaised ? 'meeting-win-hand-glyph-raised' : ''}`}
                   aria-hidden="true"
                 />
-              </div>
-              <div className={`meeting-win-pill ${roamojiOpen ? 'meeting-win-pill-active' : ''}`} data-tooltip="Roamoji" onClick={() => {
+              </button>
+              <button type="button" aria-label="Roamoji" aria-pressed={roamojiOpen} className={`unbutton meeting-win-pill ${roamojiOpen ? 'meeting-win-pill-active' : ''}`} data-tooltip="Roamoji" onClick={() => {
                 if (roamojiOpen) {
                   setRoamojiClosing(true);
                   setTimeout(() => { setRoamojiOpen(false); setRoamojiClosing(false); }, 200);
                 } else {
                   setRoamojiOpen(true);
                 }
-              }}><img src="/icons/emoji.svg" alt="" /></div>
-              <div className="meeting-win-pill" data-tooltip="Magic Minutes" onClick={onOpenMagicMinutes}><img src="/icons/magic-quill.svg" alt="" /></div>
-              <div className="meeting-win-pill meeting-win-pill-leave" data-tooltip="Leave" onClick={handleClose}><img src="/icons/door.svg" alt="" /></div>
+              }}><img src="/icons/emoji.svg" alt="" width="20" height="20" /></button>
+              <button type="button" aria-label="Magic Minutes" className="unbutton meeting-win-pill" data-tooltip="Magic Minutes" onClick={onOpenMagicMinutes}><img src="/icons/magic-quill.svg" alt="" width="20" height="20" /></button>
+              <button type="button" aria-label="Leave meeting" className="unbutton meeting-win-pill meeting-win-pill-leave" data-tooltip="Leave" onClick={handleClose}><img src="/icons/door.svg" alt="" width="20" height="20" /></button>
             </div>
             {/* Right */}
             <div className="meeting-win-toolbar-right">
               <div className="meeting-win-pill-group">
-                <div className="meeting-win-pill" data-tooltip="Add People"><img src="/icons/add-people.svg" alt="" /></div>
-                <div className="meeting-win-pill" data-tooltip="Meeting Chat"><img src="/icons/meeting-chat.svg" alt="" /></div>
-                <div className={`meeting-win-pill ${mmCatchUp ? 'meeting-win-pill-active' : ''}`} data-tooltip="Magic Minutes"><img src="/icons/magic-quill.svg" alt="" /></div>
-                <div className="meeting-win-pill" data-tooltip="Floors"><img src="/icons/floors.svg" alt="" /></div>
+                <button type="button" aria-label="Add people" className="unbutton meeting-win-pill" data-tooltip="Add People"><img src="/icons/add-people.svg" alt="" width="20" height="20" /></button>
+                <button type="button" aria-label="Meeting chat" className="unbutton meeting-win-pill" data-tooltip="Meeting Chat"><img src="/icons/meeting-chat.svg" alt="" width="20" height="20" /></button>
+                <button type="button" aria-label="Magic Minutes" aria-pressed={mmCatchUp} className={`unbutton meeting-win-pill ${mmCatchUp ? 'meeting-win-pill-active' : ''}`} data-tooltip="Magic Minutes"><img src="/icons/magic-quill.svg" alt="" width="20" height="20" /></button>
+                <button type="button" aria-label="Floors" className="unbutton meeting-win-pill" data-tooltip="Floors"><img src="/icons/floors.svg" alt="" width="20" height="20" /></button>
               </div>
             </div>
           </div>

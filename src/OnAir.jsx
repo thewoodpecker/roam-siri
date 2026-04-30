@@ -42,7 +42,7 @@ function useTypewriter(text, active, speed = 40, key = 0) {
   return displayed;
 }
 
-export default function OnAir({ win, onDrag, demo }) {
+export default function OnAir({ win, onDrag, demo, staticEvent }) {
   const [closing, setClosing] = useState(false);
 
   const handleClose = () => {
@@ -54,7 +54,7 @@ export default function OnAir({ win, onDrag, demo }) {
     if (win.closeRequestId) handleClose();
   }, [win.closeRequestId]);
 
-  const [selectedColor, setSelectedColor] = useState(0);
+  const [selectedColor, setSelectedColor] = useState(staticEvent?.color ?? 0);
   // Demo mode — cycle through events with typewriter effect
   const [demoActive, setDemoActive] = useState(false);
   const [demoEvent, setDemoEvent] = useState(null);
@@ -80,7 +80,7 @@ export default function OnAir({ win, onDrag, demo }) {
   };
 
   useEffect(() => {
-    if (!demo) return;
+    if (!demo || staticEvent) return;
     const el = containerRef.current;
     if (!el) return;
     const observer = new IntersectionObserver(([entry]) => {
@@ -104,12 +104,27 @@ export default function OnAir({ win, onDrag, demo }) {
 
   // When location finishes typing, wait then cycle to next event
   useEffect(() => {
-    if (!demo || !demoEvent || !demoActive) return;
+    if (!demo || staticEvent || !demoEvent || !demoActive) return;
     if (typedLocation === demoEvent.location) {
       demoTimerRef.current = setTimeout(startNextEvent, 5000);
       return () => clearTimeout(demoTimerRef.current);
     }
   }, [typedLocation, demoEvent, demoActive]);
+
+  // Static (non-animated) values take precedence
+  const titleVal = staticEvent ? staticEvent.title : (demo ? typedTitle : undefined);
+  const descVal = staticEvent ? staticEvent.desc : (demo ? typedDesc : undefined);
+  const dateVal = staticEvent ? staticEvent.date : (demo ? typedDate : undefined);
+  const locVal = staticEvent ? staticEvent.location : (demo ? typedLocation : undefined);
+  const readOnlyFields = !!staticEvent || demo;
+  const titleFilled = staticEvent ? !!staticEvent.title : (demo && typedTitle);
+  const descFilled = staticEvent ? !!staticEvent.desc : (demo && typedDesc);
+  const dateFilled = staticEvent ? !!staticEvent.date : (demo && typedDate);
+  const locFilled = staticEvent ? !!staticEvent.location : (demo && typedLocation);
+  const hostFilled = staticEvent
+    ? true
+    : (demo && demoActive && typedLocation.length > (demoEvent?.location?.length || 0) * 0.7);
+  const displayEvent = staticEvent || demoEvent;
 
   return (
     <div
@@ -121,9 +136,15 @@ export default function OnAir({ win, onDrag, demo }) {
       {/* Titlebar */}
       <div className="onair-titlebar" onMouseDown={onDrag}>
         <div className="onair-traffic-lights">
-          <div className="onair-light onair-light-close" onClick={(e) => { e.stopPropagation(); handleClose(); }} />
-          <div className="onair-light onair-light-minimize" />
-          <div className="onair-light onair-light-maximize" />
+          <button
+            type="button"
+            aria-label="Close"
+            className="unbutton onair-light onair-light-close"
+            onClick={(e) => { e.stopPropagation(); handleClose(); }}
+            onMouseDown={(e) => e.stopPropagation()}
+          />
+          <span aria-hidden="true" className="onair-light onair-light-minimize" />
+          <span aria-hidden="true" className="onair-light onair-light-maximize" />
         </div>
         <span className="onair-title">New On-Air Event</span>
       </div>
@@ -143,38 +164,38 @@ export default function OnAir({ win, onDrag, demo }) {
         {/* Center content */}
         <div className="onair-center">
           <div className="onair-form">
-            <div className={`onair-field onair-field-title ${demo && typedTitle ? 'onair-field-filled' : ''}`}>
-              <input type="text" placeholder="Set Title" className="onair-input onair-input-title" value={demo ? typedTitle : undefined} readOnly={demo} />
+            <div className={`onair-field onair-field-title ${titleFilled ? 'onair-field-filled' : ''}`}>
+              <input type="text" placeholder="Set Title" className="onair-input onair-input-title" value={titleVal} readOnly={readOnlyFields} />
             </div>
-            <div className={`onair-field onair-field-desc ${demo && typedDesc ? 'onair-field-filled' : ''}`}>
-              <input type="text" placeholder="Set Description" className="onair-input onair-input-desc" value={demo ? typedDesc : undefined} readOnly={demo} />
+            <div className={`onair-field onair-field-desc ${descFilled ? 'onair-field-filled' : ''}`}>
+              <input type="text" placeholder="Set Description" className="onair-input onair-input-desc" value={descVal} readOnly={readOnlyFields} />
             </div>
           </div>
 
           <div className="onair-form">
-            <div className={`onair-field ${demo && typedDate ? 'onair-field-filled' : ''}`}>
-              <input type="text" placeholder="Set Date" className="onair-input" value={demo ? typedDate : undefined} readOnly={demo} />
+            <div className={`onair-field ${dateFilled ? 'onair-field-filled' : ''}`}>
+              <input type="text" placeholder="Set Date" className="onair-input" value={dateVal} readOnly={readOnlyFields} />
             </div>
-            <div className={`onair-field ${demo && typedLocation ? 'onair-field-filled' : ''}`}>
-              <input type="text" placeholder="Set Location" className="onair-input" value={demo ? typedLocation : undefined} readOnly={demo} />
+            <div className={`onair-field ${locFilled ? 'onair-field-filled' : ''}`}>
+              <input type="text" placeholder="Set Location" className="onair-input" value={locVal} readOnly={readOnlyFields} />
             </div>
           </div>
 
           <div className="onair-host">
-            <div className={`onair-host-avatar ${demo && demoActive && typedLocation.length > (demoEvent?.location?.length || 0) * 0.7 ? 'onair-host-avatar-filled' : ''}`}>
-              <img src="/on-air/3d-guy.png" alt="" className={`onair-host-img-default ${demo && demoActive && typedLocation.length > (demoEvent?.location?.length || 0) * 0.7 ? 'onair-host-img-out' : ''}`} />
-              {demo && demoEvent?.avatar && (
-                <img src={demoEvent.avatar} alt="" className={`onair-host-img-real ${demoActive && typedLocation.length > (demoEvent?.location?.length || 0) * 0.7 ? 'onair-host-img-in' : ''}`} />
+            <div className={`onair-host-avatar ${hostFilled ? 'onair-host-avatar-filled' : ''}`}>
+              <img src="/on-air/3d-guy.png" alt="" className={`onair-host-img-default ${hostFilled ? 'onair-host-img-out' : ''}`} />
+              {displayEvent?.avatar && (
+                <img src={displayEvent.avatar} alt="" className={`onair-host-img-real ${hostFilled ? 'onair-host-img-in' : ''}`} />
               )}
             </div>
             <div className="onair-host-label-wrap">
-              <div className={`onair-host-label ${demo && demoActive && typedLocation.length > (demoEvent?.location?.length || 0) * 0.7 ? 'onair-host-hidden' : ''}`}>
+              <div className={`onair-host-label ${hostFilled ? 'onair-host-hidden' : ''}`}>
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1V11M1 6H11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
                 <span>Add Host</span>
               </div>
-              {demo && demoEvent && (
-                <div className={`onair-host-label onair-host-name ${demoActive && typedLocation.length > (demoEvent?.location?.length || 0) * 0.7 ? 'onair-host-name-visible' : ''}`}>
-                  <span>{demoEvent.host}</span>
+              {displayEvent && (
+                <div className={`onair-host-label onair-host-name ${hostFilled ? 'onair-host-name-visible' : ''}`}>
+                  <span>{displayEvent.host}</span>
                 </div>
               )}
             </div>
@@ -182,18 +203,22 @@ export default function OnAir({ win, onDrag, demo }) {
         </div>
 
         {/* Left color picker */}
-        <div className="onair-colors">
+        <div className="onair-colors" role="radiogroup" aria-label="Background color">
           {ONAIR_COLORS.map((c, i) => (
-            <div
+            <button
               key={i}
-              className={`onair-color ${selectedColor === i ? 'onair-color-selected' : ''}`}
+              type="button"
+              role="radio"
+              aria-checked={selectedColor === i}
+              aria-label={c.label || `Color ${i + 1}`}
+              className={`unbutton onair-color ${selectedColor === i ? 'onair-color-selected' : ''}`}
               style={{ background: c.bg, border: '0.5px solid var(--border)' }}
               onClick={() => setSelectedColor(i)}
             >
               {selectedColor === i && (
-                <svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1.5 4L3.5 6L6.5 2" stroke="white" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                <svg width="8" height="8" viewBox="0 0 8 8" fill="none" aria-hidden="true"><path d="M1.5 4L3.5 6L6.5 2" stroke="white" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
               )}
-            </div>
+            </button>
           ))}
         </div>
 

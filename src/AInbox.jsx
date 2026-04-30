@@ -1459,7 +1459,7 @@ function OnItActionItemsCard({ items = [] }) {
     <div className="ainbox-aic">
       <div className="ainbox-aic-header">
         <span className="ainbox-aic-quill" aria-hidden="true">
-          <img src="/icons/mm-task.svg" alt="" width="20" height="20" />
+          <span className="ainbox-aic-quill-icon" aria-hidden="true" />
         </span>
         <span className="ainbox-aic-title">Action Items</span>
       </div>
@@ -2865,8 +2865,14 @@ export default function AInbox({ win, onDrag, onOpenMagicMinutes, initialThreadV
       {/* ——— Title bar ——— */}
       <div className="ainbox-titlebar" onMouseDown={onDrag}>
         <div className="ainbox-traffic-lights">
-          <div className="ainbox-light ainbox-light-close" onClick={(e) => { e.stopPropagation(); handleClose(); }} />
-          <div className="ainbox-light ainbox-light-minimize" />
+          <button
+            type="button"
+            aria-label="Close"
+            className="unbutton ainbox-light ainbox-light-close"
+            onClick={(e) => { e.stopPropagation(); handleClose(); }}
+            onMouseDown={(e) => e.stopPropagation()}
+          />
+          <span aria-hidden="true" className="ainbox-light ainbox-light-minimize" />
           <div className="ainbox-light ainbox-light-maximize" />
         </div>
         {searchActive && (
@@ -3068,7 +3074,11 @@ export default function AInbox({ win, onDrag, onOpenMagicMinutes, initialThreadV
                           }
                         }}
                       >
-                        {item.groupImg ? (
+                        {item.onAirIcon ? (
+                          <span className="ainbox-onair-icon" aria-hidden="true">
+                            <img src="/icons/on-air.svg" alt="" />
+                          </span>
+                        ) : item.groupImg ? (
                           <img src={item.groupImg} alt="" className="ainbox-section-item-avatar" />
                         ) : item.avatar ? (
                           <div className="ainbox-section-item-avatar-wrap">
@@ -3206,7 +3216,11 @@ export default function AInbox({ win, onDrag, onOpenMagicMinutes, initialThreadV
                 {/* Thread header: breadcrumb */}
                 <div className="ainbox-detail-header">
                   <div className="ainbox-detail-header-left">
-                    {threadConvo.type === 'meeting' ? (
+                    {threadConvo.onAirIcon ? (
+                      <span className="ainbox-onair-icon ainbox-onair-icon-lg" aria-hidden="true">
+                        <img src="/icons/on-air.svg" alt="" />
+                      </span>
+                    ) : threadConvo.type === 'meeting' ? (
                       <div className="ainbox-detail-header-meeting-icon">
                         <img src={threadConvo.groupImg} alt="" className="ainbox-section-item-icon-img" />
                       </div>
@@ -3294,7 +3308,11 @@ export default function AInbox({ win, onDrag, onOpenMagicMinutes, initialThreadV
               {/* Group header */}
               <div className="ainbox-detail-header">
                 <div className="ainbox-detail-header-left">
-                  {convo.type === 'meeting' ? (
+                  {convo.onAirIcon ? (
+                    <span className="ainbox-onair-icon ainbox-onair-icon-lg" aria-hidden="true">
+                      <img src="/icons/on-air.svg" alt="" />
+                    </span>
+                  ) : convo.type === 'meeting' ? (
                     <div className="ainbox-detail-header-meeting-icon">
                       <img src={convo.groupImg} alt="" className="ainbox-section-item-icon-img" />
                     </div>

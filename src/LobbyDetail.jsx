@@ -199,7 +199,7 @@ export default function LobbyDetail({ link, onBack, compact = false, activeSecti
     <div className={`lbd-root ${compact ? 'lbd-root-compact' : ''}`}>
       <header className="lbd-header">
         <div className="lbd-header-left">
-          <button type="button" className="lbd-back" onClick={onBack} onMouseDown={(e) => e.stopPropagation()}>
+          <button type="button" aria-label="Back" className="lbd-back" onClick={onBack} onMouseDown={(e) => e.stopPropagation()}>
             <ArrowLeftIcon />
           </button>
           <span className="lbd-title">{link.name}</span>
@@ -236,7 +236,7 @@ export default function LobbyDetail({ link, onBack, compact = false, activeSecti
           {activeSection === 'design' ? (
             <>
               <div className="lbd-preview">
-                <img src={designBg ? '/lobby/lobby-design-bg.png' : '/lobby/lobby-design-simple.png'} alt="" />
+                <img src={designBg ? '/lobby/lobby-design-bg.png' : '/lobby/lobby-design-simple.png'} alt="" width="600" height="338" loading="lazy" decoding="async" />
               </div>
 
               <div className="lbd-panel">
@@ -270,8 +270,8 @@ export default function LobbyDetail({ link, onBack, compact = false, activeSecti
                         )}
                       </button>
                     ))}
-                    <button type="button" className="lbd-accent-swatch lbd-accent-plus">
-                      <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M8 3.5V12.5M3.5 8H12.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
+                    <button type="button" aria-label="Add custom accent color" className="lbd-accent-swatch lbd-accent-plus">
+                      <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 3.5V12.5M3.5 8H12.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
                     </button>
                   </div>
                 </DetailRow>
@@ -376,12 +376,12 @@ function BasicsSection({ link }) {
           <div className="lbd-panel">
             {(link.hosts && link.hosts.length > 0 ? link.hosts : [{ name: 'Joe Woodward (You)', email: 'joe@ro.am', avatar: '/headshots/joe-woodward.jpg' }]).map((h) => (
               <div key={h.email} className="lbd-host-row">
-                <img src={h.avatar} alt="" className="lbd-host-avatar-img" />
+                <img src={h.avatar} alt="" width="32" height="32" loading="lazy" decoding="async" className="lbd-host-avatar-img" />
                 <div className="lbd-host-info">
                   <span className="lbd-host-name">{h.name}</span>
                   <span className="lbd-host-email">{h.email}</span>
                 </div>
-                <button type="button" className="lbd-hicon"><XIcon /></button>
+                <button type="button" aria-label={`Remove host ${h.name}`} className="lbd-hicon"><XIcon /></button>
               </div>
             ))}
             <div className="lbd-row lbd-add-row">
@@ -398,12 +398,12 @@ function BasicsSection({ link }) {
           <div className="lbd-panel">
             {link.roundRobinHosts.map((h) => (
               <div key={h.email} className="lbd-host-row">
-                <img src={h.avatar} alt="" className="lbd-host-avatar-img" />
+                <img src={h.avatar} alt="" width="32" height="32" loading="lazy" decoding="async" className="lbd-host-avatar-img" />
                 <div className="lbd-host-info">
                   <span className="lbd-host-name">{h.name}</span>
                   <span className="lbd-host-email">{h.email}</span>
                 </div>
-                <button type="button" className="lbd-hicon"><XIcon /></button>
+                <button type="button" aria-label={`Remove host ${h.name}`} className="lbd-hicon"><XIcon /></button>
               </div>
             ))}
             <div className="lbd-row lbd-add-row">
@@ -420,7 +420,7 @@ function AvailabilitySection() {
   return (
     <div className="lbd-panel lbd-panel-pad">
       <div className="lbd-host-row lbd-host-row-border">
-        <img src="/headshots/joe-woodward.jpg" alt="" className="lbd-host-avatar-img" />
+        <img src="/headshots/joe-woodward.jpg" alt="" width="32" height="32" loading="lazy" decoding="async" className="lbd-host-avatar-img" />
         <div className="lbd-host-info">
           <span className="lbd-host-name">Joe Woodward</span>
           <span className="lbd-host-email">Weekdays, 10:00 AM - 4:00 PM</span>

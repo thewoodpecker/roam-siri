@@ -13,6 +13,13 @@ const ONAIR = [
     section: 'Today',
     items: [
       {
+        title: 'World Cup 2026 Final Watch Party — Live from Roam Stadium',
+        subtitle: 'Joe Woodward & Will Hou',
+        when: 'Today · 7:00 pm',
+        thumb: '/on-air/on-air-blue-landscape.png',
+        avatars: ['/headshots/joe-woodward.jpg', '/headshots/will-hou.jpg'],
+      },
+      {
         title: 'The Future of Remote Work',
         subtitle: 'Howard Lerman',
         when: 'Apr 20, 2026 · 2:00 pm',
@@ -384,13 +391,22 @@ const PlusIcon = () => (
   </svg>
 );
 
-export default function Recordings({ win, onDrag, initialTab = 'Meetings' }) {
+export default function Recordings({ win, onDrag, initialTab = 'Meetings', onAirRecording = null }) {
   const [closing, setClosing] = useState(false);
   const [activeTab, setActiveTab] = useState(initialTab);
   const [collapsed, setCollapsed] = useState({});
   const [openedMeeting, setOpenedMeeting] = useState(null);
 
   const toggleSection = (key) => setCollapsed((c) => ({ ...c, [key]: !c[key] }));
+
+  // When an `onAirRecording` is supplied (from the on-air feature page) replace
+  // the first item of the Today section with it so the active event always
+  // appears at the top.
+  const onAirSections = onAirRecording
+    ? ONAIR.map((s, i) => i === 0
+        ? { ...s, items: [onAirRecording, ...s.items.slice(1)] }
+        : s)
+    : ONAIR;
 
   const handleClose = () => {
     setClosing(true);
@@ -406,9 +422,15 @@ export default function Recordings({ win, onDrag, initialTab = 'Meetings' }) {
       {/* Header */}
       <div className="rec-header" onMouseDown={onDrag}>
         <div className="rec-lights">
-          <div className="rec-light rec-light-close" onClick={(e) => { e.stopPropagation(); handleClose(); }} />
-          <div className="rec-light rec-light-min" />
-          <div className="rec-light rec-light-max" />
+          <button
+            type="button"
+            aria-label="Close"
+            className="unbutton rec-light rec-light-close"
+            onClick={(e) => { e.stopPropagation(); handleClose(); }}
+            onMouseDown={(e) => e.stopPropagation()}
+          />
+          <span aria-hidden="true" className="rec-light rec-light-min" />
+          <span aria-hidden="true" className="rec-light rec-light-max" />
         </div>
 
         {openedMeeting && (
@@ -437,15 +459,18 @@ export default function Recordings({ win, onDrag, initialTab = 'Meetings' }) {
           <MagicMinutesBody meeting={openedMeeting} />
         ) : (
           <>
-        <div className="rec-tabs">
+        <div className="rec-tabs" role="tablist">
           {TABS.map((t) => (
-            <div
+            <button
               key={t}
-              className={`rec-tab ${activeTab === t ? 'rec-tab-active' : ''}`}
+              type="button"
+              role="tab"
+              aria-selected={activeTab === t}
+              className={`unbutton rec-tab ${activeTab === t ? 'rec-tab-active' : ''}`}
               onClick={() => setActiveTab(t)}
             >
               <span className="rec-tab-label" data-text={t}>{t}</span>
-            </div>
+            </button>
           ))}
         </div>
 
@@ -491,13 +516,15 @@ export default function Recordings({ win, onDrag, initialTab = 'Meetings' }) {
               const isCollapsed = !!collapsed[section.section];
               return (
                 <React.Fragment key={section.section}>
-                  <div
-                    className={`rec-section-header rec-section-header-collapsible ${isCollapsed ? 'rec-section-collapsed' : ''}`}
+                  <button
+                    type="button"
+                    aria-expanded={!isCollapsed}
+                    className={`unbutton rec-section-header rec-section-header-collapsible ${isCollapsed ? 'rec-section-collapsed' : ''}`}
                     onClick={() => toggleSection(section.section)}
                   >
-                    <span className="rec-section-chevron"><ChevronDownSmall /></span>
+                    <span className="rec-section-chevron" aria-hidden="true"><ChevronDownSmall /></span>
                     {section.section}
-                  </div>
+                  </button>
                   {!isCollapsed && section.items.map((item, i) => (
                     <div
                       key={i}
@@ -561,14 +588,22 @@ export default function Recordings({ win, onDrag, initialTab = 'Meetings' }) {
 
         {activeTab === 'On-Air' && (
           <div className="rec-list">
-            {ONAIR.map((section) => (
+            {onAirSections.map((section) => (
               <React.Fragment key={section.section}>
                 <div className="rec-section-header">{section.section}</div>
                 {section.items.map((item, i) => (
                   <div key={i} className="rec-call">
                     <div className="rec-thumb">
                       <img src={item.thumb} alt="" />
-                      {item.avatar && <img src={item.avatar} alt="" className="rec-thumb-avatar rec-thumb-avatar-centered" />}
+                      {item.avatars ? (
+                        <div className="rec-thumb-avatars">
+                          {item.avatars.map((src, j) => (
+                            <img key={j} src={src} alt="" className="rec-thumb-avatar rec-thumb-avatar-stacked" />
+                          ))}
+                        </div>
+                      ) : item.avatar && (
+                        <img src={item.avatar} alt="" className="rec-thumb-avatar rec-thumb-avatar-centered" />
+                      )}
                     </div>
                     <div className="rec-call-body">
                       <div>

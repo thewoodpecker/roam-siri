@@ -6,24 +6,37 @@ import { EditMapView } from './App';
 function RightControls({ theme, onToggleTheme, showGrid, onToggleGrid }) {
   return (
     <div className="sc-right-controls">
-      <div className="sc-theme-capsule" onClick={onToggleTheme}>
-        <div className={`sc-theme-capsule-knob ${theme === 'light' ? 'bottom' : ''}`} />
-        <div className={`sc-theme-capsule-icon ${theme === 'dark' ? 'active' : ''}`}>
+      <button
+        type="button"
+        className="unbutton sc-theme-capsule"
+        onClick={onToggleTheme}
+        aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
+        aria-pressed={theme === 'light'}
+      >
+        <span className={`sc-theme-capsule-knob ${theme === 'light' ? 'bottom' : ''}`} aria-hidden="true" />
+        <span className={`sc-theme-capsule-icon ${theme === 'dark' ? 'active' : ''}`} aria-hidden="true">
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M14 8.5C13.3 12.1 10 14.5 6.5 13.5C3 12.5 1 9.5 2 6C2.8 3.2 5.5 1.5 8.5 2C7 3.5 6.5 6 8 8.5C9 10 11 11 14 8.5Z" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" /></svg>
-        </div>
-        <div className={`sc-theme-capsule-icon ${theme === 'light' ? 'active' : ''}`}>
+        </span>
+        <span className={`sc-theme-capsule-icon ${theme === 'light' ? 'active' : ''}`} aria-hidden="true">
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="3" stroke="currentColor" strokeWidth="1.3" /><path d="M8 2V3.5M8 12.5V14M2 8H3.5M12.5 8H14M3.8 3.8L4.8 4.8M11.2 11.2L12.2 12.2M3.8 12.2L4.8 11.2M11.2 4.8L12.2 3.8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" /></svg>
-        </div>
-      </div>
-      <div className="sc-grid-capsule" onClick={onToggleGrid} title="Toggle 12-column grid">
-        <div className={`sc-grid-capsule-knob ${showGrid ? 'on' : ''}`} />
-        <div className={`sc-grid-capsule-icon ${!showGrid ? 'active' : ''}`}>
+        </span>
+      </button>
+      <button
+        type="button"
+        className="unbutton sc-grid-capsule"
+        onClick={onToggleGrid}
+        title="Toggle 12-column grid"
+        aria-label="Toggle 12-column grid"
+        aria-pressed={showGrid}
+      >
+        <span className={`sc-grid-capsule-knob ${showGrid ? 'on' : ''}`} aria-hidden="true" />
+        <span className={`sc-grid-capsule-icon ${!showGrid ? 'active' : ''}`} aria-hidden="true">
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="2.5" y="2.5" width="11" height="11" stroke="currentColor" strokeWidth="1.3" rx="1.5" /></svg>
-        </div>
-        <div className={`sc-grid-capsule-icon ${showGrid ? 'active' : ''}`}>
+        </span>
+        <span className={`sc-grid-capsule-icon ${showGrid ? 'active' : ''}`} aria-hidden="true">
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="2.5" y="2.5" width="11" height="11" stroke="currentColor" strokeWidth="1.3" rx="1.5" /><path d="M6 2.5V13.5M10 2.5V13.5M2.5 6H13.5M2.5 10H13.5" stroke="currentColor" strokeWidth="1" /></svg>
-        </div>
-      </div>
+        </span>
+      </button>
     </div>
   );
 }
@@ -525,6 +538,360 @@ const AINBOX_AH_MESSAGES = {
     ],
   },
 };
+
+// On-Air events — one is picked at random per page load and threaded through
+// every on-air visual via OnAirEventContext (see useOnAirEvent below).
+const ONAIR_EVENTS = [
+  {
+    id: 'world-cup',
+    slug: 'world-cup-2026-final',
+    title: 'World Cup 2026 Final Watch Party — Live from Roam Stadium',
+    shortTitle: 'World Cup 2026 Final Watch Party',
+    posterTitle: 'World Cup 2026 Final Watch Party',
+    desc: 'Stream the final live, then take the stage for predictions, trivia, and a global toast at full time.',
+    inviteDesc: 'Stream the final live, then take the stage for predictions, trivia, and a global toast at full time',
+    date: 'July 19, 2026 · 7:00 PM ET',
+    dateShort: 'Sunday, July 19',
+    time: '7:00 PM ET',
+    location: 'Roam Stadium Theater',
+    posterLocation: 'A virtual event in Roam',
+    color: 4,
+    curtainLandscape: '/on-air/on-air-blue-landscape.png',
+    hostOrg: 'Roam HQ',
+    hosts: [
+      { name: 'Joe Woodward', avatar: '/headshots/joe-woodward.jpg' },
+      { name: 'Will Hou', avatar: '/headshots/will-hou.jpg' },
+    ],
+    /* Map (TheaterOnAir) override — short-name keys for SHOWCASE_PEOPLE. */
+    mapStageNames: ['Joe W.', 'Will H.'],
+    inviteGuests: [
+      { name: 'Lionel Messi', avatar: '/headshots/arnav-bansal.jpg', sub: 'Argentina HQ', subType: 'location' },
+      { name: 'Cristiano Ronaldo', avatar: '/headshots/derek-cicerone.jpg', sub: 'Euro 2024 Watch Party', subType: 'event' },
+      { name: 'Kylian Mbappé', avatar: '/headshots/mattias-leino.jpg', sub: 'Champions League Final Live', subType: 'event' },
+      { name: 'Erling Haaland', avatar: '/headshots/john-huffsmith.jpg', sub: 'Premier League Roundtable', subType: 'event' },
+      { name: 'Neymar Jr', avatar: '/headshots/keegan-lanzillotta.jpg', sub: 'Brazil HQ', subType: 'location' },
+      { name: 'Mohamed Salah', avatar: '/headshots/klas-leino.jpg', sub: 'Euro 2024 Watch Party', subType: 'event' },
+      { name: 'Harry Kane', avatar: '/headshots/tom-dixon.jpg' },
+      { name: 'Jude Bellingham', avatar: '/headshots/john-moffa.jpg' },
+    ],
+    inviteInitialAdded: ['Kylian Mbappé', 'Neymar Jr'],
+    guestList: [
+      { name: 'Lionel Messi', avatar: '/headshots/arnav-bansal.jpg', time: '2 hrs ago', status: 'going' },
+      { name: 'Cristiano Ronaldo', avatar: '/headshots/derek-cicerone.jpg', time: '5 days ago', status: 'going' },
+      { name: 'Kylian Mbappé', avatar: '/headshots/mattias-leino.jpg', time: '8 days ago', status: 'going' },
+      { name: 'Erling Haaland', avatar: '/headshots/john-huffsmith.jpg', time: '9 days ago', status: 'maybe' },
+      { name: 'Neymar Jr', avatar: '/headshots/keegan-lanzillotta.jpg', time: '10 days ago', status: 'going' },
+      { name: 'Mohamed Salah', avatar: '/headshots/klas-leino.jpg', time: '9 days ago', status: 'maybe' },
+    ],
+    recording: {
+      title: 'World Cup 2026 Final Watch Party — Live from Roam Stadium',
+      subtitle: 'Joe Woodward & Will Hou',
+      when: 'Today · 7:00 pm',
+      thumb: '/on-air/on-air-blue-landscape.png',
+      avatars: ['/headshots/joe-woodward.jpg', '/headshots/will-hou.jpg'],
+    },
+    producerChat: {
+      avatars: ['/headshots/joe-woodward.jpg', '/headshots/will-hou.jpg', '/headshots/chelsea-turbin.jpg', '/headshots/howard-lerman.jpg'],
+      pinnedItems: [
+        { label: 'Run-of-Show', emoji: null, avatar: '/groups/Group Roam.png' },
+        { label: 'Press Kit', emoji: null, avatar: '/groups/Group Features.png' },
+      ],
+      messages: [
+        {
+          id: 1, sender: 'Joe Woodward', avatar: '/headshots/joe-woodward.jpg', time: 'Today 9:30 AM',
+          text: "Producer chat is live — we're 6 days out from the World Cup Final. Will and I are on stage; Chelsea is running stage right; Howard's our color commentator from Roam HQ. Run-of-show is pinned above. Drop questions in the thread and let's lock the last details by Wednesday.",
+          reactions: [
+            { emoji: '⚽️', count: 6, active: true },
+            { emoji: '🏆', count: 4 },
+            { emoji: '🔥', count: 3 },
+            { emoji: '🎙️', count: 2 },
+          ],
+          thread: {
+            count: 6, lastReply: 'today 11:24 AM',
+            replies: [
+              { id: 'r1', sender: 'Will Hou', avatar: '/headshots/will-hou.jpg', text: "Walked through the run-of-show with Joe last night. Open with predictions, hold for kickoff, trivia at half-time. Curtain drops at 6:55 ET sharp." },
+              { id: 'r2', sender: 'Chelsea Turbin', avatar: '/headshots/chelsea-turbin.jpg', text: "RSVP curve is wild — 1,847 going / 312 maybe / 41 can't go as of this morning. Sending the early reminder blast tomorrow to the Maybe column." },
+              { id: 'r3', sender: 'Howard Lerman', avatar: '/headshots/howard-lerman.jpg', text: "Stadium Mode will kick in automatically once we cross 100. Let's make sure the audio mix from the host-city pool is dialed in before kickoff." },
+              { id: 'r4', sender: 'Will Hou', avatar: '/headshots/will-hou.jpg', text: "Walk-on music: FIFA anthem is queued. Exit music — open to ideas. Three Lions if England makes it? 😅" },
+              { id: 'r5', sender: 'Joe Woodward', avatar: '/headshots/joe-woodward.jpg', text: "Press kit is ready — square + landscape + portrait posters live. Pushing to socials end of day Tuesday." },
+              { id: 'r6', sender: 'Chelsea Turbin', avatar: '/headshots/chelsea-turbin.jpg', text: "Auto-reminders set: 1 week (Going + Maybe), 2 hours (Going only). I'll watch the Can't Go column for last-minute swaps." },
+            ],
+          },
+        },
+        {
+          id: 2, sender: 'On-Air', avatar: '/icons/on-air.svg', time: 'Today 10:00 AM',
+          text: "Email blast scheduled — '1 week countdown' to 2,200 invitees. Sending Mon, Jul 13 at 9:00 AM ET.",
+        },
+        {
+          id: 3, sender: 'On-Air', avatar: '/icons/on-air.svg', time: 'Today 10:01 AM',
+          text: "RSVPs in last 24 hours: +143 Going, +28 Maybe, +6 Can't Go. Total Going: 1,847.",
+        },
+        {
+          id: 4, sender: 'Will Hou', avatar: '/headshots/will-hou.jpg', time: 'Today 11:42 AM',
+          text: "Joe — can we reserve a Whisper Row for the production team up front? Want to coordinate live without breaking the audience experience.",
+        },
+        {
+          id: 5, sender: 'Joe Woodward', avatar: '/headshots/joe-woodward.jpg', time: 'Today 11:45 AM',
+          text: "Already done. Seats A1–A6 reserved with Whisper enabled. Howard's in A1 with the mic ready for color commentary.",
+        },
+        {
+          id: 6, sender: 'On-Air', avatar: '/icons/on-air.svg', time: 'Today 12:14 PM',
+          text: "Press kit downloaded by 12 producers. Top format: Square (1080×1080).",
+        },
+      ],
+    },
+  },
+  {
+    id: 'music',
+    slug: 'roam-sessions-acoustic',
+    title: 'Roam Sessions — Live Acoustic Showcase',
+    shortTitle: 'Roam Sessions — Live Acoustic',
+    posterTitle: 'Roam Sessions',
+    desc: 'Six artists, one stage, intimate sets — live to the world from a candle-lit theater.',
+    inviteDesc: 'Six artists, one stage, intimate sets — live to the world from a candle-lit theater',
+    date: 'August 23, 2026 · 8:00 PM ET',
+    dateShort: 'Saturday, August 23',
+    time: '8:00 PM ET',
+    location: 'Roam Amphitheater',
+    posterLocation: 'A virtual event in Roam',
+    color: 5,
+    curtainLandscape: '/on-air/static-landscape-purple.png',
+    hostOrg: 'Roam HQ',
+    hosts: [
+      { name: 'Peter Lerman', avatar: '/headshots/peter-lerman.jpg' },
+      { name: 'Chelsea Turbin', avatar: '/headshots/chelsea-turbin.jpg' },
+    ],
+    mapStageNames: ['Peter L.', 'Chelsea T.'],
+    inviteGuests: [
+      { name: 'Taylor Swift', avatar: '/headshots/grace-sutherland.jpg', sub: 'Eras Tour Roundtable', subType: 'event' },
+      { name: 'Bad Bunny', avatar: '/headshots/keegan-lanzillotta.jpg', sub: 'San Juan HQ', subType: 'location' },
+      { name: 'Olivia Rodrigo', avatar: '/headshots/chelsea-turbin.jpg', sub: 'Guts Tour Q&A', subType: 'event' },
+      { name: 'Kendrick Lamar', avatar: '/headshots/john-moffa.jpg', sub: 'Compton HQ', subType: 'location' },
+      { name: 'Beyoncé', avatar: '/headshots/lexi-bohonnon.jpg', sub: 'Renaissance Sessions', subType: 'event' },
+      { name: 'Billie Eilish', avatar: '/headshots/garima-kewlani.jpg', sub: 'Hit Me Hard Listening Party', subType: 'event' },
+      { name: 'The Weeknd', avatar: '/headshots/derek-cicerone.jpg' },
+      { name: 'Drake', avatar: '/headshots/tom-dixon.jpg' },
+    ],
+    inviteInitialAdded: ['Olivia Rodrigo', 'Billie Eilish'],
+    guestList: [
+      { name: 'Taylor Swift', avatar: '/headshots/grace-sutherland.jpg', time: '3 hrs ago', status: 'going' },
+      { name: 'Bad Bunny', avatar: '/headshots/keegan-lanzillotta.jpg', time: '4 days ago', status: 'going' },
+      { name: 'Olivia Rodrigo', avatar: '/headshots/chelsea-turbin.jpg', time: '6 days ago', status: 'going' },
+      { name: 'Kendrick Lamar', avatar: '/headshots/john-moffa.jpg', time: '7 days ago', status: 'maybe' },
+      { name: 'Beyoncé', avatar: '/headshots/lexi-bohonnon.jpg', time: '8 days ago', status: 'going' },
+      { name: 'Billie Eilish', avatar: '/headshots/garima-kewlani.jpg', time: '10 days ago', status: 'maybe' },
+    ],
+    recording: {
+      title: 'Roam Sessions — Live Acoustic Showcase',
+      subtitle: 'Peter Lerman & Chelsea Turbin',
+      when: 'Today · 8:00 pm',
+      thumb: '/on-air/static-landscape-purple.png',
+      avatars: ['/headshots/peter-lerman.jpg', '/headshots/chelsea-turbin.jpg'],
+    },
+    producerChat: {
+      avatars: ['/headshots/peter-lerman.jpg', '/headshots/chelsea-turbin.jpg', '/headshots/howard-lerman.jpg', '/headshots/grace-sutherland.jpg'],
+      pinnedItems: [
+        { label: 'Set List', emoji: null, avatar: '/groups/Group Roam.png' },
+        { label: 'Press Kit', emoji: null, avatar: '/groups/Group Features.png' },
+      ],
+      messages: [
+        {
+          id: 1, sender: 'Peter Lerman', avatar: '/headshots/peter-lerman.jpg', time: 'Today 9:30 AM',
+          text: "Producer chat is live — we're 5 days out from Roam Sessions. Chelsea and I are on hosting duty; Howard's running the floor; Grace is on lighting. Set list is pinned above. Drop questions in the thread and let's lock load-in by Thursday.",
+          reactions: [
+            { emoji: '🎸', count: 7, active: true },
+            { emoji: '🎤', count: 5 },
+            { emoji: '🔥', count: 3 },
+            { emoji: '🕯️', count: 2 },
+          ],
+          thread: {
+            count: 6, lastReply: 'today 11:14 AM',
+            replies: [
+              { id: 'r1', sender: 'Chelsea Turbin', avatar: '/headshots/chelsea-turbin.jpg', text: "Ran the cue sheet with Peter last night. Six 12-minute sets, two-minute changeovers. Curtain drops at 7:55 ET sharp." },
+              { id: 'r2', sender: 'Howard Lerman', avatar: '/headshots/howard-lerman.jpg', text: "RSVPs are flying — 2,134 going / 408 maybe / 22 can't go. Pushing the 'doors open' reminder Friday morning." },
+              { id: 'r3', sender: 'Grace Sutherland', avatar: '/headshots/grace-sutherland.jpg', text: "Lighting cues programmed: warm amber for the openers, cool blue at midpoint, candle wash for the closer. House mix sounds incredible." },
+              { id: 'r4', sender: 'Chelsea Turbin', avatar: '/headshots/chelsea-turbin.jpg', text: "Walk-on tracks: queued each artist's intro. Exit music — fading to room tone for that 'lights up' feel?" },
+              { id: 'r5', sender: 'Peter Lerman', avatar: '/headshots/peter-lerman.jpg', text: "Press kit is ready — square + landscape + portrait posters live. Pushing to socials end of day Tuesday." },
+              { id: 'r6', sender: 'Howard Lerman', avatar: '/headshots/howard-lerman.jpg', text: "Auto-reminders set: 1 week (Going + Maybe), 2 hours (Going only). Will watch the Can't Go column for last-minute swaps." },
+            ],
+          },
+        },
+        {
+          id: 2, sender: 'On-Air', avatar: '/icons/on-air.svg', time: 'Today 10:00 AM',
+          text: "Email blast scheduled — '1 week countdown' to 2,564 invitees. Sending Mon, Aug 18 at 9:00 AM ET.",
+        },
+        {
+          id: 3, sender: 'On-Air', avatar: '/icons/on-air.svg', time: 'Today 10:01 AM',
+          text: "RSVPs in last 24 hours: +212 Going, +47 Maybe, +3 Can't Go. Total Going: 2,134.",
+        },
+        {
+          id: 4, sender: 'Chelsea Turbin', avatar: '/headshots/chelsea-turbin.jpg', time: 'Today 11:42 AM',
+          text: "Peter — can we reserve a Whisper Row for the audio team? Want to flag mix tweaks live without breaking the room.",
+        },
+        {
+          id: 5, sender: 'Peter Lerman', avatar: '/headshots/peter-lerman.jpg', time: 'Today 11:45 AM',
+          text: "Already done. Seats A1–A6 with Whisper enabled. Grace is in A1 with the lighting cue tablet.",
+        },
+        {
+          id: 6, sender: 'On-Air', avatar: '/icons/on-air.svg', time: 'Today 12:14 PM',
+          text: "Press kit downloaded by 18 producers. Top format: Portrait (1080×1920).",
+        },
+      ],
+    },
+  },
+  {
+    id: 'walt-disney',
+    slug: 'evening-with-walt',
+    title: 'An Evening with Walt — The Florida Project Reimagined',
+    shortTitle: 'An Evening with Walt',
+    posterTitle: 'An Evening with Walt',
+    desc: "A guided journey through Walt's original Epcot vision — rare archival reels and live commentary.",
+    inviteDesc: "A guided journey through Walt's original Epcot vision — rare archival reels and live commentary",
+    date: 'October 17, 2026 · 7:30 PM ET',
+    dateShort: 'Friday, October 17',
+    time: '7:30 PM ET',
+    location: 'Roam Studio Theater',
+    posterLocation: 'A virtual event in Roam',
+    color: 2,
+    curtainLandscape: '/on-air/static-landscape-orange.png',
+    hostOrg: 'Roam HQ',
+    hosts: [
+      { name: 'Howard Lerman', avatar: '/headshots/howard-lerman.jpg' },
+      { name: 'Joe Woodward', avatar: '/headshots/joe-woodward.jpg' },
+    ],
+    mapStageNames: ['Howard L.', 'Joe W.'],
+    inviteGuests: [
+      { name: 'Bob Iger', avatar: '/headshots/jon-brod.jpg', sub: 'Burbank HQ', subType: 'location' },
+      { name: 'Joe Rohde', avatar: '/headshots/jeff-grossman.jpg', sub: 'Animal Kingdom Retrospective', subType: 'event' },
+      { name: 'Marty Sklar', avatar: '/headshots/peter-lerman.jpg', sub: 'Imagineering Roundtable', subType: 'event' },
+      { name: 'Kim Irvine', avatar: '/headshots/ava-lee.jpg', sub: 'Disneyland HQ', subType: 'location' },
+      { name: 'Tony Baxter', avatar: '/headshots/aaron-wadhwa.jpg', sub: 'Splash Mountain Postmortem', subType: 'event' },
+      { name: 'John Hench', avatar: '/headshots/michael-walrath.jpg', sub: 'Color Theory Workshop', subType: 'event' },
+      { name: 'Mary Blair', avatar: '/headshots/lexi-bohonnon.jpg' },
+      { name: 'Herbert Ryman', avatar: '/headshots/sean-macisaac.jpg' },
+    ],
+    inviteInitialAdded: ['Marty Sklar', 'Joe Rohde'],
+    guestList: [
+      { name: 'Bob Iger', avatar: '/headshots/jon-brod.jpg', time: '1 hr ago', status: 'going' },
+      { name: 'Joe Rohde', avatar: '/headshots/jeff-grossman.jpg', time: '3 days ago', status: 'going' },
+      { name: 'Marty Sklar', avatar: '/headshots/peter-lerman.jpg', time: '5 days ago', status: 'going' },
+      { name: 'Kim Irvine', avatar: '/headshots/ava-lee.jpg', time: '6 days ago', status: 'maybe' },
+      { name: 'Tony Baxter', avatar: '/headshots/aaron-wadhwa.jpg', time: '8 days ago', status: 'going' },
+      { name: 'John Hench', avatar: '/headshots/michael-walrath.jpg', time: '9 days ago', status: 'maybe' },
+    ],
+    recording: {
+      title: 'An Evening with Walt — The Florida Project Reimagined',
+      subtitle: 'Howard Lerman & Joe Woodward',
+      when: 'Today · 7:30 pm',
+      thumb: '/on-air/static-landscape-orange.png',
+      avatars: ['/headshots/howard-lerman.jpg', '/headshots/joe-woodward.jpg'],
+    },
+    producerChat: {
+      avatars: ['/headshots/howard-lerman.jpg', '/headshots/joe-woodward.jpg', '/headshots/chelsea-turbin.jpg', '/headshots/peter-lerman.jpg'],
+      pinnedItems: [
+        { label: 'Run-of-Show', emoji: null, avatar: '/groups/Group Roam.png' },
+        { label: 'Archival Reel List', emoji: null, avatar: '/groups/Group Features.png' },
+      ],
+      messages: [
+        {
+          id: 1, sender: 'Howard Lerman', avatar: '/headshots/howard-lerman.jpg', time: 'Today 9:30 AM',
+          text: "Producer chat is live — we're 8 days from An Evening with Walt. Joe and I are on stage; Chelsea is running stage right; Peter's our archive curator. Run-of-show is pinned above. Drop questions in the thread and let's lock the reel order by Thursday.",
+          reactions: [
+            { emoji: '🏰', count: 8, active: true },
+            { emoji: '🎬', count: 5 },
+            { emoji: '✨', count: 4 },
+            { emoji: '📽️', count: 3 },
+          ],
+          thread: {
+            count: 6, lastReply: 'today 11:24 AM',
+            replies: [
+              { id: 'r1', sender: 'Joe Woodward', avatar: '/headshots/joe-woodward.jpg', text: "Walked the run-of-show with Howard last night. Open with the 1966 Florida film, hold for the EPCOT model reveal, Q&A at the closer. Curtain drops at 7:25 ET sharp." },
+              { id: 'r2', sender: 'Chelsea Turbin', avatar: '/headshots/chelsea-turbin.jpg', text: "RSVP curve is steady — 1,402 going / 287 maybe / 19 can't go. Sending the 1-week reminder Friday to the Maybe column." },
+              { id: 'r3', sender: 'Peter Lerman', avatar: '/headshots/peter-lerman.jpg', text: "Archive cleared: I have license for the 4 reels we're showing. Frame rates synced to 24fps so transitions don't judder." },
+              { id: 'r4', sender: 'Joe Woodward', avatar: '/headshots/joe-woodward.jpg', text: "Walk-on score: 'When You Wish Upon a Star' — orchestral cut. Exit: silence into rolling credits, very deliberate." },
+              { id: 'r5', sender: 'Howard Lerman', avatar: '/headshots/howard-lerman.jpg', text: "Press kit is ready — square + landscape + portrait posters live. Pushing to socials end of day Tuesday." },
+              { id: 'r6', sender: 'Chelsea Turbin', avatar: '/headshots/chelsea-turbin.jpg', text: "Auto-reminders set: 1 week (Going + Maybe), 2 hours (Going only). I'll watch the Can't Go column for last-minute swaps." },
+            ],
+          },
+        },
+        {
+          id: 2, sender: 'On-Air', avatar: '/icons/on-air.svg', time: 'Today 10:00 AM',
+          text: "Email blast scheduled — '1 week countdown' to 1,820 invitees. Sending Fri, Oct 10 at 9:00 AM ET.",
+        },
+        {
+          id: 3, sender: 'On-Air', avatar: '/icons/on-air.svg', time: 'Today 10:01 AM',
+          text: "RSVPs in last 24 hours: +96 Going, +21 Maybe, +2 Can't Go. Total Going: 1,402.",
+        },
+        {
+          id: 4, sender: 'Joe Woodward', avatar: '/headshots/joe-woodward.jpg', time: 'Today 11:42 AM',
+          text: "Howard — can we reserve a Whisper Row for the archive team? Want Peter to flag reel cues live without breaking the immersion.",
+        },
+        {
+          id: 5, sender: 'Howard Lerman', avatar: '/headshots/howard-lerman.jpg', time: 'Today 11:45 AM',
+          text: "Already done. Seats A1–A6 reserved with Whisper enabled. Peter's in A1 with the cue list ready.",
+        },
+        {
+          id: 6, sender: 'On-Air', avatar: '/icons/on-air.svg', time: 'Today 12:14 PM',
+          text: "Press kit downloaded by 9 producers. Top format: Landscape (1920×1080).",
+        },
+      ],
+    },
+  },
+];
+
+// Picked once per FeaturePage mount and provided via context to every on-air
+// visual. Defaults to World Cup so visuals rendered outside the on-air page
+// (or before the provider mounts) keep their existing content.
+const OnAirEventContext = React.createContext(ONAIR_EVENTS[0]);
+const useOnAirEvent = () => React.useContext(OnAirEventContext);
+function pickOnAirEvent() {
+  return ONAIR_EVENTS[Math.floor(Math.random() * ONAIR_EVENTS.length)];
+}
+
+// Producer chat is keyed off a stable id so the AInbox thread view can find it.
+const ONAIR_PRODUCER_FAVORITES = [
+  { id: 'howard', name: 'Howard', avatar: '/headshots/howard-lerman.jpg', type: 'dm' },
+  { id: 'all-hands', name: 'All-Hands', avatar: '/groups/Group Roam.png', type: 'group' },
+];
+
+function buildOnAirProducerSections(event) {
+  return [
+    {
+      id: 'onair', label: 'On-Air',
+      items: [
+        { id: 'onair-event', name: event.shortTitle, onAirIcon: true, type: 'group', memberCount: 4 },
+      ],
+    },
+    ...AINBOX_AH_SECTIONS,
+  ];
+}
+
+function buildOnAirProducerMessages(event) {
+  return {
+    ...AINBOX_AH_MESSAGES,
+    'onair-event': {
+      type: 'group',
+      name: event.shortTitle,
+      memberCount: 4,
+      onAirIcon: true,
+      avatars: event.producerChat.avatars,
+      pinnedItems: event.producerChat.pinnedItems,
+      messages: event.producerChat.messages,
+    },
+  };
+}
+
+function buildOnAirInviteEvent(event) {
+  return {
+    title: event.title,
+    desc: event.inviteDesc,
+    date: event.date,
+    location: event.location,
+    host: event.hosts[0].name,
+    avatar: event.hosts[0].avatar,
+    color: event.color,
+  };
+}
 
 // On-It pinned at the top of favorites for the AInbox preview on the On-It page
 const ONIT_AINBOX_FAVORITES = [
@@ -1740,10 +2107,10 @@ const THEATER_ALL_HANDS_MEETING = {
   ],
 };
 
-function RecordingsPreview({ initialTab } = {}) {
+function RecordingsPreview({ initialTab, onAirRecording } = {}) {
   return (
     <div className="fp-rec-preview">
-      <Recordings win={noopWin('recordings')} onDrag={() => {}} initialTab={initialTab} />
+      <Recordings win={noopWin('recordings')} onDrag={() => {}} initialTab={initialTab} onAirRecording={onAirRecording} />
     </div>
   );
 }
@@ -2351,12 +2718,632 @@ function OnAirPreview() {
   return <OnAir win={noopWin('onair')} onDrag={() => {}} demo />;
 }
 
+function OnAirCurtainVisual() {
+  const event = useOnAirEvent();
+  const speakers = event.hosts;
+  const containerRef = useRef(null);
+  const videoRef = useRef(null);
+  const [started, setStarted] = useState(false);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) {
+      setStarted(true);
+      return;
+    }
+    if (typeof IntersectionObserver === 'undefined') {
+      setStarted(true);
+      return;
+    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            const v = videoRef.current;
+            if (v) {
+              try { v.currentTime = 0; } catch (_) {}
+              const p = v.play();
+              if (p && typeof p.catch === 'function') p.catch(() => {});
+            }
+            // Defer the class flip by one frame so the browser commits the
+            // initial opacity:0 state before the animation kicks in.
+            requestAnimationFrame(() => requestAnimationFrame(() => setStarted(true)));
+            observer.disconnect();
+            break;
+          }
+        }
+      },
+      { threshold: 0 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div ref={containerRef} className="fp-onair-curtain">
+      <video
+        ref={videoRef}
+        className="fp-onair-curtain-video"
+        src="/on-air/curtain-open.mp4"
+        muted
+        playsInline
+        preload="auto"
+        aria-hidden="true"
+      />
+      <div className={`fp-onair-curtain-content ${started ? 'fp-onair-curtain-content-started' : ''}`}>
+        <h1 className="fp-onair-rsvp-title">{event.title}</h1>
+        <p className="fp-onair-rsvp-desc">{event.desc}</p>
+        <div className="fp-onair-rsvp-meta">
+          <p className="fp-onair-rsvp-date">{event.dateShort}</p>
+          <p className="fp-onair-rsvp-time">{event.time}</p>
+          <p className="fp-onair-rsvp-loc">{event.location}</p>
+        </div>
+        <div className="fp-onair-rsvp-speakers">
+          {speakers.map((s, i) => (
+            <div key={i} className="fp-onair-rsvp-speaker">
+              <img className="fp-onair-rsvp-speaker-avatar" src={s.avatar} alt="" />
+              <span className="fp-onair-rsvp-speaker-name">{s.name}</span>
+            </div>
+          ))}
+        </div>
+        <div className="fp-onair-rsvp-actions">
+          <button type="button" className="fp-onair-rsvp-btn fp-onair-rsvp-btn-going">
+            <img src="/on-air/checkmark-icon.svg" alt="" width="16" height="16" />
+            <span>Going</span>
+          </button>
+          <button type="button" className="fp-onair-rsvp-btn fp-onair-rsvp-btn-maybe">
+            <img src="/on-air/question-icon.svg" alt="" width="16" height="16" />
+            <span>Maybe</span>
+          </button>
+          <button type="button" className="fp-onair-rsvp-btn fp-onair-rsvp-btn-cantgo">
+            <img src="/on-air/dismiss-icon.svg" alt="" width="16" height="16" />
+            <span>Can&rsquo;t Go</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function OnAirEpcotVisual() {
+  return (
+    <img
+      className="fp-onair-epcot-img"
+      src="/shelf/walt-disney-epcot.png"
+      alt="Walt Disney presenting the Florida Project / Epcot plans"
+    />
+  );
+}
+
+
+/* On-Air RSVP page — ported from /Users/joewoodward/Developer/on-air/src/app/page.tsx,
+   wrapped in the lobby-booking mock browser frame (.fp-lbk-browser). */
+function OnAirRsvpPreview() {
+  const event = useOnAirEvent();
+  const speakers = event.hosts;
+  return (
+    <div className="fp-lbk-stage">
+      <div className="fp-lbk-browser fp-onair-rsvp-browser">
+        <div className="fp-lbk-chrome">
+          <div className="fp-lbk-lights">
+            <span className="fp-lbk-light fp-lbk-light-close" />
+            <span className="fp-lbk-light fp-lbk-light-min" />
+            <span className="fp-lbk-light fp-lbk-light-max" />
+          </div>
+          <div className="fp-lbk-urlbar">ro.am/on-air/{event.slug}</div>
+          <div className="fp-lbk-chrome-spacer" />
+        </div>
+        <div className="fp-onair-rsvp-page">
+          <video
+            className="fp-onair-rsvp-curtain"
+            src="/on-air/curtain-sway.mp4"
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="metadata"
+            aria-hidden="true"
+          />
+          <div className="fp-onair-rsvp-content">
+            <h1 className="fp-onair-rsvp-title">{event.title}</h1>
+            <p className="fp-onair-rsvp-desc">{event.desc}</p>
+            <div className="fp-onair-rsvp-meta">
+              <p className="fp-onair-rsvp-date">{event.dateShort}</p>
+              <p className="fp-onair-rsvp-time">{event.time}</p>
+              <p className="fp-onair-rsvp-loc">{event.location}</p>
+            </div>
+            <div className="fp-onair-rsvp-speakers">
+              {speakers.map((s, i) => (
+                <div key={i} className="fp-onair-rsvp-speaker">
+                  <img className="fp-onair-rsvp-speaker-avatar" src={s.avatar} alt="" />
+                  <span className="fp-onair-rsvp-speaker-name">{s.name}</span>
+                </div>
+              ))}
+            </div>
+            <div className="fp-onair-rsvp-actions">
+              <button type="button" className="fp-onair-rsvp-btn fp-onair-rsvp-btn-going">
+                <img src="/on-air/checkmark-icon.svg" alt="" width="16" height="16" />
+                <span>Going</span>
+              </button>
+              <button type="button" className="fp-onair-rsvp-btn fp-onair-rsvp-btn-maybe">
+                <img src="/on-air/question-icon.svg" alt="" width="16" height="16" />
+                <span>Maybe</span>
+              </button>
+              <button type="button" className="fp-onair-rsvp-btn fp-onair-rsvp-btn-cantgo">
+                <img src="/on-air/dismiss-icon.svg" alt="" width="16" height="16" />
+                <span>Can&rsquo;t Go</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ONAIR_INVITE_EVENT/_GUESTS/_INITIAL_ADDED are now derived from the active
+   on-air event via useOnAirEvent() — see ONAIR_EVENTS above. */
+
+function OnAirInviteSubtitle({ subType, sub }) {
+  if (!sub) return null;
+  if (subType === 'event') {
+    return (
+      <div className="fp-oai-sub fp-oai-sub-event">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+          <circle cx="6" cy="6" r="5" stroke="currentColor" strokeWidth="1" />
+          <path d="M6 3.25V6L7.75 7.5" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
+        </svg>
+        <span>{sub}</span>
+      </div>
+    );
+  }
+  return <span className="fp-oai-sub fp-oai-sub-loc">{sub}</span>;
+}
+
+function OnAirInvitePreview() {
+  const event = useOnAirEvent();
+  const inviteEvent = useMemo(() => buildOnAirInviteEvent(event), [event]);
+  const [addedNames, setAddedNames] = useState(() => new Set(event.inviteInitialAdded));
+  const toggleAdded = (name) => {
+    setAddedNames((prev) => {
+      const next = new Set(prev);
+      if (next.has(name)) next.delete(name);
+      else next.add(name);
+      return next;
+    });
+  };
+  const invitees = event.inviteGuests.filter((g) => addedNames.has(g.name));
+  return (
+    <div className="fp-oai-stage">
+      <div className="fp-oai-frame">
+        <OnAir win={noopWin('onair-invite')} onDrag={() => {}} staticEvent={inviteEvent} />
+        <div className="fp-oai-scrim" />
+        <div className="fp-oai-dialog" role="dialog" aria-label="Invite">
+          <header className="fp-oai-header">
+            <button type="button" className="fp-oai-close-btn" aria-label="Close">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                <path d="M3.5 3.5L12.5 12.5M12.5 3.5L3.5 12.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+              </svg>
+            </button>
+            <p className="fp-oai-title">Invite</p>
+            <span className="fp-oai-close-btn fp-oai-close-spacer" aria-hidden="true" />
+          </header>
+          <div className="fp-oai-content">
+            {/* Left pane — guest list */}
+            <div className="fp-oai-pane fp-oai-pane-left">
+              <div className="fp-oai-pane-scroll">
+                <div className="fp-oai-search">
+                  <img src="/icons/oai-search.svg" alt="" width="16" height="16" />
+                  <span className="fp-oai-search-text">Search</span>
+                </div>
+                <div className="fp-oai-chips">
+                  <button type="button" className="fp-oai-chip">Past Guests</button>
+                  <button type="button" className="fp-oai-chip fp-oai-chip-with-chev">
+                    <span>Filter by Event</span>
+                    <svg width="9" height="5" viewBox="0 0 9 5" fill="none">
+                      <path d="M1 1L4.5 4L8 1" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </button>
+                </div>
+                <div className="fp-oai-list">
+                  {event.inviteGuests.map((g) => {
+                    const isAdded = addedNames.has(g.name);
+                    return (
+                      <div key={g.name} className="fp-oai-cell">
+                        <img className="fp-oai-avatar" src={g.avatar} alt="" />
+                        <div className="fp-oai-labels">
+                          <p className="fp-oai-name">{g.name}</p>
+                          <OnAirInviteSubtitle subType={g.subType} sub={g.sub} />
+                        </div>
+                        <button
+                          type="button"
+                          className={`fp-oai-cell-btn fp-oai-cell-btn-${isAdded ? 'added' : 'add'}`}
+                          onClick={() => toggleAdded(g.name)}
+                        >
+                          {isAdded ? 'Added' : 'Add'}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="fp-oai-pane-actions">
+                <button type="button" className="fp-oai-icon-btn" aria-label="Email">
+                  <img src="/icons/oai-mail.svg" alt="" width="16" height="16" />
+                </button>
+                <button type="button" className="fp-oai-icon-btn" aria-label="Copy link">
+                  <img src="/icons/oai-link.svg" alt="" width="16" height="16" />
+                </button>
+                <button type="button" className="fp-oai-icon-btn" aria-label="Share">
+                  <img src="/icons/oai-share.svg" alt="" width="16" height="16" />
+                </button>
+              </div>
+            </div>
+
+            {/* Right pane — message + invitees */}
+            <div className="fp-oai-pane fp-oai-pane-right">
+              <div className="fp-oai-section fp-oai-section-msg">
+                <div className="fp-oai-section-head">
+                  <p className="fp-oai-section-title">Message</p>
+                </div>
+                <div className="fp-oai-msg-body">
+                  <p>
+                    Hey [Name], you’re invited to the On-Air event: {event.title}.
+                  </p>
+                  <p>&nbsp;</p>
+                  <p>
+                    Can you make it? RSVP here to let the host know: [link to RSVP]
+                    <span className="fp-oai-msg-edit" aria-hidden="true">
+                      <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
+                        <path d="M8.5 1.5L10.5 3.5L4 10L1.5 10.5L2 8L8.5 1.5Z" stroke="currentColor" strokeWidth="1" strokeLinejoin="round" />
+                      </svg>
+                    </span>
+                  </p>
+                </div>
+              </div>
+              <div className="fp-oai-section fp-oai-section-invitees">
+                <div className="fp-oai-section-head">
+                  <p className="fp-oai-section-title">Invitees</p>
+                </div>
+                <div className="fp-oai-list fp-oai-list-invitees">
+                  {invitees.map((g) => (
+                    <div key={g.name} className="fp-oai-cell fp-oai-cell-static">
+                      <img className="fp-oai-avatar" src={g.avatar} alt="" />
+                      <div className="fp-oai-labels">
+                        <p className="fp-oai-name">{g.name}</p>
+                        <OnAirInviteSubtitle subType={g.subType} sub={g.sub} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="fp-oai-pane-actions fp-oai-pane-actions-right">
+                <button type="button" className="fp-oai-btn fp-oai-btn-secondary">Cancel</button>
+                <button type="button" className="fp-oai-btn fp-oai-btn-primary">Send Invites</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const ONAIR_SHARE_FORMATS = [
+  { id: 'square', label: 'Square', w: 10, h: 10, bg: '/on-air/speaker-square-1080.png' },
+  { id: 'landscape', label: 'Landscape', w: 12, h: 8, bg: '/on-air/speaker-landscape.png' },
+  { id: 'portrait', label: 'Portrait', w: 8, h: 12, bg: '/on-air/speaker-portrait.png' },
+];
+
+function OnAirSharePreview() {
+  const event = useOnAirEvent();
+  const inviteEvent = useMemo(() => buildOnAirInviteEvent(event), [event]);
+  const [format, setFormat] = useState('square');
+  const activeBg = ONAIR_SHARE_FORMATS.find((f) => f.id === format)?.bg;
+  return (
+    <div className="fp-oai-stage">
+      <div className="fp-oai-frame">
+        <OnAir win={noopWin('onair-share')} onDrag={() => {}} staticEvent={inviteEvent} />
+        <div className="fp-oai-scrim" />
+        <div className="fp-oai-dialog fp-oas-dialog" role="dialog" aria-label="Share">
+          <header className="fp-oai-header">
+            <button type="button" className="fp-oai-close-btn" aria-label="Close">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                <path d="M3.5 3.5L12.5 12.5M12.5 3.5L3.5 12.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+              </svg>
+            </button>
+            <p className="fp-oai-title">Share</p>
+            <span className="fp-oai-close-btn fp-oai-close-spacer" aria-hidden="true" />
+          </header>
+          <div className="fp-oas-body">
+            <div className="fp-oas-toolbar">
+              <button type="button" className="fp-oas-variant-chip">
+                <span>T-7 DAYS</span>
+                <svg width="9" height="5" viewBox="0 0 9 5" fill="none">
+                  <path d="M1 1L4.5 4L8 1" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+              <div className="fp-oas-format-toggles">
+                {ONAIR_SHARE_FORMATS.map((f) => (
+                  <button
+                    key={f.id}
+                    type="button"
+                    className={`fp-oas-format-btn ${format === f.id ? 'fp-oas-format-btn-active' : ''}`}
+                    aria-label={f.label}
+                    aria-pressed={format === f.id}
+                    onClick={() => setFormat(f.id)}
+                  >
+                    <span className="fp-oas-format-icon" style={{ width: f.w, height: f.h }} />
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="fp-oas-poster-slot">
+              <div className={`fp-oas-poster fp-oas-poster-${format}`}>
+              <img
+                className="fp-oas-poster-bg"
+                src={activeBg}
+                alt=""
+                aria-hidden="true"
+              />
+              <div className="fp-oas-poster-content">
+                <p className="fp-oas-poster-eyebrow">T-7 DAYS</p>
+                <h3 className="fp-oas-poster-title">{event.posterTitle}</h3>
+                <div className="fp-oas-poster-meta">
+                  <p className="fp-oas-poster-date">{event.dateShort}</p>
+                  <p className="fp-oas-poster-time">{event.time}</p>
+                  <p className="fp-oas-poster-loc">{event.posterLocation}</p>
+                </div>
+                <div className="fp-oas-poster-hosts">
+                  {event.hosts.map((h) => (
+                    <div key={h.name} className="fp-oas-poster-host">
+                      <img src={h.avatar} alt="" className="fp-oas-poster-host-avatar" />
+                      <span className="fp-oas-poster-host-name">{h.name}</span>
+                      <span className="fp-oas-poster-host-org">{event.hostOrg}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              </div>
+            </div>
+          </div>
+          <div className="fp-oas-footer">
+            <button type="button" className="fp-oas-download-btn">
+              <span className="fp-oas-download-label">Download</span>
+              <span className="fp-oas-download-sub">Post on your socials and tag @roam for a repost!</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ONAIR_GUEST_LIST is now derived per-event from useOnAirEvent().guestList. */
+
+const STATUS_LABEL = { going: 'Going', maybe: 'Maybe', cantgo: 'Can’t Go' };
+
+function OnAirGuestsPreview() {
+  const event = useOnAirEvent();
+  const inviteEvent = useMemo(() => buildOnAirInviteEvent(event), [event]);
+  return (
+    <div className="fp-oai-stage">
+      <div className="fp-oai-frame">
+        <OnAir win={noopWin('onair-guests')} onDrag={() => {}} staticEvent={inviteEvent} />
+        <div className="fp-oai-scrim" />
+        <div className="fp-oai-dialog fp-oag-dialog" role="dialog" aria-label="Guest List">
+          <header className="fp-oai-header">
+            <button type="button" className="fp-oai-close-btn" aria-label="Close">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                <path d="M3.5 3.5L12.5 12.5M12.5 3.5L3.5 12.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+              </svg>
+            </button>
+            <p className="fp-oai-title">Guest List</p>
+            <button type="button" className="fp-oai-close-btn" aria-label="More">
+              <svg width="3" height="13" viewBox="0 0 3 13" fill="none">
+                <circle cx="1.5" cy="1.5" r="1.5" fill="currentColor" />
+                <circle cx="1.5" cy="6.5" r="1.5" fill="currentColor" />
+                <circle cx="1.5" cy="11.5" r="1.5" fill="currentColor" />
+              </svg>
+            </button>
+          </header>
+          <div className="fp-oag-search-row">
+            <div className="fp-oag-search">
+              <img src="/icons/oai-search.svg" alt="" width="16" height="16" />
+              <span className="fp-oag-search-text">Search Guests</span>
+            </div>
+            <button type="button" className="fp-oag-picker">
+              <span>Status</span>
+              <span className="fp-oag-picker-icon">
+                <svg width="9" height="12" viewBox="0 0 9 12" fill="none">
+                  <path d="M1 4L4.5 1L8 4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M1 8L4.5 11L8 8" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </span>
+            </button>
+          </div>
+          <div className="fp-oag-filter-chips">
+            <span className="fp-oag-chip fp-oag-chip-going">
+              <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                <circle cx="6.5" cy="6.5" r="6.5" fill="#46D08F" />
+                <path d="M3.75 6.75L5.5 8.5L9.25 4.75" stroke="#0F1010" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <span>Going</span>
+            </span>
+            <span className="fp-oag-chip">
+              <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                <circle cx="6.5" cy="6.5" r="6.5" fill="rgba(255,255,255,0.2)" />
+                <path d="M5 5C5 4.17157 5.67157 3.5 6.5 3.5C7.32843 3.5 8 4.17157 8 5C8 5.55228 7.55228 6 7 6H6.5V7" stroke="white" strokeWidth="1.1" strokeLinecap="round" />
+                <circle cx="6.5" cy="9" r="0.65" fill="white" />
+              </svg>
+              <span>Maybe</span>
+            </span>
+            <span className="fp-oag-chip fp-oag-chip-cantgo">
+              <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                <circle cx="6.5" cy="6.5" r="6.5" fill="#EF5350" />
+                <path d="M4.25 4.25L8.75 8.75M8.75 4.25L4.25 8.75" stroke="#0F1010" strokeWidth="1.3" strokeLinecap="round" />
+              </svg>
+              <span>Can&rsquo;t Go</span>
+            </span>
+          </div>
+          <div className="fp-oag-list">
+            {event.guestList.map((g) => (
+              <div key={g.name} className="fp-oag-cell">
+                <img className="fp-oag-avatar" src={g.avatar} alt="" />
+                <div className="fp-oag-labels">
+                  <p className="fp-oag-name">{g.name}</p>
+                  <p className="fp-oag-time">{g.time}</p>
+                </div>
+                <button type="button" className={`fp-oag-status fp-oag-status-${g.status}`}>
+                  <span>{STATUS_LABEL[g.status]}</span>
+                  <svg width="9" height="5" viewBox="0 0 9 5" fill="none">
+                    <path d="M1 1L4.5 4L8 1" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function OnAirBlastPreview() {
+  const event = useOnAirEvent();
+  const inviteEvent = useMemo(() => buildOnAirInviteEvent(event), [event]);
+  const [autoReminders, setAutoReminders] = useState(true);
+  return (
+    <div className="fp-oai-stage">
+      <div className="fp-oai-frame">
+        <OnAir win={noopWin('onair-blast')} onDrag={() => {}} staticEvent={inviteEvent} />
+        <div className="fp-oai-scrim" />
+        <div className="fp-oai-dialog fp-oab-dialog" role="dialog" aria-label="Text Blasts">
+          <header className="fp-oai-header fp-oab-header">
+            <button type="button" className="fp-oai-close-btn fp-oab-icon-btn" aria-label="Close">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                <path d="M3.5 3.5L12.5 12.5M12.5 3.5L3.5 12.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+              </svg>
+            </button>
+            <p className="fp-oai-title">Text Blasts</p>
+            <button type="button" className="fp-oai-close-btn fp-oab-icon-btn" aria-label="New blast">
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+                <path d="M8 3V13M3 8H13" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+              </svg>
+            </button>
+          </header>
+          <div className="fp-oab-body">
+            <div className="fp-oab-card">
+              <div className="fp-oab-row">
+                <span className="fp-oab-row-label">Auto-Reminders</span>
+                <button
+                  type="button"
+                  className={`fp-oab-toggle ${autoReminders ? 'fp-oab-toggle-on' : ''}`}
+                  role="switch"
+                  aria-checked={autoReminders}
+                  onClick={() => setAutoReminders((v) => !v)}
+                >
+                  <span className="fp-oab-toggle-knob" />
+                </button>
+              </div>
+
+              <p className="fp-oab-section-label">Reminders to RSVP</p>
+              <div className="fp-oab-bracket-row">
+                <span className="fp-oab-bracket" aria-hidden="true" />
+                <div className="fp-oab-bracket-content">
+                  <p className="fp-oab-bracket-text">1 week before event, only sent to</p>
+                  <div className="fp-oab-chips">
+                    <span className="fp-oab-chip fp-oab-chip-going">
+                      <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                        <circle cx="6.5" cy="6.5" r="6.5" fill="#46D08F" />
+                        <path d="M3.75 6.75L5.5 8.5L9.25 4.75" stroke="#0F1010" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                      <span>Going</span>
+                    </span>
+                    <span className="fp-oab-chip">
+                      <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                        <circle cx="6.5" cy="6.5" r="6.5" fill="rgba(255,255,255,0.2)" />
+                        <path d="M5 5C5 4.17157 5.67157 3.5 6.5 3.5C7.32843 3.5 8 4.17157 8 5C8 5.55228 7.55228 6 7 6H6.5V7" stroke="white" strokeWidth="1.1" strokeLinecap="round" />
+                        <circle cx="6.5" cy="9" r="0.65" fill="white" />
+                      </svg>
+                      <span>Maybe</span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="fp-oab-separator" />
+
+              <p className="fp-oab-section-label">Event Reminders</p>
+              <div className="fp-oab-bracket-row">
+                <span className="fp-oab-bracket" aria-hidden="true" />
+                <div className="fp-oab-bracket-content">
+                  <p className="fp-oab-bracket-text">2 hours before event, only sent to</p>
+                  <div className="fp-oab-chips">
+                    <span className="fp-oab-chip fp-oab-chip-going">
+                      <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                        <circle cx="6.5" cy="6.5" r="6.5" fill="#46D08F" />
+                        <path d="M3.75 6.75L5.5 8.5L9.25 4.75" stroke="#0F1010" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                      <span>Going</span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="fp-oab-footer">
+            <button type="button" className="fp-oab-cta">New Blast</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function TodoPreview({ label = 'TODO' } = {}) {
   return (
     <div className="fp-todo-preview">
       <span className="fp-todo-label">{label}</span>
     </div>
   );
+}
+
+/* On-Air producer's chat — picks the active event from context and rebuilds
+   the AInbox sections + messages for that event so the thread view shows the
+   correct group name, hosts, and crew chatter. */
+function OnAirProducerChatPreview() {
+  const event = useOnAirEvent();
+  const sections = useMemo(() => buildOnAirProducerSections(event), [event]);
+  const messages = useMemo(() => buildOnAirProducerMessages(event), [event]);
+  return (
+    <AInboxPreview
+      overrides
+      view="thread"
+      threadView={{ chatId: 'onair-event', messageId: 1 }}
+      favoritesOverride={ONAIR_PRODUCER_FAVORITES}
+      sectionsOverride={sections}
+      messagesOverride={messages}
+    />
+  );
+}
+
+/* Recordings preview that injects the active on-air event's recording entry
+   at the top of the On-Air tab. */
+function OnAirRecordingsPreview() {
+  const event = useOnAirEvent();
+  return <RecordingsPreview initialTab="On-Air" onAirRecording={event.recording} />;
+}
+
+/* Map preview pinned to the TheaterOnAir floor — passes the active event
+   into ShowcaseMap so the theater room name + on-stage speakers reflect it. */
+function OnAirMapPreview() {
+  const event = useOnAirEvent();
+  const onAirOverride = useMemo(() => ({
+    title: event.shortTitle,
+    stageNames: event.mapStageNames,
+  }), [event]);
+  return <MapPreview initialFloor="TheaterOnAir" onAirOverride={onAirOverride} />;
 }
 
 function formatTrimTime(seconds) {
@@ -3079,7 +4066,7 @@ function FlashCard({ supertitle, title, media, back }) {
 const MAGNIFY_TARGET_PERSON = 'Michael W.';
 const MAGNIFY_TARGET_CITY = 'SFO';
 
-function MapPreview({ spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, hideOnIt = false, onItAutoOpen = false, autoKnock = false, shelfAutoOpen = false, shareAutoOpen = false, initialFloor = 'Preview', showSidebar = false, autoCycleFloors = false, autoCycleDms = false, showPhysicalTags = false, spotlightSearch = false, children = null } = {}) {
+function MapPreview({ spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, hideOnIt = false, onItAutoOpen = false, autoKnock = false, shelfAutoOpen = false, shareAutoOpen = false, initialFloor = 'Preview', showSidebar = false, autoCycleFloors = false, autoCycleDms = false, showPhysicalTags = false, spotlightSearch = false, onAirOverride = null, children = null } = {}) {
   const [pageTheme, setPageTheme] = useState(() =>
     typeof document !== 'undefined' ? document.documentElement.getAttribute('data-theme') || 'dark' : 'dark'
   );
@@ -3137,7 +4124,7 @@ function MapPreview({ spotifyAlwaysOpen = false, githubAlwaysOpen = false, figma
   ].filter(Boolean).join(' ');
   return (
     <div ref={wrapRef} className={className}>
-      <ShowcaseMap embedded autoKnock={autoKnock} initialFloor={initialFloor} spotifyAlwaysOpen={spotifyAlwaysOpen} githubAlwaysOpen={githubAlwaysOpen} figmaAlwaysOpen={figmaAlwaysOpen} hideOnIt={hideOnIt} onItAutoOpen={onItAutoOpen} shelfAutoOpen={shelfAutoOpen} shareAutoOpen={shareAutoOpen} theme={pageTheme} autoCycleFloors={autoCycleFloors} autoCycleDms={autoCycleDms} showPhysicalTags={showPhysicalTags} />
+      <ShowcaseMap embedded autoKnock={autoKnock} initialFloor={initialFloor} spotifyAlwaysOpen={spotifyAlwaysOpen} githubAlwaysOpen={githubAlwaysOpen} figmaAlwaysOpen={figmaAlwaysOpen} hideOnIt={hideOnIt} onItAutoOpen={onItAutoOpen} shelfAutoOpen={shelfAutoOpen} shareAutoOpen={shareAutoOpen} theme={pageTheme} autoCycleFloors={autoCycleFloors} autoCycleDms={autoCycleDms} showPhysicalTags={showPhysicalTags} onAirOverride={onAirOverride} />
       {children}
       {spotlightSearch && (
         <>
@@ -5093,14 +6080,14 @@ export const FEATURES = {
         visual: <MapPreview autoKnock initialFloor="DropIn" />,
       },
       {
-        variant: 'flashcards',
-        flashcards: [
-          { supertitle: 'Room Type', title: 'Private Office', back: 'Each member is assigned a Private Office, an audio-only home base to hold meetings and showcase your favorite books, movies, awards, articles, and more on their personal shelf.', media: { type: 'image', src: '/feature/flashcards/flash-card-private-office-front.png', src2x: '/feature/flashcards/flash-card-private-office-front@2x.png' } },
-          { supertitle: 'Room Type', title: 'Meeting Room', back: 'Dedicated video-enabled room to share your screen, collaborate on a shared whiteboard, record Magic Minutes, react with Roamoji, and more.', media: { type: 'image', src: '/feature/flashcards/flash-card-meeting-room-front.png', src2x: '/feature/flashcards/flash-card-meeting-room-front@2x.png' } },
-          { supertitle: 'Room Type', title: 'Theater', back: 'Hold all-hands meetings, presentations, and large-scale events for up to 3,000 people.', media: { type: 'image', src: '/feature/flashcards/flash-card-theater-front.png', src2x: '/feature/flashcards/flash-card-theater-front@2x.png' } },
-          { supertitle: 'Privacy', title: 'Do Not Disturb', back: 'If someone is doing deep work or otherwise doesn’t want to be bothered, they can set Do Not Disturb. Roam even automatically detects if someone is on a video conferencing call from Zoom or Google Meet and automatically puts that person in DND on Roam.', media: { type: 'image', src: '/feature/flashcards/flash-card-dnd-front.png', src2x: '/feature/flashcards/flash-card-dnd-front@2x.png' } },
-          { supertitle: 'Team Collaboration', title: '3D Chat', back: 'See chats and typing indicators from all groups as people message you. 3D chats visualize everyone who is messaging you right from the map at the same time.', media: { type: 'image', src: '/feature/flashcards/flash-card-3d-chat-front.png', src2x: '/feature/flashcards/flash-card-3d-chat-front@2x.png' } },
-          { supertitle: 'Team Culture', title: 'Stories', back: 'Share short video stories with your team as you work in the familiar social format beloved by millions. Stories are viewable for 24 hours but the good ones last forever.', media: { type: 'video', src: '/feature/flashcards/flash-card-stories-front.mp4', src2x: '/feature/flashcards/flash-card-stories-front@2x.mp4' } },
+        variant: 'cards',
+        cards: [
+          { title: 'Private Office', desc: 'Each member is assigned a Private Office, an audio-only home base to hold meetings and showcase your favorite books, movies, awards, articles, and more on their personal shelf.' },
+          { title: 'Meeting Room', desc: 'Dedicated video-enabled room to share your screen, collaborate on a shared whiteboard, record Magic Minutes, react with Roamoji, and more.' },
+          { title: 'Theater', desc: 'Hold all-hands meetings, presentations, and large-scale events for up to 3,000 people.' },
+          { title: 'Do Not Disturb', desc: 'If someone is doing deep work or otherwise doesn’t want to be bothered, they can set Do Not Disturb. Roam even automatically detects if someone is on a video conferencing call from Zoom or Google Meet and automatically puts that person in DND on Roam.' },
+          { title: '3D Chat', desc: 'See chats and typing indicators from all groups as people message you. 3D chats visualize everyone who is messaging you right from the map at the same time.' },
+          { title: 'Stories', desc: 'Share short video stories with your team as you work in the familiar social format beloved by millions. Stories are viewable for 24 hours but the good ones last forever.' },
         ],
       },
       {
@@ -5121,14 +6108,14 @@ export const FEATURES = {
         role: 'Professor, Information Systems, BYU',
       },
       {
-        variant: 'flashcards',
-        flashcards: [
-          { supertitle: 'Team Collaboration', title: 'GitHub', back: 'A new era of handling PR requests. When you submit a PR request to your fellow dev, it appears next to your office right on the map until it’s done. PR review wait times drop drastically.', media: { type: 'video', src: '/feature/flashcards/flash-card-github-front.mp4', src2x: '/feature/flashcards/flash-card-github-front@2x.mp4' } },
-          { supertitle: 'Team Collaboration', title: 'Figma', back: 'Your Figma conversations appear right on the Roam floor map. Whenever you reply or comment on a Figma file, the Figma logo shows right next to your office. Click to instantly open the comment in Figma.', media: { type: 'image', src: '/feature/flashcards/flash-card-figma-front.png', src2x: '/feature/flashcards/flash-card-figma-front@2x.png' } },
-          { supertitle: 'Team Culture', title: 'Spotify', back: 'Stay in tune with your team by sharing what you’re playing on Spotify or Apple Music, right in your own office, right on the map.', media: { type: 'video', src: '/feature/flashcards/flash-card-spotify-front.mp4', src2x: '/feature/flashcards/flash-card-spotify-front@2x.mp4' } },
-          { supertitle: 'Room Type', title: 'Game Room', back: 'Increase employee engagement, build better culture, and ramp new teams in your Game Room. Teams that play together win together.', media: { type: 'image', src: '/feature/flashcards/flash-card-game-room-front.png', src2x: '/feature/flashcards/flash-card-game-room-front@2x.png' } },
-          { supertitle: 'Privacy', title: 'Out of Roam', back: 'If you’re out of the office for multiple days, your return date shows on your office.', media: { type: 'image', src: '/feature/flashcards/flash-card-out-of-roam-front.png', src2x: '/feature/flashcards/flash-card-out-of-roam-front@2x.png' } },
-          { supertitle: 'Privacy', title: 'Will Return', back: 'If you’re stepping away but returning today just set your Will Return time and a clock appears.', media: { type: 'image', src: '/feature/flashcards/flash-card-will-return-front.png', src2x: '/feature/flashcards/flash-card-will-return-front@2x.png' } },
+        variant: 'cards',
+        cards: [
+          { title: 'GitHub', desc: 'A new era of handling PR requests. When you submit a PR request to your fellow dev, it appears next to your office right on the map until it’s done. PR review wait times drop drastically.' },
+          { title: 'Figma', desc: 'Your Figma conversations appear right on the Roam floor map. Whenever you reply or comment on a Figma file, the Figma logo shows right next to your office. Click to instantly open the comment in Figma.' },
+          { title: 'Spotify', desc: 'Stay in tune with your team by sharing what you’re playing on Spotify or Apple Music, right in your own office, right on the map.' },
+          { title: 'Game Room', desc: 'Increase employee engagement, build better culture, and ramp new teams in your Game Room. Teams that play together win together.' },
+          { title: 'Out of Roam', desc: 'If you’re out of the office for multiple days, your return date shows on your office.' },
+          { title: 'Will Return', desc: 'If you’re stepping away but returning today just set your Will Return time and a clock appears.' },
         ],
       },
       {
@@ -6053,18 +7040,6 @@ export const FEATURES = {
         ),
       },
       {
-        variant: 'split',
-        title: 'Why Roam Magicast?',
-        bullets: [
-          'Embedded directly in your Virtual HQ — no extension, no separate desktop app to install.',
-          'Picture-in-picture video with circle, square, and custom shape options.',
-          'Native AInbox integration — share into any group or DM in one click.',
-          'Interactive transcripts you can search and click to scrub.',
-          'AI Assistant can share Magicasts on your behalf.',
-          'Just $19.50/month per active member, bundled with 8 other products. Loom alone is $20/month.',
-        ],
-      },
-      {
         variant: 'compare-table',
         columns: [
           { label: 'Magicast' },
@@ -6086,6 +7061,19 @@ export const FEATURES = {
             },
             right: 'Not native.',
           },
+        ],
+      },
+      {
+        variant: 'explore',
+        title: 'Why Roam Magicast?',
+        itemMarker: 'bullet',
+        items: [
+          'Embedded directly in your Virtual HQ — no extension, no separate desktop app to install.',
+          'Picture-in-picture video with circle, square, and custom shape options.',
+          'Native AInbox integration — share into any group or DM in one click.',
+          'Interactive transcripts you can search and click to scrub.',
+          'AI Assistant can share Magicasts on your behalf.',
+          'Just $19.50/month per active member, bundled with 8 other products. Loom alone is $20/month.',
         ],
       },
       {
@@ -6367,27 +7355,213 @@ export const FEATURES = {
   },
   'on-air': {
     eyebrow: 'On-Air',
-    title: 'Host a live event the crowd can actually feel',
-    hero: 'Everything you love about Theater — the stage, the whispers, the reactions — opened up to your audience. No AV crew, no production stress.',
-    visual: <OnAirPreview />,
+    title: 'Now anyone can host Immersive Events for the Creator-Era',
+    hero: 'On-Air is built for the creator-era — clean RSVP pages, tailored invites, a press kit you can post in a tap, and a theater that feels alive when the doors open. No AV crew. No webinar fatigue. Just a stage, an audience, and the energy.',
+    visual: <OnAirEpcotVisual />,
     sections: [
       {
-        title: 'Anyone can host',
-        desc: 'No directors, no backstage engineer. Hit go, your event goes live, and the audience arrives through the door.',
-        visual: <OnAirPreview />,
+        variant: 'compare-table',
+        columns: [
+          { label: 'The Creator Era' },
+          { label: 'Webinar Software is Stuck in the Yahoo Era' },
+        ],
+        rows: [
+          { left: 'Kids want to be YouTubers.', right: 'Clunky registration experience.' },
+          { left: 'Creators launch billion-dollar brands.', right: 'Monologue-style audience experience.' },
+          { left: 'Founders build in public.', right: 'Made for experts — you need to be an IT admin to figure out how to use it.' },
+          { left: 'Every company needs a face.', right: 'Even the word “webinar” sounds terrible — who is excited to attend a Webinar?' },
+          { left: '“I love to create content and I want to entertain people.” — Mr. Beast', right: 'Stuck in the Yahoo era.' },
+        ],
       },
       {
-        title: 'Registration + comms',
-        desc: 'Invite flows built for creator-led events. Collect RSVPs, send reminders, land them straight on stage night.',
+        title: 'Introducing On-Air: Host Creator-Era Immersive Events',
+        desc: 'On-Air is your creator-era studio for live events. Run it from your virtual office, in front of an audience that actually shows up.',
+        subBullets: [
+          'Guest Registration — communications designed for the creator-era.',
+          'Immersive Theater — experience events like never before.',
+          'Anyone Can Host — no technical expertise required.',
+          'On-Air events show up on your Roam Virtual Office map, so everyone feels the energy.',
+        ],
+        visual: <OnAirRsvpPreview />,
       },
       {
-        title: 'Audience that feels alive',
-        desc: 'Whisper rows keep side-chat where it belongs. Stereo reactions roll across the room like a real crowd.',
+        title: 'Create Your RSVP Page',
+        desc: 'Tailor your RSVP page and get a friendly URL. Pick a color, set the date, write the description — your event is ready to share in under a minute.',
+        visual: (
+          <div className="fp-onair-rsvp-wp">
+            <OnAirPreview />
+          </div>
+        ),
       },
       {
-        title: 'Replay-ready',
-        desc: 'Every On-Air event becomes a Magicast you can share the next day. Talks live on after the doors close.',
+        title: 'Invite Your Guests',
+        desc: 'By Email or SMS — choose your sender, tailor your invite message. Land in inboxes that actually get opened.',
+        visual: <OnAirInvitePreview />,
       },
+      {
+        title: 'Download Your Social Media Press Kit',
+        desc: 'Instantly generate stunning images ready to share on every social platform.',
+        subBullets: [
+          'Instagram Stories.',
+          'TikTok Reels.',
+          'X Posts.',
+          'LinkedIn.',
+        ],
+        visual: <OnAirSharePreview />,
+      },
+      {
+        title: 'Blast!',
+        desc: 'Easily send text and email messages to your attendees to keep them informed on the latest — last-minute schedule changes, dial-in links, thank-you notes.',
+        visual: <OnAirBlastPreview />,
+      },
+      {
+        title: 'Manage Guests',
+        desc: 'Easily search for guests and download your lists. Know who’s confirmed, who showed up, and who needs a follow-up.',
+        visual: <OnAirGuestsPreview />,
+      },
+      {
+        title: 'On-Air, On the Map',
+        desc: 'Enter a theater on Broadway, for a Movie, at a Museum or at Apple Park and you’re immersed in a darker, quiet space focused on the stage. The Roam Theater is no different. Enter and you’re instantly transported to a different place with a focused view on the curtain and the stage.',
+        visual: <OnAirMapPreview />,
+      },
+      {
+        title: 'Curtain',
+        desc: 'Add an element of surprise to your performance — drop the curtain right before you walk on stage and let the audience feel the anticipation build.',
+        visual: <OnAirCurtainVisual />,
+      },
+      {
+        title: 'Whisper in Audience Rows',
+        desc: 'Join a row and whisper with others in the audience. Just like in a real theater, you can talk to the people next to you during the presentation. And the person on stage can’t hear you. And, you choose your theater seat. You can move around until you find a group of people you’re most excited to sit next to and talk to. The movement creates extra energy!',
+        visual: <WhisperPreview />,
+      },
+      {
+        title: 'Laugh, Clap & Boo in Stereo Audio',
+        desc: 'Audiences and presenters feed off of each other. This dynamic is lost completely on Zoom calls. The Roam Theater brings back the magic, starting by allowing the audience to clap, laugh and boo. The more people who clap, the louder the clapping becomes. The same goes for booing…',
+        visual: <TheaterPreview stereoDemo speakers={STEREO_SPEAKERS} audience={STEREO_AUDIENCE} />,
+      },
+      {
+        title: 'Stadium Mode',
+        desc: 'Once more than 100 people enter your audience, your Theater automatically converts into stadium mode. You’ll see a different floor each containing about 100 people. You’ll get a preview of all the floors to the live action as the audience moves around. Stadium mode supports presentations for as many as 2,500 people simultaneously.',
+        visual: <TheaterPreview stereoDemo speakers={STEREO_SPEAKERS} audience={STEREO_AUDIENCE} />,
+      },
+      {
+        title: 'The Stage',
+        desc: 'Presenters walk up to the stage. It’s not just about the message — it’s about the medium. Easily invite other people backstage or to the main stage.',
+        visual: (
+          <TheaterPreview
+            speakers={[videoPerson('Camila Torres', 'Female', 'Camila Torres')]}
+            audience={[
+              VIDEO_SPEAKERS[5],
+              VIDEO_SPEAKERS[2],
+              VIDEO_SPEAKERS[7],
+              VIDEO_SPEAKERS[0],
+              VIDEO_SPEAKERS[4],
+              VIDEO_SPEAKERS[1],
+              VIDEO_SPEAKERS[6],
+            ]}
+          />
+        ),
+      },
+      {
+        title: 'Backstage',
+        desc: 'Magic happening on the stage starts backstage. There’s a certain anxiety in presenting. In a real theater, being able to get ready backstage — and see what’s going on backstage from the actual stage — helps presentation teams coordinate and deliver better. Being able to see the next speaker backstage and ready to go relieves anxiety and allows total focus on the moment instead of having to present while simultaneously multitasking to make sure the next speaker’s arrived and their camera is working, etc. And from backstage, stagehands can control the screen, play media and have coordination conversations — all while the show is going on.',
+        visual: (
+          <TheaterPreview
+            speakers={[VIDEO_SPEAKERS[4]]}
+            audience={[
+              VIDEO_SPEAKERS[2],
+              VIDEO_SPEAKERS[0],
+              VIDEO_SPEAKERS[7],
+              VIDEO_SPEAKERS[3],
+              VIDEO_SPEAKERS[5],
+              VIDEO_SPEAKERS[1],
+              VIDEO_SPEAKERS[6],
+            ]}
+            backstage={[
+              videoPerson('Sophia Ramirez', 'Female', 'Sophia Ramirez'),
+              videoPerson('Daniel Russell', 'Male', 'Daniel Russell'),
+            ]}
+          />
+        ),
+      },
+      {
+        title: 'Producer’s Chat',
+        desc: 'A group chat is created for you and everyone else working on your event. You’ll get real-time notifications of RSVPs, blasts sent, and other stats — all in your AInbox.',
+        visual: <OnAirProducerChatPreview />,
+      },
+      {
+        title: 'Recording',
+        desc: 'Get a full recording with a Magic Minutes summary and timeline. Download the video or blast out a link to your attendees with a thank-you message.',
+        visual: <OnAirRecordingsPreview />,
+      },
+      {
+        variant: 'explore',
+        title: 'Why Roam On-Air?',
+        itemMarker: 'bullet',
+        items: [
+          'Built for the creator-era — RSVP pages, social press kit, and an audience that feels alive.',
+          'Anyone can host — no AV crew, no production engineer.',
+          'Stadium Mode scales to 2,500 attendees without the thumbnail grid.',
+          'Stereo claps, whisper rows, and Q&A mic give the audience a voice.',
+          'Lives in your Virtual HQ — events show up on the map, so everyone feels the energy.',
+          'Just $19.50/month per active member, bundled with 8 other products.',
+        ],
+      },
+      {
+        variant: 'explore',
+        title: 'On-Air Use Cases',
+        itemMarker: 'bullet',
+        items: [
+          'All-Hands — host the whole company in a real room with reactions that scale.',
+          'Product Launches — drop the curtain, walk on, demo to a crowd that’s actually paying attention.',
+          'Investor Updates — broadcast quarterly results to LPs and the board, with Q&A built in.',
+          'Creator AMAs — open the doors, take live questions on the Q&A mic, blast a recording the next day.',
+          'Town Halls — quiet by default, hands-up Q&A when the moment’s right.',
+          'Conferences — multi-day, multi-track, all on the same map.',
+        ],
+      },
+      {
+        variant: 'explore',
+        title: 'Explore our Virtual Office Platform',
+        desc: '9 products for the price of one:',
+        items: [
+          'Company Visualization with the Virtual Office',
+          'Virtual Meeting Room with Drop-In Meetings',
+          'All-Hands Presentations with Theater',
+          'Enterprise Messaging with AInbox',
+          'Meeting Scheduler with Lobby',
+          'Screen Recorder with Magicast',
+          'AI Meeting Summarization with Magic Minutes',
+          'Your AI Assistant is On-It',
+          'Immersive Events with On-Air',
+        ],
+      },
+      {
+        variant: 'columns',
+        columnsStyle: 'cards',
+        columns: [
+          { title: 'Q&A Mic', desc: 'Audience members can pop up for an audio-only broadcast to the whole theater which the speaker can answer. Audience members wishing to address everyone can queue up in first-come, first-serve order behind the current speaker.' },
+          { title: 'Walk On and Exit Music', desc: 'Nothing pumps you or your audience up like the right music at the right time. Set your own custom walk-on music to play when you enter the stage. Set different exit music. Pick a leitmotif by Wagner or a familiar tone from a Nintendo game. Make your entrance and mark your exits!' },
+          { title: 'HLS Streaming', desc: 'Include high-quality video streaming using HLS encoding in your presentations. This is far superior to screensharing of a video, which is how alternative platforms work. Think of the difference in quality between watching a high-definition Netflix show vs. a choppier video conferencing screenshare with a low frame rate. The professional edge makes all the difference!' },
+        ],
+      },
+      {
+        variant: 'compare-table',
+        columns: [
+          { label: 'On-Air in Roam' },
+          { label: 'Legacy Webinar Software' },
+        ],
+        rows: [
+          { left: 'Creator-era RSVP page with a friendly URL.', right: 'Clunky registration form straight from 2005.' },
+          { left: 'Press kit auto-generated for Instagram, TikTok, X, and LinkedIn.', right: 'Bring your own designer.' },
+          { left: 'Audience claps, laughs, and boos in stereo. Whisper rows for side chat.', right: 'Monologue-style. Audience is muted by default.' },
+          { left: 'Anyone can host — no IT admin required.', right: 'You need an IT admin to set up a webinar.' },
+          { left: 'Stadium Mode scales to 2,500 in one room.', right: 'Hard caps long before you fill the room.' },
+          { left: 'Bundled in the Virtual Office Super Bundle.', right: 'Separate seat license, billed annually.' },
+        ],
+      },
+      { variant: 'reviews' },
+      STANDARD_PRICING_COMPARE,
     ],
   },
 };
@@ -6483,7 +7657,7 @@ function SectionLinkButton({ featureSlug, slug }) {
   );
 }
 
-function FeatureSection({ eyebrow, title, subtitle, titleImage, desc, visual, icons, variant, cards, bullets, left, right, columns, columnsStyle, leadContent, items, itemMarker, flashcards, featureSlug, rows, body, subBullets }) {
+function FeatureSection({ eyebrow, title, subtitle, titleImage, desc, visual, icons, variant, cards, bullets, left, right, columns, columnsStyle, leadContent, items, itemMarker, flashcards, featureSlug, rows, body, subBullets, footer }) {
   if (variant === 'reviews') {
     return <HomepageReviews limit={items?.length || 6} />;
   }
@@ -6539,6 +7713,32 @@ function FeatureSection({ eyebrow, title, subtitle, titleImage, desc, visual, ic
     return (
       <section className="fp-section fp-section-lead">
         <p className="fp-lead">{leadContent}</p>
+      </section>
+    );
+  }
+  if (variant === 'cards-row' && cards && cards.length > 0) {
+    return (
+      <section className="fp-section fp-section-cards-row">
+        <div className="fp-cards-row-head">
+          <h2 className="fp-cards-row-title">{title}</h2>
+          {desc && <p className="fp-cards-row-desc">{desc}</p>}
+        </div>
+        <div className={`fp-cards-row-grid fp-cards-row-grid-${cards.length}`}>
+          {cards.map((c, i) => (
+            <div key={i} className={`fp-cards-row-card ${c.negative ? 'fp-cards-row-card-negative' : ''}`}>
+              {c.negative && (
+                <span className="fp-cards-row-negative-icon" aria-hidden="true">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="10" fill="#ef5350" />
+                    <path d="M8.5 8.5L15.5 15.5M15.5 8.5L8.5 15.5" stroke="white" strokeWidth="1.6" strokeLinecap="round" />
+                  </svg>
+                </span>
+              )}
+              <span className="fp-cards-row-card-text">{c.text}</span>
+            </div>
+          ))}
+        </div>
+        {footer && <p className="fp-cards-row-footer">{footer}</p>}
       </section>
     );
   }
@@ -6631,13 +7831,15 @@ function FeatureSection({ eyebrow, title, subtitle, titleImage, desc, visual, ic
       <section className="fp-section fp-section-cards">
         {cards.map((c, i) => (
           <div key={i} className="fp-card">
-            <div className="fp-card-icon">
-              <span
-                className="fp-card-icon-glyph"
-                style={{ WebkitMaskImage: `url(${c.icon})`, maskImage: `url(${c.icon})` }}
-                aria-hidden="true"
-              />
-            </div>
+            {c.icon && (
+              <div className="fp-card-icon">
+                <span
+                  className="fp-card-icon-glyph"
+                  style={{ WebkitMaskImage: `url(${c.icon})`, maskImage: `url(${c.icon})` }}
+                  aria-hidden="true"
+                />
+              </div>
+            )}
             <h3 className="fp-card-title text-title-4">{c.title}</h3>
             <p className="fp-card-desc text-body">{c.desc}</p>
           </div>
@@ -6703,6 +7905,12 @@ function FeatureQuote({ quote, author, role }) {
 
 function FeaturePageInner({ slug }) {
   const feature = FEATURES[slug];
+  // For the on-air page, pick a fresh event on each mount so reloads cycle
+  // through World Cup / Music / Walt Disney. Other pages get the default.
+  const onAirEvent = useMemo(
+    () => (slug === 'on-air' ? pickOnAirEvent() : ONAIR_EVENTS[0]),
+    [slug]
+  );
   const [theme, setTheme] = useState('dark');
   const [showGrid, setShowGrid] = useState(() => {
     try { return localStorage.getItem('showGrid') === 'true'; } catch { return false; }
@@ -6752,6 +7960,7 @@ function FeaturePageInner({ slug }) {
   if (!feature) return null;
 
   return (
+    <OnAirEventContext.Provider value={onAirEvent}>
     <div className="sc-viewport fp-page" data-theme={theme} data-slug={slug}>
       {showGrid && (
         <div className="sc-grid-debug">
@@ -6812,6 +8021,7 @@ function FeaturePageInner({ slug }) {
 
       <FloatingCTA />
     </div>
+    </OnAirEventContext.Provider>
   );
 }
 

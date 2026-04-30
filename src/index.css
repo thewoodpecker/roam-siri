@@ -1,5 +1,7 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+/* Inter font loaded via <link rel="stylesheet"> in index.html so the bundler
+   doesn't have to inline an external @import (and so the font kicks off
+   earlier in the critical path). */
 
 /* Navbar animations */
 @keyframes silver-swipe {
@@ -36,6 +38,14 @@ body {
   padding: 0;
 }
 
+/* Headshot avatars are transparent PNGs — fill the unused area with the
+   page surface token so they read as solid circles on any surface.
+   Uses `background-color` (not `background`) so per-component shorthand rules
+   that set background still win without losing this fallback. */
+img[src*="/headshots/"] {
+  background-color: var(--background-primary);
+}
+
 /* Suppress all transitions during theme toggles to avoid jank across the tree. */
 html.theme-switching,
 html.theme-switching *,
@@ -43,4 +53,75 @@ html.theme-switching *::before,
 html.theme-switching *::after {
   transition: none !important;
   animation-duration: 0s !important;
+}
+
+/* Honor user motion preferences globally. Per-component animations remain
+   defined as written; this kills duration so motion is effectively static. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Default keyboard focus ring. Per-component CSS that does `outline: none`
+   loads after this file and would otherwise win on specificity, so we use
+   !important to keep keyboard focus visible everywhere by default. Opt out
+   per-element by setting `outline-color: transparent` on `:focus-visible`. */
+:focus-visible {
+  outline: 2px solid var(--border-focus, #fff) !important;
+  outline-offset: 2px !important;
+}
+
+/* Reset for <button> elements that need to look like a div/span (used when
+   converting <div onClick> handlers to semantic <button>s).
+   Wrapped in :where() so the rule has zero specificity — any component class
+   on the same element (e.g. .meeting-win-pill { padding: 8px }) wins
+   automatically regardless of CSS source order. */
+:where(.unbutton) {
+  background: none;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  text-align: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+:where(.unbutton):disabled { cursor: default; }
+
+/* Visually-hidden utility for skip links and screen-reader-only labels. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.sr-only.focusable:focus,
+.sr-only.focusable:focus-visible {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  width: auto;
+  height: auto;
+  padding: 8px 12px;
+  margin: 0;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+  background: var(--bg-surface-elevated-primary, #1E1D20);
+  color: var(--text-primary, #fff);
+  border-radius: var(--radius-md, 10px);
+  z-index: 10000;
 }

@@ -13,7 +13,7 @@ const EVENTS = [
   { id: 'e4', title: 'Lunch w/ Jon', start: 12.5, end: 13.25, attendees: ['Jon B.'], location: 'BER ↔ NYC', organizer: 'Jon B.' },
   { id: 'e5', title: 'Pricing tiers v2 — review', start: 14, end: 15, attendees: ['Jessica H.', 'Ava L.', 'Mattias L.', 'Joe W.'], location: 'Engineering Pods', organizer: 'Jessica H.' },
   { id: 'e6', title: 'Customer call — Acme', start: 15.5, end: 16, attendees: ['Lexi B.', 'Will H.'], location: 'Sales Floor', organizer: 'Lexi B.' },
-  { id: 'e7', title: 'On-Air: Q2 All-Hands', start: 17, end: 18, attendees: ['Howard L.', 'Klas L.', 'Joe W.', '...everyone'], location: 'Theater', organizer: 'Klas L.' },
+  { id: 'e7', title: 'On-Air: Q2 All-Hands', start: 17, end: 18, attendees: ['Howard L.', 'Klas L.', 'Joe W.', '…everyone'], location: 'Theater', organizer: 'Klas L.' },
 ];
 
 const HOURS = Array.from({ length: DAY_END_HOUR - DAY_START_HOUR + 1 }, (_, i) => DAY_START_HOUR + i);
@@ -81,9 +81,15 @@ export default function Calendar({ win, onDrag }) {
     >
       <div className="cal-header" onMouseDown={onDrag}>
         <div className="cal-lights">
-          <div className="cal-light cal-light-close" onClick={(e) => { e.stopPropagation(); handleClose(); }} />
-          <div className="cal-light cal-light-min" />
-          <div className="cal-light cal-light-max" />
+          <button
+            type="button"
+            aria-label="Close"
+            className="unbutton cal-light cal-light-close"
+            onClick={(e) => { e.stopPropagation(); handleClose(); }}
+            onMouseDown={(e) => e.stopPropagation()}
+          />
+          <span aria-hidden="true" className="cal-light cal-light-min" />
+          <span aria-hidden="true" className="cal-light cal-light-max" />
         </div>
         <div className="cal-header-title">
           <span className="cal-header-weekday">{weekday}</span>

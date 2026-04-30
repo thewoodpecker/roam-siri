@@ -778,9 +778,15 @@ export default function MagicMinutes({ win, onDrag, meeting }) {
     >
       <div className="mm-header" onMouseDown={onDrag}>
         <div className="mm-lights">
-          <div className="mm-light mm-light-close" onClick={(e) => { e.stopPropagation(); handleClose(); }} />
-          <div className="mm-light mm-light-min" />
-          <div className="mm-light mm-light-max" />
+          <button
+            type="button"
+            aria-label="Close"
+            className="unbutton mm-light mm-light-close"
+            onClick={(e) => { e.stopPropagation(); handleClose(); }}
+            onMouseDown={(e) => e.stopPropagation()}
+          />
+          <span aria-hidden="true" className="mm-light mm-light-min" />
+          <span aria-hidden="true" className="mm-light mm-light-max" />
         </div>
 
         <div className="mm-header-center">

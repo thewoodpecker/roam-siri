@@ -1440,6 +1440,32 @@
   flex-shrink: 0;
 }
 
+/* On-Air event icon — used for live event chats (e.g. World Cup watch party).
+   Renders the on-air SVG inside a circular bg-primary disc. */
+.ainbox-onair-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--background-primary);
+  flex-shrink: 0;
+}
+.ainbox-onair-icon img {
+  width: 12px;
+  height: 12px;
+  display: block;
+}
+.ainbox-onair-icon-lg {
+  width: 24px;
+  height: 24px;
+}
+.ainbox-onair-icon-lg img {
+  width: 14px;
+  height: 14px;
+}
+
 .ainbox-section-item-avatar-wrap {
   position: relative;
   flex-shrink: 0;
@@ -1861,6 +1887,15 @@
 
 [data-theme="light"] .ainbox-aic-quill {
   background: rgba(0, 0, 0, 0.05);
+}
+
+.ainbox-aic-quill-icon {
+  display: block;
+  width: 20px;
+  height: 20px;
+  background-color: var(--icon-primary, var(--text-primary));
+  -webkit-mask: url('/icons/mm-task.svg') no-repeat center / contain;
+  mask: url('/icons/mm-task.svg') no-repeat center / contain;
 }
 
 .ainbox-aic-title {
@@ -2645,6 +2680,12 @@
   line-height: 20px;
   letter-spacing: -0.15px;
   outline: none;
+}
+
+/* Parent box already shows focus via .ainbox-composer-box-focused; suppress
+   the global keyboard focus ring on the inner input. */
+.ainbox-composer-field input:focus-visible {
+  outline: none !important;
 }
 
 .ainbox-composer-field-mm input {
