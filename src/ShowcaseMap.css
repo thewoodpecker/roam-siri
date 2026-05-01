@@ -97,18 +97,33 @@
   right: 0;
   z-index: 100001;
   background: transparent;
+  transition: background 0.3s ease;
+}
+
+/* Backdrop blur lives on a pseudo-element instead of the wrap itself.
+   `backdrop-filter` on the wrap would make it the containing block for
+   `position: fixed` descendants — that breaks the mobile menu, which
+   is `fixed inset-0` inside the navbar and would otherwise pin to the
+   navbar bar's height instead of the viewport. */
+.sc-navbar-wrap::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: transparent;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
   transition: background 0.3s ease, backdrop-filter 0.3s ease;
 }
 
-.sc-navbar-wrap[data-logo-visible="true"] {
+.sc-navbar-wrap[data-logo-visible="true"]::before {
   background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
 }
 
-.sc-viewport[data-theme="light"] .sc-navbar-wrap[data-logo-visible="true"] {
+.sc-viewport[data-theme="light"] .sc-navbar-wrap[data-logo-visible="true"]::before {
   background: rgba(255, 255, 255, 0.7);
 }
 
@@ -1841,7 +1856,8 @@
 
 .sc-room-card .office-name {
   color: var(--text-primary);
-  font-size: clamp(9px, 1.1vw, 13px);
+  /* Fixed size so it scales uniformly with parent CSS transforms. */
+  font-size: 13px;
   min-width: 0;
   /* Truncate long names without clipping the header — overflow lives on the
      name itself so the parent can still show badge tooltips that float above
@@ -2404,8 +2420,10 @@
 /* Talking indicator — matches Wonder's TalkingIndicator.tsx */
 .sc-room-card .meeting-room-person {
   position: relative;
-  width: clamp(24px, 3.5vw, 40px);
-  height: clamp(24px, 3.5vw, 40px);
+  /* Fixed size — viewport-responsive `vw` units would shrink avatars
+     ahead of any parent CSS transform, breaking uniform scale. */
+  width: 40px;
+  height: 40px;
 }
 
 .sc-room-card .meeting-room-person .avatar-inner-glow {
@@ -2891,8 +2909,8 @@
 
 .sc-theater-speaker {
   position: relative;
-  width: clamp(28px, 3.2vw, 40px);
-  height: clamp(28px, 3.2vw, 40px);
+  width: 40px;
+  height: 40px;
   flex-shrink: 0;
 }
 
@@ -2974,7 +2992,7 @@
 }
 
 .sc-room-card .seat-avatar {
-  width: clamp(24px, 3.5vw, 40px);
+  width: 40px;
   height: auto;
   aspect-ratio: 1;
   transition: transform 200ms ease-in-out, opacity 300ms ease;
@@ -2985,7 +3003,7 @@
 }
 
 .sc-room-card .meeting-room-people .avatar {
-  width: clamp(24px, 3.5vw, 40px) !important;
+  width: 40px !important;
   height: auto !important;
   aspect-ratio: 1 !important;
   transition: transform 400ms ease-in-out !important;
@@ -4277,6 +4295,9 @@
   background: none;
   cursor: grab;
   animation: mc-bubble-in 400ms cubic-bezier(0.22, 1, 0.36, 1);
+  /* drop-shadow follows the mask outline; values mirror --shadow-4
+     since CSS box-shadow can't track the mask shape. */
+  filter: drop-shadow(0 1px 4px rgba(0,0,0,0.3)) drop-shadow(0 6px 10px rgba(0,0,0,0.2));
 }
 
 .mc-bubble:active {
@@ -4460,6 +4481,7 @@
   flex: 1 1 50%;
   min-width: 0;
   overflow-y: auto;
+  background: var(--bg-surface-elevated-primary-subdued);
 }
 
 /* Compact On-It chat: chat-only, narrower window for cross-context demos.
@@ -4909,5 +4931,479 @@
   .sc-footer-nav {
     grid-template-columns: 1fr;
     gap: 24px;
+  }
+}
+
+/* ──────────────────────────────────────────────────────────────────
+   Mobile homepage — Cursor-style: hero stacks left-aligned, app
+   windows in feature sections render at their desktop intrinsic size
+   and crop past the right edge so the relevant left portion stays
+   legible. No interactivity inside the windows on mobile.
+   ────────────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  /* Tighter outer page padding on mobile + collapse the 12-col grid
+     to a single full-width column. Every grid child spans the only
+     column regardless of its desktop placement, so widgets that
+     reference cols 5–12 (marquee, feature visual, footer CTA, …)
+     stack cleanly without leaking into implicit columns. */
+  :root,
+  .sc-viewport {
+    --grid-margin: 16px;
+    --grid-columns: 1;
+    --grid-gutter: 16px;
+  }
+  .sc-section-grid {
+    grid-template-columns: 1fr;
+  }
+  .sc-section-grid > * {
+    grid-column: 1 / -1;
+    min-width: 0;
+  }
+
+  /* Hero — left-aligned + smaller. Anchor children to the 16px gutter
+     so the scaled-down map window lines up with the hero icon/text. */
+  .sc-viewport[data-layout="v2"] .miniRoamOS {
+    padding-top: 192px;
+    padding-bottom: 24px;
+    align-items: flex-start;
+  }
+  .sc-v2-hero {
+    align-items: flex-start;
+    text-align: left;
+    min-height: auto;
+    gap: 14px;
+    padding-left: 0;
+    padding-right: 0;
+    max-width: none;
+  }
+  .sc-v2-hero-icon {
+    width: 56px;
+    height: 56px;
+    margin-bottom: 0;
+    border-radius: 14px;
+    filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.2));
+  }
+  .sc-v2-hero-title {
+    font-size: 24px;
+    letter-spacing: -0.6px;
+    line-height: 1;
+    white-space: normal;
+    text-align: left;
+    text-wrap: balance;
+  }
+  .sc-v2-hero-rating {
+    display: none;
+  }
+  .sc-v2-hero-subtitle {
+    font-size: 13px;
+    line-height: 1.45;
+    text-align: left;
+    max-width: none;
+  }
+  .sc-v2-hero-buttons {
+    margin-top: 4px;
+    align-self: flex-start;
+  }
+  .sc-promo-btn {
+    padding: 9px 18px;
+    font-size: 14px;
+  }
+
+  /* Hero map window — keep desktop intrinsic 1120 × 630 layout so
+     CrowdGrid/BigMeeting capacity calcs (which now use offsetWidth)
+     keep fitting the right number of avatars per room, then visually
+     shrink with `transform: scale(0.6)` anchored at top-left. The
+     unscaled layout remainder is collapsed via negative margin so
+     the next section sits beneath the visible bottom edge. */
+  .sc-viewport[data-layout="v2"] .miniRoamOS .sc-window {
+    width: 1120px;
+    max-width: none;
+    aspect-ratio: 16 / 9;
+    max-height: none;
+    margin-top: 64px;
+    /* !important so we beat the inline `transform: translate(...)` set
+       in JSX for drag positioning. The map's initial position is (0,0)
+       so dropping the translate is a non-issue here. */
+    transform: scale(0.75) !important;
+    transform-origin: top left;
+    margin-bottom: -158px;
+    border-radius: var(--radius-xl);
+    pointer-events: none;
+  }
+  .sc-viewport[data-layout="v2"] .miniRoamOS .sc-window * {
+    pointer-events: none !important;
+  }
+
+  /* Hide the floating sub-windows in the hero area on mobile —
+     they'd overlap the hero text and feel chaotic. */
+  .sc-viewport[data-layout="v2"] .miniRoamOS .ainbox-window,
+  .sc-viewport[data-layout="v2"] .miniRoamOS .onair-window,
+  .sc-viewport[data-layout="v2"] .miniRoamOS .meeting-win,
+  .sc-viewport[data-layout="v2"] .miniRoamOS .theater-win,
+  .sc-viewport[data-layout="v2"] .miniRoamOS .mc-win,
+  .sc-viewport[data-layout="v2"] .miniRoamOS .mc-window,
+  .sc-viewport[data-layout="v2"] .miniRoamOS .mc-bubble,
+  .sc-viewport[data-layout="v2"] .miniRoamOS .shelf-win,
+  .sc-viewport[data-layout="v2"] .miniRoamOS .mm-win,
+  .sc-viewport[data-layout="v2"] .miniRoamOS .rec-win,
+  .sc-viewport[data-layout="v2"] .miniRoamOS .lb-win {
+    display: none !important;
+  }
+
+  /* Marquee — smaller */
+  .sc-v2-hero-marquee {
+    margin-top: 20px;
+  }
+
+  /* Feature sections — single column stack */
+  .sc-feature-section {
+    contain-intrinsic-size: 1px 540px;
+  }
+  .sc-feature-section .sc-section-grid {
+    grid-template-columns: 1fr;
+    padding-top: 48px;
+    padding-bottom: 48px;
+    align-items: stretch;
+    row-gap: 24px;
+  }
+  .sc-feature-text,
+  .sc-feature-text-right {
+    grid-column: 1 / -1;
+    order: 1;
+  }
+  .sc-feature-title {
+    font-size: 16px;
+    letter-spacing: 0.4px;
+  }
+  .sc-feature-desc {
+    font-size: 15px;
+    line-height: 22px;
+  }
+  .sc-feature-link {
+    font-size: 15px;
+  }
+
+  /* Feature visual — fills the viewport minus the 16px page gutters.
+     The wallpaper inside stays at desktop width and pins to the
+     container's left edge, so the right side crops off-screen. */
+  .sc-feature-visual,
+  .sc-feature-visual-left {
+    grid-column: 1 / -1;
+    order: 2;
+    width: 100%;
+    margin-left: 0;
+    height: 360px;
+    overflow: hidden;
+    pointer-events: none;
+    user-select: none;
+    position: relative;
+  }
+  /* Visual heights — hug the rendered window with 32px padding all
+     around. Windows scaled to 0.75 from 780×580 render at 435 tall,
+     so visual = 435 + 64 = 499. Magicast and On-It fill the visual
+     width without scaling, so their visual height is content-driven. */
+  .sc-feature-visual:has(.meeting-win),
+  .sc-feature-visual-left:has(.meeting-win),
+  .sc-feature-visual:has(.theater-win),
+  .sc-feature-visual-left:has(.theater-win),
+  .sc-feature-visual:has(.ainbox-window),
+  .sc-feature-visual-left:has(.ainbox-window),
+  .sc-feature-visual:has(.mm-win),
+  .sc-feature-visual-left:has(.mm-win),
+  .sc-feature-visual:has(.lb-win),
+  .sc-feature-visual-left:has(.lb-win),
+  .sc-feature-visual:has(.onair-window),
+  .sc-feature-visual-left:has(.onair-window) {
+    height: 499px;
+  }
+  .sc-feature-visual:has(.mc-win),
+  .sc-feature-visual-left:has(.mc-win),
+  .sc-feature-visual:has(.sc-onit-window),
+  .sc-feature-visual-left:has(.sc-onit-window),
+  .sc-feature-visual:has(.onair-window),
+  .sc-feature-visual-left:has(.onair-window) {
+    height: auto;
+  }
+  /* Drop-In and Virtual Office: hug the embedded map window (840×472
+     after the 0.75 scale) with 32px vertical padding → 472 + 64. */
+  .sc-feature-visual.sc-feature-visual-map,
+  .sc-feature-visual-left.sc-feature-visual-map {
+    height: 537px;
+  }
+  /* Kill all pointer interactivity inside the mobile windows. */
+  .sc-feature-visual *,
+  .sc-feature-visual-left * {
+    pointer-events: none !important;
+  }
+  /* Hold the wallpaper at desktop-ish proportions; pinned to the left
+     edge of the visual container with the right side overflowing past
+     the container's right edge (cropped via `overflow: hidden`). */
+  .sc-feature-wallpaper {
+    width: 760px;
+    height: 100%;
+    padding: 18px;
+    margin-left: 0;
+    /* On mobile the visual's `overflow: hidden` clips the wallpaper's
+       outward shadow, so move the border up to the visual itself. */
+    box-shadow: none;
+  }
+  .sc-feature-visual,
+  .sc-feature-visual-left {
+    box-shadow: 0 0 0 1px var(--border);
+  }
+  /* Match the Drop-In map treatment for the other feature windows:
+     wallpaper shrinks to the visual width with 32px padding all
+     around. Most windows render at desktop size scaled to 0.75 and
+     centered horizontally; Lobby (Scheduling) is pinned to the left
+     edge instead. */
+  .sc-feature-visual:has(.meeting-win, .theater-win, .mm-win, .mc-win, .sc-onit-window, .onair-window) .sc-feature-wallpaper,
+  .sc-feature-visual-left:has(.meeting-win, .theater-win, .mm-win, .mc-win, .sc-onit-window, .onair-window) .sc-feature-wallpaper {
+    width: 100%;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 32px;
+  }
+  /* Magicast, On-It, and On-Air fill width with 32px around — wallpaper
+     hugs content vertically (visual height is auto for these). */
+  .sc-feature-visual:has(.mc-win) .sc-feature-wallpaper,
+  .sc-feature-visual-left:has(.mc-win) .sc-feature-wallpaper,
+  .sc-feature-visual:has(.sc-onit-window) .sc-feature-wallpaper,
+  .sc-feature-visual-left:has(.sc-onit-window) .sc-feature-wallpaper,
+  .sc-feature-visual:has(.onair-window) .sc-feature-wallpaper,
+  .sc-feature-visual-left:has(.onair-window) .sc-feature-wallpaper {
+    height: auto;
+  }
+  /* Lobby (Scheduling) and AInbox (Group Chat) — pin to the left edge. */
+  .sc-feature-visual:has(.lb-win) .sc-feature-wallpaper,
+  .sc-feature-visual-left:has(.lb-win) .sc-feature-wallpaper,
+  .sc-feature-visual:has(.ainbox-window) .sc-feature-wallpaper,
+  .sc-feature-visual-left:has(.ainbox-window) .sc-feature-wallpaper {
+    width: 100%;
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding: 32px;
+  }
+  /* Restore each window's intrinsic desktop size (the desktop rule
+     above forces them to 100% of the wallpaper) before scaling, so
+     the layout matches what the design ships at on desktop. */
+  .sc-feature-visual .meeting-win,
+  .sc-feature-visual .theater-win,
+  .sc-feature-visual .mm-win,
+  .sc-feature-visual-left .meeting-win,
+  .sc-feature-visual-left .theater-win,
+  .sc-feature-visual-left .mm-win {
+    width: 780px !important;
+    height: 580px !important;
+    flex-shrink: 0;
+    transform: scale(0.75);
+    transform-origin: top center;
+  }
+  /* Lobby (Scheduling) and AInbox (Group Chat) — same scale, but
+     anchor to the top-left so the window pins 32px from the left
+     edge of the visual. */
+  .sc-feature-visual .lb-win,
+  .sc-feature-visual-left .lb-win,
+  .sc-feature-visual .ainbox-window,
+  .sc-feature-visual-left .ainbox-window {
+    width: 780px !important;
+    height: 580px !important;
+    flex-shrink: 0;
+    transform: scale(0.75);
+    transform-origin: top left;
+  }
+  /* Magicast — fill the visual width with 32px around, no scale, and
+     let the content drive the height (matching its desktop behavior;
+     no fixed height in the natural .mc-win CSS). */
+  .sc-feature-visual .mc-win,
+  .sc-feature-visual-left .mc-win {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    transform: none !important;
+  }
+  /* On-It and On-Air — fill width with 32px around. Both use
+     absolute-positioned interiors that need a fixed-aspect parent,
+     so we share an aspect ratio that lines them up at the same
+     height on mobile. Explicit 24px radius matches mc-window's
+     resolved radius and prevents either window's corners from
+     reading larger than the other. */
+  .sc-feature-visual .sc-onit-window,
+  .sc-feature-visual-left .sc-onit-window,
+  .sc-feature-visual .onair-window,
+  .sc-feature-visual-left .onair-window {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    aspect-ratio: 780 / 1080;
+    transform: none !important;
+    border-radius: var(--radius-xl) !important;
+    corner-shape: superellipse(1.6) !important;
+  }
+  /* Magicast — hide the floating PiP video bubble on mobile; it sits
+     outside the visual frame and clutters the layout at this width. */
+  .sc-feature-visual .mc-bubble,
+  .sc-feature-visual-left .mc-bubble {
+    display: none !important;
+  }
+  /* On-Air — hide the side color picker and right toolbar; the form
+     uses the full width on mobile. */
+  .sc-feature-visual .onair-colors,
+  .sc-feature-visual-left .onair-colors,
+  .sc-feature-visual .onair-tools,
+  .sc-feature-visual-left .onair-tools {
+    display: none !important;
+  }
+  /* On-Air form — fill the window width with 16px horizontal padding
+     (desktop pins it to a fixed 460px which overflows on mobile). */
+  .sc-feature-visual .onair-center,
+  .sc-feature-visual-left .onair-center {
+    width: calc(100% - 32px);
+  }
+  /* Bump field text down so the form scales with the narrower window.
+     The visible text comes from `.onair-input`, not the field container. */
+  .sc-feature-visual .onair-field,
+  .sc-feature-visual-left .onair-field {
+    padding: 6px 10px;
+  }
+  .sc-feature-visual .onair-input,
+  .sc-feature-visual-left .onair-input {
+    font-size: 11px;
+    line-height: 14px;
+  }
+  .sc-feature-visual .onair-input-title,
+  .sc-feature-visual-left .onair-input-title {
+    font-size: 16px;
+    line-height: 20px;
+  }
+  .sc-feature-visual .onair-host-label,
+  .sc-feature-visual-left .onair-host-label {
+    font-size: 11px;
+  }
+  /* Drop the body's inner rounded-top so the dark area matches the
+     uniform window chrome on the On-It window (radius comes from the
+     outer .onair-window's --radius-xl + overflow: hidden). */
+  .sc-feature-visual .onair-body,
+  .sc-feature-visual-left .onair-body {
+    border-radius: 0;
+  }
+
+  /* Drop-In Meetings — scale the embedded app window down to fit inside
+     the visual frame and center it. Scoped to the Drop-In variant via
+     `:not(.sc-feature-visual-left)` so the Virtual Office map (which
+     uses the same map host classes) keeps its top-left peek behavior. */
+  .sc-feature-visual-map:not(.sc-feature-visual-left) .sc-feature-wallpaper.sc-feature-wallpaper-map {
+    width: 100%;
+  }
+  .sc-feature-visual-map:not(.sc-feature-visual-left) .sc-map-feature-window-host {
+    justify-content: center;
+    align-items: flex-start;
+    padding: 32px 0 0;
+  }
+  .sc-feature-visual-map:not(.sc-feature-visual-left) .sc-map-feature-window-host .miniRoamOS .sc-window {
+    transform-origin: top center !important;
+  }
+
+  /* On-It feature visual — hide the Replay button to keep the task
+     pane header readable at the narrower mobile width. */
+  .sc-feature-visual .onit-replay,
+  .sc-feature-visual-left .onit-replay {
+    display: none;
+  }
+  /* Bump text down so the chat bubbles, task header, step list, and
+     composer fit cleanly at the narrow mobile column widths. */
+  .sc-feature-visual .sc-onit-window .mc-msg-bubble p,
+  .sc-feature-visual-left .sc-onit-window .mc-msg-bubble p {
+    font-size: 11px;
+    line-height: 15px;
+  }
+  .sc-feature-visual .sc-onit-window .onit-summary-text,
+  .sc-feature-visual-left .sc-onit-window .onit-summary-text,
+  .sc-feature-visual .sc-onit-window .onit-summary,
+  .sc-feature-visual-left .sc-onit-window .onit-summary {
+    font-size: 12px;
+    line-height: 16px;
+  }
+  .sc-feature-visual .sc-onit-window .onit-step,
+  .sc-feature-visual-left .sc-onit-window .onit-step,
+  .sc-feature-visual .sc-onit-window .onit-card-name,
+  .sc-feature-visual-left .sc-onit-window .onit-card-name {
+    font-size: 11px;
+    line-height: 14px;
+  }
+  .sc-feature-visual .sc-onit-window .ainbox-composer-field input,
+  .sc-feature-visual-left .sc-onit-window .ainbox-composer-field input {
+    font-size: 12px;
+  }
+
+  /* Story bubble icon — drop the brightness filter so the SVG's
+     alpha-layered paths (0.3 / 0.5 / 1.0 fills) survive rasterization
+     at the small post-scale render size. */
+  .sc-story-overlay img {
+    width: 24px !important;
+    height: 24px !important;
+    filter: none;
+  }
+
+  /* Footer CTA — stack the inner block and shrink its huge padding. */
+  .fp-footer-cta {
+    margin-top: 56px;
+    padding-bottom: 48px;
+  }
+  .fp-footer-cta-inner {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 32px 24px;
+    gap: 24px;
+  }
+  .fp-footer-cta-title {
+    font-size: 24px;
+  }
+
+  /* Platform badge — hide on mobile, the navbar sits tighter */
+  .sc-platform-badge {
+    display: none;
+  }
+
+  /* Product Tour hint — hide on mobile (no hover/desktop affordance) */
+  .sc-hint {
+    display: none !important;
+  }
+
+  /* Mobile navbar logo — always visible, no scroll-fade. */
+  .sc-navbar-wrap[data-logo-visible="false"] nav img[alt="Roam"],
+  .sc-navbar-wrap[data-logo-visible="true"] nav img[alt="Roam"] {
+    opacity: 1 !important;
+  }
+
+  /* Hide the Free Trial CTA on mobile — the second button in each pair. */
+  .sc-v2-hero-buttons .sc-promo-btn:nth-child(2),
+  .sc-promo-buttons .sc-promo-btn:nth-child(2),
+  .fp-cta-row .sc-promo-btn:nth-child(2) {
+    display: none;
+  }
+
+  /* Hide the "Try / Virtual Office · Drop-In Meetings · …" products bar */
+  .sc-products-bar {
+    display: none !important;
+  }
+
+  /* Hide the dev 12-col grid debug overlay on mobile — it's a desktop
+     ruler and would just paint cyan stripes across the page. */
+  .sc-grid-debug {
+    display: none !important;
+  }
+
+  /* Hide dev affordances on mobile: grid toggle, v1/v2 layout switcher,
+     and the bottom-left dev settings cog. */
+  .sc-grid-capsule,
+  .sc-layout-capsule,
+  .toolbar,
+  .dev-settings-wrap {
+    display: none !important;
+  }
+
+  /* Hide the floating "Ready to grow your business?" CTA on mobile. */
+  .fp-floating-cta {
+    display: none !important;
   }
 }

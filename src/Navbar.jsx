@@ -250,6 +250,19 @@ export default function Navbar() {
   // Mobile state
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileActivePanel, setMobileActivePanel] = useState(null);
+  // Mobile-only: fade in a small Book Demo CTA on the right of the
+  // navbar once the user has scrolled past 300px. The page scrolls
+  // inside `.sc-viewport`, not the window, so we attach the listener
+  // there (with a window fallback for any other host).
+  const [showMobileCta, setShowMobileCta] = useState(false);
+  useEffect(() => {
+    const target = document.querySelector('.sc-viewport') || window;
+    const getY = () => (target === window ? window.scrollY : target.scrollTop);
+    const onScroll = () => setShowMobileCta(getY() > 300);
+    onScroll();
+    target.addEventListener('scroll', onScroll, { passive: true });
+    return () => target.removeEventListener('scroll', onScroll);
+  }, []);
 
   // Desktop menu logic
   const closeMenu = useCallback(() => {
@@ -557,7 +570,7 @@ export default function Navbar() {
 
       {/* ===== Mobile Header ===== */}
       <div
-        className="relative z-10 flex lg:hidden h-[56px] items-center justify-between px-4"
+        className="relative z-10 flex lg:hidden h-[56px] items-center justify-between pl-1 pr-4"
         style={{
           background: "transparent",
           transition: mobileMenuOpen
@@ -565,8 +578,8 @@ export default function Navbar() {
             : "background-color 300ms cubic-bezier(0.32,0,0.67,0)",
         }}
       >
-        {/* Logo */}
-        <a href="#/" aria-label="Roam home" style={{ display: 'inline-flex', alignItems: 'center' }}>
+        {/* Logo — hidden on mobile; brand sits with the hero icon */}
+        <a href="#/" aria-label="Roam home" style={{ display: 'none' }}>
           <img src="/icons/roam-logo.png" alt="Roam" style={{ width: 90, height: 26, objectFit: 'contain', cursor: 'pointer' }} />
         </a>
 
@@ -579,23 +592,52 @@ export default function Navbar() {
         >
           <div className="relative w-[16px] h-[7px]">
             <span
-              className="absolute left-0 right-0 h-[1.5px] rounded-full bg-white transition-all duration-300 ease-out"
+              className="absolute left-0 right-0 h-[1.5px] rounded-full transition-all duration-300 ease-out"
               style={
                 mobileMenuOpen
-                  ? { top: "3px", transform: "rotate(45deg)" }
-                  : { top: 0, transform: "rotate(0deg)" }
+                  ? { top: "3px", transform: "rotate(45deg)", backgroundColor: "var(--icon-secondary)" }
+                  : { top: 0, transform: "rotate(0deg)", backgroundColor: "var(--icon-secondary)" }
               }
             />
             <span
-              className="absolute left-0 right-0 h-[1.5px] rounded-full bg-white transition-all duration-300 ease-out"
+              className="absolute left-0 right-0 h-[1.5px] rounded-full transition-all duration-300 ease-out"
               style={
                 mobileMenuOpen
-                  ? { top: "3px", transform: "rotate(-45deg)" }
-                  : { top: "6px", transform: "rotate(0deg)" }
+                  ? { top: "3px", transform: "rotate(-45deg)", backgroundColor: "var(--icon-secondary)" }
+                  : { top: "6px", transform: "rotate(0deg)", backgroundColor: "var(--icon-secondary)" }
               }
             />
           </div>
         </button>
+
+        {/* Scroll-triggered CTA — fades in past 300px, fades out on
+            exit. Always rendered so opacity/transform transitions
+            animate in both directions. */}
+        <a
+          href="#book-demo"
+          aria-label="Book Demo"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            height: 32,
+            padding: '0 14px',
+            fontSize: 13,
+            fontWeight: 500,
+            letterSpacing: '-0.15px',
+            color: 'var(--btn-text)',
+            background: 'var(--btn-bg)',
+            borderRadius: 999,
+            textDecoration: 'none',
+            opacity: showMobileCta ? 1 : 0,
+            transform: showMobileCta ? 'translateY(0) scale(1)' : 'translateY(-6px) scale(0.94)',
+            pointerEvents: showMobileCta ? 'auto' : 'none',
+            transition: 'opacity 320ms cubic-bezier(0.22, 1, 0.36, 1), transform 320ms cubic-bezier(0.22, 1, 0.36, 1)',
+            willChange: 'opacity, transform',
+          }}
+        >
+          Book Demo
+        </a>
       </div>
 
       {/* ===== Desktop Mega Menu (v1/v2) ===== */}

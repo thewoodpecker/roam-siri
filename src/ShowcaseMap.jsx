@@ -464,7 +464,7 @@ function SimpleStoryBubble({ image, delay = 0, onClick }) {
       <div className="sc-story-circle">
         <div className="sc-story-photo">
           {/\.(mp4|webm|mov)$/i.test(image) ? (
-            <video className="sc-story-thumb" src={`${image}#t=0.1`} muted playsInline preload="auto" />
+            <video className="sc-story-thumb" src={`${image}#t=0.1`} muted playsInline preload="metadata" />
           ) : (
             <img className="sc-story-thumb" src={image} alt="" />
           )}
@@ -1621,13 +1621,40 @@ const AINBOX_ENG_MESSAGES = {
   },
 };
 
+// Mounts `children` only once the wrapper intersects the viewport (with a
+// generous root margin so the content is ready by the time the user scrolls
+// to it). Used to defer the heavy embedded ShowcaseMap instances on the
+// homepage so they don't block initial paint.
+function LazyVisible({ children, rootMargin = '400px 0px', className, style }) {
+  const ref = useRef(null);
+  const [shown, setShown] = useState(false);
+  useEffect(() => {
+    if (shown) return;
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        setShown(true);
+        obs.disconnect();
+      }
+    }, { rootMargin });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [shown, rootMargin]);
+  return (
+    <div ref={ref} className={className} style={style}>
+      {shown ? children : null}
+    </div>
+  );
+}
+
 function MapFeatureVisual({ theme, className }) {
   return (
     <div className={`sc-feature-visual sc-feature-visual-left sc-feature-visual-map${className ? ' ' + className : ''}`}>
       <div className="sc-feature-wallpaper sc-feature-wallpaper-map" style={{ backgroundImage: `url(/wallpapers/wallpaper-${theme}.png)` }}>
-        <div className="sc-map-feature-window-host">
+        <LazyVisible className="sc-map-feature-window-host">
           <ShowcaseMap embedded initialFloor="Homepage" />
-        </div>
+        </LazyVisible>
       </div>
     </div>
   );
@@ -1637,9 +1664,9 @@ function DropInFeatureVisual({ theme, className }) {
   return (
     <div className={`sc-feature-visual sc-feature-visual-map${className ? ' ' + className : ''}`}>
       <div className="sc-feature-wallpaper sc-feature-wallpaper-map" style={{ backgroundImage: `url(/wallpapers/wallpaper-${theme}.png)` }}>
-        <div className="sc-map-feature-window-host">
+        <LazyVisible className="sc-map-feature-window-host">
           <ShowcaseMap embedded autoKnock initialFloor="DropIn" />
-        </div>
+        </LazyVisible>
       </div>
     </div>
   );

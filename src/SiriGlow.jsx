@@ -123,7 +123,13 @@ function createConicGradient(ctx, cx, cy, params, angle) {
 }
 
 export default function SiriGlow({ active, color = '#EB6139', intensity = 1, width, height, borderRadius = 12, cornerExponent }) {
-  const canvasRef = useRef(null);
+  // Three stacked canvases: halo (heavy blur), main (medium blur), core
+  // (no blur). Blur is applied via CSS `filter: blur(...)` on each canvas
+  // element rather than `ctx.filter`, because Safari does not support the
+  // Canvas 2D `filter` property — strokes would draw unblurred there.
+  const haloRef = useRef(null);
+  const mainRef = useRef(null);
+  const coreRef = useRef(null);
   const animRef = useRef(null);
   const startRef = useRef(0);
   const lastTimeRef = useRef(0);
@@ -143,8 +149,10 @@ export default function SiriGlow({ active, color = '#EB6139', intensity = 1, wid
   }, [color]);
 
   const render = useCallback((time) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+    const halo = haloRef.current;
+    const main = mainRef.current;
+    const core = coreRef.current;
+    if (!halo || !main || !core) return;
 
     if (!startRef.current) { startRef.current = time; lastTimeRef.current = time; }
     const elapsed = (time - startRef.current) / 1000;
@@ -157,23 +165,20 @@ export default function SiriGlow({ active, color = '#EB6139', intensity = 1, wid
     } else {
       opacityRef.current = Math.max(opacityRef.current - 0.02, 0);
       if (opacityRef.current <= 0) {
-        const ctx = canvas.getContext('2d');
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        return; // stop animating
+        [halo, main, core].forEach(c => c.getContext('2d').clearRect(0, 0, c.width, c.height));
+        return;
       }
     }
 
     const dpr = window.devicePixelRatio || 1;
-    const w = canvas.clientWidth;
-    const h = canvas.clientHeight;
-    if (canvas.width !== w * dpr || canvas.height !== h * dpr) {
-      canvas.width = w * dpr;
-      canvas.height = h * dpr;
-    }
-
-    const ctx = canvas.getContext('2d');
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.clearRect(0, 0, w, h);
+    const w = halo.clientWidth;
+    const h = halo.clientHeight;
+    [halo, main, core].forEach(c => {
+      if (c.width !== w * dpr || c.height !== h * dpr) {
+        c.width = w * dpr;
+        c.height = h * dpr;
+      }
+    });
 
     // Smoothly animate intensity toward target
     const target = intensityTargetRef.current;
@@ -181,12 +186,10 @@ export default function SiriGlow({ active, color = '#EB6139', intensity = 1, wid
     intensityRef.current += diff * 0.03;
     if (Math.abs(diff) < 0.01) intensityRef.current = target;
 
-    // Intensity scaling: more people = bigger, stronger glow
     const iRaw = Math.max(intensityRef.current, 0);
     const iScale = Math.min(1 + (iRaw - 1) * 0.12, 2.5);
     const iOpacity = Math.min(1 + (iRaw - 1) * 0.03, 1.3);
 
-    // Accumulate rotation — speed increases with intensity, no jumps
     const rotSpeed = (60 + Math.min(iRaw, 8) * 15) * Math.PI / 180;
     angleRef.current += dt * rotSpeed;
     const angle = angleRef.current;
@@ -199,44 +202,30 @@ export default function SiriGlow({ active, color = '#EB6139', intensity = 1, wid
     const cardW = w - pad * 2, cardH = h - pad * 2;
     const r = borderRadius;
 
-    // Clip to card shape
-    ctx.save();
-    drawRoundedRect(ctx, cardX, cardY, cardW, cardH, r, cornerExponent);
-    ctx.clip();
+    // Update CSS blur on the layered canvases (Safari-compatible).
+    halo.style.filter = `blur(${Math.round(16 * iScale)}px)`;
+    main.style.filter = `blur(${Math.round(4 * iScale)}px)`;
 
-    // Layer 1: Halo — wide spread, heavy blur
-    ctx.save();
-    ctx.globalAlpha = Math.min(globalAlpha * 0.8 * iOpacity, 1);
-    ctx.filter = `blur(${Math.round(16 * iScale)}px)`;
-    ctx.strokeStyle = createConicGradient(ctx, cx, cy,
-      buildGradientStops(elapsed, 0.8 * iOpacity, shades, iRaw), angle);
-    ctx.lineWidth = 14 * iScale;
-    drawRoundedRect(ctx, cardX, cardY, cardW, cardH, r, cornerExponent);
-    ctx.stroke();
-    ctx.restore();
+    // Helper: draw one stroked layer onto a target canvas.
+    const drawLayer = (canvas, lineWidth, alphaMult) => {
+      const ctx = canvas.getContext('2d');
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, w, h);
+      ctx.save();
+      drawRoundedRect(ctx, cardX, cardY, cardW, cardH, r, cornerExponent);
+      ctx.clip();
+      ctx.globalAlpha = Math.min(globalAlpha * alphaMult, 1);
+      ctx.strokeStyle = createConicGradient(ctx, cx, cy,
+        buildGradientStops(elapsed, alphaMult, shades, iRaw), angle);
+      ctx.lineWidth = lineWidth;
+      drawRoundedRect(ctx, cardX, cardY, cardW, cardH, r, cornerExponent);
+      ctx.stroke();
+      ctx.restore();
+    };
 
-    // Layer 2: Main glow
-    ctx.save();
-    ctx.globalAlpha = Math.min(globalAlpha * iOpacity, 1);
-    ctx.filter = `blur(${Math.round(4 * iScale)}px)`;
-    ctx.strokeStyle = createConicGradient(ctx, cx, cy,
-      buildGradientStops(elapsed, 1.0 * iOpacity, shades, iRaw), angle);
-    ctx.lineWidth = 6 * iScale;
-    drawRoundedRect(ctx, cardX, cardY, cardW, cardH, r, cornerExponent);
-    ctx.stroke();
-    ctx.restore();
-
-    // Layer 3: Core — sharp edge
-    ctx.save();
-    ctx.globalAlpha = Math.min(globalAlpha * iOpacity, 1);
-    ctx.strokeStyle = createConicGradient(ctx, cx, cy,
-      buildGradientStops(elapsed, 1.0 * iOpacity, shades, iRaw), angle);
-    ctx.lineWidth = 3 * iScale;
-    drawRoundedRect(ctx, cardX, cardY, cardW, cardH, r, cornerExponent);
-    ctx.stroke();
-    ctx.restore();
-
-    ctx.restore(); // unclip
+    drawLayer(halo, 14 * iScale, 0.8 * iOpacity);
+    drawLayer(main, 6 * iScale, 1.0 * iOpacity);
+    drawLayer(core, 3 * iScale, 1.0 * iOpacity);
 
     animRef.current = requestAnimationFrame(render);
   }, [active, borderRadius, cornerExponent]);
@@ -248,7 +237,6 @@ export default function SiriGlow({ active, color = '#EB6139', intensity = 1, wid
       animRef.current = requestAnimationFrame(render);
     } else {
       fadingRef.current = true;
-      // Keep animating for fade out
       if (!animRef.current) {
         animRef.current = requestAnimationFrame(render);
       }
@@ -261,17 +249,19 @@ export default function SiriGlow({ active, color = '#EB6139', intensity = 1, wid
     };
   }, [active, render]);
 
+  const layerStyle = {
+    position: 'absolute',
+    inset: '-62px',
+    width: 'calc(100% + 124px)',
+    height: 'calc(100% + 124px)',
+    pointerEvents: 'none',
+  };
+
   return (
-    <canvas
-      ref={canvasRef}
-      style={{
-        position: 'absolute',
-        inset: '-62px',
-        width: 'calc(100% + 124px)',
-        height: 'calc(100% + 124px)',
-        pointerEvents: 'none',
-        zIndex: 1,
-      }}
-    />
+    <>
+      <canvas ref={haloRef} style={{ ...layerStyle, zIndex: 1 }} />
+      <canvas ref={mainRef} style={{ ...layerStyle, zIndex: 1 }} />
+      <canvas ref={coreRef} style={{ ...layerStyle, zIndex: 1 }} />
+    </>
   );
 }

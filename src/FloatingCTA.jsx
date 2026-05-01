@@ -35,6 +35,12 @@ export default function FloatingCTA({ title = 'Ready to meet Roam?', sub = 'Give
   };
 
   useEffect(() => {
+    // The CTA is `display: none` on mobile (≤768px) and there's no path
+    // for it to ever show — skip the scroll listener + RAF loop entirely
+    // so we don't waste cycles measuring a button that will never render.
+    const mobile = window.matchMedia('(max-width: 768px)');
+    if (mobile.matches) return;
+
     const findScrollHost = (el) => {
       let current = el && el.parentElement;
       while (current) {

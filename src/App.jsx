@@ -1,9 +1,12 @@
-import React, { useEffect, useState, useRef, useMemo, useCallback } from 'react';
+import React, { useEffect, useState, useRef, useMemo, useCallback, lazy, Suspense } from 'react';
 import SiriGlow from './SiriGlow';
 import { offices as officeData, meetingRooms } from './data';
 import ShowcaseMap from './ShowcaseMap';
-import FeaturePage, { FEATURES } from './FeaturePage';
 import './App.css';
+
+// FeaturePage is ~380K and only renders for #/feature/* routes — keep it
+// out of the homepage bundle so most visitors don't pay for it.
+const FeaturePage = lazy(() => import('./FeaturePage'));
 
 // Flip to `false` to show the dev settings icon in the top-left
 const HIDE_CHROME = false;
@@ -26,9 +29,9 @@ function useAnimatedNumber(target) {
       }
       currentRef.current += diff * 0.15;
       setDisplay(Math.round(currentRef.current));
-      animRef.current = requestAnimationFrame(animate);
+      if (!document.hidden) animRef.current = requestAnimationFrame(animate);
     };
-    animRef.current = requestAnimationFrame(animate);
+    if (!document.hidden) animRef.current = requestAnimationFrame(animate);
     return () => { if (animRef.current) cancelAnimationFrame(animRef.current); };
   }, [target]);
 
@@ -3249,9 +3252,12 @@ function useHashTab() {
 }
 
 function useFeatureRoute() {
+  // Don't validate the slug against FEATURES here — FEATURES lives in the
+  // lazy FeaturePage chunk. FeaturePageInner already returns null for an
+  // unknown slug, so passing it through is safe.
   const getSlug = () => {
     const m = window.location.hash.match(/^#\/feature\/([a-z0-9-]+)/i);
-    return m && FEATURES[m[1]] ? m[1] : null;
+    return m ? m[1] : null;
   };
   const [slug, setSlug] = useState(getSlug);
   useEffect(() => {
@@ -3269,7 +3275,9 @@ export default function App() {
   if (featureSlug) {
     return (
       <>
-        <FeaturePage slug={featureSlug} />
+        <Suspense fallback={null}>
+          <FeaturePage slug={featureSlug} />
+        </Suspense>
         <div className="toolbar" style={HIDE_CHROME ? { display: 'none' } : undefined}>
           <TabSwitcher activeTab={activeTab} onTabChange={setActiveTab} />
         </div>
