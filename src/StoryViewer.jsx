@@ -12,6 +12,7 @@ export default function StoryViewer({ stories, initialIndex = 0, onClose }) {
   const [loaded, setLoaded] = useState(false);
   const [closing, setClosing] = useState(false);
   const [muted, setMuted] = useState(true);
+  const [paused, setPaused] = useState(false);
 
   const handleClose = () => {
     setClosing(true);
@@ -63,9 +64,12 @@ export default function StoryViewer({ stories, initialIndex = 0, onClose }) {
     if (!current) return;
     if (isVideoSrc(current.image)) return; // video effect handles progress
     const duration = 5000;
-    const start = Date.now();
+    let elapsed = 0;
+    let lastFrame = Date.now();
     const tick = () => {
-      const elapsed = Date.now() - start;
+      const now = Date.now();
+      if (!paused) elapsed += now - lastFrame;
+      lastFrame = now;
       const p = Math.min(elapsed / duration, 1);
       setProgress(p);
       if (p < 1) {
@@ -77,7 +81,7 @@ export default function StoryViewer({ stories, initialIndex = 0, onClose }) {
     };
     let rafId = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(rafId);
-  }, [currentIndex, stories.length, current?.image]);
+  }, [currentIndex, stories.length, current?.image, paused]);
 
   // Wire up video progress for the active video story. Browser `timeupdate`
   // events fire ~4× per second which feels steppy, so we sample currentTime
@@ -107,6 +111,17 @@ export default function StoryViewer({ stories, initialIndex = 0, onClose }) {
     };
   }, [currentIndex, current?.image]);
 
+  // Pause/resume the active video without restarting it. Kept separate
+  // from the init effect above so toggling `paused` doesn't reset
+  // `currentTime` — resume picks up exactly where the user paused.
+  useEffect(() => {
+    if (!current || !isVideoSrc(current.image)) return;
+    const video = activeVideoRef.current;
+    if (!video) return;
+    if (paused) video.pause?.();
+    else video.play?.().catch(() => {});
+  }, [paused, current?.image]);
+
   const goNext = () => {
     if (currentIndex < stories.length - 1) setCurrentIndex(i => i + 1);
     else handleClose();
@@ -115,6 +130,26 @@ export default function StoryViewer({ stories, initialIndex = 0, onClose }) {
   const goPrev = () => {
     if (currentIndex > 0) setCurrentIndex(i => i - 1);
   };
+
+  // Keyboard shortcuts: Space toggles pause/play; arrows navigate.
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.code === 'Space') {
+        e.preventDefault();
+        setPaused(p => !p);
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        goNext();
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        goPrev();
+      } else if (e.key === 'Escape') {
+        handleClose();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [currentIndex, stories.length]);
 
   return (
     <div

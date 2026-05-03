@@ -64,6 +64,8 @@
   overflow: hidden;
   flex-shrink: 0;
   position: relative;
+  border: 0.5px solid var(--border);
+  box-sizing: border-box;
   transition: transform 0.5s ease-in-out, height 0.5s ease-in-out, opacity 0.5s ease-in-out;
 }
 

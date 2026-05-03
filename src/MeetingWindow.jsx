@@ -664,7 +664,7 @@ export default function MeetingWindow({ win, onDrag, roomName, people: allPeople
                 )}
                 <span>{person.fullName || person.name}</span>
               </div>
-              {gesturesEnabled && (
+              {gesturesEnabled && !(person.avatar === '/headshots/joe-woodward.jpg' || person.name === 'Joe W.') && (
                 <TileGestures
                   isRoamaniac
                   occupantName={person.name?.split(' ')[0] || 'them'}
@@ -706,7 +706,7 @@ export default function MeetingWindow({ win, onDrag, roomName, people: allPeople
           }
 
           return (
-            <div className="meeting-win-grid" style={{ gridTemplateColumns: `repeat(${virtualCols}, 1fr)`, gridTemplateRows: `repeat(${rows}, auto)` }}>
+            <div className={`meeting-win-grid ${people.length === 2 ? 'meeting-win-grid-two' : ''}`} style={{ gridTemplateColumns: `repeat(${virtualCols}, 1fr)`, gridTemplateRows: `repeat(${rows}, minmax(0, 1fr))` }}>
               {people.map((person, i) => {
                 const isLastRow = i >= lastRowStart;
                 const tileStyle = { gridColumnEnd: 'span 2' };

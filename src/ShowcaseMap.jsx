@@ -2742,7 +2742,7 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
       imgs.push(img);
     }
   }, [shelfWin.isOpen]);
-  const JOE = { name: 'Ava L.', fullName: 'Ava Lee', avatar: '/headshots/joe-woodward.jpg' };
+  const JOE = { name: 'Joe W.', fullName: 'Joe Woodward', avatar: '/headshots/joe-woodward.jpg' };
 
   const makeDragHandler = (win) => (e) => {
     if (e.target.closest('.sc-traffic-lights') || e.target.closest('.ainbox-traffic-lights') || e.target.closest('.sc-theme-toggle')) return;
@@ -2829,26 +2829,11 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
   const viewportRef = useRef(null);
   const productsBarRef = useRef(null);
 
-  // The homepage scroll container (`.sc-viewport`) is independent from
-  // window scroll and isn't covered by `history.scrollRestoration =
-  // 'manual'`. Force it to top across multiple frames on initial mount —
-  // a single reset isn't enough because LazyVisible sections mounting
-  // beneath the hero can shift the scroll position after our first
-  // attempt. Hammer it with multiple timeouts so whichever frame the
-  // last layout pass lands on, scroll ends at 0.
+  // Reset the homepage scroll container to the top on initial mount —
+  // synchronously, no rAF or timers, so we never yank the user mid-scroll.
   useEffect(() => {
-    const reset = () => {
-      const v = viewportRef.current;
-      if (v) v.scrollTop = 0;
-      window.scrollTo(0, 0);
-      document.documentElement.scrollTop = 0;
-      document.body.scrollTop = 0;
-    };
-    reset();
-    requestAnimationFrame(reset);
-    setTimeout(reset, 50);
-    setTimeout(reset, 200);
-    setTimeout(reset, 600);
+    const v = viewportRef.current;
+    if (v) v.scrollTop = 0;
   }, []);
 
   useEffect(() => {
@@ -3023,7 +3008,19 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
                         }}
                       />
                     ) : room.type === 'meeting' ? (
-                      <MeetingRoomCardShowcase showPhysicalTags={showPhysicalTags} room={{ ...room, people: joinedRoomId === room.id && !room.people.some(p => p.avatar === JOE.avatar) ? [...room.people, { ...JOE, isJoining: true }] : room.people }} onPersonClick={openMiniChat} onRoomClick={(r) => { setJoinedRoomId(r.id); const ppl = r.people.some(p => p.avatar === JOE.avatar) ? r.people : [...r.people, JOE]; setActiveMeetingRoom({ ...r, people: ppl }); meetingWin.open(); }} />
+                      <MeetingRoomCardShowcase showPhysicalTags={showPhysicalTags} room={{ ...room, people: joinedRoomId === room.id && !room.people.some(p => p.avatar === JOE.avatar) ? [...room.people, { ...JOE, isJoining: true }] : room.people }} onPersonClick={openMiniChat} onRoomClick={(r) => {
+                        setJoinedRoomId(r.id);
+                        // Mirror the map cell: only people with .video render
+                        // tiles. Then de-dupe by avatar so the same headshot
+                        // can't appear twice (was happening when a fallback
+                        // resolved two missing names to the same person).
+                        const onScreen = r.people.filter(p => p?.video);
+                        const seen = new Set();
+                        const unique = onScreen.filter(p => seen.has(p.avatar) ? false : (seen.add(p.avatar), true));
+                        const ppl = unique.some(p => p.avatar === JOE.avatar) ? unique : [...unique, JOE];
+                        setActiveMeetingRoom({ ...r, people: ppl });
+                        meetingWin.open();
+                      }} />
                     ) : room.type === 'game' ? (
                       <GameRoomCard room={room} />
                     ) : room.type === 'command' ? (

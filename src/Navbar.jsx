@@ -601,16 +601,8 @@ export default function Navbar() {
           style={{ display: 'inline-flex', alignItems: 'center', textDecoration: 'none' }}
           onClick={() => {
             if (mobileMenuOpen) setMobileMenuOpen(false);
-            const scrollTop = () => {
-              window.scrollTo({ top: 0, behavior: 'auto' });
-              document.querySelector('.sc-viewport')?.scrollTo({ top: 0, behavior: 'auto' });
-              document.documentElement.scrollTop = 0;
-              document.body.scrollTop = 0;
-            };
-            scrollTop();
-            requestAnimationFrame(scrollTop);
-            setTimeout(scrollTop, 50);
-            setTimeout(scrollTop, 200);
+            window.scrollTo({ top: 0, behavior: 'auto' });
+            document.querySelector('.sc-viewport')?.scrollTo({ top: 0, behavior: 'auto' });
           }}
         >
           <img
