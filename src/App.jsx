@@ -3255,9 +3255,15 @@ function useFeatureRoute() {
   // Don't validate the slug against FEATURES here — FEATURES lives in the
   // lazy FeaturePage chunk. FeaturePageInner already returns null for an
   // unknown slug, so passing it through is safe.
+  // `#/pricing` is treated as the `pricing` feature slug — pricing reuses
+  // FeaturePage's hero/sections/footer scaffolding via a normal entry in
+  // the FEATURES dict.
   const getSlug = () => {
-    const m = window.location.hash.match(/^#\/feature\/([a-z0-9-]+)/i);
-    return m ? m[1] : null;
+    const hash = window.location.hash;
+    const m = hash.match(/^#\/feature\/([a-z0-9-]+)/i);
+    if (m) return m[1];
+    if (/^#\/pricing(?:\/|$)/i.test(hash)) return 'pricing';
+    return null;
   };
   const [slug, setSlug] = useState(getSlug);
   useEffect(() => {

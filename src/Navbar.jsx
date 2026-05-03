@@ -86,7 +86,7 @@ const navItems = [
   { label: "Products", href: "#", menu: productsMenu },
   { label: "Resources", href: "#", menu: resourcesMenu },
   { label: "Company", href: "#", menu: companyMenu },
-  { label: "Pricing", href: "/pricing" },
+  { label: "Pricing", href: "#/pricing" },
 ];
 
 const existingMembersMenu = [
@@ -481,10 +481,16 @@ export default function Navbar() {
             <div className="grid h-[60px] grid-cols-[1fr_auto_1fr] items-stretch px-3">
               <div className="flex items-stretch overflow-hidden">
                 {navItems.map((item) => (
-                  <button key={item.label} onMouseEnter={() => handleMouseEnter(item.label, !!item.menu)} onClick={() => item.menu ? setActiveMenu(activeMenu === item.label ? null : item.label) : setActiveMenu(null)} className={`flex items-center gap-1.5 px-5 text-sm font-normal leading-5 tracking-[-0.15px] transition-colors duration-200 ${activeMenu === item.label ? "text-white" : "text-white/50 hover:text-white"}`}>
-                    {item.label}
-                    {item.menu && (<svg width="10" height="6" viewBox="0 0 10 6" fill="none" className={`transition-transform duration-250 ${activeMenu === item.label ? "rotate-180" : ""}`}><path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>)}
-                  </button>
+                  item.menu ? (
+                    <button key={item.label} onMouseEnter={() => handleMouseEnter(item.label, true)} onClick={() => setActiveMenu(activeMenu === item.label ? null : item.label)} className={`flex items-center gap-1.5 px-5 text-sm font-normal leading-5 tracking-[-0.15px] transition-colors duration-200 ${activeMenu === item.label ? "text-white" : "text-white/50 hover:text-white"}`}>
+                      {item.label}
+                      <svg width="10" height="6" viewBox="0 0 10 6" fill="none" className={`transition-transform duration-250 ${activeMenu === item.label ? "rotate-180" : ""}`}><path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                    </button>
+                  ) : (
+                    <a key={item.label} href={item.href} onMouseEnter={() => handleMouseEnter(item.label, false)} onClick={() => setActiveMenu(null)} className="flex items-center gap-1.5 px-5 text-sm font-normal leading-5 tracking-[-0.15px] transition-colors duration-200 text-white/50 hover:text-white">
+                      {item.label}
+                    </a>
+                  )
                 ))}
               </div>
               <div className="flex items-center justify-center">
@@ -497,8 +503,8 @@ export default function Navbar() {
                   Existing Members
                   <svg width="10" height="6" viewBox="0 0 10 6" fill="none" className={`transition-transform duration-200 ${activeMenu === "Existing Members" ? "rotate-180" : ""}`}><path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
                 </button>
-                <button className="rounded-md bg-white/5 px-4 py-2 text-sm font-normal leading-5 tracking-[-0.15px] text-white shadow-[inset_0px_0.5px_0px_0px_rgba(255,255,255,0.1)] transition-colors hover:bg-white/10">Book Demo</button>
-                <button className="rounded-md bg-white/5 px-4 py-2 text-sm font-normal leading-5 tracking-[-0.15px] text-white shadow-[inset_0px_0.5px_0px_0px_rgba(255,255,255,0.1)] transition-colors hover:bg-white/10">Free Trial</button>
+                <button className="rounded-md bg-white/5 px-4 py-2 text-sm font-normal leading-5 tracking-[-0.15px] text-white shadow-[inset_0px_0.5px_0px_0px_rgba(255,255,255,0.1)] transition-colors hover:bg-[var(--border,rgba(255,255,255,0.1))]">Book Demo</button>
+                <button className="rounded-md bg-white/5 px-4 py-2 text-sm font-normal leading-5 tracking-[-0.15px] text-white shadow-[inset_0px_0.5px_0px_0px_rgba(255,255,255,0.1)] transition-colors hover:bg-[var(--border,rgba(255,255,255,0.1))]">Free Trial</button>
               </div>
             </div>
             {/* Menu expander */}
@@ -562,82 +568,87 @@ export default function Navbar() {
               Existing Members
               <svg width="10" height="6" viewBox="0 0 10 6" fill="none" className={`transition-transform duration-200 ${activeMenu === "Existing Members" ? "rotate-180" : ""}`}><path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
             </button>
-            <button className="rounded-md bg-white/5 px-4 py-2 text-sm font-normal leading-5 tracking-[-0.15px] text-white shadow-[inset_0px_0.5px_0px_0px_rgba(255,255,255,0.1)] transition-colors hover:bg-white/10">Book Demo</button>
-            <button className="rounded-md bg-white/5 px-4 py-2 text-sm font-normal leading-5 tracking-[-0.15px] text-white shadow-[inset_0px_0.5px_0px_0px_rgba(255,255,255,0.1)] transition-colors hover:bg-white/10">Free Trial</button>
+            <button className="rounded-md bg-white/5 px-4 py-2 text-sm font-normal leading-5 tracking-[-0.15px] text-white shadow-[inset_0px_0.5px_0px_0px_rgba(255,255,255,0.1)] transition-colors hover:bg-[var(--border,rgba(255,255,255,0.1))]">Book Demo</button>
+            <button className="rounded-md bg-white/5 px-4 py-2 text-sm font-normal leading-5 tracking-[-0.15px] text-white shadow-[inset_0px_0.5px_0px_0px_rgba(255,255,255,0.1)] transition-colors hover:bg-[var(--border,rgba(255,255,255,0.1))]">Free Trial</button>
           </div>
         </div>
       )}
 
-      {/* ===== Mobile Header ===== */}
+      {/* ===== Mobile Header (port of wonder's MobileHeader) =====
+          56px tall. Logo flush at the left edge so it aligns with
+          the page's grid margin (sections have padding-left:
+          var(--grid-margin)=16px on mobile). The hamburger has a
+          generous 56×56 tap target on the right. */}
       <div
-        className="relative z-10 flex lg:hidden h-[56px] items-center justify-between pl-1 pr-4"
+        className="relative z-10 flex lg:hidden h-[56px] items-center justify-between"
         style={{
+          padding: '0 0.5rem 0 8px',
           background: "transparent",
           transition: mobileMenuOpen
             ? "background-color 400ms cubic-bezier(0.33,1,0.68,1)"
             : "background-color 300ms cubic-bezier(0.32,0,0.67,0)",
         }}
       >
-        {/* Logo — hidden on mobile; brand sits with the hero icon */}
-        <a href="#/" aria-label="Roam home" style={{ display: 'none' }}>
-          <img src="/icons/roam-logo.png" alt="Roam" style={{ width: 90, height: 26, objectFit: 'contain', cursor: 'pointer' }} />
+        {/* Roam logo (matches wonder's LogoImage — gold mark, 95×26).
+            Tapping it returns home AND scrolls to the top. A single
+            rAF wasn't enough because hash navigation → route remount →
+            scroll position can land across multiple frames; scroll
+            repeatedly across the nav lifecycle so the final paint
+            ends at top. Also closes the mobile menu if open. */}
+        <a
+          href="#/"
+          aria-label="Roam home"
+          style={{ display: 'inline-flex', alignItems: 'center', textDecoration: 'none' }}
+          onClick={() => {
+            if (mobileMenuOpen) setMobileMenuOpen(false);
+            const scrollTop = () => {
+              window.scrollTo({ top: 0, behavior: 'auto' });
+              document.querySelector('.sc-viewport')?.scrollTo({ top: 0, behavior: 'auto' });
+              document.documentElement.scrollTop = 0;
+              document.body.scrollTop = 0;
+            };
+            scrollTop();
+            requestAnimationFrame(scrollTop);
+            setTimeout(scrollTop, 50);
+            setTimeout(scrollTop, 200);
+          }}
+        >
+          <img
+            src="/icons/roam-logo.png"
+            alt="Roam"
+            style={{ width: 95, height: 26, objectFit: 'contain', cursor: 'pointer' }}
+          />
         </a>
 
         {/* Hamburger / Close button */}
         <button
           onClick={toggleMobileMenu}
-          className="relative flex items-center justify-center w-10 h-10"
+          className="relative flex items-center justify-center"
+          style={{ width: 56, height: 56, border: 0, background: 'transparent', padding: 0, cursor: 'pointer', marginRight: '-0.5rem' }}
           aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
           aria-expanded={mobileMenuOpen}
         >
-          <div className="relative w-[16px] h-[7px]">
+          <div className="relative" style={{ width: 16, height: 6 }}>
             <span
-              className="absolute left-0 right-0 h-[1.5px] rounded-full transition-all duration-300 ease-out"
-              style={
-                mobileMenuOpen
-                  ? { top: "3px", transform: "rotate(45deg)", backgroundColor: "var(--icon-secondary)" }
-                  : { top: 0, transform: "rotate(0deg)", backgroundColor: "var(--icon-secondary)" }
-              }
+              className="absolute left-0 right-0 rounded-full transition-all duration-300 ease-out"
+              style={{
+                height: '1.5px',
+                top: mobileMenuOpen ? '3px' : '0px',
+                transform: mobileMenuOpen ? 'rotate(45deg)' : 'rotate(0deg)',
+                backgroundColor: 'var(--icon-primary)',
+              }}
             />
             <span
-              className="absolute left-0 right-0 h-[1.5px] rounded-full transition-all duration-300 ease-out"
-              style={
-                mobileMenuOpen
-                  ? { top: "3px", transform: "rotate(-45deg)", backgroundColor: "var(--icon-secondary)" }
-                  : { top: "6px", transform: "rotate(0deg)", backgroundColor: "var(--icon-secondary)" }
-              }
+              className="absolute left-0 right-0 rounded-full transition-all duration-300 ease-out"
+              style={{
+                height: '1.5px',
+                top: mobileMenuOpen ? '3px' : '6px',
+                transform: mobileMenuOpen ? 'rotate(-45deg)' : 'rotate(0deg)',
+                backgroundColor: 'var(--icon-primary)',
+              }}
             />
           </div>
         </button>
-
-        {/* Scroll-triggered CTA — fades in past 300px, fades out on
-            exit. Always rendered so opacity/transform transitions
-            animate in both directions. */}
-        <a
-          href="#book-demo"
-          aria-label="Book Demo"
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            height: 32,
-            padding: '0 14px',
-            fontSize: 13,
-            fontWeight: 500,
-            letterSpacing: '-0.15px',
-            color: 'var(--btn-text)',
-            background: 'var(--btn-bg)',
-            borderRadius: 999,
-            textDecoration: 'none',
-            opacity: showMobileCta ? 1 : 0,
-            transform: showMobileCta ? 'translateY(0) scale(1)' : 'translateY(-6px) scale(0.94)',
-            pointerEvents: showMobileCta ? 'auto' : 'none',
-            transition: 'opacity 320ms cubic-bezier(0.22, 1, 0.36, 1), transform 320ms cubic-bezier(0.22, 1, 0.36, 1)',
-            willChange: 'opacity, transform',
-          }}
-        >
-          Book Demo
-        </a>
       </div>
 
       {/* ===== Desktop Mega Menu (v1/v2) ===== */}
@@ -762,12 +773,12 @@ export default function Navbar() {
         className="fixed inset-0 z-[5] overflow-hidden lg:hidden"
         style={{ pointerEvents: mobileMenuOpen ? "auto" : "none" }}
       >
-        {/* Backdrop */}
+        {/* Backdrop — same window color as panel; fades in alongside it */}
         <div
           className="absolute inset-0"
           style={{
             opacity: mobileMenuOpen ? 1 : 0,
-            background: "rgba(0, 0, 0, 0.5)",
+            background: "var(--bg-surface-primary, #0C0C0E)",
             transition: mobileMenuOpen
               ? "opacity 400ms cubic-bezier(0.33, 1, 0.68, 1)"
               : "opacity 300ms cubic-bezier(0.32, 0, 0.67, 0)",
@@ -779,7 +790,7 @@ export default function Navbar() {
         <div
           className="relative h-full overflow-hidden"
           style={{
-            background: "#000000",
+            background: "var(--bg-surface-primary, #0C0C0E)",
             transform: mobileMenuOpen ? "translateY(0)" : "translateY(-110%)",
             opacity: mobileMenuOpen ? 1 : 0,
             transition: mobileMenuOpen
@@ -795,13 +806,15 @@ export default function Navbar() {
             }}
           >
             {/* Top gradient fade — fixed above scroll */}
-            <div className="pointer-events-none absolute inset-x-0 top-0 z-30 h-[80px] bg-gradient-to-b from-black to-transparent" />
+            <div className="pointer-events-none absolute inset-x-0 top-0 z-30 h-[80px] bg-gradient-to-b from-[var(--bg-surface-primary,#0C0C0E)] to-transparent" />
             {/* Bottom gradient fade — fixed below scroll */}
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 z-30 h-32 bg-gradient-to-t from-black to-transparent" />
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 z-30 h-32 bg-gradient-to-t from-[var(--bg-surface-primary,#0C0C0E)] to-transparent" />
 
-            {/* Pinned button at bottom */}
+            {/* Pinned Book Demo CTA at the bottom of the panel — mirrors
+                wonder's MobileCtaWrap: stays above the safe-area inset,
+                fades in 200ms after the panel transition completes. */}
             <div
-              className="absolute inset-x-0 bottom-0 z-40 px-6 pb-[calc(env(safe-area-inset-bottom,12px)+16px)] pt-3"
+              className="absolute inset-x-0 bottom-0 z-40 flex px-6 pb-[calc(env(safe-area-inset-bottom,12px)+16px)] pt-3"
               style={{
                 opacity: mobileMenuOpen ? 1 : 0,
                 transition: mobileMenuOpen
@@ -811,62 +824,77 @@ export default function Navbar() {
             >
               <a
                 href="/demo"
-                className="flex items-center justify-center rounded-2xl bg-white px-6 py-3.5 text-base font-medium leading-6 tracking-[-0.32px] text-[#1a1a1a] active:bg-white/90"
+                className="flex w-full items-center justify-center no-underline active:opacity-90"
+                style={{
+                  padding: '1rem 2rem',
+                  borderRadius: '0.75rem',
+                  background: 'var(--btn-bg, #ffffff)',
+                  color: 'var(--text-primary-on-light, #1a1a1a)',
+                  fontSize: 16,
+                  lineHeight: '24px',
+                  fontWeight: 500,
+                  letterSpacing: '-0.32px',
+                }}
               >
                 Book Demo
               </a>
             </div>
 
-            {/* Scrollable content — full height, padded for nav and button */}
-            <div className="absolute inset-0 overflow-y-auto px-6 pt-[72px] pb-[calc(env(safe-area-inset-bottom,12px)+80px)]">
-                {/* Products inline */}
+            {/* Scrollable content — mirrors wonder's MobileScrollContent
+                (padding 4.5rem 1.5rem). Top 72px clears the fixed
+                header; bottom pads under the safe area + pinned CTA. */}
+            <div className="absolute inset-0 overflow-y-auto px-6 pt-[72px] pb-[calc(env(safe-area-inset-bottom,12px)+88px)]">
+                {/* Products lead heading — possibilityCaption uppercase, text.secondary */}
                 <h3
-                  className="animate-silver-swipe bg-[length:500%_100%] bg-no-repeat bg-clip-text pt-2 pb-[16px] text-[11px] font-bold uppercase tracking-[0.5px] text-transparent"
-                  style={{
-                    fontFamily: "var(--font-possibility), sans-serif",
-                    backgroundImage: "linear-gradient(90deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.3) 35%, #e0e0e0 50%, rgba(255,255,255,0.3) 65%, rgba(255,255,255,0.3) 100%)",
-                  }}
+                  className="m-0 pt-2 pb-4 text-[11px] font-bold uppercase tracking-[0.5px] text-white/50"
+                  style={{ fontFamily: "var(--font-possibility), sans-serif" }}
                 >
                   Virtual Office Platform
                 </h3>
-                <div className="flex flex-col gap-[16px]">
+                <div className="flex flex-col gap-7">
                   {productsMenu[0].items.map((item) => (
                     <a
                       key={item.title}
                       href={item.href}
                       onClick={toggleMobileMenu}
-                      className="active:opacity-70"
+                      className="block no-underline active:opacity-70"
                     >
-                      <span className="block text-[15px] font-medium text-white">{item.title}</span>
+                      <span className="block text-[16px] font-medium leading-6 tracking-[-0.32px] text-white">{item.title}</span>
                       {item.description && (
-                        <span className="block text-[12px] text-white/40 mt-0.5">{item.description}</span>
+                        <span className="mt-0.5 block text-[12px] leading-4 text-white/50">{item.description}</span>
                       )}
                     </a>
                   ))}
                 </div>
 
-                <div className="my-[24px] -mx-6 h-px bg-white/10" />
+                {/* Full-width hairline divider — bleeds past the 24px page padding
+                    via negative horizontal margins (wonder's HorizontalRule). */}
+                <div className="my-6 -mx-6 h-px bg-[var(--border,rgba(255,255,255,0.1))]" />
 
-                {/* Nav items + Existing Members */}
-                <div className="flex flex-col gap-[16px]">
+                {/* Nav items + Existing Members — bodyEmphasis (16/24, medium),
+                    chevron right at the end for items that drill into a
+                    sub-panel. */}
+                <div className="flex flex-col gap-4">
                   {navItems.filter(item => item.label !== "Products").map((item) =>
                     item.menu ? (
                       <button
                         key={item.label}
                         onClick={() => openMobilePanel(item.label)}
-                        className="flex w-full items-center justify-between text-[17px] font-semibold text-white active:opacity-70"
+                        className="flex w-full items-center justify-between p-0 text-left text-[16px] font-medium leading-6 tracking-[-0.32px] text-white active:opacity-70"
                       >
                         {item.label}
-                        <svg width="7" height="12" viewBox="0 0 7 12" fill="none" className="shrink-0 ml-4 text-white/30">
-                          <path d="M1 1L6 6L1 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
+                        <span className="ml-4 flex shrink-0 text-white/40">
+                          <svg width="7" height="12" viewBox="0 0 7 12" fill="none">
+                            <path d="M1 1L6 6L1 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        </span>
                       </button>
                     ) : (
                       <a
                         key={item.label}
                         href={item.href}
                         onClick={toggleMobileMenu}
-                        className="text-[17px] font-semibold text-white active:opacity-70"
+                        className="block text-[16px] font-medium leading-6 tracking-[-0.32px] text-white no-underline active:opacity-70"
                       >
                         {item.label}
                       </a>
@@ -875,12 +903,14 @@ export default function Navbar() {
 
                   <button
                     onClick={() => openMobilePanel("Existing Members")}
-                    className="flex w-full items-center justify-between text-[17px] font-semibold text-white/60 active:opacity-70"
+                    className="flex w-full items-center justify-between p-0 text-left text-[16px] font-medium leading-6 tracking-[-0.32px] text-white active:opacity-70"
                   >
                     Existing Members
-                    <svg width="7" height="12" viewBox="0 0 7 12" fill="none" className="shrink-0 ml-4 text-white/30">
-                      <path d="M1 1L6 6L1 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
+                    <span className="ml-4 flex shrink-0 text-white/40">
+                      <svg width="7" height="12" viewBox="0 0 7 12" fill="none">
+                        <path d="M1 1L6 6L1 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </span>
                   </button>
                 </div>
 
@@ -902,14 +932,16 @@ export default function Navbar() {
                 }}
               >
                 <div className="flex flex-col px-6 pt-[72px] pb-[env(safe-area-inset-bottom,24px)]">
-                  {/* Back button */}
+                  {/* Back button — bodyEmphasis size, secondary text color */}
                   <button
                     onClick={closeMobilePanel}
-                    className="flex items-center gap-2 py-3 text-[15px] font-medium text-white/50 active:opacity-70"
+                    className="flex items-center gap-1 py-3 text-[16px] font-medium leading-6 tracking-[-0.32px] text-white/50 active:opacity-70"
                   >
-                    <svg width="7" height="12" viewBox="0 0 7 12" fill="none" className="text-white/40">
-                      <path d="M6 1L1 6L6 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
+                    <span className="flex">
+                      <svg width="7" height="12" viewBox="0 0 7 12" fill="none">
+                        <path d="M6 1L1 6L6 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </span>
                     Back
                   </button>
 
@@ -919,7 +951,7 @@ export default function Navbar() {
                       {/* Only show heading if multiple columns or if it differs from the nav item label */}
                       {(navItem.menu.length > 1 || column.heading !== navItem.label) && (
                         <h3
-                          className="pb-2 text-[11px] font-bold uppercase tracking-[0.5px] text-white/35"
+                          className="m-0 pb-2 text-[11px] font-bold uppercase tracking-[0.5px] text-white/35"
                           style={{ fontFamily: "var(--font-possibility), sans-serif" }}
                         >
                           {column.heading}
@@ -931,13 +963,13 @@ export default function Navbar() {
                             key={item.title}
                             href={item.href}
                             onClick={toggleMobileMenu}
-                            className="py-2.5 active:opacity-70"
+                            className="block py-2.5 no-underline active:opacity-70"
                           >
-                            <span className="block text-[15px] font-medium text-white">
+                            <span className="block text-[16px] font-medium leading-6 tracking-[-0.32px] text-white">
                               {item.title}
                             </span>
                             {item.description && (
-                              <span className="block text-[12px] text-white/40 mt-0.5">
+                              <span className="mt-0.5 block text-[12px] leading-4 text-white/50">
                                 {item.description}
                               </span>
                             )}
@@ -945,7 +977,7 @@ export default function Navbar() {
                         ))}
                       </div>
                       {colIndex < navItem.menu.length - 1 && (
-                        <div className="mt-3 -mx-6 h-px bg-white/10" />
+                        <div className="mt-3 -mx-6 h-px bg-[var(--border,rgba(255,255,255,0.1))]" />
                       )}
                     </div>
                   ))}

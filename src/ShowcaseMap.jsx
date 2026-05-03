@@ -20,6 +20,7 @@ import StoryViewer from './StoryViewer';
 import ShareDialog from './ShareDialog';
 import Footer from './Footer';
 import FloatingCTA from './FloatingCTA';
+import FooterCTA from './FooterCTA';
 import './ShowcaseMap.css';
 
 // Flip to `false` to show the nav, bottom bar, and theme toggle
@@ -85,7 +86,7 @@ const p = (name) => SHOWCASE_PEOPLE.find(p => p.name === name) || SHOWCASE_PEOPL
 // Physical office assignments — used by the Physical Office Tags feature visual
 const CITY_BY_NAME = {
   'Klas L.': 'NYC', 'Derek C.': 'LDN', 'John M.': 'TYO', 'Howard L.': 'NYC', 'Keegan L.': 'LAX', 'Jon B.': 'BER',
-  'Grace S.': 'YYZ', 'Michael W.': 'SFO', 'Rob F.': 'SYD', 'Chelsea T.': 'PAR', 'Tom D.': 'MEX', 'Will H.': 'MEL',
+  'Grace S.': 'YYZ', 'Michael W.': 'MIA', 'Rob F.': 'SYD', 'Chelsea T.': 'PAR', 'Tom D.': 'MEX', 'Will H.': 'MEL',
   'Lexi B.': 'AUS', 'Garima K.': 'BOM', 'Ava L.': 'AMS', 'Mia C.': 'SIN', 'Sarah M.': 'DUB',
   'Ashley B.': 'GRU', 'Hannah B.': 'STO', 'Daniel R.': 'LIS', 'John B.': 'SEL', 'Michael M.': 'MAD',
   'Joe W.': 'NYC', 'Peter L.': 'CHI', 'Sean M.': 'YVR', 'Jeff G.': 'TLV',
@@ -2828,6 +2829,28 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
   const viewportRef = useRef(null);
   const productsBarRef = useRef(null);
 
+  // The homepage scroll container (`.sc-viewport`) is independent from
+  // window scroll and isn't covered by `history.scrollRestoration =
+  // 'manual'`. Force it to top across multiple frames on initial mount —
+  // a single reset isn't enough because LazyVisible sections mounting
+  // beneath the hero can shift the scroll position after our first
+  // attempt. Hammer it with multiple timeouts so whichever frame the
+  // last layout pass lands on, scroll ends at 0.
+  useEffect(() => {
+    const reset = () => {
+      const v = viewportRef.current;
+      if (v) v.scrollTop = 0;
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    };
+    reset();
+    requestAnimationFrame(reset);
+    setTimeout(reset, 50);
+    setTimeout(reset, 200);
+    setTimeout(reset, 600);
+  }, []);
+
   useEffect(() => {
     if (themeOverride) return; // parent controls the global data-theme
     const html = document.documentElement;
@@ -2926,7 +2949,7 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
               </span>
               <span className="sc-v2-hero-rating-score">4.8/5</span>
             </div>
-            <p className="sc-v2-hero-subtitle">Roam is a Virtual Office Platform where humans and AI agents work together in the open.</p>
+            <p className="sc-v2-hero-subtitle">Roam is a Virtual Office Platform Where People &amp; AI Agents Collaborate.</p>
             <div className="sc-v2-hero-buttons">
               <button className="sc-promo-btn">Book Demo</button>
               <button className="sc-promo-btn">Free Trial</button>
@@ -3547,22 +3570,7 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
 
       <HomepageReviews />
 
-      {/* Footer CTA — reuses FeaturePage's fp-footer-cta styles */}
-      <div className="fp-footer-cta">
-        <div className="fp-footer-cta-inner">
-          <div className="fp-footer-cta-lead">
-            <img className="fp-footer-cta-icon" src="/icons/roam-gold-icon.png" alt="" />
-            <div className="fp-footer-cta-text">
-              <h2 className="fp-footer-cta-title">Ready to Grow Your Business?</h2>
-              <p className="fp-footer-cta-sub text-body">Give your team an office that thinks. Book a demo or kick the tires for free.</p>
-            </div>
-          </div>
-          <div className="fp-cta-row">
-            <button className="sc-promo-btn">Book Demo</button>
-            <button className="sc-promo-btn">Free Trial</button>
-          </div>
-        </div>
-      </div>
+      <FooterCTA title="Ready to Grow Your Business?" />
 
       <Footer />
 

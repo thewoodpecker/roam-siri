@@ -6,6 +6,8 @@
   height: auto;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   color: #fff;
+  user-select: text;
+  -webkit-user-select: text;
   animation: mw-win-in 240ms cubic-bezier(0.22, 1, 0.36, 1) both;
   transform-origin: 50% 0%;
   filter: drop-shadow(0 1px 8px rgba(0, 0, 0, 0.3)) drop-shadow(0 8px 16px rgba(0, 0, 0, 0.2));
@@ -165,6 +167,38 @@
   border-radius: 50%;
 }
 
+/* Drop the iOS liquid-glass treatment (turbulence/displacement filter +
+   asymmetric bevel highlights) on Android. Use a flat Material-style
+   scrim — solid translucent fill, plain backdrop blur, soft shadow. */
+.mw-win-android .mw-tabbar-main,
+.mw-win-android .mw-tab-eye,
+.mw-win-android .mw-theater-icon-btn,
+.mw-win-android .mw-top-back,
+.mw-win-android .mw-ainbox-compose,
+.mw-win-android .mw-ainbox-profile,
+.mw-win-android .mw-onit-composer,
+.mw-win-android .mw-camera-flip {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(24px) saturate(140%);
+  -webkit-backdrop-filter: blur(24px) saturate(140%);
+  border: 1px solid var(--border);
+  box-shadow: none;
+}
+.sc-viewport[data-theme="light"] .mw-win-android .mw-tabbar-main,
+.sc-viewport[data-theme="light"] .mw-win-android .mw-tab-eye,
+.sc-viewport[data-theme="light"] .mw-win-android .mw-theater-icon-btn,
+.sc-viewport[data-theme="light"] .mw-win-android .mw-top-back,
+.sc-viewport[data-theme="light"] .mw-win-android .mw-ainbox-compose,
+.sc-viewport[data-theme="light"] .mw-win-android .mw-ainbox-profile,
+.sc-viewport[data-theme="light"] .mw-win-android .mw-onit-composer,
+.sc-viewport[data-theme="light"] .mw-win-android .mw-camera-flip {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(24px) saturate(140%);
+  -webkit-backdrop-filter: blur(24px) saturate(140%);
+  border: 1px solid var(--border);
+  box-shadow: none;
+}
+
 .mw-chrome-btn {
   width: 20px;
   height: 20px;
@@ -238,6 +272,22 @@
   clip-path: inset(0 round calc(var(--radius-3xl) - 16px));
 }
 
+/* Safari fallback — Safari doesn't support `corner-shape: superellipse`,
+   so the bezel renders as a regular rounded rect. The screen's
+   inner-corner radius set above (R - 16) is intentionally tighter
+   than the bezel's inner curve to tuck under the bezel's superellipse
+   peak; in Safari that smaller radius leaves the screen's corners
+   square enough to bulge outside the bezel's regular-rounded-rect
+   inner curve at radius (R + 14 - 8 = R + 6). Bump the screen radius
+   up in Safari (and any UA without corner-shape support) so its
+   regular-rounded corners match the bezel's regular-rounded inner. */
+@supports not (corner-shape: superellipse(1.6)) {
+  .mw-screen {
+    border-radius: calc(var(--radius-3xl) + 6px);
+    clip-path: inset(0 round calc(var(--radius-3xl) + 6px));
+  }
+}
+
 /* Header: solid bar covers status + top nav, then a longer gradient strip
    below it fades from the same bar color (top, fully opaque) to transparent
    at its bottom edge so room cards scrolling underneath bleed through
@@ -294,6 +344,7 @@
 
 .mw-content.mw-map {
   padding-top: 0;
+  position: relative;
 }
 
 .mw-content.mw-ainbox {
@@ -312,7 +363,8 @@
   flex: 1;
   min-height: 0;
   overflow: hidden;
-  user-select: none;
+  user-select: text;
+  -webkit-user-select: text;
   /* `pan-y` lets vertical touch/wheel scroll the outer page through the
      simulator; horizontal gestures + mouse drag still drive the AInbox's
      custom pan logic via pointer events. */
@@ -375,19 +427,21 @@
   position: relative;
   transform: rotate(180deg);
   background: rgba(255, 255, 255, 0.04);
-  backdrop-filter: url(#mw-liquid-glass) blur(0.5px) saturate(160%) brightness(1.05);
-  -webkit-backdrop-filter: blur(8px) saturate(160%) brightness(1.05);
+  backdrop-filter: url(#mw-liquid-glass) blur(2px) saturate(160%) brightness(1.05);
+  -webkit-backdrop-filter: blur(14px) saturate(160%) brightness(1.05);
   border: 0;
   box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.18),
-    inset 1.5px 2px 0 -2px rgba(255, 255, 255, 0.65),
-    inset -2px -2px 0 -2px rgba(255, 255, 255, 0.8),
-    inset 0 -3px 10px -2px rgba(255, 255, 255, 0.45),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.12),
+    inset 1.5px 2px 2px -2px rgba(255, 255, 255, 0.35),
+    inset -2px -2px 2px -2px rgba(255, 255, 255, 0.5),
+    inset 0 -3px 10px -2px rgba(255, 255, 255, 0.25),
     0 6px 24px rgba(0, 0, 0, 0.18),
     0 2px 6px rgba(0, 0, 0, 0.1);
   isolation: isolate;
 }
 .mw-top-back > * { position: relative; z-index: 1; }
+/* iOS only: no chevron offset — the previous translateX hack was
+   creating an over-correction. */
 
 .mw-top-logo {
   position: absolute;
@@ -673,7 +727,8 @@
   flex: 1;
   min-height: 0;
   overflow: hidden;
-  user-select: none;
+  user-select: text;
+  -webkit-user-select: text;
   /* `pan-y` lets vertical scroll of the outer feature page pass through
      the simulator; horizontal touch drags + any mouse drag still pan the
      map via pointer events. */
@@ -856,11 +911,37 @@
   box-sizing: border-box;
 }
 
+/* Liquid-glass profile button — same recipe as `.mw-top-back` /
+   `.mw-ainbox-compose`. The avatar img inside fills the button. */
 .mw-ainbox-profile {
+  position: relative;
   width: 32px;
   height: 32px;
   border-radius: 50%;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: url(#mw-liquid-glass) blur(2px) saturate(160%) brightness(1.05);
+  -webkit-backdrop-filter: blur(14px) saturate(160%) brightness(1.05);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.12),
+    inset 1.5px 2px 2px -2px rgba(255, 255, 255, 0.35),
+    inset -2px -2px 2px -2px rgba(255, 255, 255, 0.5),
+    inset 0 -3px 10px -2px rgba(255, 255, 255, 0.25),
+    0 6px 24px rgba(0, 0, 0, 0.18),
+    0 2px 6px rgba(0, 0, 0, 0.1);
+  isolation: isolate;
+}
+.mw-ainbox-profile img {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
   object-fit: cover;
+  display: block;
 }
 
 .mw-ainbox-title {
@@ -881,16 +962,31 @@
 }
 
 .mw-ainbox-compose {
+  position: relative;
   width: 32px;
   height: 32px;
-  border: none;
-  background: transparent;
+  border-radius: 50%;
+  border: 0;
   color: #fff;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  /* Same liquid-glass treatment as .mw-top-back / .mw-tab-eye. */
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: url(#mw-liquid-glass) blur(2px) saturate(160%) brightness(1.05);
+  -webkit-backdrop-filter: blur(14px) saturate(160%) brightness(1.05);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.12),
+    inset 1.5px 2px 2px -2px rgba(255, 255, 255, 0.35),
+    inset -2px -2px 2px -2px rgba(255, 255, 255, 0.5),
+    inset 0 -3px 10px -2px rgba(255, 255, 255, 0.25),
+    0 6px 24px rgba(0, 0, 0, 0.18),
+    0 2px 6px rgba(0, 0, 0, 0.1);
+  isolation: isolate;
 }
+.mw-ainbox-compose > * { position: relative; z-index: 1; }
+.mw-ainbox-compose img { width: 16px; height: 16px; }
 
 /* Featured users row */
 .mw-ainbox-featured {
@@ -1143,31 +1239,45 @@
 }
 
 .mw-camera-flip {
+  position: relative;
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(30px);
-  -webkit-backdrop-filter: blur(30px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: url(#mw-liquid-glass) blur(2px) saturate(160%) brightness(1.05);
+  -webkit-backdrop-filter: blur(14px) saturate(160%) brightness(1.05);
+  border: 0;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.12),
+    inset 1.5px 2px 2px -2px rgba(255, 255, 255, 0.35),
+    inset -2px -2px 2px -2px rgba(255, 255, 255, 0.5),
+    inset 0 -3px 10px -2px rgba(255, 255, 255, 0.25),
+    0 6px 24px rgba(0, 0, 0, 0.18),
+    0 2px 6px rgba(0, 0, 0, 0.1);
   color: #fff;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  isolation: isolate;
 }
+.mw-camera-flip > * { position: relative; z-index: 1; }
 
-/* --- Tab bar --- */
 .mw-tabbar {
   position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 0;
+  right: 0;
   bottom: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   z-index: 6;
+  /* No `transform: translateX(-50%)` here — Safari iOS combines a
+     transformed flex parent + child's `backdrop-filter` + grandchild's
+     `mask-image` into a compositor edge case where the masked icons
+     render invisible. `left:0; right:0` + `justify-content: center`
+     centers the children without a transform stacking context. */
 }
 
 .mw-tabbar-main {
@@ -1176,24 +1286,40 @@
   align-items: center;
   height: 44px;
   gap: 14px;
-  /* Liquid glass — kevinbism technique. SVG turbulence + displacement
-     filter on the backdrop creates real refraction. Asymmetric inset
-     highlights simulate the curved bevel where light bends through
-     the glass. */
-  background: rgba(255, 255, 255, 0.04);
-  backdrop-filter: url(#mw-liquid-glass) blur(0.5px) saturate(160%) brightness(1.05);
-  -webkit-backdrop-filter: blur(8px) saturate(160%) brightness(1.05);
+  /* Safari iOS kills any element with `-webkit-backdrop-filter` whose
+     ancestor chain is fully transparent up to the `.mw-screen`'s
+     `contain: paint` boundary — the filter has no opaque backdrop to
+     sample so it paints nothing AND suppresses children. Theater
+     icons work because `.mw-theater` is an opaque container; the
+     tabbar is transparent over `.mw-content` and trips the bug.
+     The fix: drop the blur entirely and use a more opaque solid
+     background that reads as a glass pill on its own. Chrome/Edge
+     get the kevinbism refraction back via the @supports block. */
+  background: rgba(255, 255, 255, 0.08);
   border: 0;
   border-radius: 999px;
   padding: 0 14px;
   box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.18),
-    inset 1.5px 2px 0 -2px rgba(255, 255, 255, 0.65),
-    inset -2px -2px 0 -2px rgba(255, 255, 255, 0.8),
-    inset 0 -3px 10px -2px rgba(255, 255, 255, 0.45),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.12),
+    inset 1.5px 2px 2px -2px rgba(255, 255, 255, 0.35),
+    inset -2px -2px 2px -2px rgba(255, 255, 255, 0.5),
+    inset 0 -3px 10px -2px rgba(255, 255, 255, 0.25),
     0 6px 24px rgba(0, 0, 0, 0.18),
     0 2px 6px rgba(0, 0, 0, 0.1);
-  isolation: isolate;
+}
+
+/* Re-add the kevinbism url() refraction effect ONLY for browsers that
+   support `corner-shape` — that's Chrome/Edge today, which is also
+   where url() backdrop-filter works. Safari iOS doesn't match this
+   @supports rule, so it never sees the unprefixed line and stays on
+   the plain -webkit-backdrop-filter blur above. */
+@supports (corner-shape: superellipse(1.6)) {
+  .mw-tabbar-main,
+  .mw-tab-eye {
+    background: rgba(255, 255, 255, 0.04);
+    backdrop-filter: url(#mw-liquid-glass) blur(2px) saturate(160%) brightness(1.05);
+    -webkit-backdrop-filter: blur(14px) saturate(160%) brightness(1.05);
+  }
 }
 
 .mw-tabbar-main::before,
@@ -1219,43 +1345,65 @@
   padding: 0;
 }
 
+/* Match `.mw-theater-icon-mask` exactly — that pattern renders
+   correctly in Safari iOS even with backdrop-filter on the parent.
+   The previous version differed by:
+     - `display: block` (vs theater's `inline-block`)
+     - `background-color: rgba(255,255,255,0.5)` semi-transparent
+       (vs theater's solid `var(--icon-primary)`)
+     - explicit `mask-mode: alpha`
+     - `transition: background-color`
+   Safari's mask compositor seems to drop a semi-transparent
+   `background-color` under a parent with backdrop-filter, leaving
+   the icon invisible. Use a SOLID `background-color` and tint the
+   inactive state via `opacity` instead. */
+/* Tab icons render as inline SVG (see <TabIcon /> in MobileWindow.jsx)
+   with `fill="currentColor"`, so we color them via `color` not
+   `background-color`. Mask-image used to drive these but Safari iOS
+   silently dropped the masked layer when nested inside the tabbar's
+   `backdrop-filter` parent — inline SVG sidesteps the compositor
+   path entirely. */
 .mw-tab-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 20px;
   height: 20px;
+  color: var(--icon-primary);
+  opacity: 0.5;
+  transition: opacity 120ms ease;
+}
+
+.mw-tab-icon > svg {
   display: block;
-  background-color: rgba(255, 255, 255, 0.5);
-  -webkit-mask-repeat: no-repeat;
-          mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-          mask-position: center;
-  -webkit-mask-size: contain;
-          mask-size: contain;
-  transition: background-color 120ms ease;
+  width: 100%;
+  height: 100%;
 }
 
 .mw-tab:hover .mw-tab-icon {
-  background-color: rgba(255, 255, 255, 0.75);
+  opacity: 0.75;
 }
 
 .mw-tab-active .mw-tab-icon {
-  background-color: #fff;
+  opacity: 1;
 }
 
 .mw-tab-eye {
   position: relative;
   width: 44px;
   height: 44px;
-  background: rgba(255, 255, 255, 0.04);
-  backdrop-filter: url(#mw-liquid-glass) blur(0.5px) saturate(160%) brightness(1.05);
-  -webkit-backdrop-filter: blur(8px) saturate(160%) brightness(1.05);
+  /* See .mw-tabbar-main comment — backdrop-filter (both prefixed and
+     unprefixed) kills this element in Safari iOS. Solid bg only;
+     Chrome/Edge add the glass back via the @supports block. */
+  background: rgba(255, 255, 255, 0.08);
   border: 0;
   border-radius: 50%;
   flex-shrink: 0;
   box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.18),
-    inset 1.5px 2px 0 -2px rgba(255, 255, 255, 0.65),
-    inset -2px -2px 0 -2px rgba(255, 255, 255, 0.8),
-    inset 0 -3px 10px -2px rgba(255, 255, 255, 0.45),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.12),
+    inset 1.5px 2px 2px -2px rgba(255, 255, 255, 0.35),
+    inset -2px -2px 2px -2px rgba(255, 255, 255, 0.5),
+    inset 0 -3px 10px -2px rgba(255, 255, 255, 0.25),
     0 6px 24px rgba(0, 0, 0, 0.18),
     0 2px 6px rgba(0, 0, 0, 0.1);
   isolation: isolate;
@@ -1270,9 +1418,10 @@
 }
 
 .mw-tab-eye .mw-tab-icon {
-  background-color: #fff;
+  color: var(--icon-primary);
   width: 16px;
   height: 16px;
+  opacity: 1;
 }
 
 /* Light-mode liquid glass — same displacement filter, slightly stronger
@@ -1280,19 +1429,34 @@
 .sc-viewport[data-theme="light"] .mw-tabbar-main,
 .sc-viewport[data-theme="light"] .mw-tab-eye,
 .sc-viewport[data-theme="light"] .mw-theater-icon-btn,
-.sc-viewport[data-theme="light"] .mw-top-back {
+.sc-viewport[data-theme="light"] .mw-top-back,
+.sc-viewport[data-theme="light"] .mw-ainbox-compose {
   background: rgba(255, 255, 255, 0.18);
-  backdrop-filter: url(#mw-liquid-glass) blur(0.5px) saturate(150%) brightness(1.02);
-  -webkit-backdrop-filter: blur(10px) saturate(150%) brightness(1.02);
+  /* See Safari iOS comment on .mw-tabbar-main — the url() refraction
+     is gated below in an @supports block. Safari iOS gets a solid bg
+     only — no backdrop-filter at all — because even the prefixed form
+     kills the tabbar/tab-eye when they sit over a transparent ancestor
+     chain. Chrome/Edge add the glass back below. */
   border: 0;
   color: #000;
   box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.5),
-    inset 1.8px 3px 0 -2px rgba(255, 255, 255, 0.95),
-    inset -2px -2px 0 -2px rgba(255, 255, 255, 0.85),
-    inset 0 -3px 10px -2px rgba(255, 255, 255, 0.6),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.3),
+    inset 1.8px 3px 2px -2px rgba(255, 255, 255, 0.55),
+    inset -2px -2px 2px -2px rgba(255, 255, 255, 0.5),
+    inset 0 -3px 10px -2px rgba(255, 255, 255, 0.35),
     0 4px 14px rgba(0, 0, 0, 0.08),
     0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+@supports (corner-shape: superellipse(1.6)) {
+  .sc-viewport[data-theme="light"] .mw-tabbar-main,
+  .sc-viewport[data-theme="light"] .mw-tab-eye,
+  .sc-viewport[data-theme="light"] .mw-theater-icon-btn,
+  .sc-viewport[data-theme="light"] .mw-top-back,
+  .sc-viewport[data-theme="light"] .mw-ainbox-compose {
+    backdrop-filter: url(#mw-liquid-glass) blur(2px) saturate(150%) brightness(1.02);
+    -webkit-backdrop-filter: blur(16px) saturate(150%) brightness(1.02);
+  }
 }
 
 /* ───────── Light theme overrides ───────── */
@@ -1335,13 +1499,14 @@
   background-color: rgba(0, 0, 0, 0.5);
 }
 
-.sc-viewport[data-theme="light"] .mw-tab:hover .mw-tab-icon {
-  background-color: rgba(0, 0, 0, 0.75);
-}
-
-.sc-viewport[data-theme="light"] .mw-tab-active .mw-tab-icon,
-.sc-viewport[data-theme="light"] .mw-tab-eye .mw-tab-icon {
-  background-color: #000;
+/* Light theme — `var(--icon-primary)` is the same near-white token
+   in light AND dark mode, so on a light tabbar bg the icons would
+   be invisible. Override to a dark color so the icons read against
+   the light glass tabbar. State tinting still flows through opacity
+   from the base rule above. (Tab icons are inline SVG with
+   `fill="currentColor"` — color the parent, not background.) */
+.sc-viewport[data-theme="light"] .mw-tab-icon {
+  color: #000;
 }
 
 /* Overworld */
@@ -1499,7 +1664,8 @@
 .mw-map-embed,
 .mw-map-embed * {
   pointer-events: none !important;
-  user-select: none !important;
+  user-select: text !important;
+  -webkit-user-select: text !important;
 }
 
 /* ----------------------------------------------------------------------
@@ -1585,35 +1751,41 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 10px;
+  padding: 0 16px;
+  height: 56px;
   flex-shrink: 0;
 }
 .mw-theater-icon-btn {
   position: relative;
-  width: 36px;
-  height: 36px;
-  border-radius: 18px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
   border: 0;
   background: rgba(255, 255, 255, 0.04);
-  backdrop-filter: url(#mw-liquid-glass) blur(0.5px) saturate(160%) brightness(1.05);
-  -webkit-backdrop-filter: blur(8px) saturate(160%) brightness(1.05);
+  backdrop-filter: url(#mw-liquid-glass) blur(2px) saturate(160%) brightness(1.05);
+  -webkit-backdrop-filter: blur(14px) saturate(160%) brightness(1.05);
   color: var(--icon-primary);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   padding: 0;
-  cursor: default;
+  cursor: pointer;
   box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.18),
-    inset 1.5px 2px 0 -2px rgba(255, 255, 255, 0.65),
-    inset -2px -2px 0 -2px rgba(255, 255, 255, 0.8),
-    inset 0 -3px 10px -2px rgba(255, 255, 255, 0.45),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.12),
+    inset 1.5px 2px 2px -2px rgba(255, 255, 255, 0.35),
+    inset -2px -2px 2px -2px rgba(255, 255, 255, 0.5),
+    inset 0 -3px 10px -2px rgba(255, 255, 255, 0.25),
     0 6px 24px rgba(0, 0, 0, 0.18),
     0 2px 6px rgba(0, 0, 0, 0.1);
   isolation: isolate;
 }
 .mw-theater-icon-btn > * { position: relative; z-index: 1; }
-.mw-theater-icon-btn[aria-label="Back"] > * { transform: translateX(-2px); }
+/* Rotate only the chevron, not the button itself — rotating the whole
+   button mirrors the asymmetric inset highlights and makes the back
+   and leave buttons look like they have different shadows. */
+.mw-theater-icon-btn[aria-label="Back"] > svg {
+  transform: rotate(180deg);
+}
 .mw-theater-title-stack {
   display: flex;
   flex-direction: column;
@@ -1753,10 +1925,10 @@
   align-items: center;
   justify-content: center;
   padding: 0;
-  cursor: default;
+  cursor: pointer;
 }
 .mw-theater-tabicon-muted {
-  color: #ef5350;
+  color: var(--text-error);
 }
 
 /* Match the desktop theater's red mic-muted treatment — same filter chain
@@ -1769,8 +1941,8 @@
    icon reads correctly on both dark and light theater backgrounds. */
 .mw-theater-icon-mask {
   display: inline-block;
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   background-color: var(--icon-primary);
   -webkit-mask-repeat: no-repeat;
   mask-repeat: no-repeat;
@@ -1786,6 +1958,9 @@
 .mw-theater-icon-door {
   -webkit-mask-image: url('/icons/theater-door.svg');
   mask-image: url('/icons/theater-door.svg');
+  width: 18px;
+  height: 18px;
+  background-color: var(--text-error);
 }
 .mw-theater-icon-stage {
   -webkit-mask-image: url('/icons/theater-stage.svg');
@@ -1798,4 +1973,873 @@
 .mw-theater-icon-chat {
   -webkit-mask-image: url('/icons/meeting-chat.svg');
   mask-image: url('/icons/meeting-chat.svg');
+}
+
+/* Drop-In Meetings demo overlay — sits inside the mobile screen frame
+   (positioned to .mw-content) above the map. Animation cycles between
+   knocking → in-meeting via the parent component's phase state. */
+.mw-knock-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 12;
+  animation: mw-knock-fade-in 240ms ease-out both;
+}
+.mw-knock-dialog {
+  width: calc(100% - 48px);
+  max-width: 280px;
+  padding: 12px;
+  background: var(--bg-surface-elevated-primary, #1d1e20);
+  border: 0.5px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-xl);
+  corner-shape: superellipse(1.6);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+}
+.mw-knock-icon {
+  width: 20px;
+  height: 20px;
+  margin-bottom: 8px;
+  background: var(--icon-primary);
+  -webkit-mask: url(/icons/knock.svg) center / 20px 20px no-repeat;
+  mask: url(/icons/knock.svg) center / 20px 20px no-repeat;
+  /* Same rocking pulse the desktop knock dialog uses. */
+  transform-origin: 80% 70%;
+  animation: mw-knock-pulse 900ms ease-in-out infinite;
+}
+.mw-knock-icon img { display: none; }
+@keyframes mw-knock-pulse {
+  0%, 60%, 100% { transform: rotate(0deg) scale(1); }
+  15%           { transform: rotate(-18deg) scale(1.12); }
+  30%           { transform: rotate(12deg) scale(1.12); }
+  45%           { transform: rotate(-8deg) scale(1.05); }
+}
+.mw-knock-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 16px;
+  letter-spacing: -0.15px;
+  line-height: 16px;
+}
+.mw-knock-dots span {
+  opacity: 0;
+  animation: mw-knock-dot 1.4s infinite;
+}
+.mw-knock-dots span:nth-child(2) { animation-delay: 0.2s; }
+.mw-knock-dots span:nth-child(3) { animation-delay: 0.4s; }
+.mw-knock-cancel {
+  width: 100%;
+  padding: 8px 0;
+  background: var(--background-primary);
+  border: 0;
+  border-radius: var(--radius-md);
+  corner-shape: superellipse(1.6);
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  /* Top inset highlight, dark-mode only — same look as the navbar
+     CTAs. Cleared in light mode below. */
+  box-shadow: inset 0 0.5px 0 0 rgba(255, 255, 255, 0.1);
+}
+.sc-viewport[data-theme="light"] .mw-knock-cancel {
+  box-shadow: none;
+}
+
+@keyframes mw-knock-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes mw-knock-dot {
+  0%, 30% { opacity: 0; }
+  50%, 100% { opacity: 1; }
+}
+
+/* In-meeting view shown after the knock is accepted. */
+.mw-knock-meeting {
+  position: absolute;
+  inset: 0;
+  background: #0c0c0e;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  z-index: 12;
+  animation: mw-knock-fade-in 320ms ease-out both;
+}
+.mw-knock-meeting-avatar {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08);
+}
+.mw-knock-meeting-name {
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: -0.2px;
+}
+.mw-knock-meeting-status {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.55);
+  letter-spacing: -0.1px;
+}
+.mw-knock-meeting-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 24px;
+  margin-top: 4px;
+}
+.mw-knock-meeting-bar {
+  display: block;
+  width: 3px;
+  background: var(--text-positive, #34c759);
+  border-radius: 2px;
+  animation: mw-knock-bar 900ms ease-in-out infinite;
+}
+@keyframes mw-knock-bar {
+  0%, 100% { height: 4px; }
+  50% { height: 22px; }
+}
+
+/* Guest Badge sheet rendered inside the mobile simulator over a
+   dim scrim. White surface, dark drag handle, dismiss X, person
+   avatar with a Roam-mark badge, email field, list cells (toggle
+   on Visitor Access), purple Send Badge CTA, gradient slogan
+   footer. Mirrors the Figma spec. */
+.mw-gb-scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 12;
+}
+.mw-gb-sheet {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  right: 12px;
+  transform: translateY(-50%);
+  max-height: calc(100% - 32px);
+  background: #FFFFFF;
+  color: #1a1a1a;
+  border-radius: var(--radius-xl);
+  corner-shape: superellipse(1.6);
+  box-shadow: 0 1px 2px 0 rgba(0,0,0,0.3), 0 3px 6px 2px rgba(0,0,0,0.1);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding-top: 12px;
+  z-index: 13;
+}
+.mw-gb-handle {
+  width: 36px;
+  height: 8px;
+  border-radius: 999px;
+  background: #0c0c0e;
+  margin: 0 auto;
+  flex-shrink: 0;
+}
+.mw-gb-dismiss {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  width: 28px;
+  height: 28px;
+  border-radius: 24px;
+  border: 0;
+  background: rgba(0, 0, 0, 0.05);
+  color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+}
+.mw-gb-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+.mw-gb-body::-webkit-scrollbar { display: none; }
+.mw-gb-avatar {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.05);
+  align-self: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+}
+.mw-gb-avatar-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.mw-gb-mark {
+  position: absolute;
+  right: -3px;
+  bottom: -3px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #1a1a1a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  box-sizing: border-box;
+}
+.mw-gb-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 50%;
+}
+.mw-gb-text { display: flex; flex-direction: column; gap: 4px; }
+.mw-gb-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: -0.2px;
+  line-height: 18px;
+  color: #1a1a1a;
+}
+.mw-gb-sub {
+  margin: 0;
+  font-size: 11px;
+  letter-spacing: -0.1px;
+  line-height: 16px;
+  color: rgba(0, 0, 0, 0.5);
+}
+.mw-gb-section { display: flex; flex-direction: column; }
+.mw-gb-section-title {
+  margin: 0 0 6px;
+  padding-top: 12px;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: -0.2px;
+  line-height: 18px;
+  color: #1a1a1a;
+}
+.mw-gb-field {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 11px;
+  line-height: 16px;
+  letter-spacing: -0.1px;
+  color: rgba(0, 0, 0, 0.5);
+}
+.mw-gb-list { display: flex; flex-direction: column; }
+.mw-gb-cell {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 0;
+}
+.mw-gb-cell-text { flex: 1; min-width: 0; }
+.mw-gb-cell-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: -0.2px;
+  line-height: 18px;
+  color: #1a1a1a;
+}
+.mw-gb-cell-sub {
+  margin: 0;
+  font-size: 11px;
+  letter-spacing: -0.1px;
+  line-height: 16px;
+  color: rgba(0, 0, 0, 0.5);
+}
+.mw-gb-toggle {
+  position: relative;
+  width: 40px;
+  height: 24px;
+  background: #6e31e7;
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+.mw-gb-toggle-knob {
+  position: absolute;
+  top: 50%;
+  right: 2px;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+.mw-gb-cta {
+  width: 100%;
+  padding: 12px 24px;
+  background: #6e31e7;
+  border: 0;
+  border-radius: 12px;
+  color: #FFFFFF;
+  font-size: 13px;
+  letter-spacing: -0.2px;
+  line-height: 18px;
+  cursor: pointer;
+}
+.mw-gb-footer {
+  border-top: 0.5px solid rgba(0, 0, 0, 0.1);
+  background: linear-gradient(to bottom, #f0f0f0, #ffffff);
+  padding: 16px 8px;
+  text-align: center;
+  font-family: 'Possibility', serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1px;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.3);
+  flex-shrink: 0;
+}
+
+/* On-It DM chat view — same general scaffolding as Magic Minutes
+   (chat covers the screen, gradient fade behind the header) but the
+   message list uses asymmetric chat bubbles (white-on-right for
+   user, dark-on-left for the assistant) with the tail-side corner
+   squared. */
+.mw-onit-chat {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--bg-surface-primary, #0c0c0e);
+  overflow: hidden;
+}
+/* Solid status-bar bg while the On-It chat is active — keeps the
+   time/icons readable as messages scroll up behind it. */
+.mw-screen:has(.mw-onit-chat) .mw-status {
+  background: var(--bg-surface-primary, #0c0c0e);
+}
+.mw-onit-header {
+  position: absolute;
+  top: 38px;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  z-index: 3;
+  background: transparent;
+}
+.mw-onit-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: -0.2px;
+  line-height: 18px;
+  color: var(--text-primary);
+}
+.mw-onit-title-avatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.mw-onit-header-spacer {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+}
+.mw-onit-chat .mw-mm-topbar-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 96px;
+  pointer-events: none;
+  z-index: 2;
+  background: linear-gradient(to bottom, var(--bg-surface-primary, #0c0c0e), rgba(12, 12, 14, 0));
+  -webkit-mask-image: linear-gradient(to bottom, #000, transparent);
+  mask-image: linear-gradient(to bottom, #000, transparent);
+}
+.mw-onit-chat .mw-ainbox-scroller {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  flex: none;
+  z-index: 1;
+}
+.mw-onit-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  /* Top padding clears the status bar (38) + header (~50) so the
+     first message sits below the chrome at rest, but content can
+     scroll up beneath the status bar as the user pans. Bottom
+     padding clears the liquid-glass composer. */
+  padding: 88px 12px 96px;
+}
+.mw-onit-row {
+  display: flex;
+  justify-content: flex-start;
+}
+.mw-onit-row-self { justify-content: flex-end; }
+.mw-onit-bubble {
+  max-width: 240px;
+  padding: 8px 12px;
+  background: var(--bg-surface-elevated-primary, #1d1e20);
+  color: var(--text-primary, #fff);
+  border-radius: 18px 18px 18px 4px;
+  font-size: 12px;
+  line-height: 18px;
+  letter-spacing: -0.15px;
+}
+.mw-onit-bubble-self {
+  background: var(--bg-surface-secondary, #FFFFFF);
+  color: var(--text-primary-on-light, #000);
+  border-radius: 18px 18px 4px 18px;
+}
+.mw-onit-composer-wrap {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 8px 16px 16px;
+  z-index: 4;
+}
+/* Liquid-glass composer — same recipe as `.mw-tabbar-main`:
+   asymmetric bevel highlights + displacement-filter blur for the
+   real refraction look. The list scrolls underneath so messages
+   pass behind it. */
+.mw-onit-composer {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 8px 8px 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 999px;
+  border: 0;
+  backdrop-filter: url(#mw-liquid-glass) blur(2px) saturate(160%) brightness(1.05);
+  -webkit-backdrop-filter: blur(14px) saturate(160%) brightness(1.05);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.12),
+    inset 1.5px 2px 2px -2px rgba(255, 255, 255, 0.35),
+    inset -2px -2px 2px -2px rgba(255, 255, 255, 0.5),
+    inset 0 -3px 10px -2px rgba(255, 255, 255, 0.25),
+    0 6px 24px rgba(0, 0, 0, 0.18),
+    0 2px 6px rgba(0, 0, 0, 0.1);
+  isolation: isolate;
+}
+.mw-onit-composer > * { position: relative; z-index: 1; }
+.mw-onit-composer-placeholder {
+  flex: 1;
+  font-size: 12px;
+  line-height: 18px;
+  letter-spacing: -0.15px;
+  color: var(--text-disabled);
+}
+.mw-onit-composer-audio {
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--background-primary);
+  color: var(--icon-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+}
+.mw-onit-composer-audio img { width: 16px; height: 16px; display: block; }
+
+/* Magic Minutes group chat view — covers the mobile screen inside
+   the simulator. Header (back + meeting title), scrollable message
+   list, footer with typing indicator + composer. Scaled type sizes
+   so the conversation reads cleanly at the simulator's narrower
+   width. */
+.mw-mm-chat {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--bg-surface-primary, #0c0c0e);
+  overflow: hidden;
+}
+/* Gradient fade overlay above the list — list content scrolls
+   under the header and fades into the chat bg. Same recipe as
+   the map's `.mw-topbar-bg`. */
+/* z-stack inside the chat:
+   1. list (conversation)         — behind gradient
+   2. ::before gradient overlay   — fades scrolled content
+   3. header (back button + title) — sits on top of gradient */
+.mw-mm-chat::before {
+  content: '';
+  position: absolute;
+  top: 38px;
+  left: 0;
+  right: 0;
+  height: 96px;
+  pointer-events: none;
+  z-index: 2;
+  background: linear-gradient(to bottom, var(--bg-surface-primary, #0c0c0e), rgba(12, 12, 14, 0));
+  -webkit-mask-image: linear-gradient(to bottom, #000, transparent);
+  mask-image: linear-gradient(to bottom, #000, transparent);
+}
+.mw-mm-header {
+  position: absolute;
+  top: 38px;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 12px;
+  z-index: 3;
+  background: transparent;
+}
+.mw-mm-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  letter-spacing: -0.2px;
+  line-height: 18px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* The conversation lives inside an `AinboxScroller` (drag-to-pan
+   + momentum), positioned absolutely inside the chat to fill the
+   space behind the gradient and footer. */
+.mw-mm-chat .mw-ainbox-scroller {
+  position: absolute;
+  top: 38px; /* clear the status bar */
+  left: 0;
+  right: 0;
+  bottom: 0;
+  flex: none;
+  z-index: 1;
+}
+.mw-mm-list {
+  /* The scroller's canvas is already positioned; the list is just
+     a flex column for message stacking. Padding bottom leaves room
+     for the typing indicator + composer to overlap into. */
+  display: flex;
+  flex-direction: column;
+  padding: 0 10px 96px;
+}
+.mw-mm-list::-webkit-scrollbar { display: none; }
+.mw-mm-message {
+  display: flex;
+  gap: 16px;
+  padding: 6px 0;
+}
+.mw-mm-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.mw-mm-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+.mw-mm-avatar-bot {
+  background: var(--background-primary);
+  border: 0.5px solid var(--border);
+  position: relative;
+}
+/* Render the quill icon via mask so it picks up --icon-primary
+   (theme-aware) instead of being baked into a brightness/invert
+   filter that breaks in light mode. */
+.mw-mm-avatar-bot img { display: none; }
+.mw-mm-avatar-bot::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 14px;
+  height: 14px;
+  background: var(--icon-primary);
+  -webkit-mask: url(/icons/magic-quill.svg) center / contain no-repeat;
+  mask: url(/icons/magic-quill.svg) center / contain no-repeat;
+}
+.mw-mm-message-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.mw-mm-message-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+.mw-mm-message-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  letter-spacing: -0.2px;
+  line-height: 16px;
+}
+.mw-mm-message-time {
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--text-secondary);
+  line-height: 14px;
+}
+.mw-mm-message-text {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-primary);
+  letter-spacing: -0.15px;
+  line-height: 18px;
+  margin: 0;
+}
+.mw-mm-footer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 4;
+}
+
+/* Typing indicator — same pattern as the AInbox DM indicator on
+   desktop: avatar stack + small dots bubble, positioned absolute
+   above the composer with a lower z-index so the composer's
+   background covers any overlap. */
+.mw-mm-typing {
+  position: absolute;
+  top: -24px;
+  left: 12px;
+  height: 31px;
+  width: 90px;
+  z-index: 0;
+  pointer-events: none;
+}
+.mw-mm-typing-face {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  bottom: 0;
+  background: var(--bg-surface-elevated-secondary);
+}
+.mw-mm-typing-face:nth-child(1) { left: 0; z-index: 3; }
+.mw-mm-typing-face:nth-child(2) { left: 22px; z-index: 2; }
+.mw-mm-typing-face:nth-child(3) { left: 44px; z-index: 1; }
+.mw-mm-typing-dots {
+  position: absolute;
+  left: 22px;
+  top: -4px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--bg-surface-elevated-secondary);
+  box-shadow: var(--shadow-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  z-index: 4;
+}
+.mw-mm-typing-dots span {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--text-secondary);
+  animation: mw-mm-typing 1.4s infinite ease-in-out;
+}
+.mw-mm-typing-dots span:nth-child(1) { animation-delay: 0s; }
+.mw-mm-typing-dots span:nth-child(2) { animation-delay: 0.2s; width: 4px; height: 4px; }
+.mw-mm-typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes mw-mm-typing {
+  0%, 80%, 100% { opacity: 0.3; }
+  40% { opacity: 1; }
+}
+
+.mw-mm-composer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px 24px;
+  background: var(--bg-surface-primary-subdued, #0c0c0e);
+  border-top: 0.5px solid var(--border);
+  position: relative;
+  z-index: 2;
+}
+.mw-mm-composer-placeholder {
+  flex: 1;
+  font-size: 13px;
+  color: var(--text-disabled);
+  letter-spacing: -0.2px;
+  line-height: 18px;
+}
+.mw-mm-composer-send {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+/* "Roam HQ" elevator overview — bottom sheet that slides up over the
+   map when the user scrolls this section into view. Matches the Figma
+   spec: surface-elevated-primary background, top-rounded corners,
+   stops below the status bar, 8px inner padding, floor cards inside. */
+.mw-elevator-sheet {
+  position: absolute;
+  top: 44px; /* sits 6px below the status bar */
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--bg-surface-elevated-primary);
+  display: flex;
+  flex-direction: column;
+  transform: translateY(100%);
+  transition: transform 480ms cubic-bezier(0.22, 1, 0.36, 1);
+  z-index: 12;
+  border-top-left-radius: var(--radius-2xl);
+  border-top-right-radius: var(--radius-2xl);
+  corner-shape: superellipse(1.6);
+  overflow: hidden;
+}
+.mw-elevator-shown { transform: translateY(0); }
+.mw-elevator-header {
+  display: grid;
+  grid-template-columns: 32px 1fr 32px;
+  align-items: center;
+  padding: 12px 12px 4px;
+}
+/* Strip the rotation that .mw-top-back applies (used to flip the
+   chevron) — the close icon is symmetric and shouldn't be rotated. */
+.mw-elevator-close { transform: none !important; }
+.mw-elevator-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  text-align: center;
+  letter-spacing: -0.2px;
+  line-height: 18px;
+}
+.mw-elevator-header-spacer { width: 32px; height: 32px; }
+.mw-elevator-floors {
+  flex: 1;
+  overflow: hidden;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.mw-elevator-floors::-webkit-scrollbar { display: none; }
+
+/* Each floor card matches the Figma `Floor` frame. */
+.mw-elevator-floor {
+  background: var(--background-primary);
+  border-radius: 16px;
+  corner-shape: superellipse(1.6);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.mw-elevator-floor-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  letter-spacing: -0.2px;
+  line-height: 18px;
+}
+.mw-elevator-grid {
+  display: grid;
+  gap: 4.873px;
+  align-items: stretch;
+}
+.mw-elevator-col {
+  display: flex;
+  flex-direction: column;
+  gap: 4.873px;
+}
+.mw-elevator-cell {
+  background: var(--background-primary);
+  border-radius: 4.873px;
+  padding: 4.873px;
+  min-height: 29.239px;
+  flex-shrink: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4.873px;
+  align-items: flex-start;
+  overflow: hidden;
+}
+.mw-elevator-cell-flex { flex: 1 1 auto; min-height: 29.239px; flex-shrink: 1; }
+.mw-elevator-cell-tall { min-height: 76px; }
+/* Wide cells expand to fill the column width — letting min-width
+   bleed past the grid column would overlap the next column. */
+.mw-elevator-cell-wide { width: 100%; }
+.mw-elevator-avatar {
+  width: 19.493px;
+  height: 19.493px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+/* Theater cell — stage rectangle on top + audience seat pattern below.
+   The cell itself is a column flex so the stage sits on top and the
+   dock pattern fills below it. */
+.mw-elevator-cell-theater {
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  justify-content: space-between;
+}
+.mw-elevator-stage {
+  width: 100%;
+  height: 41px;
+  background: var(--background-primary);
+  border-radius: 2.437px;
+  flex-shrink: 0;
+}
+.mw-elevator-dock {
+  display: flex;
+  flex-direction: column;
+  gap: 2.437px;
+  width: 100%;
+  margin-top: auto;
+}
+.mw-elevator-dock-row {
+  display: flex;
+  gap: 2.437px;
+}
+.mw-elevator-dock-bar {
+  flex: 1;
+  height: 2px;
+  background: var(--background-primary);
+  border-radius: 2px;
 }

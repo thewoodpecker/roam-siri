@@ -3683,3 +3683,29 @@
 [data-theme="light"] .big-meetings-view.edit-mode .command-screen {
   background: rgba(0, 0, 0, 0.06);
 }
+
+/* ========================================================
+   Global app-window shadow removal
+   --------------------------------------------------------
+   Every "app window" mock (MeetingWindow, Theater, AInbox,
+   MagicMinutes, Lobby, Magicast, On-It, On-Air, Calendar,
+   Recordings, the homepage map's `.sc-window`, the Drop-In
+   knock frame) declares `box-shadow: var(--shadow-5)` near
+   the top of its own CSS file. We strip them all globally
+   so the windows read flat against the wallpaper backdrop —
+   the hairline `--border` does the lifting on its own. */
+.sc-window,
+.meeting-win,
+.theater-win,
+.ainbox-window,
+.mm-win,
+.lb-win,
+.mc-win,
+.mc-window,
+.sc-onit-window,
+.onair-window,
+.cal-win,
+.rec-win,
+.fp-knock-frame {
+  box-shadow: none !important;
+}

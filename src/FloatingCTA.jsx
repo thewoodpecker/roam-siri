@@ -7,6 +7,23 @@ import { useEffect, useRef, useState } from 'react';
 // Works regardless of whether the page scrolls on `window` (FeaturePage) or on
 // a `position: fixed; overflow-y: auto` viewport (ShowcaseMap homepage).
 export default function FloatingCTA({ title = 'Ready to meet Roam?', sub = 'Give your team an office that thinks.', showAfter = 320 }) {
+  // Hide entirely on mobile — the CSS `display: none` rule can fall
+  // out of sync with the rest of the page styling on Safari (where
+  // we've seen the unstyled card render at the bottom of the
+  // document). Skipping the render is the only reliable guard.
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== 'undefined' && window.matchMedia
+      ? window.matchMedia('(max-width: 768px)').matches
+      : false
+  );
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return;
+    const mq = window.matchMedia('(max-width: 768px)');
+    const onChange = () => setIsMobile(mq.matches);
+    mq.addEventListener?.('change', onChange);
+    return () => mq.removeEventListener?.('change', onChange);
+  }, []);
+
   const [visible, setVisible] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const [dismissed, setDismissed] = useState(false);
@@ -90,6 +107,8 @@ export default function FloatingCTA({ title = 'Ready to meet Roam?', sub = 'Give
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
   }, []);
+
+  if (isMobile) return null;
 
   const shown = visible && !dismissed;
 

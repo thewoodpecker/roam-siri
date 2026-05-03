@@ -43,6 +43,7 @@ function RightControls({ theme, onToggleTheme, showGrid, onToggleGrid }) {
 import Navbar from './Navbar';
 import Footer from './Footer';
 import FloatingCTA from './FloatingCTA';
+import FooterCTA from './FooterCTA';
 import AInbox, { TypingIndicator } from './AInbox';
 import MeetingWindow from './MeetingWindow';
 import TheaterWindow from './TheaterWindow';
@@ -122,17 +123,29 @@ function MeetingPreview({ roomName = 'Daily Standup', autoReactions = true, roam
 }
 
 function TheaterPreview({ speakers, audience, backstage, stereoDemo } = {}) {
+  // Wrap in `.fp-knock-preview.fp-roamoji-preview > .fp-lock-frame`
+  // so the .theater-win uses the layout=render recipe (CLAUDE.md
+  // §0a-i) — the lock-frame becomes the scaled visible-size box
+  // (585×435) and the inner .theater-win sits at desktop intrinsic
+  // 780×580 with transform: scale(0.75). The visual container then
+  // hugs the rendered window exactly with 32px padding on the left
+  // and 32px vertical, matching the meeting-win-family pattern used
+  // by BigMeeting, ActiveSpeaker, Krisp, Locked Room, etc.
   return (
-    <TheaterWindow
-      win={noopWin('theater')}
-      onDrag={() => {}}
-      speakers={speakers || VIDEO_SPEAKERS.slice(0, 2)}
-      audience={audience || VIDEO_SPEAKERS}
-      backstage={backstage}
-      me={JOE}
-      onOpenChat={() => {}}
-      stereoDemo={stereoDemo}
-    />
+    <div className="fp-knock-preview fp-roamoji-preview">
+      <div className="fp-lock-frame">
+        <TheaterWindow
+          win={noopWin('theater')}
+          onDrag={() => {}}
+          speakers={speakers || VIDEO_SPEAKERS.slice(0, 2)}
+          audience={audience || VIDEO_SPEAKERS}
+          backstage={backstage}
+          me={JOE}
+          onOpenChat={() => {}}
+          stereoDemo={stereoDemo}
+        />
+      </div>
+    </div>
   );
 }
 
@@ -1092,17 +1105,19 @@ const AINBOX_FOLDER_SECTIONS = [
 
 function AInboxFoldersPreview() {
   return (
-    <AInbox
-      win={noopWin('ainbox')}
-      onDrag={() => {}}
-      initialChatId="all-hands"
-      sidebarScrollToBottom
-      staticMode
-      autoAddFolders
-      favoritesOverride={AINBOX_FOLDER_FAVORITES}
-      sectionsOverride={AINBOX_FOLDER_SECTIONS}
-      messagesOverride={AINBOX_AH_MESSAGES}
-    />
+    <div className="fp-ainbox-folders">
+      <AInbox
+        win={noopWin('ainbox')}
+        onDrag={() => {}}
+        initialChatId="all-hands"
+        sidebarScrollToBottom
+        staticMode
+        autoAddFolders
+        favoritesOverride={AINBOX_FOLDER_FAVORITES}
+        sectionsOverride={AINBOX_FOLDER_SECTIONS}
+        messagesOverride={AINBOX_AH_MESSAGES}
+      />
+    </div>
   );
 }
 
@@ -1594,8 +1609,12 @@ function AInboxHeroAnimated(props) {
 function MagicMinutesPreview({ meeting } = {}) {
   const resolved = { defaultTab: 'transcript', ...(meeting || {}) };
   return (
-    <div className="fp-mm-preview">
-      <MagicMinutes win={noopWin('magicminutes')} onDrag={() => {}} meeting={resolved} />
+    <div className="fp-knock-preview fp-roamoji-preview">
+      <div className="fp-lock-frame">
+        <div className="fp-mm-preview">
+          <MagicMinutes win={noopWin('magicminutes')} onDrag={() => {}} meeting={resolved} />
+        </div>
+      </div>
     </div>
   );
 }
@@ -1979,7 +1998,8 @@ function HubSpotIntegrationPreview() {
   const [restrict, setRestrict] = useState(false);
   return (
     <div className="fp-mm-preview fp-hubspot-preview">
-      <MagicMinutes win={noopWin('magicminutes')} onDrag={() => {}} meeting={{ defaultTab: 'summary' }} />
+      <div className="fp-hubspot-frame">
+        <MagicMinutes win={noopWin('magicminutes')} onDrag={() => {}} meeting={{ defaultTab: 'summary' }} />
         <div className="fp-hubspot-scrim" aria-hidden="true" />
         <div className="fp-hubspot-dialog" role="dialog" aria-modal="true" aria-labelledby="fp-hubspot-title">
         <div className="fp-hubspot-header">
@@ -2042,6 +2062,7 @@ function HubSpotIntegrationPreview() {
           <button type="button" className="fp-hubspot-btn fp-hubspot-btn-secondary">Cancel</button>
           <button type="button" className="fp-hubspot-btn fp-hubspot-btn-primary">Done</button>
         </div>
+      </div>
       </div>
     </div>
   );
@@ -2120,15 +2141,17 @@ function RecordingsPreview({ initialTab, onAirRecording } = {}) {
    in a stage so the iPhone/Pixel mock can drive each section's visual.
    `initialTab` and `initialView` let us point at the overworld, the map,
    the AInbox, or the camera roll without keeping per-section markup. */
-function MobilePreview({ initialTab = 'roam', initialView = 'overworld', initialPlatform = 'ios', lockscreen = false, theater = false, richMap = false } = {}) {
+function MobilePreview({ initialTab = 'roam', initialView = 'overworld', initialPlatform = 'ios', lockscreen = false, theater = false, richMap = false, autoKnock = false, elevator = false, magicMinutesChat = false, guestBadge = false, onItChat = false } = {}) {
   // When `richMap` is set we hand the desktop ShowcaseMap into MobileWindow via
   // the `mapContent` prop so the phone's map view shows the same rich room
   // treatment (badges, theater seats, game-room leaderboard, etc) as the
   // desktop showcase. CSS in MobileWindow.css clips the embedded map's chrome
-  // so only the floor renders inside the phone screen.
+  // so only the floor renders inside the phone screen. `autoKnock` triggers a
+  // native mobile knock dialog → meeting flow inside the simulator.
   const mapContent = richMap && initialView === 'map'
     ? <MapPreview initialFloor="R&D" />
     : null;
+  const resolvedPlatform = initialPlatform;
   return (
     <div className="fp-mobile-preview">
       <MobileWindow
@@ -2136,10 +2159,15 @@ function MobilePreview({ initialTab = 'roam', initialView = 'overworld', initial
         onDrag={() => {}}
         initialTab={initialTab}
         initialView={initialView}
-        initialPlatform={initialPlatform}
+        initialPlatform={resolvedPlatform}
         lockscreen={lockscreen}
         theater={theater}
         mapContent={mapContent}
+        autoKnock={autoKnock}
+        elevator={elevator}
+        magicMinutesChat={magicMinutesChat}
+        guestBadge={guestBadge}
+        onItChat={onItChat}
       />
     </div>
   );
@@ -2214,6 +2242,105 @@ const USE_CASE_LINKS = [
   { id: 4, name: 'Office Hours',       slug: 'ro.am/joe/office',    duration: '20m', dropIn: true,  active: true,  thumb: '/lobby/lobby-green.png'  },
   { id: 5, name: 'VIP Access',         slug: 'ro.am/joe/vip',       duration: '60m', dropIn: true,  active: false, thumb: '/lobby/lobby-purple.png' },
 ];
+
+// Live embed of the Roam lobby widget inside the mock browser chrome.
+// Used by the Lobby feature page hero. The mock LobbyBookingPreview
+// (defined further below) is kept intact for future use cases where
+// the live widget can't be loaded (e.g. offline screenshots).
+//
+// To avoid a layout jump when the iframe loads:
+// 1. Reserve a height (EMBED_RESERVED_HEIGHT) up-front so the browser
+//    chrome paints at its full size on first render.
+// 2. Keep the host at `opacity: 0` until the first `onSizeChange`
+//    callback fires, then transition to opacity: 1 (~250ms fade).
+const EMBED_RESERVED_HEIGHT = 660; // matches the typical default-config embed height
+function LobbyBookingEmbedPreview() {
+  // Mirror the page's data-theme so the embed can switch with the
+  // light/dark toggle. The Roam embed widget only reads `theme` at
+  // init time, so on every theme change we wipe the host and
+  // re-init. Keyed on `theme` via the effect dep.
+  const readTheme = () => (
+    typeof document !== 'undefined'
+      ? (document.querySelector('.fp-page')?.dataset.theme
+          || document.documentElement.dataset.theme
+          || 'dark')
+      : 'dark'
+  );
+  const [theme, setTheme] = useState(readTheme);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    const sync = () => setTheme(readTheme());
+    const target = document.querySelector('.fp-page') || document.documentElement;
+    const obs = new MutationObserver(sync);
+    obs.observe(target, { attributes: true, attributeFilter: ['data-theme'] });
+    return () => obs.disconnect();
+  }, []);
+
+  useEffect(() => {
+    setLoaded(false);
+    const SCRIPT_SRC = 'https://ro.am/lobbylinks/embed.js';
+    const initEmbed = () => {
+      const parentElement = document.getElementById('roam-lobby');
+      if (!parentElement || !window.Roam?.initLobbyEmbed) return;
+      // Wipe any prior embed (theme change re-runs this effect)
+      parentElement.innerHTML = '';
+      // Keep the reserved height so the browser doesn't collapse
+      // between init and first onSizeChange.
+      parentElement.style.height = `${EMBED_RESERVED_HEIGHT}px`;
+      window.Roam.initLobbyEmbed({
+        url: 'https://ro.am/roam/',
+        parentElement,
+        lobbyConfiguration: 'default',
+        accentColor: '#0059DC',
+        theme,
+        onSizeChange: (width, height) => {
+          parentElement.style.height = `${height}px`;
+          setLoaded(true);
+        },
+      });
+    };
+    const existing = document.querySelector(`script[src="${SCRIPT_SRC}"]`);
+    if (existing) {
+      if (window.Roam?.initLobbyEmbed) initEmbed();
+      else existing.addEventListener('load', initEmbed, { once: true });
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = SCRIPT_SRC;
+    script.async = true;
+    script.addEventListener('load', initEmbed, { once: true });
+    document.body.appendChild(script);
+  }, [theme]);
+
+  return (
+    <div className="fp-lbk-stage">
+      <div className="fp-lbk-browser">
+        <div className="fp-lbk-chrome">
+          <div className="fp-lbk-lights">
+            <span className="fp-lbk-light fp-lbk-light-close" />
+            <span className="fp-lbk-light fp-lbk-light-min" />
+            <span className="fp-lbk-light fp-lbk-light-max" />
+          </div>
+          <div className="fp-lbk-urlbar">ro.am/roam</div>
+          <div className="fp-lbk-chrome-spacer" />
+        </div>
+        <div
+          id="roam-lobby"
+          style={{
+            minWidth: 320,
+            width: '100%',
+            height: EMBED_RESERVED_HEIGHT,
+            padding: '32px 0',
+            boxSizing: 'content-box',
+            opacity: loaded ? 1 : 0,
+            transition: 'opacity 250ms ease-out',
+          }}
+        />
+      </div>
+    </div>
+  );
+}
 
 function LobbyBookingPreview() {
   const [mode, setMode] = useState('minimal');
@@ -2551,7 +2678,6 @@ function LobbyShelfPreview() {
     { src: '/shelf/walt.webp',              alt: 'Walt Disney portrait' },
     { src: '/shelf/ready-player-one.jpeg',  alt: 'Movie poster' },
     { src: '/shelf/epcot.jpg',              alt: 'Spaceship Earth' },
-    { src: '/shelf/moon.jpeg',              alt: 'Moon' },
   ];
   return (
     <div className="fp-lobby-shelf">
@@ -2797,7 +2923,7 @@ function OnAirCurtainVisual() {
         src="/on-air/curtain-open.mp4"
         muted
         playsInline
-        preload="auto"
+        preload="metadata"
         aria-hidden="true"
       />
       <div className={`fp-onair-curtain-content ${started ? 'fp-onair-curtain-content-started' : ''}`}>
@@ -4056,7 +4182,7 @@ function FlashCard({ supertitle, title, media, back }) {
           loop
           muted
           playsInline
-          preload="auto"
+          preload="metadata"
           disablePictureInPicture
           disableRemotePlayback
         />
@@ -4094,7 +4220,7 @@ function FlashCard({ supertitle, title, media, back }) {
 }
 
 const MAGNIFY_TARGET_PERSON = 'Michael W.';
-const MAGNIFY_TARGET_CITY = 'SFO';
+const MAGNIFY_TARGET_CITY = 'MIA';
 
 function MapPreview({ spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, hideOnIt = false, onItAutoOpen = false, autoKnock = false, shelfAutoOpen = false, shareAutoOpen = false, initialFloor = 'Preview', showSidebar = false, autoCycleFloors = false, autoCycleDms = false, showPhysicalTags = false, spotlightSearch = false, onAirOverride = null, children = null } = {}) {
   const [pageTheme, setPageTheme] = useState(() =>
@@ -4111,6 +4237,27 @@ function MapPreview({ spotifyAlwaysOpen = false, githubAlwaysOpen = false, figma
   const wrapRef = useRef(null);
   const [magnifyPos, setMagnifyPos] = useState(null);
   const [magnifyHost, setMagnifyHost] = useState(null);
+  // Spotlight overlay portals into the embedded map's `.sc-window` so
+  // the scrim + dialog live INSIDE the window container (clipped to
+  // its rounded corners, anchored to the visible map area). Without
+  // this, the overlay sits as a sibling of the ShowcaseMap inside
+  // `.fp-map-preview` and bleeds onto the wallpaper around the
+  // window when the window is centered/scaled on mobile.
+  const [spotlightHost, setSpotlightHost] = useState(null);
+  useEffect(() => {
+    if (!spotlightSearch) return;
+    let raf = 0;
+    const findHost = () => {
+      const el = wrapRef.current?.querySelector('.miniRoamOS .sc-window');
+      if (el) {
+        setSpotlightHost(el);
+      } else {
+        raf = requestAnimationFrame(findHost);
+      }
+    };
+    findHost();
+    return () => cancelAnimationFrame(raf);
+  }, [spotlightSearch]);
   useEffect(() => {
     if (!showPhysicalTags) return;
     const host = wrapRef.current?.closest('.fp-section-visual') || null;
@@ -4156,7 +4303,7 @@ function MapPreview({ spotifyAlwaysOpen = false, githubAlwaysOpen = false, figma
     <div ref={wrapRef} className={className}>
       <ShowcaseMap embedded autoKnock={autoKnock} initialFloor={initialFloor} spotifyAlwaysOpen={spotifyAlwaysOpen} githubAlwaysOpen={githubAlwaysOpen} figmaAlwaysOpen={figmaAlwaysOpen} hideOnIt={hideOnIt} onItAutoOpen={onItAutoOpen} shelfAutoOpen={shelfAutoOpen} shareAutoOpen={shareAutoOpen} theme={pageTheme} autoCycleFloors={autoCycleFloors} autoCycleDms={autoCycleDms} showPhysicalTags={showPhysicalTags} onAirOverride={onAirOverride} />
       {children}
-      {spotlightSearch && (
+      {spotlightSearch && spotlightHost && ReactDOM.createPortal(
         <>
           <div className="fp-spotlight-scrim" aria-hidden="true" />
           <div className="fp-spotlight" role="search">
@@ -4190,7 +4337,8 @@ function MapPreview({ spotifyAlwaysOpen = false, githubAlwaysOpen = false, figma
               ))}
             </div>
           </div>
-        </>
+        </>,
+        spotlightHost
       )}
       {showPhysicalTags && magnifyPos && magnifyHost && ReactDOM.createPortal(
         <Magnify
@@ -4552,7 +4700,7 @@ function LockedRoomPreview() {
   }, []);
 
   return (
-    <div className="fp-knock-preview">
+    <div className="fp-knock-preview fp-roamoji-preview">
       <div className="fp-lock-frame" ref={frameRef}>
         <MeetingWindow
           win={noopWin('meeting')}
@@ -4841,6 +4989,7 @@ function KrispNoiseCancellationPreview() {
   const pct = `${volume * 100}%`;
 
   return (
+    <div className="fp-knock-preview">
     <div className="fp-krisp-frame">
       <MeetingPreview autoReactions={false} roamojiOpen={false} />
       <div className="fp-krisp-popover">
@@ -4886,17 +5035,28 @@ function KrispNoiseCancellationPreview() {
         <KrispToggleRow title="Disable Audio Processing" sub="Not Recommended" on={toggles.disable} onToggle={toggle('disable')} />
       </div>
     </div>
+    </div>
   );
 }
 
 function RoamojiReactionsPreview() {
   const fourPeople = [
     VIDEO_SPEAKERS[1], // Lauren Hayes
-    VIDEO_SPEAKERS[2], // Ashley Brooks
     VIDEO_SPEAKERS[5], // Ethan Bishop
-    VIDEO_SPEAKERS[6], // Sarah Mitchell
   ];
-  return <MeetingPreview people={fourPeople} incomingGesturesEnabled={true} />;
+  // Wrap in `.fp-knock-preview > .fp-lock-frame` so it picks up the
+  // same scale-not-resize mobile recipe as Locked Room / Krisp /
+  // Raised Hands. The frame is the scaled box; the inner meeting-win
+  // fills it 100%×100%. The `fp-roamoji-preview` marker class on the
+  // outer lets the mobile CSS pin this one to the left edge instead
+  // of centering (matches the section's left-of-content layout).
+  return (
+    <div className="fp-knock-preview fp-roamoji-preview">
+      <div className="fp-lock-frame">
+        <MeetingPreview people={fourPeople} incomingGesturesEnabled={true} />
+      </div>
+    </div>
+  );
 }
 
 function WbIcon({ name, size = 24 }) {
@@ -5508,6 +5668,8 @@ function WhiteboardPreview() {
   };
 
   return (
+    <div className="fp-knock-preview fp-roamoji-preview">
+    <div className="fp-lock-frame">
     <div className="fp-wb-window fp-mp-host" ref={windowRef}>
       <div
         ref={canvasRef}
@@ -5669,6 +5831,8 @@ function WhiteboardPreview() {
       </div>
       <SimulatedCursors containerRef={windowRef} count={2} />
       <MultiplayerCursor containerRef={windowRef} />
+    </div>
+    </div>
     </div>
   );
 }
@@ -5864,6 +6028,8 @@ function MediaBoardPreview() {
   };
 
   return (
+    <div className="fp-knock-preview fp-roamoji-preview">
+    <div className="fp-lock-frame">
     <div className="fp-mb-window fp-mp-host" ref={windowRef} aria-hidden="true">
       <div className="fp-mb-titlebar">
         <button type="button" className="fp-wb-iconbtn" aria-label="Close">
@@ -5959,6 +6125,8 @@ function MediaBoardPreview() {
       <SimulatedCursors containerRef={windowRef} count={2} />
       <MultiplayerCursor containerRef={windowRef} />
     </div>
+    </div>
+    </div>
   );
 }
 
@@ -5979,7 +6147,16 @@ function ClosedCaptionsPreview() {
     line(emily, 'Just one open thread on punctuation timing — I’ll have an answer by tomorrow.'),
     line(ethan, 'Sounds good. Let’s plan to walk through it again on Friday.'),
   ];
-  return <MeetingPreview people={fourPeople} autoReactions={false} roamojiOpen={false} captionsScript={script} />;
+  // Same wrap as Roamoji Reactions — `.fp-knock-preview > .fp-lock-frame`
+  // for the scale-not-resize mobile recipe + `.fp-roamoji-preview` to
+  // pin left at 32px instead of centering.
+  return (
+    <div className="fp-knock-preview fp-roamoji-preview">
+      <div className="fp-lock-frame">
+        <MeetingPreview people={fourPeople} autoReactions={false} roamojiOpen={false} captionsScript={script} />
+      </div>
+    </div>
+  );
 }
 
 function BootChatPreview() {
@@ -6108,6 +6285,7 @@ export const FEATURES = {
         title: 'Feel the Office Buzz',
         desc: 'Click a seat to enter a room. Your new location is visible on the map. A talking indicator animates on your head as you talk. As people move around and talk, your company will feel the energy of the movement and presence — just as if you were in the same physical office. Company Culture 📈',
         visual: <MapPreview autoKnock initialFloor="DropIn" />,
+        mapAlign: 'center',
       },
       {
         variant: 'cards',
@@ -6157,11 +6335,13 @@ export const FEATURES = {
         title: 'Spotlight Search',
         desc: 'Looking for someone? Instantly spotlight them on the map, on any floor. It’s like an automatic version of "Where’s Waldo".',
         visual: <MapPreview spotlightSearch initialFloor="Commercial" />,
+        mapAlign: 'center',
       },
       {
         title: 'Elevator',
         desc: 'Turn your HQ into a skyscraper! Add floors as your company expands. Organize the company by floor, if you like. See multiple floors from the same view, and scroll up and down to see everyone.',
         visual: <MapPreview initialFloor="R&D" showSidebar autoCycleFloors />,
+        mapAlign: 'right',
       },
       {
         title: 'Interact on the Map',
@@ -6236,6 +6416,7 @@ export const FEATURES = {
     title: 'Knock. Talk. Done.',
     hero: <>Turn next week’s 60 minute meeting into a 5 minute conversation, right now. Audio-only private office or fully featured video conferencing rooms, right on the map.<br /><br />Knock to drop-in to anyone who is available for a quick meeting. The average meeting time in Roam is just 8 minutes long!</>,
     visual: <MapPreview autoKnock initialFloor="DropIn" />,
+    heroMapAlign: 'center',
     quote: {
       quote: '“Walk out of a meeting … as soon as it is obvious you aren’t adding value … It is not rude to leave, it is rude to make someone stay and waste their time.”',
       author: 'Elon Musk',
@@ -6247,6 +6428,7 @@ export const FEATURES = {
         title: 'Shelf',
         desc: 'Showcase your favorite pictures, books, movies, awards, achievements and more on your virtual shelf. Discover unexpected connections. You’ll get to know your team faster in 2 minutes in Roam than 2 years on Zoom.',
         visual: <MapPreview shelfAutoOpen initialFloor="Shelf" />,
+        mapAlign: 'center',
       },
       {
         type: 'quote',
@@ -6282,6 +6464,7 @@ export const FEATURES = {
         title: 'Screenshare',
         desc: 'Ultra high resolution screenshare with optional soundshare.',
         visual: <MapPreview shareAutoOpen initialFloor="R&D" />,
+        mapAlign: 'center',
       },
       {
         title: 'Raised Hands',
@@ -6293,12 +6476,14 @@ export const FEATURES = {
         desc: 'Blur your background or upload an image to use as your virtual background.',
         visual: <VirtualBackgroundPreview />,
         variant: 'horz',
+        interactive: true,
       },
       {
         title: 'Face Touch Up',
         desc: 'Add Face Touch Up effects to beautify your skin!',
         visual: <FaceTouchUpPreview />,
         variant: 'horz-reverse',
+        interactive: true,
       },
       {
         title: 'Krisp Noise Cancellation',
@@ -6310,6 +6495,7 @@ export const FEATURES = {
         title: 'Roamoji Reactions',
         desc: 'Fist bump, high five, or show respect by bowing with Roamoji reactions. There’s even a secret FOUNDER MODE unlock for those adventurous members who can figure it out…',
         visual: <RoamojiReactionsPreview />,
+        interactive: true,
       },
       {
         title: 'Closed Captions',
@@ -7036,7 +7222,11 @@ export const FEATURES = {
       {
         title: 'Interactive Transcription',
         desc: 'Within seconds, get a fully interactive transcript of your Magicast. Click any line to jump to that part of the recording.',
-        visual: <MagicastViewerWindow initialTrimOpen={false} initialSideTab="transcript" />,
+        visual: (
+          <div className="fp-mv-transcript-section" style={{ display: 'contents' }}>
+            <MagicastViewerWindow initialTrimOpen={false} initialSideTab="transcript" />
+          </div>
+        ),
       },
       {
         title: 'Search Magicast Transcript',
@@ -7453,6 +7643,7 @@ export const FEATURES = {
         title: 'On-Air, On the Map',
         desc: 'Enter a theater on Broadway, for a Movie, at a Museum or at Apple Park and you’re immersed in a darker, quiet space focused on the stage. The Roam Theater is no different. Enter and you’re instantly transported to a different place with a focused view on the curtain and the stage.',
         visual: <OnAirMapPreview />,
+        mapAlign: 'right',
       },
       {
         title: 'Curtain',
@@ -7597,7 +7788,7 @@ export const FEATURES = {
   'mobile': {
     eyebrow: 'Mobile',
     title: 'Roam While You Roam',
-    hero: 'iOS and Android apps are your Virtual HQ in your pocket. The full Roam experience — overworld, map, AInbox, theater, magic minutes, stories, and your On-It assistant — wherever you are.',
+    hero: 'Native mobile apps for iOS and Android put your Virtual HQ in your pocket. The full Roam experience — overworld, map, AInbox, theater, magic minutes, stories, and your On-It assistant — wherever you are.',
     visual: <MobilePreview />,
     sections: [
       {
@@ -7613,12 +7804,12 @@ export const FEATURES = {
       {
         title: 'Drop-In Meetings',
         desc: 'Tap any room to drop into a voice or video meeting.',
-        visual: <MobilePreview initialTab="roam" initialView="map" />,
+        visual: <MobilePreview initialTab="roam" initialView="map" autoKnock />,
       },
       {
         title: 'Switch Floors from the Elevator',
         desc: 'See the entire multi-floor company at a glance. Swipe up or down to scroll each floor. Tap to jump to any floor you want to visit.',
-        visual: <MobilePreview initialTab="roam" initialView="map" initialPlatform="android" />,
+        visual: <MobilePreview initialTab="roam" initialView="map" initialPlatform="android" elevator />,
       },
       {
         title: 'Theater',
@@ -7633,12 +7824,12 @@ export const FEATURES = {
       {
         title: 'Magic Minutes',
         desc: 'Get Magic Minutes from a meeting on your mobile device. Prompt your Magic Minutes with questions.',
-        visual: <MagicMinutesPreview />,
+        visual: <MobilePreview magicMinutesChat />,
       },
       {
         title: 'Guest Badges',
         desc: "Grant guest badges to your contacts to chat with people outside your organization and allow them to visit you in Roam. They're free!",
-        visual: <MobilePreview initialTab="ainbox" />,
+        visual: <MobilePreview initialTab="ainbox" guestBadge />,
       },
       {
         title: 'Stories',
@@ -7648,7 +7839,7 @@ export const FEATURES = {
       {
         title: 'On-It is On-It!',
         desc: "On-It is your AI Assistant, included in Roam. Bring your On-It with you wherever you are. Tell your On-It to schedule a meeting, follow up with people, or run any routine it's been trained to do — right from your phone.",
-        visual: <MobilePreview initialTab="ainbox" />,
+        visual: <MobilePreview onItChat />,
       },
       {
         title: 'Apple Watch',
@@ -7710,6 +7901,40 @@ export const FEATURES = {
       },
       { variant: 'reviews' },
       STANDARD_PRICING_COMPARE,
+    ],
+  },
+  'pricing': {
+    eyebrow: 'Pricing',
+    title: 'Save 93% With Our 9 for 1 Bundle',
+    hero: 'Customer-friendly pricing principles that respect your team and your budget.',
+    visual: null,
+    sections: [
+      STANDARD_PRICING_COMPARE,
+      {
+        variant: 'explore',
+        title: 'Why Bundle?',
+        desc: 'Nine products in one Virtual Office Super Bundle, designed to work together from day one.',
+        itemMarker: 'bullet',
+        items: [
+          'One bill, one vendor, one identity, one office — instead of nine SaaS subscriptions to chase.',
+          'Every product is integrated by default. Magic Minutes shows up in AInbox, your On-It assistant knows your office, Drop-In Meetings live on the same map as your Theater.',
+          'Procurement, security review, and onboarding happen once — not nine times.',
+          'AI is built into every surface from day one. No “AI add-on” SKU at $50/month.',
+          'Bring guests in for free — your customers, prospects, and partners can join you in Roam without a paid seat.',
+        ],
+      },
+      {
+        variant: 'cards',
+        cards: [
+          { title: 'Pay Only for Active Members', desc: 'You’re only charged for members who actually use Roam each month. Inactive seats don’t count.' },
+          { title: '14-Day Free Trial', desc: 'Every new team member gets a 14-day free trial before they show up on your bill.' },
+          { title: 'No Annual Contracts', desc: 'Pay monthly. Cancel anytime. We earn your business every month.' },
+          { title: 'Guests Are Free', desc: 'External collaborators with guest badges don’t count toward your active member count.' },
+          { title: 'Same Price for Everyone', desc: 'No discounts, no negotiations, no enterprise-tier surprises. The price you see is the price everyone pays.' },
+          { title: 'Predictable Rates', desc: 'Annual rate adjustments are published in December for two years forward — so you can plan ahead with confidence.' },
+        ],
+      },
+      { variant: 'reviews' },
     ],
   },
 };
@@ -7806,7 +8031,55 @@ function SectionLinkButton({ featureSlug, slug }) {
   );
 }
 
-function FeatureSection({ eyebrow, title, subtitle, titleImage, desc, visual, icons, variant, cards, bullets, left, right, columns, columnsStyle, leadContent, items, itemMarker, flashcards, featureSlug, rows, body, subBullets, footer }) {
+// IntersectionObserver-driven lazy mounter for section visuals. The
+// drop-in feature page has 25+ heavy section visuals (multiple
+// embedded ShowcaseMaps, MeetingWindows, Whiteboard, MediaBoard,
+// etc.) and mounting them all at once is brutal on mobile Safari —
+// the whole React tree stalls and scrolling janks. Wrapping each
+// visual in `LazyVisualMount` means the visual is `null` until the
+// placeholder enters the viewport (with a 600px rootMargin so it's
+// ready before the user scrolls into it).
+//
+// Reserves a `min-height` matching the most common visual heights
+// (499px for meeting-win, 537px for map-preview, 720px for editor)
+// so the page layout doesn't reflow as visuals mount in. Mobile uses
+// the same heights via the `:has()` rules in FeaturePage.css.
+function LazyVisualMount({ children, minHeight = 499, rootMargin = '600px 0px' }) {
+  const ref = useRef(null);
+  const [shown, setShown] = useState(false);
+  useEffect(() => {
+    if (shown) return;
+    if (typeof IntersectionObserver === 'undefined') {
+      setShown(true);
+      return;
+    }
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        setShown(true);
+        obs.disconnect();
+      }
+    }, { rootMargin });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [shown, rootMargin]);
+  // Once mounted, render children directly (no wrapper) so DOM
+  // traversal from inside the visual (e.g. shelf-win's portal
+  // `closest('.fp-section-visual')` lookup, the rules in
+  // FeaturePage.css that target `.fp-section-visual > .fp-map-preview`,
+  // etc.) still works as if the visual were a direct child of
+  // `.fp-section-visual`.
+  if (shown) return <>{children}</>;
+  // Placeholder needs an explicit width — without it the flex parent
+  // (.fp-section-visual is `display: flex; align-items: center;
+  // justify-content: center` on mobile) sizes the div to 0 wide, and
+  // IntersectionObserver treats a 0-area rect as never intersecting.
+  // Result: visuals stay stuck on the placeholder forever on mobile.
+  return <div ref={ref} style={{ minHeight, width: '100%' }} aria-hidden="true" />;
+}
+
+function FeatureSection({ eyebrow, title, subtitle, titleImage, desc, visual, icons, variant, cards, bullets, left, right, columns, columnsStyle, leadContent, items, itemMarker, flashcards, featureSlug, rows, body, subBullets, footer, mapAlign, interactive }) {
   if (variant === 'reviews') {
     return <HomepageReviews limit={items?.length || 6} />;
   }
@@ -7989,7 +8262,7 @@ function FeatureSection({ eyebrow, title, subtitle, titleImage, desc, visual, ic
                 />
               </div>
             )}
-            <h3 className="fp-card-title text-title-4">{c.title}</h3>
+            <h3 className="fp-card-title text-headline">{c.title}</h3>
             <p className="fp-card-desc text-body">{c.desc}</p>
           </div>
         ))}
@@ -8035,7 +8308,11 @@ function FeatureSection({ eyebrow, title, subtitle, titleImage, desc, visual, ic
           </div>
         )}
       </div>
-      {visual && <div className="fp-section-visual">{visual}</div>}
+      {visual && (
+        <div className="fp-section-visual" data-map-align={mapAlign || undefined} data-interactive={interactive ? 'true' : undefined}>
+          <LazyVisualMount>{visual}</LazyVisualMount>
+        </div>
+      )}
     </section>
   );
 }
@@ -8044,8 +8321,15 @@ function FeatureQuote({ quote, author, role }) {
   return (
     <section className="fp-quote">
       <div className="fp-quote-inner">
-        <div className="fp-quote-author">{author}</div>
-        {role && <div className="fp-quote-role">{role}</div>}
+        <div className="fp-quote-attribution">
+          <span className="fp-quote-author">{author}</span>
+          {role && (
+            <>
+              <span className="fp-quote-sep" aria-hidden="true">·</span>
+              <span className="fp-quote-role">{role}</span>
+            </>
+          )}
+        </div>
         <blockquote className="fp-quote-text">{quote}</blockquote>
       </div>
     </section>
@@ -8139,7 +8423,7 @@ function FeaturePageInner({ slug }) {
       </div>
 
       <div className="fp-hero-visual">
-        <div className="fp-hero-stage">{feature.visual}</div>
+        <div className="fp-hero-stage" data-map-align={feature.heroMapAlign || undefined}>{feature.visual}</div>
       </div>
 
       {feature.quote && <FeatureQuote {...feature.quote} />}
@@ -8150,21 +8434,7 @@ function FeaturePageInner({ slug }) {
           : <FeatureSection key={i} featureSlug={slug} {...s} />
       ))}
 
-      <div className="fp-footer-cta">
-        <div className="fp-footer-cta-inner">
-          <div className="fp-footer-cta-lead">
-            <img className="fp-footer-cta-icon" src="/icons/roam-gold-icon.png" alt="" />
-            <div className="fp-footer-cta-text">
-              <h2 className="fp-footer-cta-title">Ready to meet Roam?</h2>
-              <p className="fp-footer-cta-sub text-body">Give your team an office that thinks. Book a demo or kick the tires for free.</p>
-            </div>
-          </div>
-          <div className="fp-cta-row">
-            <button className="sc-promo-btn">Book Demo</button>
-            <button className="sc-promo-btn">Free Trial</button>
-          </div>
-        </div>
-      </div>
+      <FooterCTA title="Ready to meet Roam?" />
 
       <Footer />
 

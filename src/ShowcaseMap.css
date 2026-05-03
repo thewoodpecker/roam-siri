@@ -252,7 +252,12 @@
   z-index: 99999;
 }
 
-.sc-navbar-wrap nav > div {
+/* Inset the desktop nav bar's content by 8px from the rounded
+   container edges. The mobile menu overlay also matches this
+   selector but it's `position: fixed` and must paint to viewport
+   edges, so we exclude `.fixed` (the mobile overlay class) from
+   the rule. */
+.sc-navbar-wrap nav > div:not(.fixed) {
   margin: 8px !important;
 }
 
@@ -299,7 +304,7 @@
 }
 
 .sc-nav-link {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-family-primary);
   font-size: 13px;
   font-weight: 400;
   color: var(--text-secondary);
@@ -315,7 +320,7 @@
 }
 
 .sc-nav-btn {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-family-primary);
   font-size: 13px;
   font-weight: 400;
   color: var(--text-primary);
@@ -457,7 +462,7 @@
 }
 
 .sc-promo-stat-value {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-family-primary);
   font-size: 22px;
   font-weight: 600;
   line-height: 28px;
@@ -468,7 +473,7 @@
 }
 
 .sc-promo-stat-label {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-family-primary);
   font-size: 14px;
   font-weight: 500;
   color: #e7e8e9;
@@ -477,7 +482,7 @@
 }
 
 .sc-promo-stat-category {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-family-primary);
   font-size: 14px;
   font-weight: 400;
   color: #6a6d71;
@@ -731,7 +736,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-family-primary);
   font-size: 14px;
   line-height: 20px;
   font-weight: 400;
@@ -755,7 +760,7 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-family-primary);
   font-size: 16px;
   line-height: 24px;
   font-weight: 500;
@@ -983,7 +988,7 @@
 }
 
 .sc-promo-btn {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-family-primary);
   font-size: 14px;
   font-weight: 500;
   color: var(--btn-text);
@@ -1013,7 +1018,7 @@
 .sc-promo-placeholder {
   flex: 1;
   padding: 0 16px;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-family-primary);
   font-size: 14px;
   font-weight: 400;
   color: var(--text-secondary);
@@ -1025,7 +1030,7 @@
   padding: 0 16px;
   background: var(--text-primary);
   border: none;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-family-primary);
   font-size: 14px;
   font-weight: 500;
   color: var(--bg-surface-primary);
@@ -1337,7 +1342,7 @@
 }
 
 .sc-mock-heading {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-family-primary);
   font-size: 20px;
   font-weight: 600;
   color: #fff;
@@ -1350,7 +1355,7 @@
 }
 
 .sc-mock-text {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-family-primary);
   font-size: 16px;
   font-weight: 400;
   color: rgba(255, 255, 255, 0.5);
@@ -1597,7 +1602,7 @@
 }
 
 .sc-v2-hero-subtitle {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-family-primary);
   font-size: 14px;
   font-weight: 500;
   color: var(--text-secondary);
@@ -1729,11 +1734,13 @@
   background: #28C840;
 }
 
-/* Unfocused map window: grey traffic lights */
+/* Unfocused map window: theme-aware grey traffic lights so they
+   stay visible in light mode (rgba(255,255,255,0.15) was invisible
+   on the light wallpaper). */
 .sc-window-unfocused .sc-light-close,
 .sc-window-unfocused .sc-light-minimize,
 .sc-window-unfocused .sc-light-maximize {
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--background-primary);
 }
 
 /* Content area */
@@ -1844,7 +1851,7 @@
 }
 
 .sc-onair-tag-text {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-family-primary);
   font-size: 10px;
   line-height: 12px;
   font-weight: 500;
@@ -1999,8 +2006,11 @@
   justify-content: center;
 }
 
+/* Drop the `brightness(10)` boost — the SVG already has white
+   fills, and on Safari the filter rasterizes the alpha-layered
+   paths into a hard solid blob. */
 .sc-story-overlay img {
-  filter: brightness(10);
+  filter: none;
 }
 
 .sc-story-tip {
@@ -2946,6 +2956,7 @@
   opacity: 1;
 }
 
+
 @keyframes sc-wonder-talking {
   0%, 27%, 64%, 93% { opacity: 1; }
   10%, 24%, 37%, 74% { opacity: 0.5; }
@@ -3064,7 +3075,7 @@
 }
 
 .sc-avatar-name span {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-family-primary);
   font-size: 9px;
   font-weight: 500;
   color: rgba(255, 255, 255, 0.5);
@@ -3108,7 +3119,7 @@
 }
 
 .sc-chat-text {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-family-primary);
   font-size: 10px;
   color: rgba(255, 255, 255, 0.7);
   white-space: nowrap;
@@ -3177,7 +3188,7 @@
 }
 
 .sc-lobby-name {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-family-primary);
   font-size: 12px;
   font-weight: 500;
   color: var(--text-primary);
@@ -3192,7 +3203,7 @@
 }
 
 .sc-lobby-meta span {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-family-primary);
   font-size: 10px;
   font-weight: 400;
   color: var(--text-secondary);
@@ -3207,7 +3218,7 @@
   background: rgba(70, 208, 143, 0.2);
   padding: 1px 4px;
   border-radius: 4px;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-family-primary);
   font-size: 10px;
   font-weight: 500;
   color: #46D08F !important;
@@ -3241,7 +3252,7 @@
 }
 
 .sc-floor-name {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-family-primary);
   font-size: 12px;
   font-weight: 500;
   color: var(--text-primary);
@@ -3398,7 +3409,7 @@
   transform: translateX(-50%) translateY(4px);
   background: var(--bg-surface-elevated-primary);
   color: var(--text-primary);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-family-primary);
   font-size: 11px;
   font-weight: 500;
   padding: 4px 8px;
@@ -3421,7 +3432,7 @@
 }
 
 .sc-toolbar-pill-label span {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-family-primary);
   font-size: 12px;
   font-weight: 400;
   color: var(--text-primary);
@@ -3591,7 +3602,7 @@
 }
 
 .sc-knock-label {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-family-primary);
   font-size: 14px;
   font-weight: 400;
   line-height: 20px;
@@ -3628,7 +3639,7 @@
   color: var(--text-primary);
   border: 0;
   border-radius: 8px;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-family-primary);
   font-size: 14px;
   font-weight: 400;
   line-height: 20px;
@@ -3872,7 +3883,7 @@
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-family-primary);
   font-size: 13px;
   font-weight: 500;
   color: var(--text-primary);
@@ -3938,7 +3949,7 @@
   align-items: center;
   gap: 16px;
   padding: 16px;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-family-primary);
   font-size: 14px;
   font-weight: 400;
   line-height: 20px;
@@ -3998,7 +4009,7 @@
   color: white;
   border: 0;
   border-radius: 12px;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-family-primary);
   font-size: 14px;
   font-weight: 400;
   line-height: 20px;
@@ -4043,7 +4054,7 @@
   display: flex;
   flex-direction: column;
   padding: 8px 16px 16px;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-family-primary);
   font-size: 14px;
   letter-spacing: -0.15px;
   color: var(--text-primary);
@@ -4230,7 +4241,7 @@
   background: transparent;
   border: 0;
   cursor: pointer;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-family-primary);
   font-size: 14px;
   line-height: 20px;
   letter-spacing: -0.15px;
@@ -4520,7 +4531,7 @@
 .sc-reviews-container {
   max-width: var(--grid-max-width);
   margin: 0 auto;
-  padding: 120px var(--grid-margin);
+  padding: 80px var(--grid-margin);
   display: grid;
   grid-template-columns: repeat(var(--grid-columns), 1fr);
   gap: var(--grid-gutter);
@@ -4718,6 +4729,22 @@
   z-index: 1;
 }
 
+.fp-footer-cta-lead {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+}
+.fp-footer-cta-icon {
+  width: 88px;
+  height: 88px;
+  flex-shrink: 0;
+  object-fit: contain;
+  display: block;
+}
+
 .fp-footer-cta-text {
   display: flex;
   flex-direction: column;
@@ -4735,12 +4762,14 @@
   color: var(--text-primary);
   margin: 0;
   text-transform: uppercase;
+  text-wrap: balance;
 }
 
 .fp-footer-cta-sub {
   color: var(--text-secondary);
   margin: 0;
   max-width: 52ch;
+  text-wrap: balance;
 }
 
 /* ——— V2 hero G2 rating row ——— */
@@ -4836,6 +4865,46 @@
   color: var(--text-primary);
   letter-spacing: -0.2px;
   margin-left: 4px;
+}
+
+/* Inverted footer CTA — light panel on the dark page, dark panel
+   on the light page. Mirrors the rules in FeaturePage.css. */
+.sc-viewport[data-theme="dark"] .fp-footer-cta-inner {
+  background: #FFFFFF;
+  border-color: rgba(0, 0, 0, 0.1);
+}
+.sc-viewport[data-theme="dark"] .fp-footer-cta-inner::before {
+  background-color: #000000;
+  opacity: 0.08;
+}
+.sc-viewport[data-theme="dark"] .fp-footer-cta-title {
+  color: #1D1D1F;
+}
+.sc-viewport[data-theme="dark"] .fp-footer-cta-sub {
+  color: rgba(0, 0, 0, 0.6);
+}
+.sc-viewport[data-theme="dark"] .fp-footer-cta-inner .sc-promo-btn {
+  background: #1D1D1F;
+  color: #FFFFFF;
+}
+
+.sc-viewport[data-theme="light"] .fp-footer-cta-inner {
+  background: #1D1D1F;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+.sc-viewport[data-theme="light"] .fp-footer-cta-inner::before {
+  background-color: #FFFFFF;
+  opacity: 0.12;
+}
+.sc-viewport[data-theme="light"] .fp-footer-cta-title {
+  color: #FFFFFF;
+}
+.sc-viewport[data-theme="light"] .fp-footer-cta-sub {
+  color: rgba(255, 255, 255, 0.6);
+}
+.sc-viewport[data-theme="light"] .fp-footer-cta-inner .sc-promo-btn {
+  background: #FFFFFF;
+  color: #1D1D1F;
 }
 
 /* ——— Site footer ——— */
@@ -4977,11 +5046,7 @@
     max-width: none;
   }
   .sc-v2-hero-icon {
-    width: 56px;
-    height: 56px;
-    margin-bottom: 0;
-    border-radius: 14px;
-    filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.2));
+    display: none;
   }
   .sc-v2-hero-title {
     font-size: 24px;
@@ -5238,6 +5303,7 @@
     transform: none !important;
     border-radius: var(--radius-xl) !important;
     corner-shape: superellipse(1.6) !important;
+    overflow: hidden !important;
   }
   /* Magicast — hide the floating PiP video bubble on mobile; it sits
      outside the visual frame and clutters the layout at this width. */
@@ -5278,13 +5344,6 @@
   .sc-feature-visual .onair-host-label,
   .sc-feature-visual-left .onair-host-label {
     font-size: 11px;
-  }
-  /* Drop the body's inner rounded-top so the dark area matches the
-     uniform window chrome on the On-It window (radius comes from the
-     outer .onair-window's --radius-xl + overflow: hidden). */
-  .sc-feature-visual .onair-body,
-  .sc-feature-visual-left .onair-body {
-    border-radius: 0;
   }
 
   /* Drop-In Meetings — scale the embedded app window down to fit inside
@@ -5344,19 +5403,72 @@
     filter: none;
   }
 
+  /* Reviews — only show the top 4 social posts on mobile and drop
+     the section's bottom padding so the banner sits closer. */
+  .sc-reviews-container .sc-review-card:nth-child(n+5) {
+    display: none;
+  }
+  .sc-reviews-container {
+    padding-bottom: 0;
+  }
+  /* Shrink the review cards on mobile (desktop has min-height: 280px
+     for a tidy 3-up grid; on mobile they stack vertically and the
+     min-height creates lots of dead space below short quotes).
+     Drop to 200 so they hug closer while still keeping a consistent
+     baseline height across all four visible cards. */
+  .sc-reviews-container .sc-review-card {
+    min-height: 200px;
+    gap: 16px;
+  }
+  /* Bump the review quote text down a step on mobile (was 16/1.5). */
+  .sc-review-quote {
+    font-size: 14px;
+    line-height: 20px;
+    letter-spacing: -0.2px;
+  }
+
+  /* Footer — collapse to just the Follow column on mobile. */
+  .sc-footer-nav .sc-footer-col:not(:last-child) {
+    display: none;
+  }
+
   /* Footer CTA — stack the inner block and shrink its huge padding. */
   .fp-footer-cta {
-    margin-top: 56px;
+    margin-top: 16px;
     padding-bottom: 48px;
   }
   .fp-footer-cta-inner {
     flex-direction: column;
+    align-items: stretch;
+    padding: 16px;
+    gap: 16px;
+  }
+  .fp-footer-cta-lead {
+    flex-direction: column;
     align-items: flex-start;
-    padding: 32px 24px;
-    gap: 24px;
+    gap: 12px;
+  }
+  .fp-footer-cta-icon {
+    width: 56px;
+    height: 56px;
   }
   .fp-footer-cta-title {
-    font-size: 24px;
+    font-size: 20px;
+    letter-spacing: -0.4px;
+  }
+  .fp-footer-cta-sub {
+    font-size: 14px;
+    line-height: 20px;
+  }
+  .fp-footer-cta-text {
+    gap: 8px;
+  }
+  .fp-footer-cta .fp-cta-row {
+    width: 100%;
+    flex-direction: column;
+  }
+  .fp-footer-cta .fp-cta-row .sc-promo-btn {
+    width: 100%;
   }
 
   /* Platform badge — hide on mobile, the navbar sits tighter */

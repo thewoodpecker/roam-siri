@@ -185,6 +185,65 @@ function ChevronIcon({ size = 12 }) {
   );
 }
 
+// Material-style back arrow used on Android: arrowhead + short
+// horizontal line. The button still rotates 180° via CSS so the
+// arrow that points right by default ends up pointing left.
+function MaterialBackArrowIcon({ size = 18 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 18 18" fill="none" aria-hidden="true">
+      <path d="M3 9H15M11 5L15 9L11 13" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function TabIcon({ kind, size = 20 }) {
+  if (kind === 'chat') {
+    return (
+      <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true">
+        <circle cx="16" cy="16" r="12" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+        <path d="M16.0107 20.1193C15.4254 20.1193 14.9027 20.0185 14.4425 19.8168C13.9851 19.6151 13.6229 19.3352 13.3558 18.9773C13.0916 18.6165 12.9496 18.1989 12.9297 17.7244H14.2678C14.2848 17.983 14.3714 18.2074 14.5277 18.3977C14.6868 18.5852 14.8942 18.7301 15.1499 18.8324C15.4055 18.9347 15.6896 18.9858 16.0021 18.9858C16.3459 18.9858 16.6499 18.9261 16.9141 18.8068C17.1811 18.6875 17.3899 18.5213 17.5405 18.3082C17.6911 18.0923 17.7663 17.8438 17.7663 17.5625C17.7663 17.2699 17.6911 17.0128 17.5405 16.7912C17.3928 16.5668 17.1754 16.3906 16.8885 16.2628C16.6044 16.1349 16.2607 16.071 15.8572 16.071H15.12V14.9972H15.8572C16.1811 14.9972 16.4652 14.9389 16.7095 14.8224C16.9567 14.706 17.1499 14.544 17.2891 14.3366C17.4283 14.1264 17.4979 13.8807 17.4979 13.5994C17.4979 13.3295 17.4368 13.0952 17.3146 12.8963C17.1953 12.6946 17.0249 12.5369 16.8033 12.4233C16.5845 12.3097 16.326 12.2528 16.0277 12.2528C15.7436 12.2528 15.478 12.3054 15.2308 12.4105C14.9865 12.5128 14.7876 12.6605 14.6342 12.8537C14.4808 13.044 14.3984 13.2727 14.3871 13.5398H13.1129C13.1271 13.0682 13.2663 12.6534 13.5305 12.2955C13.7976 11.9375 14.1499 11.6577 14.5874 11.456C15.0249 11.2543 15.5107 11.1534 16.0447 11.1534C16.6044 11.1534 17.0874 11.2628 17.4936 11.4815C17.9027 11.6974 18.218 11.9858 18.4396 12.3466C18.6641 12.7074 18.7749 13.1023 18.772 13.5312C18.7749 14.0199 18.6385 14.4347 18.3629 14.7756C18.0902 15.1165 17.7266 15.3452 17.272 15.4616V15.5298C17.8516 15.6179 18.3004 15.848 18.6186 16.2202C18.9396 16.5923 19.0987 17.054 19.0959 17.6051C19.0987 18.0852 18.9652 18.5156 18.6953 18.8963C18.4283 19.277 18.0632 19.5767 17.6001 19.7955C17.1371 20.0114 16.6072 20.1193 16.0107 20.1193Z" fill="currentColor" />
+      </svg>
+    );
+  }
+  if (kind === 'logo') {
+    return (
+      <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true">
+        <path fillRule="evenodd" clipRule="evenodd" d="M16 4.75C9.7868 4.75 4.75 9.7868 4.75 16C4.75 22.2132 9.7868 27.25 16 27.25C22.2132 27.25 27.25 22.2132 27.25 16C27.25 9.7868 22.2132 4.75 16 4.75ZM3.25 16C3.25 8.95837 8.95837 3.25 16 3.25C23.0416 3.25 28.75 8.95837 28.75 16C28.75 23.0416 23.0416 28.75 16 28.75C8.95837 28.75 3.25 23.0416 3.25 16Z" fill="currentColor" />
+        <path fillRule="evenodd" clipRule="evenodd" d="M24.2466 8.34779C22.9891 7.64839 21.5411 7.25 20 7.25C15.1675 7.25 11.25 11.1675 11.25 16C11.25 20.8325 15.1675 24.75 20 24.75C21.5411 24.75 22.9891 24.3516 24.2467 23.6522C26.1104 21.6446 27.25 18.9554 27.25 16C27.25 13.0446 26.1104 10.3554 24.2466 8.34779ZM27.25 16C27.25 11.9959 24.0041 8.75 20 8.75C15.9959 8.75 12.75 11.9959 12.75 16C12.75 20.0041 15.9959 23.25 20 23.25C24.0041 23.25 27.25 20.0041 27.25 16Z" fill="currentColor" fillOpacity="0.5" />
+        <path fillRule="evenodd" clipRule="evenodd" d="M24.7473 10.5203C24.1963 10.3447 23.6092 10.25 23 10.25C19.8244 10.25 17.25 12.8244 17.25 16C17.25 19.1756 19.8244 21.75 23 21.75C23.6092 21.75 24.1963 21.6553 24.7473 21.4797C26.2804 20.1504 27.25 18.1884 27.25 16C27.25 13.8116 26.2804 11.8496 24.7473 10.5203ZM27.25 16C27.25 13.6528 25.3472 11.75 23 11.75C20.6528 11.75 18.75 13.6528 18.75 16C18.75 18.3472 20.6528 20.25 23 20.25C25.3472 20.25 27.25 18.3472 27.25 16Z" fill="currentColor" fillOpacity="0.3" />
+      </svg>
+    );
+  }
+  if (kind === 'camera') {
+    return (
+      <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true">
+        <path d="M16 11.25C13.3766 11.25 11.25 13.3766 11.25 16C11.25 18.6234 13.3766 20.75 16 20.75C18.6234 20.75 20.75 18.6234 20.75 16C20.75 13.3766 18.6234 11.25 16 11.25ZM12.75 16C12.75 14.2051 14.2051 12.75 16 12.75C17.7949 12.75 19.25 14.2051 19.25 16C19.25 17.7949 17.7949 19.25 16 19.25C14.2051 19.25 12.75 17.7949 12.75 16Z" fill="currentColor" />
+        <path d="M17.3022 4.25H14.6978C14.3796 4.24998 14.175 4.24997 13.9764 4.26663C12.8464 4.36143 11.7877 4.85733 10.9915 5.6647C10.8515 5.80661 10.7205 5.9638 10.5168 6.20827L10.3367 6.42443L10.314 6.4516C9.88977 6.954 9.26701 7.24569 8.60947 7.24996L8.57406 7.25H8.56804C8.50499 7.25 8.4666 7.25 8.43311 7.25039C5.3098 7.28673 2.78673 9.80981 2.75039 12.9331C2.75 12.9666 2.75 13.005 2.75 13.0681V16.7923C2.74999 18.5121 2.74999 19.8602 2.85918 20.9336C2.97055 22.0283 3.20166 22.9202 3.71905 23.6945C4.13856 24.3224 4.67763 24.8614 5.30547 25.281C6.0798 25.7983 6.97168 26.0295 8.06641 26.1408C9.13982 26.25 10.488 26.25 12.2077 26.25H19.7923C21.512 26.25 22.8602 26.25 23.9336 26.1408C25.0283 26.0295 25.9202 25.7983 26.6945 25.281C27.3224 24.8614 27.8614 24.3224 28.281 23.6945C28.7983 22.9202 29.0295 22.0283 29.1408 20.9336C29.25 19.8602 29.25 18.512 29.25 16.7923V13.0678C29.25 13.0049 29.25 12.9666 29.2496 12.9331C29.2133 9.80981 26.6902 7.28673 23.5669 7.25039C23.5334 7.25 23.495 7.25 23.432 7.25H23.4259L23.3905 7.24996C22.733 7.24569 22.1102 6.954 21.686 6.4516L21.6633 6.42443L21.4832 6.20828C21.2795 5.96382 21.1485 5.80661 21.0085 5.6647C20.2123 4.85733 19.1536 4.36143 18.0236 4.26663C17.825 4.24997 17.6204 4.24998 17.3022 4.25ZM14.1018 5.76138C14.2301 5.75062 14.3685 5.75 14.7315 5.75H17.2685C17.6315 5.75 17.7699 5.75062 17.8982 5.76138C18.6713 5.82625 19.3958 6.16554 19.9405 6.71795C20.0309 6.80962 20.12 6.91554 20.3524 7.19443L20.511 7.38471L20.5399 7.41934C21.247 8.25667 22.2849 8.74281 23.3808 8.74993L23.4259 8.75C23.4968 8.75 23.5258 8.75002 23.5494 8.75029C25.858 8.77715 27.7229 10.642 27.7497 12.9506C27.75 12.9742 27.75 13.0032 27.75 13.0741V16.75C27.75 18.5212 27.7491 19.7931 27.6485 20.7818C27.5492 21.7579 27.359 22.3744 27.0337 22.8612C26.7237 23.3252 26.3252 23.7237 25.8612 24.0338C25.3744 24.359 24.7579 24.5492 23.7818 24.6485C22.7931 24.7491 21.5212 24.75 19.75 24.75H12.25C10.4788 24.75 9.20688 24.7491 8.21821 24.6485C7.24209 24.5492 6.62561 24.359 6.13883 24.0338C5.67477 23.7237 5.27633 23.3252 4.96625 22.8612C4.64099 22.3744 4.45078 21.7579 4.35148 20.7818C4.25091 19.7931 4.25 18.5212 4.25 16.75V13.0741C4.25 13.0032 4.25001 12.9742 4.25029 12.9506C4.27715 10.642 6.14203 8.77715 8.45056 8.75029C8.47418 8.75002 8.50319 8.75 8.57406 8.75L8.61921 8.74993C9.7151 8.74281 10.753 8.25667 11.4601 7.41934L11.489 7.38471L11.6476 7.19443C11.88 6.91554 11.9691 6.80962 12.0595 6.71795C12.6042 6.16554 13.3287 5.82625 14.1018 5.76138Z" fill="currentColor" />
+      </svg>
+    );
+  }
+  if (kind === 'eye') {
+    return (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M12 3.75C13.3878 3.75 14.6492 4.02422 15.7744 4.47168C15.7135 4.53581 15.6506 4.59832 15.585 4.6582C15.4315 4.7982 15.2564 4.92613 14.7773 5.27051L14.7305 5.30371C14.6611 5.35359 14.5617 5.42484 14.4795 5.49414C14.4533 5.51619 14.4207 5.5448 14.3848 5.58008C13.6454 5.36991 12.8494 5.25 12 5.25C9.24392 5.25 7.05001 6.51053 5.53027 8.03027C4.77032 8.79023 4.19031 9.60481 3.80371 10.335C3.40604 11.0861 3.25 11.6775 3.25 12C3.25 12.3225 3.40604 12.9139 3.80371 13.665C4.19031 14.3952 4.77032 15.2098 5.53027 15.9697C7.05001 17.4895 9.24392 18.75 12 18.75C14.7561 18.75 16.95 17.4895 18.4697 15.9697C19.2297 15.2098 19.8097 14.3952 20.1963 13.665C20.594 12.9139 20.75 12.3225 20.75 12C20.75 11.6775 20.594 11.0861 20.1963 10.335C20.0358 10.0318 19.8406 9.71492 19.6143 9.39258C19.6825 9.25999 19.7334 9.17027 19.7881 9.08496C19.9626 8.81285 20.1734 8.56232 20.415 8.3418C20.4681 8.29339 20.5238 8.2464 20.5938 8.19141C20.9632 8.67851 21.2749 9.16623 21.5225 9.63379C21.9684 10.4763 22.25 11.3226 22.25 12C22.25 12.6774 21.9684 13.5237 21.5225 14.3662C21.0653 15.2297 20.3952 16.1654 19.5303 17.0303C17.8 18.7605 15.2439 20.25 12 20.25C8.75608 20.25 6.19999 18.7605 4.46973 17.0303C3.60481 16.1654 2.93469 15.2297 2.47754 14.3662C2.03157 13.5237 1.75 12.6774 1.75 12C1.75 11.3226 2.03157 10.4763 2.47754 9.63379C2.93469 8.77029 3.60481 7.83465 4.46973 6.96973C6.19999 5.23947 8.75608 3.75 12 3.75ZM12 8.75C13.7949 8.75 15.25 10.2051 15.25 12C15.25 13.7949 13.7949 15.25 12 15.25C10.2051 15.25 8.75 13.7949 8.75 12C8.75 10.2051 10.2051 8.75 12 8.75ZM12 10.25C11.0335 10.25 10.25 11.0335 10.25 12C10.25 12.9665 11.0335 13.75 12 13.75C12.9665 13.75 13.75 12.9665 13.75 12C13.75 11.0335 12.9665 10.25 12 10.25Z" fill="currentColor" />
+        <path d="M21.1421 1.21175C21.1941 1.10157 21.2201 1.04649 21.2526 1.02452C21.301 0.991826 21.3644 0.991826 21.4128 1.02452C21.4453 1.04649 21.4713 1.10157 21.5234 1.21175C21.6321 1.44199 21.6865 1.55712 21.7531 1.66371C21.8516 1.82152 21.9703 1.96584 22.1061 2.09304C22.1978 2.17896 22.3002 2.25457 22.5051 2.40577L22.5259 2.42114C22.5993 2.47527 22.636 2.50234 22.6514 2.53445C22.6701 2.57355 22.6701 2.61905 22.6514 2.65816C22.636 2.69026 22.5993 2.71733 22.5259 2.77147L22.5051 2.78684C22.3002 2.93804 22.1978 3.01364 22.1061 3.09956C21.9703 3.22677 21.8516 3.37109 21.7531 3.5289C21.6865 3.63549 21.6321 3.75061 21.5234 3.98086C21.4713 4.09103 21.4453 4.14612 21.4128 4.16808C21.3644 4.20078 21.301 4.20078 21.2526 4.16808C21.2201 4.14612 21.1941 4.09103 21.1421 3.98086C21.0333 3.75061 20.9789 3.63549 20.9124 3.5289C20.8138 3.37109 20.6951 3.22677 20.5594 3.09956C20.4676 3.01364 20.3652 2.93804 20.1603 2.78684L20.1395 2.77147C20.0661 2.71733 20.0295 2.69026 20.0141 2.65816C19.9953 2.61905 19.9953 2.57355 20.0141 2.53445C20.0295 2.50234 20.0661 2.47527 20.1395 2.42114L20.1603 2.40577C20.3652 2.25457 20.4676 2.17896 20.5594 2.09304C20.6951 1.96584 20.8138 1.82152 20.9124 1.66371C20.9789 1.55712 21.0333 1.44199 21.1421 1.21175Z" fill="url(#mw-tab-eye-spark1)" />
+        <path d="M17.5708 3.46427C17.688 3.22271 17.7465 3.10193 17.8197 3.05377C17.9286 2.98208 18.0714 2.98208 18.1803 3.05377C18.2535 3.10193 18.312 3.22271 18.4292 3.46427C18.674 3.9691 18.7964 4.22151 18.9462 4.45522C19.1681 4.80123 19.4352 5.11767 19.7409 5.39657C19.9473 5.58495 20.1779 5.75072 20.6391 6.08225L20.686 6.11594C20.8511 6.23464 20.9337 6.29398 20.9683 6.36437C21.0106 6.45012 21.0106 6.54988 20.9683 6.63563C20.9337 6.70602 20.8511 6.76536 20.686 6.88406L20.6391 6.91775C20.1779 7.24928 19.9473 7.41505 19.7409 7.60343C19.4352 7.88233 19.1681 8.19877 18.9462 8.54478C18.7964 8.77849 18.674 9.0309 18.4292 9.53573C18.312 9.77729 18.2535 9.89807 18.1803 9.94623C18.0714 10.0179 17.9286 10.0179 17.8197 9.94623C17.7465 9.89807 17.688 9.77729 17.5708 9.53573C17.326 9.0309 17.2036 8.77849 17.0538 8.54478C16.8319 8.19877 16.5648 7.88233 16.2591 7.60343C16.0527 7.41505 15.8221 7.24928 15.3609 6.91775L15.314 6.88406C15.1489 6.76536 15.0663 6.70602 15.0317 6.63563C14.9894 6.54988 14.9894 6.45012 15.0317 6.36437C15.0663 6.29398 15.1489 6.23464 15.314 6.11594L15.3609 6.08225C15.8221 5.75072 16.0527 5.58495 16.2591 5.39657C16.5648 5.11767 16.8319 4.80123 17.0538 4.45522C17.2036 4.22151 17.326 3.9691 17.5708 3.46427Z" fill="url(#mw-tab-eye-spark2)" />
+        <defs>
+          <linearGradient id="mw-tab-eye-spark1" x1="22.6654" y1="4.19261" x2="19.6277" y2="3.78683" gradientUnits="userSpaceOnUse">
+            <stop stopColor="#D4FC79" />
+            <stop offset="1" stopColor="#96E6A1" />
+          </linearGradient>
+          <linearGradient id="mw-tab-eye-spark2" x1="21" y1="10" x2="14.1685" y2="9.06311" gradientUnits="userSpaceOnUse">
+            <stop stopColor="#D4FC79" />
+            <stop offset="1" stopColor="#96E6A1" />
+          </linearGradient>
+        </defs>
+      </svg>
+    );
+  }
+  return null;
+}
+
 function ArrowIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
@@ -274,7 +333,7 @@ function formatClock(d) {
   return `${h}:${String(m).padStart(2, '0')}`;
 }
 
-export default function MobileWindow({ win, onDrag, onOpenStories, initialTab = 'roam', initialView = 'overworld', initialPlatform = 'ios', lockscreen = false, theater = false, mapContent = null }) {
+export default function MobileWindow({ win, onDrag, onOpenStories, initialTab = 'roam', initialView = 'overworld', initialPlatform = 'ios', lockscreen = false, theater = false, mapContent = null, autoKnock = false, elevator = false, magicMinutesChat = false, guestBadge = false, onItChat = false }) {
   const [closing, setClosing] = useState(false);
   const [activeTab, setActiveTab] = useState(initialTab);
   const [viewStack, setViewStack] = useState(initialTab === 'roam' && initialView === 'map' ? ['overworld', 'map'] : ['overworld']);
@@ -372,9 +431,12 @@ export default function MobileWindow({ win, onDrag, onOpenStories, initialTab = 
             </div>
 
             {lockscreen && <LockScreenView />}
-            {theaterOpen && <TheaterView onClose={() => setTheaterOpen(false)} />}
+            {theaterOpen && <TheaterView onClose={() => setTheaterOpen(false)} platform={platform} />}
+            {magicMinutesChat && <MagicMinutesChatView platform={platform} />}
+            {onItChat && <OnItChatView platform={platform} />}
+            {guestBadge && <MobileGuestBadgeSheet />}
 
-            {!lockscreen && !theaterOpen && activeTab === 'roam' && currentView === 'overworld' && (
+            {!lockscreen && !theaterOpen && !magicMinutesChat && !onItChat && activeTab === 'roam' && currentView === 'overworld' && (
               <div className="mw-content mw-overworld">
                 <div className="mw-top-nav">
                   <img className="mw-top-avatar" src="/headshots/joe-woodward.jpg" alt="" />
@@ -394,22 +456,26 @@ export default function MobileWindow({ win, onDrag, onOpenStories, initialTab = 
               </div>
             )}
 
-            {!lockscreen && !theaterOpen && activeTab === 'roam' && currentView === 'map' && (
+            {!lockscreen && !theaterOpen && !magicMinutesChat && !onItChat && activeTab === 'roam' && currentView === 'map' && (
               <div className="mw-content mw-map">
                 <div className="mw-top-nav">
                   <button className="mw-top-avatar mw-top-back" onClick={goBack} aria-label="Back">
-                    <ChevronIcon size={14} />
+                    {platform === 'android' ? <MaterialBackArrowIcon size={16} /> : <ChevronIcon size={14} />}
                   </button>
                   <img className="mw-top-logo" src="/icons/mobile-tabs/logo-with-wordmark.svg" alt="Roam" />
                 </div>
                 {mapContent ? <div className="mw-map-embed">{mapContent}</div> : <MobileMapGrid onOpenTheater={() => setTheaterOpen(true)} />}
+                {autoKnock && <MobileKnockSequence />}
+                {elevator && <MobileElevatorOverview />}
               </div>
             )}
 
-            {!lockscreen && !theaterOpen && activeTab === 'ainbox' && (
+            {!lockscreen && !theaterOpen && !magicMinutesChat && !onItChat && activeTab === 'ainbox' && (
               <div className="mw-content mw-ainbox">
                 <div className="mw-ainbox-header">
-                  <img className="mw-ainbox-profile" src="/headshots/joe-woodward.jpg" alt="" />
+                  <button className="mw-ainbox-profile" type="button" aria-label="Profile" tabIndex={-1}>
+                    <img src="/headshots/joe-woodward.jpg" alt="" />
+                  </button>
                   <div className="mw-ainbox-title">
                     <span>AInbox</span>
                     <span className="mw-ainbox-title-caret"><ChevronIcon size={10} /></span>
@@ -474,7 +540,7 @@ export default function MobileWindow({ win, onDrag, onOpenStories, initialTab = 
               </div>
             )}
 
-            {!lockscreen && !theaterOpen && activeTab === 'camera' && (
+            {!lockscreen && !theaterOpen && !magicMinutesChat && !onItChat && activeTab === 'camera' && (
               <div className="mw-content mw-camera">
                 <div className="mw-camera-viewfinder">
                   <video
@@ -497,20 +563,20 @@ export default function MobileWindow({ win, onDrag, onOpenStories, initialTab = 
               </div>
             )}
 
-            {!lockscreen && !theaterOpen && <div className="mw-tabbar">
+            {!lockscreen && !theaterOpen && !magicMinutesChat && !onItChat && <div className="mw-tabbar">
               <div className="mw-tabbar-main">
                 <button className={`mw-tab ${activeTab === 'ainbox' ? 'mw-tab-active' : ''}`} onClick={() => selectTab('ainbox')} aria-label="AInbox">
-                  <span className="mw-tab-icon" style={{ WebkitMaskImage: 'url(/icons/mobile-tabs/Chat.svg)', maskImage: 'url(/icons/mobile-tabs/Chat.svg)' }} />
+                  <span className="mw-tab-icon"><TabIcon kind="chat" size={20} /></span>
                 </button>
                 <button className={`mw-tab ${activeTab === 'roam' ? 'mw-tab-active' : ''}`} onClick={() => selectTab('roam')} aria-label="Roam">
-                  <span className="mw-tab-icon" style={{ WebkitMaskImage: 'url(/icons/mobile-tabs/logo.svg)', maskImage: 'url(/icons/mobile-tabs/logo.svg)' }} />
+                  <span className="mw-tab-icon"><TabIcon kind="logo" size={20} /></span>
                 </button>
                 <button className={`mw-tab ${activeTab === 'camera' ? 'mw-tab-active' : ''}`} onClick={() => selectTab('camera')} aria-label="Camera">
-                  <span className="mw-tab-icon" style={{ WebkitMaskImage: 'url(/icons/mobile-tabs/Camera.svg)', maskImage: 'url(/icons/mobile-tabs/Camera.svg)' }} />
+                  <span className="mw-tab-icon"><TabIcon kind="camera" size={20} /></span>
                 </button>
               </div>
               <button className="mw-tab mw-tab-eye" aria-label="Presence">
-                <span className="mw-tab-icon" style={{ WebkitMaskImage: 'url(/icons/mobile-tabs/Eye.svg)', maskImage: 'url(/icons/mobile-tabs/Eye.svg)' }} />
+                <span className="mw-tab-icon"><TabIcon kind="eye" size={16} /></span>
               </button>
             </div>}
           </div>
@@ -623,13 +689,13 @@ function MwIconMicSmall() {
   );
 }
 
-function TheaterView({ onClose }) {
+function TheaterView({ onClose, platform }) {
   return (
     <div className="mw-theater" aria-hidden={!onClose}>
       {/* Office controls — back / title / leave */}
       <div className="mw-theater-controls">
         <button type="button" className="mw-theater-icon-btn" aria-label="Back" onClick={onClose}>
-          <MwIconChevron />
+          {platform === 'android' ? <MaterialBackArrowIcon size={16} /> : <ChevronIcon size={14} />}
         </button>
         <div className="mw-theater-title-stack">
           <span className="mw-theater-title">Theater</span>
@@ -864,6 +930,345 @@ const MW_EMPTY_ROOM_IDS = new Set([
   'mwx-r6-2',    // Lexi B.
   'mwx-r6-4',    // Michael M.
 ]);
+
+// Guest Badge sheet rendered inside the mobile simulator. Sits over
+// a dim scrim covering the whole screen so the underlying view (the
+// AInbox) reads as a backdrop. Mirrors the Figma spec — white sheet
+// with a dark drag handle, dismiss X, person avatar with a Roam-mark
+// badge, email field, list cells (toggle on Visitor Access), purple
+// Send Badge CTA, gradient slogan footer.
+function MobileGuestBadgeSheet() {
+  return (
+    <>
+      <div className="mw-gb-scrim" aria-hidden="true" />
+      <div className="mw-gb-sheet">
+        <div className="mw-gb-handle" aria-hidden="true" />
+        <button type="button" className="mw-gb-dismiss" aria-label="Dismiss" tabIndex={-1}>
+          <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+            <path d="M2 2L9 9M9 2L2 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
+        </button>
+        <div className="mw-gb-body">
+          <div className="mw-gb-avatar">
+            <img className="mw-gb-avatar-img" src="/icons/guest-light.png" alt="" />
+          </div>
+          <div className="mw-gb-text">
+            <p className="mw-gb-title">Guest Badge</p>
+            <p className="mw-gb-sub">Your guest will be able to message you, meet with you, and visit you. It’s free to add Guests. Invite as many as you like.</p>
+          </div>
+          <div className="mw-gb-section">
+            <p className="mw-gb-section-title">Email</p>
+            <div className="mw-gb-field">Work Email</div>
+          </div>
+          <div className="mw-gb-list">
+            <div className="mw-gb-cell">
+              <div className="mw-gb-cell-text">
+                <p className="mw-gb-cell-title">Chat</p>
+                <p className="mw-gb-cell-sub">Guests can reach out to you with messages</p>
+              </div>
+            </div>
+            <div className="mw-gb-cell">
+              <div className="mw-gb-cell-text">
+                <p className="mw-gb-cell-title">Visitor Access</p>
+                <p className="mw-gb-cell-sub">Guests are welcome to knock if you’re in your office</p>
+              </div>
+              <span className="mw-gb-toggle" aria-hidden="true">
+                <span className="mw-gb-toggle-knob" />
+              </span>
+            </div>
+          </div>
+          <button type="button" className="mw-gb-cta" tabIndex={-1}>Send Badge</button>
+        </div>
+        <div className="mw-gb-footer">The Office of Tomorrow awaits Them</div>
+      </div>
+    </>
+  );
+}
+
+// On-It DM-style chat — back / On-It avatar+title / emoji top
+// nav, alternating user (right, white) + bot (left, dark) bubbles
+// with the "tail" corner squared, gradient fade behind the header
+// like the Magic Minutes view, and a pill composer with audio
+// button at the bottom. Lives inside the simulator so it benefits
+// from the mobile chrome.
+function OnItChatView({ platform }) {
+  const messages = [
+    { id: 1, self: true,  text: 'Hey On-It, can you schedule a meeting about our GTM strategy for next week?' },
+    { id: 2, self: false, text: 'Sure thing! I’ll set up a meeting about the GTM strategy. Any preferences for the day or time next week?' },
+    { id: 3, self: true,  text: 'How about Wednesday at 2 PM? Invite Sarah, Mike, and Priya. In Roam in the Walt Disney meeting room.' },
+    { id: 4, self: false, text: 'Got it. Scheduling a GTM strategy meeting for Wednesday at 2 PM with Sarah, Mike, and Priya in the Walt Disney meeting room in Roam. Should I add a quick agenda: GTM goals, timeline, and resource allocation?' },
+    { id: 5, self: true,  text: 'Yes, perfect.' },
+    { id: 6, self: false, text: 'Done! Invites sent to Sarah, Mike, and Priya with the agenda: GTM goals, timeline, resource allocation. Room booked in Roam.' },
+  ];
+  return (
+    <div className="mw-onit-chat" aria-hidden="true">
+      <div className="mw-mm-topbar-bg" aria-hidden="true" />
+      <div className="mw-onit-header">
+        <button type="button" className="mw-top-avatar mw-top-back" aria-label="Back" tabIndex={-1}>
+          {platform === 'android' ? <MaterialBackArrowIcon size={16} /> : <ChevronIcon size={14} />}
+        </button>
+        <div className="mw-onit-title">
+          <img className="mw-onit-title-avatar" src="/on-it-agent.png" alt="" />
+          <span>On-It!</span>
+        </div>
+        <span className="mw-onit-header-spacer" aria-hidden="true" />
+      </div>
+      <AinboxScroller topInset={0}>
+        <div className="mw-onit-list">
+          {messages.map((m) => (
+            <div key={m.id} className={`mw-onit-row ${m.self ? 'mw-onit-row-self' : ''}`}>
+              <div className={`mw-onit-bubble ${m.self ? 'mw-onit-bubble-self' : ''}`}>{m.text}</div>
+            </div>
+          ))}
+        </div>
+      </AinboxScroller>
+      <div className="mw-onit-composer-wrap">
+        <div className="mw-onit-composer">
+          <span className="mw-onit-composer-placeholder">Write a Message...</span>
+          <button type="button" className="mw-onit-composer-audio" tabIndex={-1} aria-label="Voice message">
+            <img src="/icons/composer/Audio.svg" alt="" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Magic Minutes group chat view used inside the mobile simulator on
+// the FeaturePage. Mirrors the Figma spec — back button + meeting
+// title header, scrollable message list with Magic Minutes summary
+// bot replies + a teammate question, and a footer with the typing
+// indicator stack and the message composer.
+function MagicMinutesChatView({ platform }) {
+  const messages = [
+    {
+      id: 1,
+      sender: 'Magic Minutes',
+      kind: 'bot',
+      time: '6:32 PM',
+      text: "We just wrapped up an exciting all-hands meeting in Roam HQ's virtual theater today, diving into the latest product updates that are elevating our virtual office platform. The focus was on enhancing hybrid work with seamless mobile features, interactive maps, AI-driven tools, and robust collaboration options. Our mobile app's new Live Activity feature, now live on iOS and Android, displays real-time office activity—like who's in a meeting or at the watercooler—right on users' lock screens, making it easier to stay connected without constant app checks.",
+    },
+    {
+      id: 2,
+      sender: 'Howard Lerman',
+      avatar: '/headshots/howard-lerman.jpg',
+      time: '6:36 PM',
+      text: 'When are we releasing the new iOS live activity feature?',
+    },
+    {
+      id: 3,
+      sender: 'Magic Minutes',
+      kind: 'bot',
+      time: '6:32 PM',
+      text: "We're targeting an immediate rollout starting today, October 22, 2025, via a phased App Store update for all users on iOS 18+.",
+    },
+  ];
+  const typingAvatars = [
+    '/headshots/mattias-leino.jpg',
+  ];
+  return (
+    <div className="mw-mm-chat" aria-hidden="true">
+      <div className="mw-mm-header">
+        <button type="button" className="mw-top-avatar mw-top-back mw-mm-back" aria-label="Back">
+          {platform === 'android' ? <MaterialBackArrowIcon size={16} /> : <ChevronIcon size={14} />}
+        </button>
+        <div className="mw-mm-title">Roam Weekly All-Hands</div>
+      </div>
+      <AinboxScroller topInset={56}>
+        <div className="mw-mm-list">
+          {messages.map((m) => (
+            <div key={m.id} className="mw-mm-message">
+              <div className={`mw-mm-avatar ${m.kind === 'bot' ? 'mw-mm-avatar-bot' : ''}`}>
+                {m.kind === 'bot' ? (
+                  <img src="/icons/magic-quill.svg" alt="" width="16" height="16" />
+                ) : (
+                  <img src={m.avatar} alt="" />
+                )}
+              </div>
+              <div className="mw-mm-message-body">
+                <div className="mw-mm-message-meta">
+                  <span className="mw-mm-message-name">{m.sender}</span>
+                  <span className="mw-mm-message-time">{m.time}</span>
+                </div>
+                <p className="mw-mm-message-text">{m.text}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </AinboxScroller>
+      <div className="mw-mm-footer">
+        <div className="mw-mm-typing" aria-hidden="true">
+          {typingAvatars.map((src, i) => (
+            <img key={i} className="mw-mm-typing-face" src={src} alt="" />
+          ))}
+          <div className="mw-mm-typing-dots">
+            <span />
+            <span />
+            <span />
+          </div>
+        </div>
+        <div className="mw-mm-composer">
+          <span className="mw-mm-composer-placeholder">Write a Message...</span>
+          <img className="mw-mm-composer-send" src="/icons/composer/Send.svg" alt="" aria-hidden="true" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Multi-floor "Roam HQ" overview that slides up from the bottom over
+// the map when scrolled into view. Mirrors the iOS Maps-style bottom
+// sheet treatment from the spec — a header (close + title) followed
+// by stacked floor sections, each with a stylized room grid.
+function MobileElevatorOverview() {
+  const rootRef = useRef(null);
+  const [shown, setShown] = useState(false);
+  // Trigger the slide-up animation once the simulator's mobile screen
+  // reaches the viewport. Observe the parent (.mw-content.mw-map)
+  // because the sheet itself sits at translateY(100%) below it and
+  // wouldn't intersect on its own.
+  useEffect(() => {
+    const sheet = rootRef.current;
+    const parent = sheet?.parentElement;
+    if (!parent) return;
+    const obs = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting && entry.intersectionRatio > 0) {
+        setShown(true);
+        obs.disconnect();
+      }
+    }, { threshold: [0, 0.1, 0.25, 0.5] });
+    obs.observe(parent);
+    // Safety net: animate after 1.6s even if the observer never fires
+    // (some layouts may not emit intersection events for off-screen
+    // siblings).
+    const fallback = setTimeout(() => setShown(true), 1600);
+    return () => {
+      obs.disconnect();
+      clearTimeout(fallback);
+    };
+  }, []);
+
+  // Each floor renders as a column-stack of "h-stacks" (vertical
+  // sub-columns) — mirroring the Figma layout where each floor is a
+  // grid of variable-width columns, each containing a vertical stack
+  // of office cells (singletons or tall blocks). Cells optionally
+  // carry one or more avatars stacked horizontally.
+  const F = (...avatars) => ({ avatars });
+  const E = () => ({});                  // empty cell
+  const FLOORS = [
+    {
+      name: 'R&D',
+      columns: [
+        [F('/headshots/joe-woodward.jpg'), E(), F('/headshots/howard-lerman.jpg'), E()],
+        [E(), F('/headshots/mattias-leino.jpg', '/headshots/arnav-bansal.jpg'), E(), E()],
+        [E(), { wide: true, flex: true, theater: true }],
+        [F('/headshots/jeff-grossman.jpg'), { flex: true }],
+        [E(), E(), F('/headshots/lexi-bohonnon.jpg'), F('/headshots/will-hou.jpg')],
+      ],
+      colWidths: ['minmax(36px, 1fr)', 'auto', 'minmax(110px, 2fr)', 'auto', 'minmax(36px, 1fr)'],
+    },
+    {
+      name: 'Commercial',
+      columns: [
+        [
+          F('/headshots/chelsea-turbin.jpg', '/headshots/garima-kewlani.jpg', '/headshots/ava-lee.jpg', '/headshots/grace-sutherland.jpg'),
+          F('/headshots/aaron-wadhwa.jpg'),
+          F('/headshots/peter-lerman.jpg'),
+        ],
+        [E(), { flex: true }],
+        [F('/headshots/john-moffa.jpg'), F('/headshots/lexi-bohonnon.jpg'), { dock: true }],
+        [F('/headshots/howard-lerman.jpg'), E(), F('/headshots/will-hou.jpg'), E()],
+        [F('/headshots/joe-woodward.jpg', '/headshots/grace-sutherland.jpg'), { dock: true }],
+      ],
+      colWidths: ['auto', 'minmax(36px, auto)', 'auto', '1fr', '1fr'],
+    },
+    {
+      name: 'Marketing',
+      columns: [
+        [F('/headshots/will-hou.jpg', '/headshots/grace-sutherland.jpg'), { tall: true, theater: true }],
+        [E(), E(), E()],
+        [F('/headshots/peter-lerman.jpg'), F('/headshots/aaron-wadhwa.jpg'), { tall: true, flex: true }],
+        [F('/headshots/lexi-bohonnon.jpg'), E(), F('/headshots/john-moffa.jpg'), E(), F('/headshots/jeff-grossman.jpg')],
+        [F('/headshots/joe-woodward.jpg', '/headshots/mattias-leino.jpg'), F('/headshots/chelsea-turbin.jpg', '/headshots/ava-lee.jpg'), F('/headshots/howard-lerman.jpg')],
+      ],
+      colWidths: ['107px', 'minmax(36px, auto)', 'auto', 'auto', 'auto'],
+    },
+  ];
+
+  return (
+    <div ref={rootRef} className={`mw-elevator-sheet ${shown ? 'mw-elevator-shown' : ''}`}>
+      <div className="mw-elevator-header">
+        <button type="button" className="mw-top-avatar mw-top-back mw-elevator-close" aria-label="Close">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+            <path d="M3 3L11 11M11 3L3 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
+        </button>
+        <div className="mw-elevator-title">Roam HQ</div>
+        <div className="mw-elevator-header-spacer" />
+      </div>
+      <div className="mw-elevator-floors">
+        {FLOORS.map((floor) => (
+          <div key={floor.name} className="mw-elevator-floor">
+            <div className="mw-elevator-floor-name">{floor.name}</div>
+            <div
+              className="mw-elevator-grid"
+              style={{ gridTemplateColumns: floor.colWidths.join(' ') }}
+            >
+              {floor.columns.map((col, ci) => (
+                <div key={ci} className="mw-elevator-col">
+                  {col.map((cell, i) => (
+                    <div
+                      key={i}
+                      className={`mw-elevator-cell ${cell.flex ? 'mw-elevator-cell-flex' : ''} ${cell.tall ? 'mw-elevator-cell-tall' : ''} ${cell.wide ? 'mw-elevator-cell-wide' : ''} ${cell.theater ? 'mw-elevator-cell-theater' : ''}`}
+                    >
+                      {cell.avatars && cell.avatars.map((src, j) => (
+                        <img key={j} className="mw-elevator-avatar" src={src} alt="" />
+                      ))}
+                      {cell.theater && (
+                        <div className="mw-elevator-stage" aria-hidden="true" />
+                      )}
+                      {(cell.dock || cell.theater) && (
+                        <div className="mw-elevator-dock" aria-hidden="true">
+                          {Array.from({ length: 4 }).map((_, r) => (
+                            <div key={r} className="mw-elevator-dock-row">
+                              {Array.from({ length: 4 }).map((__, c) => (
+                                <span key={c} className="mw-elevator-dock-bar" />
+                              ))}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Drop-In Meetings demo: shows a static knock dialog over the map so
+// the visual reads as "tap a room → knock to drop in". Kept inside the
+// simulator's screen frame.
+function MobileKnockSequence() {
+  return (
+    <div className="mw-knock-overlay" aria-hidden="true">
+      <div className="mw-knock-dialog">
+        <div className="mw-knock-icon">
+          <img src="/icons/knock.svg" alt="" width="24" height="24" />
+        </div>
+        <div className="mw-knock-label">
+          Knocking on Chelsea&rsquo;s Door
+          <span className="mw-knock-dots"><span>.</span><span>.</span><span>.</span></span>
+        </div>
+        <button type="button" className="mw-knock-cancel" tabIndex={-1}>Cancel</button>
+      </div>
+    </div>
+  );
+}
 
 function MobileMapGrid({ onOpenTheater } = {}) {
   // Walk rooms in array order, dropping any person whose name was already

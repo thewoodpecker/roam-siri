@@ -125,6 +125,20 @@
   padding-bottom: 96px;
 }
 
+/* Pricing — no hero stage; the comparison section is the lead visual. */
+.fp-page[data-slug="pricing"] .fp-hero-visual {
+  display: none;
+}
+
+.fp-page[data-slug="pricing"] .fp-hero {
+  margin-bottom: 96px;
+}
+
+.fp-page[data-slug="pricing"] .fp-section-cards {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
 /* On-Air hero — single frame: hero-stage IS the frame, image fills it */
 .fp-page[data-slug="on-air"] .fp-hero-stage {
   padding: 0;
@@ -172,6 +186,16 @@
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+/* Folders preview wrapper — `display: contents` so the inner
+   .ainbox-window inherits the standard `.fp-section-visual .ainbox-window`
+   sizing (desktop + mobile) without any wrapper interfering with
+   layout. Only purpose is to give a CSS hook for the mobile
+   bottom-pin override. */
+.fp-hero-stage .fp-ainbox-folders,
+.fp-section-visual .fp-ainbox-folders {
+  display: contents;
 }
 
 /* Knock dialog preview — overlays the meeting window in the Drop-In Video Meetings section */
@@ -546,7 +570,7 @@
   padding: 3px 8px;
   border-radius: 6px;
   color: #fff;
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-family-primary);
   font-size: 12px;
   font-weight: 600;
   line-height: 16px;
@@ -582,7 +606,7 @@
   flex: 1;
   width: 100%;
   height: 100%;
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-family-primary);
   font-size: 14px;
   line-height: 1.3;
   letter-spacing: -0.15px;
@@ -606,7 +630,7 @@
 
 .fp-wb-text {
   position: absolute;
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-family-primary);
   font-size: 16px;
   line-height: 1.25;
   letter-spacing: -0.2px;
@@ -1261,13 +1285,29 @@
   justify-content: center;
 }
 
+/* Frame wraps the .mm-win + scrim + dialog so all three share a
+   common positioning context. Frame width matches the desktop
+   .mm-win grid-column calc; the inner .mm-win fills the frame at
+   100% width. Scrim `inset: 0` and dialog `top:50%; left:50%` now
+   resolve against the frame — they overlay the .mm-win itself
+   rather than the wider visual. On mobile the frame becomes the
+   scaled box (see late-bound rules). */
+.fp-hubspot-frame {
+  position: relative;
+  width: calc(((100% - 11 * var(--grid-gutter)) / 12) * 10 + 9 * var(--grid-gutter));
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: var(--radius-xl);
+  corner-shape: superellipse(1.6);
+}
+
+.fp-hubspot-frame .mm-win {
+  width: 100% !important;
+}
+
 .fp-hubspot-scrim {
   position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: calc(((100% - 11 * var(--grid-gutter)) / 12) * 10 + 9 * var(--grid-gutter));
+  inset: 0;
   background: rgba(0, 0, 0, 0.55);
   border-radius: var(--radius-xl);
   corner-shape: superellipse(1.6);
@@ -1292,7 +1332,7 @@
   flex-direction: column;
   overflow: hidden;
   color: var(--text-primary);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-family-primary);
 }
 
 .fp-hubspot-header {
@@ -1560,14 +1600,222 @@
   object-fit: contain;
 }
 .fp-mobile-image-watch {
-  max-width: 320px;
+  max-width: 240px;
   width: 100%;
 }
 .fp-mobile-image-carplay {
-  max-width: 720px;
+  max-width: 540px;
   width: 100%;
   border-radius: var(--radius-2xl);
   corner-shape: superellipse(1.6);
+}
+
+/* Safari fallback — without `corner-shape: superellipse`, the
+   regular-rounded corners at radius-2xl read too curvy. Use a
+   smaller radius (xl) so the corners match the superellipse
+   visual weight in Chrome/Edge. */
+@supports not (corner-shape: superellipse(1.6)) {
+  .fp-mobile-image-carplay {
+    border-radius: var(--radius-md);
+  }
+}
+
+/* (Guest Badge sheet has moved into the mobile simulator — see
+   `.mw-gb-*` in MobileWindow.css.) */
+.fp-guest-badge--legacy-do-not-use {
+  position: relative;
+  width: 100%;
+  max-width: 380px;
+  margin: 0 auto;
+  background: #FFFFFF;
+  color: #1a1a1a;
+  border-radius: 24px;
+  corner-shape: superellipse(1.6);
+  box-shadow: 0 1px 2px 0 rgba(0,0,0,0.3), 0 3px 6px 2px rgba(0,0,0,0.1);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding-top: 12px;
+}
+.fp-guest-badge-handle {
+  width: 50px;
+  height: 12px;
+  border-radius: 12px;
+  background: #0c0c0e;
+  margin: 0 auto;
+}
+.fp-guest-badge-dismiss {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  width: 28px;
+  height: 28px;
+  border-radius: 24px;
+  border: 0;
+  background: rgba(0, 0, 0, 0.05);
+  color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+}
+.fp-guest-badge-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px;
+}
+.fp-guest-badge-avatar {
+  position: relative;
+  width: 74px;
+  height: 74px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.05);
+  color: rgba(0, 0, 0, 0.4);
+  align-self: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+}
+.fp-guest-badge-avatar svg {
+  width: 36px;
+  height: 36px;
+}
+.fp-guest-badge-mark {
+  position: absolute;
+  right: -3px;
+  bottom: -3px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #1a1a1a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  box-sizing: border-box;
+}
+.fp-guest-badge-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 50%;
+}
+.fp-guest-badge-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.fp-guest-badge-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: -0.32px;
+  line-height: 24px;
+  color: #1a1a1a;
+}
+.fp-guest-badge-sub {
+  margin: 0;
+  font-size: 14px;
+  letter-spacing: -0.15px;
+  line-height: 20px;
+  color: rgba(0, 0, 0, 0.5);
+}
+.fp-guest-badge-section {
+  display: flex;
+  flex-direction: column;
+}
+.fp-guest-badge-section-title {
+  margin: 0 0 8px;
+  padding-top: 16px;
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: -0.32px;
+  line-height: 24px;
+  color: #1a1a1a;
+}
+.fp-guest-badge-field {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 14px;
+  line-height: 20px;
+  letter-spacing: -0.15px;
+  color: rgba(0, 0, 0, 0.5);
+}
+.fp-guest-badge-list {
+  display: flex;
+  flex-direction: column;
+}
+.fp-guest-badge-cell {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 0;
+}
+.fp-guest-badge-cell-text {
+  flex: 1;
+  min-width: 0;
+}
+.fp-guest-badge-cell-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: -0.32px;
+  line-height: 24px;
+  color: #1a1a1a;
+}
+.fp-guest-badge-cell-sub {
+  margin: 0;
+  font-size: 14px;
+  letter-spacing: -0.15px;
+  line-height: 20px;
+  color: rgba(0, 0, 0, 0.5);
+}
+.fp-guest-badge-toggle {
+  position: relative;
+  width: 40px;
+  height: 24px;
+  background: #6e31e7;
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+.fp-guest-badge-toggle-knob {
+  position: absolute;
+  top: 50%;
+  right: 2px;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+.fp-guest-badge-cta {
+  width: 100%;
+  padding: 16px 32px;
+  background: #6e31e7;
+  border: 0;
+  border-radius: 12px;
+  color: #FFFFFF;
+  font-size: 16px;
+  letter-spacing: -0.32px;
+  line-height: 24px;
+  cursor: pointer;
+}
+.fp-guest-badge-footer {
+  border-top: 0.5px solid rgba(0, 0, 0, 0.1);
+  background: linear-gradient(to bottom, #f0f0f0, #ffffff);
+  padding: 24px;
+  text-align: center;
+  font-family: 'Possibility', serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12px;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.3);
 }
 
 /* Mobile feature page — every section visual uses a flat surface-raised
@@ -1966,7 +2214,7 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-family-primary);
   color: var(--text-primary);
   box-shadow: var(--shadow-5);
 }
@@ -2373,7 +2621,7 @@
   border: 0;
   padding: 4px 12px;
   border-radius: 8px;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-family-primary);
   font-size: 14px;
   line-height: 20px;
   letter-spacing: -0.15px;
@@ -2442,7 +2690,7 @@
   background: transparent;
   border: 0;
   color: var(--text-secondary);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-family-primary);
   font-size: 14px;
   font-weight: 400;
   line-height: 20px;
@@ -2561,7 +2809,7 @@
   border: 0;
   outline: none;
   padding: 0;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-family-primary);
   font-size: 14px;
   line-height: 20px;
   letter-spacing: -0.15px;
@@ -2576,7 +2824,7 @@
   flex: 1;
   display: flex;
   align-items: center;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-family-primary);
   font-size: 14px;
   line-height: 20px;
   letter-spacing: -0.15px;
@@ -2737,7 +2985,7 @@
   border: 0;
   outline: none;
   padding: 0;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-family-primary);
   font-size: 14px;
   line-height: 20px;
   letter-spacing: -0.15px;
@@ -3358,7 +3606,7 @@
 }
 
 .fp-onair-curtain-badge-text {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-family-primary);
   font-size: 12px;
   line-height: 14px;
   font-weight: 600;
@@ -3412,7 +3660,7 @@
 
 .fp-onair-rsvp-title {
   margin: 0;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-family-primary);
   font-size: 28px;
   line-height: 1.2;
   font-weight: 600;
@@ -3500,7 +3748,7 @@
   border-radius: 24px;
   corner-shape: superellipse(1.6);
   cursor: pointer;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-family-primary);
   font-size: 14px;
   line-height: 20px;
   letter-spacing: -0.15px;
@@ -3600,7 +3848,7 @@
   border: 0.5px solid var(--border);
   border-radius: 8px;
   corner-shape: superellipse(1.6);
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-family-primary);
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.4px;
@@ -3667,7 +3915,7 @@
 }
 
 .fp-pot-room-name {
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-family-primary);
   font-size: 13px;
   font-weight: 500;
   color: var(--text-primary);
@@ -3706,7 +3954,7 @@
   border: 0.5px solid var(--border);
   border-radius: 8px;
   corner-shape: superellipse(1.6);
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-family-primary);
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.4px;
@@ -3873,11 +4121,14 @@
 }
 
 .fp-explore-title {
+  /* Match `.fp-col-title` (columns variant) — same Possibility cap
+     style and clamp values so the explore lead reads at the same
+     scale as the columns headlines. */
   font-family: 'Possibility', serif;
-  font-size: clamp(20px, 2vw, 28px);
+  font-size: clamp(16px, 1.4vw, 20px);
   font-weight: 700;
-  line-height: 1.1;
-  letter-spacing: -0.6px;
+  line-height: 1.15;
+  letter-spacing: -0.4px;
   color: var(--text-primary);
   margin: 0;
   text-wrap: balance;
@@ -4199,7 +4450,7 @@
   display: flex;
   flex-direction: column;
   z-index: 3;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-family-primary);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
   color: var(--text-primary);
 }
@@ -4430,6 +4681,12 @@
   margin: 0;
   display: flex;
   flex-direction: column;
+  /* Clip to the rounded corners — without this, the editor canvas's
+     `inset: 0` absolute children paint over the curved corners and
+     the rounding reads as a "bulge" at the bottom. `!important`
+     beats the broader `.fp-map-preview .sc-window { overflow:
+     visible !important }` rule above. */
+  overflow: hidden !important;
 }
 
 .fp-map-editor-body {
@@ -4676,7 +4933,7 @@
 }
 
 .fp-tags-magnify-city {
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-family-primary);
   font-size: 22px;
   font-weight: 700;
   letter-spacing: 1px;
@@ -4803,12 +5060,811 @@
   }
 }
 
+/* Footer CTA banner — stack vertically on mobile, full-width
+   button, smaller icon, 16px inner padding. */
+@media (max-width: 768px) {
+  /* ========================================================
+     Feature page mobile pass — mirrors the homepage playbook
+     in /virtual-offices/CLAUDE.md, scoped to .fp-page selectors.
+     ======================================================== */
+
+  /* Hero — left-aligned, smaller text, stacked CTAs. */
+  .fp-hero {
+    padding: 120px var(--grid-margin) 24px;
+  }
+  .fp-hero-inner {
+    grid-column: 1 / -1;
+    gap: 14px;
+  }
+  .fp-hero-title {
+    font-size: 24px;
+    letter-spacing: -0.6px;
+    line-height: 1.05;
+  }
+  .fp-hero-sub {
+    font-size: 13px;
+    line-height: 1.45;
+  }
+  /* Feature-page hero CTAs match the homepage hero (.sc-v2-hero-buttons
+     + .sc-promo-btn): inline buttons (not full-width), 9px 18px
+     padding, 14px font, aligned to start. */
+  .fp-hero .fp-cta-row {
+    width: auto;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 4px;
+    align-self: flex-start;
+  }
+  .fp-hero .fp-cta-row .sc-promo-btn {
+    width: auto;
+    padding: 9px 18px;
+    font-size: 14px;
+  }
+
+  /* Hero visual — same height-hugs-content recipe as section visual. */
+  .fp-hero-visual {
+    margin: 0 auto 48px;
+    padding: 0 var(--grid-margin);
+  }
+  .fp-hero-stage {
+    padding: 0;
+    overflow: hidden;
+    box-shadow: 0 0 0 1px var(--border);
+  }
+  .fp-hero-stage::after {
+    display: none;
+  }
+
+  /* Section frame — collapse to a single column with tighter padding. */
+  .fp-section {
+    grid-template-columns: 1fr;
+    padding: 56px var(--grid-margin);
+    row-gap: 24px;
+  }
+  .fp-section-text {
+    grid-column: 1 / -1;
+    gap: 16px;
+  }
+  /* Match the `.fp-col-title` style on mobile so section titles
+     and the columns-cards card titles read as the same tier. */
+  .fp-section-title {
+    font-size: 16px;
+    line-height: 1.15;
+    letter-spacing: -0.4px;
+  }
+  .fp-section-desc {
+    font-size: 14px;
+    line-height: 22px;
+  }
+  .fp-section-subtitle {
+    font-size: 18px;
+  }
+
+  /* Visual frame — content-driven heights, hairline border on the
+     frame itself (overflow: hidden clips outward shadows on children). */
+  .fp-section-visual {
+    grid-column: 1 / -1;
+    width: 100%;
+    overflow: hidden;
+    pointer-events: none;
+    user-select: none;
+    box-shadow: 0 0 0 1px var(--border);
+  }
+  .fp-section-visual::after {
+    display: none;
+  }
+  .fp-section-visual *,
+  .fp-hero-stage * {
+    pointer-events: none !important;
+  }
+  /* Map editor on mobile — keep the canvas non-interactive so the
+     page can scroll vertically through the visual (touch on the
+     canvas would otherwise be captured by the EditMapView's
+     pan/draw handlers). Only the color swatches stay tappable so
+     users can change the editor's accent color. */
+  .fp-section-visual:has(.fp-map-editor-preview) .toolbar-bg-swatches,
+  .fp-section-visual:has(.fp-map-editor-preview) .toolbar-bg-swatches *,
+  .fp-hero-stage:has(.fp-map-editor-preview) .toolbar-bg-swatches,
+  .fp-hero-stage:has(.fp-map-editor-preview) .toolbar-bg-swatches * {
+    pointer-events: auto !important;
+  }
+  /* Sections marked `interactive: true` on the FEATURES config (e.g.
+     Roamoji Reactions, where users should be able to tap reactions)
+     re-enable pointer events on every descendant. */
+  .fp-section-visual[data-interactive="true"],
+  .fp-section-visual[data-interactive="true"] *,
+  .fp-hero-stage[data-interactive="true"],
+  .fp-hero-stage[data-interactive="true"] * {
+    pointer-events: auto !important;
+  }
+
+  /* Heights per content type (mirrors playbook §1):
+     780×580 windows × scale(0.75) = 435 rendered + 64 padding = 499.
+     Pin top + center horizontally so the scaled window (`transform-origin:
+     top center`) sits flush at 32px from top with room below — `align-items:
+     center` would overflow the top because the scale anchors at the top. */
+  .fp-section-visual:has(.meeting-win),
+  .fp-section-visual:has(.theater-win),
+  .fp-section-visual:has(.ainbox-window),
+  .fp-section-visual:has(.mm-win),
+  .fp-section-visual:has(.lb-win),
+  .fp-section-visual:has(.fp-knock-frame),
+  .fp-section-visual:has(.fp-lock-frame),
+  .fp-section-visual:has(.fp-krisp-frame),
+  .fp-hero-stage:has(.meeting-win),
+  .fp-hero-stage:has(.theater-win),
+  .fp-hero-stage:has(.ainbox-window),
+  .fp-hero-stage:has(.mm-win),
+  .fp-hero-stage:has(.lb-win),
+  .fp-hero-stage:has(.fp-knock-frame),
+  .fp-hero-stage:has(.fp-lock-frame),
+  .fp-hero-stage:has(.fp-krisp-frame) {
+    height: 499px;
+    padding: 32px 0 0;
+    align-items: flex-start;
+    justify-content: center;
+  }
+  /* Magicast / On-It / On-Air — fill width, content-driven height. */
+  .fp-section-visual:has(.mc-win),
+  .fp-section-visual:has(.sc-onit-window),
+  .fp-section-visual:has(.onair-window),
+  .fp-hero-stage:has(.mc-win),
+  .fp-hero-stage:has(.sc-onit-window),
+  .fp-hero-stage:has(.onair-window) {
+    height: auto;
+    padding: 32px;
+  }
+  /* Map preview — embedded ShowcaseMap shrunken to 0.75. */
+  .fp-section-visual:has(.fp-map-preview),
+  .fp-hero-stage:has(.fp-map-preview) {
+    height: 537px;
+    padding: 0;
+  }
+  /* Calendar window (.fp-cal-preview wrapping .cal-win) — same
+     scale-not-resize recipe as Recordings. Desktop intrinsic 780×580
+     scaled 0.75 from top-left, pinned at 32 / 32 of the visual frame. */
+  .fp-section-visual:has(.fp-cal-preview),
+  .fp-hero-stage:has(.fp-cal-preview) {
+    height: 499px !important;
+    padding: 0 !important;
+    align-items: flex-start;
+    justify-content: flex-start;
+  }
+  .fp-section-visual .fp-cal-preview,
+  .fp-hero-stage .fp-cal-preview {
+    width: auto !important;
+    display: block !important;
+    flex-shrink: 0;
+    margin-left: 32px;
+    margin-top: 32px;
+  }
+  .fp-section-visual .fp-cal-preview .cal-win,
+  .fp-hero-stage .fp-cal-preview .cal-win {
+    width: 780px !important;
+    height: 580px !important;
+    flex-shrink: 0;
+    transform: scale(0.75) !important;
+    transform-origin: top left !important;
+  }
+  /* macOS desktop mock — scale-not-resize at 0.75 with desktop
+     intrinsic width (1120). Left-pinned with 32px padding. */
+  .fp-section-visual:has(.fp-desktop) {
+    height: 537px !important;
+    padding: 0 !important;
+  }
+  .fp-section-visual .fp-desktop,
+  .fp-hero-stage .fp-desktop {
+    position: absolute !important;
+    top: 32px !important;
+    left: 32px !important;
+    width: 1120px !important;
+    max-width: none !important;
+    flex-shrink: 0;
+    transform: scale(0.75) !important;
+    transform-origin: top left !important;
+    padding-bottom: 0 !important;
+  }
+  /* Recordings window (.fp-rec-preview wrapping .rec-win) — same
+     scale-not-resize recipe. The `.rec-win` is sized intrinsically
+     by Recordings.css; force the wrapper to its desktop intrinsic
+     dimensions then scale. Pin at 32 / 32 from top-left of the
+     visual frame; right side overflows and crops. */
+  .fp-section-visual:has(.fp-rec-preview),
+  .fp-hero-stage:has(.fp-rec-preview) {
+    height: 499px !important;
+    padding: 0 !important;
+    align-items: flex-start;
+    justify-content: flex-start;
+  }
+  .fp-section-visual .fp-rec-preview,
+  .fp-hero-stage .fp-rec-preview {
+    width: auto !important;
+    display: block !important;
+    flex-shrink: 0;
+    margin-left: 32px;
+    margin-top: 32px;
+  }
+  .fp-section-visual .fp-rec-preview .rec-win,
+  .fp-hero-stage .fp-rec-preview .rec-win {
+    width: 780px !important;
+    height: 580px !important;
+    flex-shrink: 0;
+    transform: scale(0.75) !important;
+    transform-origin: top left !important;
+  }
+  /* Raised Hands popover — desktop anchors it via inline `left`/`bottom`
+     calculated from a `getBoundingClientRect()` measurement of the
+     hand pill. With the `.fp-lock-frame` parent now scaled 0.75 on
+     mobile, the rect math returns post-transform coordinates that
+     don't translate back into the unscaled positioning context, so
+     the popover ends up offset to the bottom-left. Override to a
+     simple horizontal center anchored just above the toolbar
+     (toolbar wrap is ~56px including the 8px padding + 1px border;
+     leave 8px breathing room → bottom: 64px in the unscaled frame). */
+  .fp-section-visual .fp-hands-popover,
+  .fp-hero-stage .fp-hands-popover {
+    left: 50% !important;
+    right: auto !important;
+    bottom: 64px !important;
+    transform: translateX(-50%) !important;
+  }
+
+  /* Knock frame (Drop-In), Lock frame (Locked Room), Krisp frame
+     (Noise Cancellation) — same recipe. The frame itself is the
+     scaled box (sized 780×580, transform: scale(0.75) from top
+     center), inner meeting-win fills the frame at 100%×100% with
+     `transform: none` (don't apply scale twice). Modal/popover
+     overlays inside the frame (knock dialog, hands popover, krisp
+     panel) are already DOM children of the frame, so they scale
+     with it automatically — no extra positioning needed. The visual
+     is centered + top-pinned via the default meeting-win `:has()`
+     rule above. */
+  .fp-section-visual .fp-knock-frame,
+  .fp-section-visual .fp-lock-frame,
+  .fp-section-visual .fp-krisp-frame,
+  .fp-hero-stage .fp-knock-frame,
+  .fp-hero-stage .fp-lock-frame,
+  .fp-hero-stage .fp-krisp-frame {
+    width: 780px !important;
+    height: 580px !important;
+    max-width: none !important;
+    max-height: none !important;
+    flex-shrink: 0 !important;
+    transform: scale(0.75) !important;
+    transform-origin: top center !important;
+    border-radius: var(--radius-xl) !important;
+  }
+  .fp-section-visual .fp-knock-frame .meeting-win,
+  .fp-section-visual .fp-lock-frame .meeting-win,
+  .fp-section-visual .fp-krisp-frame .meeting-win,
+  .fp-hero-stage .fp-knock-frame .meeting-win,
+  .fp-hero-stage .fp-lock-frame .meeting-win,
+  .fp-hero-stage .fp-krisp-frame .meeting-win {
+    width: 100% !important;
+    height: 100% !important;
+    transform: none !important;
+  }
+  /* The .meeting-win-grid layout intentionally has NO mobile override
+     — `transform: scale(0.75)` on the parent meeting-win scales the
+     desktop layout uniformly (gap, padding, alignment), so any
+     mobile-specific tweak would diverge from the desktop look. */
+
+  /* Roamoji-style left-pinned preview wrapper. `.fp-knock-preview` is
+     a flex centering container by default (display: flex; align/justify
+     center). Override BOTH axes — flex-start so the inner
+     `.fp-lock-frame` scales 0.75 from its top-left and lands flush to
+     the visual's top-left padding edge.
+     Used by Roamoji Reactions, Closed Captions, Magic Minutes,
+     Whiteboard, Media Board, 300-Person Meetings, Active Speaker. */
+  .fp-section-visual .fp-roamoji-preview,
+  .fp-hero-stage .fp-roamoji-preview {
+    justify-content: flex-start !important;
+    align-items: flex-start !important;
+    padding-left: 32px;
+  }
+  .fp-section-visual .fp-roamoji-preview .fp-lock-frame,
+  .fp-hero-stage .fp-roamoji-preview .fp-lock-frame {
+    /* Set the lock-frame to its scaled VISIBLE size (585×435)
+       directly — `transform: scale(0.75)` doesn't affect layout, so
+       a 780×580 lock-frame would push the parent to 580 tall even
+       though it renders at 435. Layout matches render this way, no
+       margin tricks needed. The transform moves down to the inner
+       content wrapper (.fp-big-meeting / .meeting-win / etc).
+       Drop border-radius + overflow:hidden so the inner element's
+       OWN border-radius (which scales 0.75 with the transform) is
+       what shows — otherwise the wrapper's unscaled radius would
+       clip the scaled radius and the corners wouldn't match. */
+    width: 585px !important;
+    height: 435px !important;
+    transform: none !important;
+    border-radius: 0 !important;
+    overflow: visible !important;
+    position: relative;
+  }
+  /* Inner content keeps its desktop intrinsic dimensions and gets
+     the scale, anchored top-left at 0/0 of the lock-frame box.
+     Excludes magnify pins / overlay components — those use their
+     own inline `left`/`top` from a measurement and shouldn't be
+     resized to fill the frame. */
+  .fp-section-visual .fp-roamoji-preview .fp-lock-frame > *:not(.fp-lock-magnify):not(.fp-magnify):not(.fp-hands-popover):not(.fp-krisp-popover),
+  .fp-hero-stage .fp-roamoji-preview .fp-lock-frame > *:not(.fp-lock-magnify):not(.fp-magnify):not(.fp-hands-popover):not(.fp-krisp-popover) {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 780px !important;
+    height: 580px !important;
+    transform: scale(0.75) !important;
+    transform-origin: top left !important;
+  }
+  /* TheaterWindow's flex layout (BACKSTAGE row + stage + audience-wrap
+     + reactions + toolbar via `margin-top: auto`) overflows the 580
+     inner height by ~25px because items above the toolbar take more
+     than 528. With `overflow: hidden` on `.theater-win`, the bottom
+     of the toolbar clips. Bump the inner to 610 (fits with a 5px
+     buffer) and the lock-frame outer to 458 (= 610 × 0.75 scaled).
+     The selector chains the four `:not()` exclusions to match the
+     specificity of the lock-frame children rule above (which sets
+     height: 580 for non-overlay children) — without these, source
+     order isn't enough to win. */
+  .fp-section-visual .fp-roamoji-preview .fp-lock-frame:has(.theater-win),
+  .fp-hero-stage .fp-roamoji-preview .fp-lock-frame:has(.theater-win) {
+    height: 465px !important;
+  }
+  .fp-section-visual .fp-roamoji-preview .fp-lock-frame > .theater-win:not(.fp-lock-magnify):not(.fp-magnify):not(.fp-hands-popover):not(.fp-krisp-popover),
+  .fp-hero-stage .fp-roamoji-preview .fp-lock-frame > .theater-win:not(.fp-lock-magnify):not(.fp-magnify):not(.fp-hands-popover):not(.fp-krisp-popover) {
+    height: 620px !important;
+  }
+  /* For sections where the visual height should HUG the scaled
+     window (32 top + 435 content + 32 bottom = 499 either way, but
+     using `height: auto` + symmetric vertical padding keeps the
+     intent explicit and adapts if the content height changes). */
+  .fp-section-visual:has(.fp-roamoji-preview),
+  .fp-hero-stage:has(.fp-roamoji-preview) {
+    height: auto !important;
+    padding: 32px 0 32px 0 !important;
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+  }
+  /* Note: this used to have a duplicate rule for
+     `.fp-roamoji-preview .fp-lock-frame > *` that set
+     `width: 100%; height: 100%; transform: none` — that's resize, not
+     scale, and was overriding the layout=render rule above due to
+     source order. Removed. The rule at line ~5350 is the canonical
+     one (inner = 780×580 + scale 0.75). */
+
+  /* `.fp-mobile-scale-left` — for one-off preview wrappers that have
+     their OWN intrinsic dimensions/aspect-ratio and shouldn't be
+     stuffed into the 780×580 lock-frame. Force the same 780×580
+     intrinsic + 0.75 scale as the meeting-win family so the visible
+     size matches the other mobile windows (585 × 435). The wrapper's
+     own aspect-ratio is overridden — content gets a slight horizontal
+     compression but visual consistency wins. Restore border +
+     border-radius (the earlier full-bleed rule for `.fp-wb-window`/
+     `.fp-mb-window` zeroed them out — undo). */
+  .fp-section-visual .fp-mobile-scale-left,
+  .fp-hero-stage .fp-mobile-scale-left {
+    width: 780px !important;
+    height: 580px !important;
+    max-width: none !important;
+    max-height: none !important;
+    aspect-ratio: auto !important;
+    flex-shrink: 0 !important;
+    transform: scale(0.75) !important;
+    transform-origin: top left !important;
+    border: 0.5px solid var(--border) !important;
+    border-radius: var(--radius-2xl) !important;
+  }
+  /* Visual that contains a `.fp-mobile-scale-left` — hug the scaled
+     content height (auto + aspect ratio drives), pin the scaled
+     window 32px from the left edge with 32px vertical padding.
+     Override the default `.fp-section-visual:has(.fp-wb-window)` /
+     `.fp-mb-window` rules above which were full-bleed. */
+  .fp-section-visual:has(.fp-mobile-scale-left),
+  .fp-hero-stage:has(.fp-mobile-scale-left) {
+    height: auto !important;
+    padding: 32px 0 32px 32px !important;
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+  }
+
+  /* Window placement (playbook §2). Restore desktop intrinsic size,
+     scale to 0.75, top-anchored so the visual hugs from the top. */
+  .fp-section-visual .meeting-win,
+  .fp-section-visual .theater-win,
+  .fp-section-visual .mm-win,
+  .fp-hero-stage .meeting-win,
+  .fp-hero-stage .theater-win,
+  .fp-hero-stage .mm-win {
+    width: 780px !important;
+    height: 580px !important;
+    flex-shrink: 0;
+    transform: scale(0.75);
+    transform-origin: top center;
+  }
+  .fp-section-visual .lb-win,
+  .fp-section-visual .ainbox-window,
+  .fp-hero-stage .lb-win,
+  .fp-hero-stage .ainbox-window {
+    width: 780px !important;
+    height: 580px !important;
+    flex-shrink: 0;
+    transform: scale(0.75);
+    transform-origin: top left;
+  }
+  .fp-section-visual .mc-win,
+  .fp-hero-stage .mc-win {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    transform: none !important;
+  }
+  .fp-section-visual .sc-onit-window,
+  .fp-section-visual .onair-window,
+  .fp-hero-stage .sc-onit-window,
+  .fp-hero-stage .onair-window {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    aspect-ratio: 780 / 1080;
+    transform: none !important;
+    border-radius: var(--radius-xl) !important;
+    corner-shape: superellipse(1.6) !important;
+    overflow: hidden !important;
+  }
+  /* Map preview — fill the visual frame, drop the rounded card chrome.
+     Then scale (don't resize) the embedded ShowcaseMap window: keep its
+     desktop intrinsic 1120 × 630 layout and shrink visually with
+     transform: scale(0.75) anchored top-left, exactly like the homepage
+     hero map (ShowcaseMap.css). Resizing the window squashes
+     CrowdGrid/BigMeeting capacity calcs and breaks the floor look. */
+  /* Default map placement: pinned to the left edge with 32px left padding
+     and 32px top/bottom padding. The right side is intentionally
+     unpadded so the scaled window overflows off-screen and crops via
+     `overflow: hidden`. Sections that want a centered map opt in with
+     `[data-map-align="center"]`. */
+  .fp-section-visual .fp-map-preview,
+  .fp-hero-stage .fp-map-preview {
+    width: 100% !important;
+    height: 100% !important;
+    aspect-ratio: auto !important;
+    border-radius: 0 !important;
+    padding: 32px 0 32px 32px !important;
+    overflow: hidden;
+  }
+  /* Override the desktop rule that pins .miniRoamOS to inset:0 — that
+     ignores .fp-map-preview's padding. Inset to match the padding so
+     the padded area becomes the new positioning context for .sc-window.
+     Don't use the `inset` shorthand here — the desktop rule uses it,
+     and any later `inset` declaration would clobber our longhands. */
+  .fp-section-visual .fp-map-preview .miniRoamOS,
+  .fp-hero-stage .fp-map-preview .miniRoamOS {
+    position: absolute !important;
+    top: 32px !important;
+    left: 32px !important;
+    right: 0 !important;
+    bottom: 32px !important;
+    width: auto !important;
+    height: auto !important;
+  }
+  .fp-section-visual .fp-map-preview .sc-window,
+  .fp-hero-stage .fp-map-preview .sc-window {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: auto !important;
+    bottom: auto !important;
+    width: 1120px !important;
+    height: 630px !important;
+    aspect-ratio: 16 / 9;
+    max-width: none !important;
+    max-height: none !important;
+    margin: 0 !important;
+    flex-shrink: 0;
+    transform: scale(0.75) !important;
+    transform-origin: top left !important;
+    pointer-events: none;
+    /* The visual frame has `overflow: hidden` (so the right side of
+       the map crops cleanly off-screen), which would clip the
+       sc-window's outward shadow. The shadow doesn't read clearly at
+       this scale anyway — drop it on mobile to avoid the half-clipped
+       artifact along the bottom edge. */
+    box-shadow: none !important;
+  }
+  /* Map editor — same scale recipe but no .miniRoamOS wrapper, so the
+     padding has to be applied directly to the sc-window via top/left
+     positioning instead of via .miniRoamOS's inset. */
+  .fp-section-visual .fp-map-editor-preview.fp-map-preview .sc-window,
+  .fp-hero-stage .fp-map-editor-preview.fp-map-preview .sc-window {
+    top: 32px !important;
+    left: 32px !important;
+  }
+  /* Animated DM popups (.mc-window) overlay the map at desktop sizes
+     and positions. ShowcaseMap portals them to the closest
+     `.fp-section-visual` (see `dmPortalTarget` in ShowcaseMap.jsx),
+     so they're a DIRECT child of `.fp-section-visual`. On mobile,
+     pin them to top-left of the visual (16px / 16px) and scale 0.75
+     to match the map. The desktop inline `top`/`left` chase the
+     active avatar position which doesn't translate well to the
+     scaled-down map at mobile widths — fixed corner is cleaner.
+     The `:has()` selector matches the desktop On-It pin rule
+     (`.fp-section-visual:has(.fp-map-preview-onit-pin) .mc-window`,
+     specificity 0,3,0) so we win on mobile too. */
+  .fp-section-visual:has(.fp-map-preview) > .mc-window,
+  .fp-hero-stage:has(.fp-map-preview) > .mc-window {
+    top: 16px !important;
+    left: 16px !important;
+    right: auto !important;
+    bottom: auto !important;
+    transform: scale(0.75) !important;
+    transform-origin: top left !important;
+  }
+  /* The editor body has square bottom corners (color picker bar lives
+     beneath it on desktop). On mobile the bar overflows off-screen,
+     so let the sc-window's bottom rounding show by giving the body
+     matching bottom radii. */
+  .fp-section-visual .fp-map-editor-preview .fp-map-editor-body,
+  .fp-hero-stage .fp-map-editor-preview .fp-map-editor-body {
+    border-radius: 20px !important;
+  }
+  /* Editor toolbar (trash + add + color swatches) — desktop renders
+     it as a horizontal pill pinned `position: fixed; bottom; left:50%`.
+     On mobile it overflows off-screen at the narrow column width.
+     Re-pin to the left edge of the editor, stacked vertically and
+     vertically centered. The .big-meetings-view ancestor has
+     `overflow: hidden`, so position relative to .fp-map-editor-body
+     (the body wrapper, which is `position: relative`) instead, and
+     hoist with z-index above the .big-meetings-view canvas. */
+  .fp-section-visual .fp-map-editor-preview .map-toolbar,
+  .fp-hero-stage .fp-map-editor-preview .map-toolbar {
+    position: absolute !important;
+    bottom: auto !important;
+    top: 50% !important;
+    left: 12px !important;
+    right: auto !important;
+    transform: translateY(-50%) !important;
+    z-index: 10 !important;
+  }
+  .fp-section-visual .fp-map-editor-preview .map-toolbar-inner,
+  .fp-hero-stage .fp-map-editor-preview .map-toolbar-inner {
+    flex-direction: column !important;
+    border-radius: 999px !important;
+  }
+  .fp-section-visual .fp-map-editor-preview .toolbar-bg-swatches,
+  .fp-hero-stage .fp-map-editor-preview .toolbar-bg-swatches {
+    flex-direction: column !important;
+    gap: 14px !important;
+    padding: 10px 0 !important;
+  }
+  /* Bump up the icon + swatch hit targets on mobile inside the editor.
+     App.css mobile shrinks them to 24/14px for the small fixed pill;
+     the vertical stack has more room so we go bigger. */
+  .fp-section-visual .fp-map-editor-preview .toolbar-btn,
+  .fp-hero-stage .fp-map-editor-preview .toolbar-btn {
+    width: 32px !important;
+    height: 32px !important;
+  }
+  .fp-section-visual .fp-map-editor-preview .toolbar-btn svg,
+  .fp-hero-stage .fp-map-editor-preview .toolbar-btn svg {
+    width: 18px !important;
+    height: 18px !important;
+  }
+  .fp-section-visual .fp-map-editor-preview .toolbar-swatch,
+  .fp-hero-stage .fp-map-editor-preview .toolbar-swatch {
+    width: 20px !important;
+    height: 20px !important;
+  }
+  .fp-section-visual .fp-map-editor-preview .toolbar-add-wrap,
+  .fp-hero-stage .fp-map-editor-preview .toolbar-add-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  /* Spotlight overlay portals into the `.sc-window` so the scrim and
+     dialog naturally live inside the window container. The scrim
+     fills the window via `inset: 0` (matching its desktop rule), the
+     dialog stays centered via 50%/-50% transform. Cap dialog width
+     so it doesn't extend past the visible mobile viewport. */
+  .fp-map-preview-spotlight .sc-window > .fp-spotlight {
+    width: calc(100% - 32px) !important;
+    max-width: 320px !important;
+  }
+  /* Opt-in: right-align the map within the visual frame — mirror of
+     the default left-pinned recipe (32px right + 32px vertical, 0
+     left). The scaled window's left edge overflows off-screen and
+     crops via `overflow: hidden`. */
+  .fp-section-visual[data-map-align="right"] .fp-map-preview,
+  .fp-hero-stage[data-map-align="right"] .fp-map-preview {
+    padding: 32px 32px 32px 0 !important;
+  }
+  .fp-section-visual[data-map-align="right"] .fp-map-preview .miniRoamOS,
+  .fp-hero-stage[data-map-align="right"] .fp-map-preview .miniRoamOS {
+    top: 32px !important;
+    left: 0 !important;
+    right: 32px !important;
+    bottom: 32px !important;
+  }
+  .fp-section-visual[data-map-align="right"] .fp-map-preview .sc-window,
+  .fp-hero-stage[data-map-align="right"] .fp-map-preview .sc-window {
+    left: auto !important;
+    right: 0 !important;
+    transform-origin: top right !important;
+  }
+  /* Opt-in: center-align the map within the visual frame. */
+  .fp-section-visual[data-map-align="center"] .fp-map-preview,
+  .fp-hero-stage[data-map-align="center"] .fp-map-preview {
+    padding: 32px 0 !important;
+  }
+  .fp-section-visual[data-map-align="center"] .fp-map-preview .miniRoamOS,
+  .fp-hero-stage[data-map-align="center"] .fp-map-preview .miniRoamOS {
+    top: 32px !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 32px !important;
+  }
+  .fp-section-visual[data-map-align="center"] .fp-map-preview .sc-window,
+  .fp-hero-stage[data-map-align="center"] .fp-map-preview .sc-window {
+    left: 50% !important;
+    transform: translateX(-50%) scale(0.75) !important;
+    transform-origin: top center !important;
+  }
+  /* Lock interactivity inside the regular map preview's sc-window —
+     but exclude the editor variant, which is interactive on mobile. */
+  .fp-section-visual .fp-map-preview:not(.fp-map-editor-preview) .sc-window *,
+  .fp-hero-stage .fp-map-preview:not(.fp-map-editor-preview) .sc-window * {
+    pointer-events: none !important;
+  }
+
+  /* Hide list (playbook §3). */
+  .fp-section-visual .mc-bubble,
+  .fp-section-visual .onair-colors,
+  .fp-section-visual .onair-tools,
+  .fp-section-visual .onit-replay,
+  .fp-hero-stage .mc-bubble,
+  .fp-hero-stage .onair-colors,
+  .fp-hero-stage .onair-tools,
+  .fp-hero-stage .onit-replay {
+    display: none !important;
+  }
+
+  /* On-Air type ramp (playbook §4). */
+  .fp-section-visual .onair-center,
+  .fp-hero-stage .onair-center {
+    width: calc(100% - 32px);
+  }
+  .fp-section-visual .onair-field,
+  .fp-hero-stage .onair-field {
+    padding: 6px 10px;
+  }
+  .fp-section-visual .onair-input,
+  .fp-hero-stage .onair-input {
+    font-size: 11px;
+    line-height: 14px;
+  }
+  .fp-section-visual .onair-input-title,
+  .fp-hero-stage .onair-input-title {
+    font-size: 16px;
+    line-height: 20px;
+  }
+  .fp-section-visual .onair-host-label,
+  .fp-hero-stage .onair-host-label {
+    font-size: 11px;
+  }
+
+  /* On-It type ramp. */
+  .fp-section-visual .sc-onit-window .mc-msg-bubble p,
+  .fp-hero-stage .sc-onit-window .mc-msg-bubble p {
+    font-size: 11px;
+    line-height: 15px;
+  }
+  .fp-section-visual .sc-onit-window .onit-summary-text,
+  .fp-section-visual .sc-onit-window .onit-summary,
+  .fp-hero-stage .sc-onit-window .onit-summary-text,
+  .fp-hero-stage .sc-onit-window .onit-summary {
+    font-size: 12px;
+    line-height: 16px;
+  }
+  .fp-section-visual .sc-onit-window .onit-step,
+  .fp-section-visual .sc-onit-window .onit-card-name,
+  .fp-hero-stage .sc-onit-window .onit-step,
+  .fp-hero-stage .sc-onit-window .onit-card-name {
+    font-size: 11px;
+    line-height: 14px;
+  }
+  .fp-section-visual .sc-onit-window .ainbox-composer-field input,
+  .fp-hero-stage .sc-onit-window .ainbox-composer-field input {
+    font-size: 12px;
+  }
+
+  /* Cards — single-column stack, tighter padding, smaller text. */
+  .fp-section-cards {
+    grid-template-columns: 1fr;
+    row-gap: 0;
+  }
+  .fp-card {
+    grid-column: 1 / -1;
+    padding: 24px;
+    gap: 8px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  /* Match `text-body-strong` token (16/24, weight 600) — one notch
+     below the desktop `text-headline` (18/24). Type tokens don't swap
+     across breakpoints so we restate the values here. */
+  .fp-card-title {
+    font-size: 16px;
+    line-height: 24px;
+    letter-spacing: -0.32px;
+  }
+  .fp-card-desc {
+    font-size: 14px;
+    line-height: 20px;
+  }
+
+  /* Explore — single column. */
+  .fp-section-explore {
+    grid-template-columns: 1fr;
+    row-gap: 16px;
+  }
+  .fp-explore-text,
+  .fp-explore-list {
+    grid-column: 1 / -1;
+  }
+  /* Title + desc sizes match the columns variant (`.fp-col-title`,
+     `.fp-col-desc`) so the explore lead reads consistently. The
+     desktop `.fp-explore-title` clamp (16-20) and `text-body` token
+     on `.fp-explore-desc` are right for mobile already — no
+     overrides needed. */
+
+  /* Compare — stack the two columns. */
+  .fp-section-compare {
+    grid-template-columns: 1fr;
+    row-gap: 16px;
+  }
+  .fp-compare-col {
+    grid-column: 1 / -1;
+  }
+
+  /* Cards-row variant — stack to a single column. */
+  .fp-section-cards-row {
+    grid-template-columns: 1fr;
+  }
+  .fp-cards-row-grid,
+  .fp-cards-row-grid-2,
+  .fp-cards-row-grid-3,
+  .fp-cards-row-grid-4 {
+    grid-template-columns: 1fr;
+  }
+
+  /* Columns variant — stack.
+     Match the desktop rule's specificity (0,2,0) so the
+     `grid-column: 1 / -1` actually wins: desktop's
+     `.fp-section-columns .fp-col { grid-column: span 4 }` ties
+     a bare `.fp-col` selector and would beat it by source order. */
+  .fp-section-columns {
+    grid-template-columns: 1fr;
+    row-gap: 24px;
+  }
+  .fp-section-columns .fp-col {
+    grid-column: 1 / -1;
+  }
+
+  /* Quote — stack rules live at end-of-file because the desktop
+     `.fp-quote-*` rules are defined later in this file and would
+     otherwise win by source order even at mobile widths. */
+
+  /* Footer CTA banner — mobile rules live in the late-bound block at
+     end-of-file because the desktop `.fp-footer-cta-*` rules are
+     defined later in this file (around line 5680+) and would beat
+     same-specificity rules here by source order. */
+}
+
 
 .fp-footer-cta {
   width: 100%;
   max-width: var(--grid-max-width);
   margin: 0 auto;
-  padding: 0 var(--grid-margin) 80px;
+  padding: 80px var(--grid-margin);
   box-sizing: border-box;
   display: grid;
   grid-template-columns: repeat(var(--grid-columns), 1fr);
@@ -4880,12 +5936,14 @@
   color: var(--text-primary);
   margin: 0;
   text-transform: uppercase;
+  text-wrap: balance;
 }
 
 .fp-footer-cta-sub {
   color: var(--text-secondary);
   margin: 0;
   max-width: 52ch;
+  text-wrap: balance;
 }
 
 /* ——— Inverted footer CTA in dark mode (light panel on dark page) ——— */
@@ -4977,6 +6035,20 @@
   padding-top: 24px;
 }
 
+/* Wrapper exists so author + sep + role can flow inline on mobile
+   (see late-bound mobile block). On desktop, the wrapper takes the
+   first 4 columns of the 12-col `.fp-quote-inner` grid and runs an
+   internal 4-col subgrid-style layout so author (cols 1-2) and role
+   (cols 3-4) keep their original side-by-side placement on the same
+   row as the quote text (cols 5-12). */
+.fp-quote-attribution {
+  grid-column: 1 / span 4;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--grid-gutter);
+  align-items: start;
+}
+
 .fp-quote-author {
   grid-column: 1 / span 2;
   font-size: 11px;
@@ -4997,9 +6069,22 @@
   line-height: 1.5;
 }
 
+/* Inline middle-dot separator between author + role. Hidden on
+   desktop where author and role sit in different grid columns;
+   shown on mobile (see late-bound mobile block) where they stack
+   inline as "Name · Role". */
+.fp-quote-sep {
+  display: none;
+  color: var(--text-secondary);
+  letter-spacing: 0.18em;
+  font-weight: 500;
+  font-size: 11px;
+  margin: 0 0.5em;
+}
+
 .fp-quote-text {
   grid-column: 5 / span 8;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-family-primary);
   font-size: clamp(17px, 1.6vw, 22px);
   font-weight: 500;
   line-height: 1.3;
@@ -5154,6 +6239,7 @@
   color: var(--text-primary);
   margin: 0;
   text-transform: uppercase;
+  text-wrap: balance;
 }
 
 .fp-floating-cta-sub {
@@ -5161,6 +6247,7 @@
   line-height: 1.35;
   color: var(--text-secondary);
   margin: 0;
+  text-wrap: balance;
 }
 
 .fp-floating-cta-actions {
@@ -5447,18 +6534,22 @@
 
 .fp-compare-row {
   display: flex;
-  align-items: stretch;
+  align-items: center;
   justify-content: space-between;
+  gap: 16px;
   border-bottom: 0.5px solid var(--border);
   height: 76px;
+  padding: 16px 24px;
   box-sizing: border-box;
   transition: background 120ms ease;
 }
 
-.fp-compare-row:not(.fp-compare-row-link) {
-  align-items: center;
-  gap: 16px;
-  padding: 16px 32px;
+.fp-compare-row-link {
+  /* Link rows replace the .fp-compare-row's own flex content with an
+     anchor that fills the row. Drop the padding on the row itself so
+     padding doesn't double up — the anchor will own it instead. */
+  padding: 0 !important;
+  align-items: stretch;
 }
 
 .fp-compare-row-anchor {
@@ -5466,8 +6557,9 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 16px 32px;
+  padding: 16px 24px;
   width: 100%;
+  box-sizing: border-box;
   text-decoration: none;
   color: inherit;
 }
@@ -5542,7 +6634,7 @@
 
 .fp-compare-row-positive.fp-compare-row-total .fp-compare-row-price {
   display: inline-block;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-family-primary);
   font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.04em;
@@ -5589,7 +6681,7 @@
 
 .fp-compare-badge {
   align-self: flex-start;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-family-primary);
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.06em;
@@ -5902,14 +6994,30 @@
   border-radius: var(--radius-2xl);
   corner-shape: superellipse(1.6);
   overflow: hidden;
-  box-shadow: var(--shadow-5);
   display: flex;
   flex-direction: column;
   padding: 4px;
   gap: 4px;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-family-primary);
   color: var(--text-primary);
 }
+
+/* Live Roam lobby embed — paint surface-primary behind the iframe
+   so any white space inside the iframe before/around the embed's
+   own content reads as the page's surface color, not white.
+   Scoped to the `#roam-lobby` host only — the mock browser chrome
+   (.fp-lbk-browser) is left untouched. Bottom corners get a
+   slightly smaller radius than the browser's outer `--radius-2xl`
+   so the inset (4px padding) reads correctly when the iframe
+   reaches the rounded bottom of the browser. */
+#roam-lobby,
+#roam-lobby iframe {
+  background: var(--bg-surface-primary);
+  border-radius: var(--radius-xl);
+  corner-shape: superellipse(1.6);
+  overflow: hidden;
+}
+
 
 [data-theme="light"] .fp-lbk-browser {
   background: rgba(255, 255, 255, 0.3);
@@ -6690,7 +7798,7 @@ button.fp-lbk-day {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-family-primary);
   color: var(--text-primary);
   z-index: 6;
 }
@@ -6912,7 +8020,7 @@ button.fp-lbk-day {
   padding: 6px 14px;
   border-radius: var(--radius-md);
   corner-shape: superellipse(1.6);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-family-primary);
   font-size: 14px;
   line-height: 20px;
   letter-spacing: -0.15px;
@@ -6984,7 +8092,7 @@ button.fp-lbk-day {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-family-primary);
   color: var(--text-primary);
   z-index: 6;
 }
@@ -7301,7 +8409,7 @@ button.fp-lbk-day {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-family-primary);
   color: var(--text-primary);
   z-index: 6;
 }
@@ -7786,7 +8894,7 @@ button.fp-lbk-day {
 
 .fp-oas-poster-title {
   margin: 0;
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-family-primary);
   font-weight: 600;
   font-size: 18px;
   line-height: 22px;
@@ -8324,4 +9432,1196 @@ button.fp-lbk-day {
 [data-theme="light"] .fp-lobby-shelf-base {
   --ledge-lip: #E8EAEE;
   --ledge-body: #C9CCD1;
+}
+
+/* Mobile overrides for rules that come after the main mobile media block.
+   Lives here at end-of-file so it wins by source order over later
+   desktop declarations of the same selectors. Add new mobile-only
+   rules here when the matching desktop selector is defined later in
+   the file (otherwise they get clobbered). */
+@media (max-width: 768px) {
+  .fp-quote {
+    padding: 64px var(--grid-margin);
+  }
+  .fp-quote-inner {
+    grid-template-columns: 1fr;
+    row-gap: 16px;
+    padding-top: 16px;
+    /* Drop the hairline divider above the author block on mobile. */
+    border-top: 0 !important;
+  }
+  /* Stack as: a SINGLE inline line of "author · role" on top, then
+     the blockquote beneath. JSX renders attribution before text;
+     setting `.fp-quote-inner` to `display: block` flows them
+     naturally in source order (the desktop grid pins them
+     side-by-side regardless of source order). */
+  .fp-quote-inner {
+    display: block !important;
+  }
+  /* Defeat the desktop `.fp-quote-attribution { display: grid }`
+     so author/sep/role flow inline as a single line instead of
+     side-by-side grid columns. */
+  .fp-quote-attribution {
+    display: block !important;
+    margin-bottom: 16px;
+  }
+  .fp-quote-author,
+  .fp-quote-sep,
+  .fp-quote-role {
+    display: inline !important;
+  }
+  .fp-quote-text {
+    display: block;
+    font-size: 18px;
+    line-height: 1.4;
+  }
+  /* Soften the author name to text-secondary so it reads as
+     supporting metadata next to the quote (consistent with the role
+     line below it). */
+  .fp-quote-author {
+    color: var(--text-secondary) !important;
+  }
+
+  /* Explore variant — desktop puts text in cols 1-6 and the bullet
+     list in cols 7-12. On mobile collapse to a single stack with the
+     title above the list. Specificity has to match the desktop
+     `.fp-section-explore .fp-explore-*` rules (0,2,0). */
+  .fp-section-explore .fp-explore-text,
+  .fp-section-explore .fp-explore-list {
+    grid-column: 1 / -1 !important;
+  }
+
+  /* Theater Whisper Rows preview — fluid scale that fills the visual
+     width with 32px padding on all sides. Uses viewport-width math
+     so the grid scales smoothly across mobile breakpoints (390px
+     phone → 768px breakpoint edge). The `100vw - 96px` accounts for
+     the section's 16px outer gutter (×2 = 32) and the visual's 32px
+     inner padding (×2 = 64): 32 + 64 = 96. Aspect ratio of the
+     natural grid is ~0.25 (height ÷ width = ~236 / 944), so the
+     wrapper height tracks the same fraction of the visible width. */
+  .fp-section-visual:has(.fp-whisper-preview) {
+    height: auto !important;
+    padding: 32px !important;
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+  }
+  .fp-section-visual .fp-whisper-preview {
+    width: 100% !important;
+    height: calc((100vw - 96px) * 0.25) !important;
+    padding: 0 !important;
+    flex-shrink: 0;
+    position: relative !important;
+    overflow: visible !important;
+    display: block !important;
+  }
+  .fp-section-visual .fp-whisper-preview .fp-whisper-grid {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 944px !important;
+    /* Divide length by length (not unitless) so the result is a
+       proper unitless ratio that `scale()` accepts. `scale(<length>)`
+       is invalid and silently fails — was the bug that left the
+       grid at full natural size. */
+    transform: scale(calc((100vw - 96px) / 944px)) !important;
+    transform-origin: top left !important;
+  }
+
+  /* Columns-cards (Theater "The Curtain", "Town Halls", etc.) —
+     desktop sets `min-height: 280px` so the cards align in a tidy
+     grid. On mobile each card stacks vertically — keep them all the
+     same height for visual rhythm, but pin to the tallest sibling
+     via `grid-auto-rows: 1fr` on the section instead of a fixed
+     min-height (avoids dead space when copy is short, avoids
+     clipping when copy is long).
+     Also force `width: 100%` — the third card (last row) was
+     sometimes sizing to its content (~580 instead of ~623) because
+     of how grid-auto-flow + `1 / -1` resolves on the implicit row,
+     leaving an inconsistent right edge between cards. */
+  .fp-section-columns-cards {
+    grid-auto-rows: 1fr !important;
+  }
+  .fp-section-columns-cards .fp-col {
+    min-height: 0 !important;
+    padding: 24px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Lead variant — desktop `clamp(20px, 2vw, 28px)` floors at 20px
+     on mobile, which feels too big for body-prose-style intro
+     paragraphs. Bump down to text-body sized (16/24). */
+  .fp-section-lead .fp-lead {
+    font-size: 16px !important;
+    line-height: 24px !important;
+    letter-spacing: -0.32px !important;
+  }
+
+  /* Compare (pricing) — desktop sets `padding-top: 0` and `row-gap: 0`
+     on `.fp-section-compare` (specificity 0,1,0, lives after the
+     early mobile block). Force 32px vertical padding so the table
+     breathes on mobile, and 16px gap between the stacked Legacy /
+     Roam Bundle cards. */
+  .fp-section-compare {
+    padding-top: 32px !important;
+    padding-bottom: 32px !important;
+    row-gap: 16px !important;
+  }
+
+  /* Footer CTA banner (playbook §7) — desktop `.fp-footer-cta-*`
+     rules at ~5680 in this file beat the early mobile block by
+     source order, so the polished mobile layout (icon stacked above
+     text, full-width CTAs) lives here at end-of-file instead. */
+  .fp-footer-cta-inner {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 16px !important;
+    padding: 24px !important;
+  }
+  .fp-footer-cta-lead {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+  .fp-footer-cta-icon {
+    width: 56px !important;
+    height: 56px !important;
+  }
+  .fp-footer-cta-title {
+    font-size: 20px !important;
+    letter-spacing: -0.4px !important;
+  }
+  .fp-footer-cta-sub {
+    font-size: 14px !important;
+    line-height: 20px !important;
+  }
+  .fp-footer-cta .fp-cta-row {
+    width: 100% !important;
+    flex-direction: column !important;
+  }
+  .fp-footer-cta .fp-cta-row .sc-promo-btn {
+    width: 100% !important;
+  }
+
+  /* ==========================================================
+     Drop-In page (and any other page using these visuals) —
+     mobile pass for the long tail of one-off preview wrappers.
+     The default scale-not-resize recipe (§2) handles `.meeting-win`
+     anywhere it appears, so wrappers that just contain a meeting-win
+     work automatically. The rules below cover wrappers that DON'T
+     contain a `.meeting-win` (image previews, aspect-ratio frames),
+     plus the `horz` / `horz-reverse` section variants.
+     ========================================================== */
+
+  /* Section variants — collapse `horz` (text cols 1-4, visual 5-12)
+     and `horz-reverse` (visual 1-8, text 9-12) to a single column. */
+  .fp-section-horz,
+  .fp-section-horz-reverse {
+    grid-template-columns: 1fr !important;
+  }
+  .fp-section-horz .fp-section-text,
+  .fp-section-horz .fp-section-visual,
+  .fp-section-horz-reverse .fp-section-text,
+  .fp-section-horz-reverse .fp-section-visual {
+    grid-column: 1 / -1 !important;
+  }
+  /* Reverse: visual is `grid-row: 1` on desktop. Reset so DOM order
+     wins and text sits above visual on mobile (matches the default
+     `.fp-section` stacking). */
+  .fp-section-horz-reverse .fp-section-text,
+  .fp-section-horz-reverse .fp-section-visual {
+    grid-row: auto !important;
+  }
+  /* horz visual wrapper has `padding: 32px` on desktop — keep that
+     on mobile but ensure the inner preview fills width. */
+  .fp-section-horz .fp-section-visual,
+  .fp-section-horz-reverse .fp-section-visual {
+    padding: 16px !important;
+  }
+
+  /* Roamvision (`.fp-rv-window`) — image-only aspect-ratio frame,
+     fill the visual edge-to-edge on mobile. Wb/Mb intentionally
+     excluded — they use the `.fp-mobile-scale-left` recipe below
+     (scale-not-resize, left-pinned). */
+  .fp-section-visual:has(.fp-rv-window) {
+    height: auto !important;
+    padding: 0 !important;
+  }
+  .fp-section-visual .fp-rv-window {
+    width: 100% !important;
+    border-radius: 0 !important;
+    border-left: 0 !important;
+    border-right: 0 !important;
+  }
+
+  /* Generic image preview (External Meetings + any other
+     `.fp-image-preview` host). The component is `display: block;
+     line-height: 0` with an `<img width:100%>` inside — let the
+     image fill the visual edge-to-edge with no padding. */
+  .fp-section-visual:has(.fp-image-preview) {
+    height: auto !important;
+    padding: 0 !important;
+  }
+  .fp-section-visual .fp-image-preview {
+    width: 100% !important;
+  }
+  .fp-section-visual .fp-image-preview-half {
+    width: 100% !important;
+  }
+  /* CompareSlider visuals (Virtual Background, Face Touch Up) — full
+     bleed, the image fills the visual frame edge-to-edge. Overrides
+     both the generic .fp-image-preview padding and the .fp-section-horz
+     padding below. */
+  .fp-section-visual:has(.fp-vbg-compare) {
+    padding: 0 !important;
+  }
+
+  /* MiniChat preview (Boot the user out). The `.fp-minichat-preview`
+     wrapper is already `display: flex; justify-content: center`, so
+     a fixed 320×520 frame inside centers naturally. Keep that — only
+     stretch the wrapper to full visual width and add 32px vertical
+     padding so the frame breathes. Don't override the frame's own
+     width (was forcing it to 100% which stretched the chat window). */
+  .fp-section-visual:has(.fp-minichat-preview) {
+    height: auto !important;
+    padding: 32px 0 !important;
+    align-items: center;
+    justify-content: center;
+  }
+  .fp-section-visual .fp-minichat-preview {
+    width: 100% !important;
+  }
+
+  /* Krisp noise cancellation overlay — popover anchored to a
+     meeting-win. The meeting-win itself follows the standard
+     scale recipe; just make sure the popover doesn't bleed past
+     the visual frame. */
+  .fp-section-visual:has(.fp-krisp-frame) {
+    overflow: hidden;
+  }
+
+  /* `.fp-as-preview` (Active Speaker) and `.fp-big-meeting` wrap a
+     `.meeting-win` directly — the inner window already gets the
+     standard 780×580 scale-0.75 recipe from §2, but the wrappers
+     have `display: flex; justify-content: center` and force the
+     inner `.meeting-win` to `position: relative; left: auto; top: auto`
+     which can fight the standard mobile rule. Reassert the wrapper
+     as a passthrough so the meeting-win lays out naturally. */
+  /* 300 Person Meetings (`.fp-big-meeting`) and Active Speaker
+     (`.fp-as-preview`) — clean layout=render recipe (CLAUDE.md
+     §0a-i). Take the desktop meeting-win (780×580) and visually
+     scale to 0.75 without resizing it. Wrapper takes the SCALED
+     visible size (585×435), inner meeting-win is absolutely
+     positioned at desktop intrinsic 780×580 with `transform: scale`.
+     Layout = render, so the visual hugs the rendered window. */
+  .fp-section-visual:has(.fp-big-meeting),
+  .fp-section-visual:has(.fp-as-preview) {
+    height: auto !important;
+    align-items: flex-start !important;
+  }
+  .fp-section-visual:has(.fp-big-meeting) {
+    /* 300 Person Meetings — left-pinned (32px from left, 32 vertical).
+       Right side overflows and crops via the visual's overflow:hidden. */
+    padding: 32px 0 32px 32px !important;
+    justify-content: flex-start !important;
+  }
+  .fp-section-visual:has(.fp-as-preview) {
+    /* Active Speaker — right-pinned (32px from right, 32 vertical).
+       Left side overflows and crops via the visual's overflow:hidden. */
+    padding: 32px 32px 32px 0 !important;
+    justify-content: flex-end !important;
+  }
+  .fp-section-visual .fp-big-meeting,
+  .fp-section-visual .fp-as-preview {
+    position: relative !important;
+    width: 585px !important;
+    height: 435px !important;
+    flex-shrink: 0 !important;
+    overflow: visible !important;
+    display: block !important;
+  }
+  .fp-section-visual .fp-big-meeting > .meeting-win,
+  .fp-section-visual .fp-as-preview > .meeting-win {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: auto !important;
+    bottom: auto !important;
+    width: 780px !important;
+    height: 580px !important;
+    flex-shrink: 0 !important;
+    transform: scale(0.75) !important;
+    transform-origin: top left !important;
+  }
+
+  /* ───────────────────── AInbox feature page ─────────────────────
+     Most AInbox sections render `<AInbox>` directly (.ainbox-window).
+     The standard meeting-window mobile recipe (height: 499; padding:
+     32 0 0; align-items: flex-start; justify-content: center) gives
+     the right visual height but centers the unscaled 780-wide box —
+     because AInbox uses transform-origin: top left, the visible
+     scaled output ends up roughly centered (overflows both sides).
+     Per CLAUDE.md §2 ("AInbox: same as Lobby — pinned to the left"),
+     override justify-content + padding-left so the unscaled box
+     starts at x=32 and the scaled output sits flush 32px from the
+     left wallpaper edge. Right side overflows offscreen and crops
+     via the visual's `overflow: hidden`. */
+  .fp-section-visual:has(.ainbox-window),
+  .fp-hero-stage:has(.ainbox-window),
+  .fp-section-visual:has(.lb-win),
+  .fp-hero-stage:has(.lb-win) {
+    justify-content: flex-start !important;
+    padding-left: 32px !important;
+  }
+
+  /* ─────────── Lobby feature page ───────────
+     Same recipe as AInbox §35 — `.lb-win` shares the meeting-style
+     window family and needs the same scope+:not()-chain transform
+     fix to defeat the reset rule's specificity (0,6,0). The
+     existing `.fp-section-visual:has(.lb-win)` left-pin rule
+     (justify-content + padding-left) already applies. */
+  .fp-page[data-slug="lobby"] .fp-section-visual .lb-win:not(.fp-section-visual-wallpaper):not(.shelf-win):not(.mc-window):not(.mc-bubble):not(.fp-tags-magnify),
+  .fp-page[data-slug="lobby"] .fp-hero-stage .lb-win:not(.fp-section-visual-wallpaper):not(.shelf-win):not(.mc-window):not(.mc-bubble):not(.fp-tags-magnify) {
+    transform: scale(0.75) !important;
+    transform-origin: top left !important;
+  }
+
+  /* Hero stage — uses LobbyBookingPreview (.fp-lbk-browser). Apply
+     the standard scale-not-resize recipe: keep the desktop intrinsic
+     width (980px) and shrink with `transform: scale(0.5)` from
+     top-left, pinned 32px from the left wallpaper edge. Right side
+     overflows offscreen and crops via overflow:hidden. */
+  .fp-page[data-slug="lobby"] .fp-hero-stage:has(.fp-lbk-browser) {
+    height: 414px !important;
+    padding: 32px 0 32px 32px !important;
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+    overflow: hidden !important;
+  }
+  .fp-page[data-slug="lobby"] .fp-hero-stage .fp-lbk-browser:not(.fp-section-visual-wallpaper):not(.shelf-win):not(.mc-window):not(.mc-bubble):not(.fp-tags-magnify) {
+    width: 980px !important;
+    max-width: 980px !important;
+    flex-shrink: 0 !important;
+    align-self: flex-start !important;
+    transform: scale(0.5) !important;
+    transform-origin: top left !important;
+  }
+  /* `.fp-lbk-stage` (the wrapper around the browser inside
+     LobbyBookingPreview) is `display: flex; align-items: center`
+     which centers the 980-wide browser horizontally — putting its
+     left edge at offsetLeft: -194 inside a 591-wide stage. Override
+     to flex-start so the browser sits at the left of the stage,
+     and the hero stage's padding-left + transform-origin: top left
+     anchor it 32px from the wallpaper edge. */
+  .fp-page[data-slug="lobby"] .fp-hero-stage .fp-lbk-stage {
+    align-items: flex-start !important;
+    width: auto !important;
+    flex-shrink: 0 !important;
+  }
+  /* Force the desktop two-column booking-card layout on mobile.
+     The @media(max-width:900px) rule on `.fp-lbk-card` (line 7694)
+     stacks the host column above the calendar/slots column on small
+     viewports — but our hero scales the unscaled 980-wide box to
+     fit, so we want the desktop layout INSIDE the scaled box even
+     though the viewport is narrow. */
+  .fp-page[data-slug="lobby"] .fp-hero-stage .fp-lbk-card {
+    height: 520px !important;
+    flex-direction: row !important;
+  }
+  .fp-page[data-slug="lobby"] .fp-hero-stage .fp-lbk-col-host,
+  .fp-page[data-slug="lobby"] .fp-hero-stage .fp-lbk-col-month {
+    width: auto !important;
+    border-right: 0.5px solid var(--border) !important;
+    border-bottom: none !important;
+  }
+
+  /* Embed section — `.fp-emb-stage > .fp-emb-frame` contains a
+     <LobbyPreview> (lb-win) + modal scrim/dialog. Standard scale
+     recipe: fixed 780×580 frame scaled 0.75 from top-left, visual
+     hugs at 499px (= 32 + 435 + 32). Layout box of frame stays
+     780×580 unscaled though, so the visual would naturally size to
+     580 + 64 = 644. Pin visual height to 499 and let overflow
+     hidden crop the layout box overshoot. */
+  .fp-page[data-slug="lobby"] .fp-section-visual:has(.fp-emb-stage) {
+    height: 499px !important;
+    padding: 32px 0 0 32px !important;
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+  }
+  .fp-page[data-slug="lobby"] .fp-section-visual .fp-emb-stage {
+    width: 780px !important;
+    flex-shrink: 0 !important;
+    justify-content: flex-start !important;
+  }
+  .fp-page[data-slug="lobby"] .fp-section-visual .fp-emb-frame {
+    width: 780px !important;
+    height: 580px !important;
+    flex-shrink: 0 !important;
+    transform: scale(0.75) !important;
+    transform-origin: top left !important;
+  }
+  /* Inner lb-win fills the frame — defeat the standalone .lb-win
+     mobile transform (which would double-scale inside the frame).
+     Specificity needs to beat the standalone rule's 0,8,0 — adding
+     `.fp-emb-frame` (one more class) gets to 0,9,0. */
+  .fp-page[data-slug="lobby"] .fp-section-visual .fp-emb-frame .lb-win:not(.fp-section-visual-wallpaper):not(.shelf-win):not(.mc-window):not(.mc-bubble):not(.fp-tags-magnify),
+  .fp-page[data-slug="lobby"] .fp-hero-stage .fp-emb-frame .lb-win:not(.fp-section-visual-wallpaper):not(.shelf-win):not(.mc-window):not(.mc-bubble):not(.fp-tags-magnify) {
+    width: 100% !important;
+    height: 100% !important;
+    transform: none !important;
+  }
+
+  /* Virtual Shelf preview — already gets a flat surface bg via the
+     desktop `:has(.fp-lobby-shelf)` rule. Hug height with 32px
+     vertical padding on mobile. The shelf's own `padding: 80px 0 16px`
+     creates ~80px of dead wallpaper above the items on desktop;
+     drop it on mobile so the visual hugs the items with just the
+     visual's 32px padding. */
+  .fp-page[data-slug="lobby"] .fp-section-visual:has(.fp-lobby-shelf) {
+    height: auto !important;
+    padding: 32px 0 !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  .fp-page[data-slug="lobby"] .fp-section-visual .fp-lobby-shelf {
+    width: 100% !important;
+    padding: 0 !important;
+  }
+
+  /* Magic Minutes "On-It picks up the slack" section uses
+     <OnItFeatureChat /> which renders `.mc-window.sc-onit-window`.
+     The desktop fill-width + aspect-ratio 780/1080 rule (line ~5468)
+     makes it ~862px tall on mobile. Fill the visual width with 32px
+     horizontal padding and a fixed 520px height (matching the
+     small DM window height) so it reads as a normal-sized chat
+     window instead of a portrait poster. */
+  .fp-page[data-slug="magic-minutes"] .fp-section-visual:has(.sc-onit-window) {
+    height: auto !important;
+    padding: 32px !important;
+    align-items: stretch !important;
+    justify-content: stretch !important;
+  }
+  .fp-page[data-slug="magic-minutes"] .fp-section-visual .sc-onit-window {
+    position: relative !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 520px !important;
+    aspect-ratio: auto !important;
+    flex-shrink: 0 !important;
+    transform: none !important;
+    margin: 0 !important;
+  }
+
+  /* AInbox windows on any feature page that uses them — match the
+     map preview's mobile recipe: same 0.75 scale factor, visual
+     frame hugs the scaled window with 32px vertical padding
+     (height = 32 + 435 + 32 = 499).
+     The `:not()` chain matches the specificity of the reset rule
+     (0,6,0) at the top of this file so `transform: scale(0.75)`
+     actually applies — without it the reset's `transform: none
+     !important` on direct children wins.
+     Applies to: AInbox feature page (most sections), Magic Minutes
+     feature page ("Group Chat for every meeting" + several other
+     sections that embed AInbox previews). Add more slugs here as
+     needed. */
+  .fp-page[data-slug="ainbox"] .fp-section-visual .ainbox-window:not(.fp-section-visual-wallpaper):not(.shelf-win):not(.mc-window):not(.mc-bubble):not(.fp-tags-magnify),
+  .fp-page[data-slug="ainbox"] .fp-hero-stage .ainbox-window:not(.fp-section-visual-wallpaper):not(.shelf-win):not(.mc-window):not(.mc-bubble):not(.fp-tags-magnify),
+  .fp-page[data-slug="magic-minutes"] .fp-section-visual .ainbox-window:not(.fp-section-visual-wallpaper):not(.shelf-win):not(.mc-window):not(.mc-bubble):not(.fp-tags-magnify),
+  .fp-page[data-slug="magic-minutes"] .fp-hero-stage .ainbox-window:not(.fp-section-visual-wallpaper):not(.shelf-win):not(.mc-window):not(.mc-bubble):not(.fp-tags-magnify),
+  .fp-page[data-slug="on-it"] .fp-section-visual .ainbox-window:not(.fp-section-visual-wallpaper):not(.shelf-win):not(.mc-window):not(.mc-bubble):not(.fp-tags-magnify),
+  .fp-page[data-slug="on-it"] .fp-hero-stage .ainbox-window:not(.fp-section-visual-wallpaper):not(.shelf-win):not(.mc-window):not(.mc-bubble):not(.fp-tags-magnify),
+  .fp-page[data-slug="on-air"] .fp-section-visual .ainbox-window:not(.fp-section-visual-wallpaper):not(.shelf-win):not(.mc-window):not(.mc-bubble):not(.fp-tags-magnify),
+  .fp-page[data-slug="on-air"] .fp-hero-stage .ainbox-window:not(.fp-section-visual-wallpaper):not(.shelf-win):not(.mc-window):not(.mc-bubble):not(.fp-tags-magnify) {
+    transform: scale(0.75) !important;
+    transform-origin: top left !important;
+  }
+  /* ─────────── Magicast feature page ───────────
+     Sections use a mix of `.mc-win` (Magicast window),
+     `.fp-mv-win` (viewer window for Trim/Transcript/Search),
+     `.fp-mvs-frame` (Share section, modal-inside-frame),
+     `.ainbox-window` (Integrated with AInbox), and
+     `.sc-onit-window` (AI Assistant Integration). The reset rule
+     forces transform: none on direct children — same :not() chain
+     bump used everywhere else on mobile to win.
+
+     Strategy:
+     - mc-win sections: pin LEFT, scale 0.5 (mc-win is 420 normal /
+       800 effects-open which is much wider than other windows;
+       0.5 makes them fit the visual width comfortably).
+     - fp-mv-win sections: pin LEFT, scale 0.5 (1133 wide intrinsic,
+       too wide to fit at 0.75).
+     - fp-mvs-frame: scale like an mm-win (780×580 → 0.75) since it
+       wraps a viewer window with a modal overlay.
+     - ainbox-window: same recipe as AInbox/Magic Minutes pages.
+     - sc-onit-window: fill visual width with 32px horizontal
+       padding (matches Magic Minutes "On-It picks up the slack"). */
+
+  /* Mobile simulator (.fp-mobile-preview wrapping .mw-win — used on
+     the Mobile feature page).
+     Use `transform: scale(0.75)` (NOT `zoom`) so the mw-win's
+     layout box is preserved — its internal media queries / sizing
+     calcs see the original 340×~680 box and don't reflow the
+     screens to a smaller size. The downside of transform is that
+     the layout box stays full size and the visual auto-pads to it,
+     leaving dead space below. Fix with the layout=render recipe:
+     constrain `.fp-mobile-preview` to the scaled visible size so
+     the visual hugs naturally.
+     Visual gets 32px top + bottom padding to match other simulator
+     section visuals. */
+  .fp-section-visual:has(.fp-mobile-preview),
+  .fp-hero-stage:has(.fp-mobile-preview) {
+    padding-top: 32px !important;
+    padding-bottom: 32px !important;
+    align-items: flex-start !important;
+    justify-content: center !important;
+    height: auto !important;
+    overflow: hidden !important;
+  }
+  .fp-section-visual .fp-mobile-preview,
+  .fp-hero-stage .fp-mobile-preview {
+    width: 255px !important;
+    height: 510px !important;
+    flex-shrink: 0 !important;
+    overflow: visible !important;
+    position: relative !important;
+    display: block !important;
+  }
+  .fp-section-visual .fp-mobile-preview .mw-win,
+  .fp-hero-stage .fp-mobile-preview .mw-win {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 340px !important;
+    transform: scale(0.75) !important;
+    transform-origin: top left !important;
+    flex-shrink: 0 !important;
+  }
+  /* Apple Watch + CarPlay product images scale down to 0.75 on
+     mobile so they read at the same proportion as the simulator
+     mw-win above. Layout=render: the .fp-mobile-image-stage is
+     fixed at the scaled visible image size; the image inside
+     keeps its full intrinsic width with `transform: scale(0.75)`
+     pinned to top-left. The aspect of the natural images
+     (watch ~471×799, carplay ~1240×744) determines the wrapper's
+     scaled dimensions: watch 240×407 → scaled 180×305; carplay
+     540×324 → scaled 405×243.
+     Visual height auto-hugs with 32px padding all sides. */
+  .fp-section-visual:has(.fp-mobile-image-stage),
+  .fp-hero-stage:has(.fp-mobile-image-stage) {
+    height: auto !important;
+    padding: 32px !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  .fp-section-visual:has(.fp-mobile-image-watch) .fp-mobile-image-stage,
+  .fp-hero-stage:has(.fp-mobile-image-watch) .fp-mobile-image-stage {
+    width: 180px !important;
+    height: 305px !important;
+    position: relative !important;
+    overflow: visible !important;
+    flex-shrink: 0 !important;
+    display: block !important;
+  }
+  .fp-section-visual:has(.fp-mobile-image-carplay) .fp-mobile-image-stage,
+  .fp-hero-stage:has(.fp-mobile-image-carplay) .fp-mobile-image-stage {
+    width: 100% !important;
+    height: auto !important;
+    position: relative !important;
+    overflow: visible !important;
+    flex-shrink: 0 !important;
+    display: block !important;
+  }
+  .fp-section-visual .fp-mobile-image-watch,
+  .fp-hero-stage .fp-mobile-image-watch {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 240px !important;
+    max-width: 240px !important;
+    height: auto !important;
+    transform: scale(0.75) !important;
+    transform-origin: top left !important;
+  }
+  .fp-section-visual .fp-mobile-image-carplay,
+  .fp-hero-stage .fp-mobile-image-carplay {
+    position: relative !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    transform: none !important;
+  }
+
+  /* Compare-table variant (Magicast vs Loom etc.) — desktop is
+     16px / 24 line-height / 24px 32px padding. Bump down a step
+     on mobile so each row sits more compactly: 13px / 18 line /
+     -0.2 letter-spacing / 16px padding. Header row stays slightly
+     larger (14px) to read as a header. Marks/glyphs scale to 16px
+     to match the reduced text height. */
+  .fp-section-compare-table .fp-cmp-head-cell {
+    font-size: 14px !important;
+    line-height: 20px !important;
+    letter-spacing: -0.2px !important;
+    padding: 16px !important;
+  }
+  .fp-section-compare-table .fp-cmp-cell {
+    font-size: 13px !important;
+    line-height: 18px !important;
+    letter-spacing: -0.2px !important;
+    padding: 16px !important;
+    gap: 12px !important;
+  }
+  .fp-section-compare-table .fp-cmp-mark,
+  .fp-section-compare-table .fp-cmp-mark-glyph {
+    width: 16px !important;
+    height: 16px !important;
+  }
+  .fp-section-compare-table .fp-cmp-title {
+    font-size: 22px !important;
+    line-height: 28px !important;
+    letter-spacing: -0.4px !important;
+  }
+
+  /* mc-win — Hero + "Perfect Your Appearance" sections.
+     Use layout=render: outer wrapper takes the scaled visible size,
+     inner mc-win at intrinsic size with `transform: scale(0.5)`.
+     Without this, `transform: scale()` doesn't shrink the layout
+     box, so the visual auto-height grows to the unscaled height
+     and leaves a huge dead space below the visible mc-win.
+     Trick: fix the visual to a known scaled height. mc-win normal
+     is 420 wide × auto-content tall. Effects-open is 800 wide.
+     Use a fixed visual height that fits the larger of the two
+     scaled outputs — 360px = 32 + 296 + 32. Effects-open sections
+     stay left-pinned (window is 400 wide scaled, overflows mobile);
+     the bare hero centers since the 210-wide scaled output fits. */
+  .fp-page[data-slug="magicast"] .fp-section-visual:has(.mc-win),
+  .fp-page[data-slug="magicast"] .fp-hero-stage:has(.mc-win) {
+    height: 360px !important;
+    padding: 32px 0 32px 32px !important;
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+    overflow: hidden !important;
+  }
+  /* Hero centers the (non-effects-open) mc-win — 420 wide × 0.5
+     scale = 210 visible, fits comfortably centered on mobile.
+     Transform-origin needs to be `top center` (not top-left) so
+     the scaled output sits at the unscaled-box's center, otherwise
+     `justify-content: center` centers the unscaled 420-wide box
+     and the scaled output anchors at its left edge — visually
+     offset 105px to the left of true center. */
+  .fp-page[data-slug="magicast"] .fp-hero-stage:has(.mc-win):not(:has(.mc-win-effects-open)) {
+    padding: 32px !important;
+    justify-content: center !important;
+  }
+  .fp-page[data-slug="magicast"] .fp-hero-stage:has(.mc-win):not(:has(.mc-win-effects-open)) .mc-win:not(.fp-section-visual-wallpaper):not(.shelf-win):not(.mc-window):not(.mc-bubble):not(.fp-tags-magnify) {
+    transform-origin: top center !important;
+  }
+  .fp-page[data-slug="magicast"] .fp-section-visual .mc-win:not(.fp-section-visual-wallpaper):not(.shelf-win):not(.mc-window):not(.mc-bubble):not(.fp-tags-magnify),
+  .fp-page[data-slug="magicast"] .fp-hero-stage .mc-win:not(.fp-section-visual-wallpaper):not(.shelf-win):not(.mc-window):not(.mc-bubble):not(.fp-tags-magnify) {
+    position: relative !important;
+    flex-shrink: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    transform: scale(0.5) !important;
+    transform-origin: top left !important;
+  }
+  /* Hide the floating .mc-bubble on mobile — it sits in unscaled
+     coords absolute-positioned and ends up far off-screen. */
+  .fp-page[data-slug="magicast"] .fp-section-visual .mc-bubble,
+  .fp-page[data-slug="magicast"] .fp-hero-stage .mc-bubble {
+    display: none !important;
+  }
+
+  /* fp-mv-win — Trim, Interactive Transcription, Search sections.
+     Same layout-box-vs-render-box issue as mc-win — fix visual at
+     a known scaled height: 1133 × 720 × 0.5 = 567 × 360, plus 32
+     vert padding = 424. */
+  .fp-page[data-slug="magicast"] .fp-section-visual:has(.fp-mv-win):not(:has(.fp-mvs-frame)),
+  .fp-page[data-slug="magicast"] .fp-hero-stage:has(.fp-mv-win):not(:has(.fp-mvs-frame)) {
+    height: 424px !important;
+    padding: 32px 0 32px 32px !important;
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+    overflow: hidden !important;
+  }
+  /* Interactive Transcription — right-pin instead of left.
+     The original `:has(.fp-mv-win):not(:has(.fp-mvs-frame))` rule
+     above has specificity 0,5,0; this override needs to match or
+     beat it. Add `:has(.fp-mv-win)` here too so specificity = 0,5,0
+     and source order (later) wins. */
+  .fp-page[data-slug="magicast"] .fp-section-visual:has(.fp-mv-win):has(.fp-mv-transcript-section) {
+    padding: 32px 32px 32px 0 !important;
+    justify-content: flex-end !important;
+  }
+  .fp-page[data-slug="magicast"] .fp-section-visual:has(.fp-mv-transcript-section) .fp-mv-win:not(.fp-section-visual-wallpaper):not(.shelf-win):not(.mc-window):not(.mc-bubble):not(.fp-tags-magnify) {
+    transform-origin: top right !important;
+  }
+  .fp-page[data-slug="magicast"] .fp-section-visual .fp-mv-win:not(.fp-section-visual-wallpaper):not(.shelf-win):not(.mc-window):not(.mc-bubble):not(.fp-tags-magnify),
+  .fp-page[data-slug="magicast"] .fp-hero-stage .fp-mv-win:not(.fp-section-visual-wallpaper):not(.shelf-win):not(.mc-window):not(.mc-bubble):not(.fp-tags-magnify) {
+    position: relative !important;
+    width: 1133px !important;
+    max-width: 1133px !important;
+    aspect-ratio: 1133 / 720 !important;
+    flex-shrink: 0 !important;
+    transform: scale(0.5) !important;
+    transform-origin: top left !important;
+  }
+
+  /* fp-mvs-frame (Share Your Magicast) — same recipe as the
+     standalone fp-mv-win sections (Interactive Transcription /
+     Search / Trim): take the entire desktop block (window + scrim +
+     dialog already inside the frame) and scale it as a single unit.
+     1133 wide intrinsic, aspect-ratio 1133/720, transform scale 0.5
+     from top-left. Visual pinned 32px from top-left, height 424
+     fits the scaled output. The overlay and dialog scale together
+     with the window — they already live inside .fp-mvs-frame in
+     JSX, no per-element overrides needed. */
+  .fp-page[data-slug="magicast"] .fp-section-visual:has(.fp-mvs-frame),
+  .fp-page[data-slug="magicast"] .fp-hero-stage:has(.fp-mvs-frame) {
+    height: 424px !important;
+    padding: 32px 0 32px 32px !important;
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+    overflow: hidden !important;
+  }
+  .fp-page[data-slug="magicast"] .fp-section-visual .fp-mvs-stage,
+  .fp-page[data-slug="magicast"] .fp-hero-stage .fp-mvs-stage {
+    width: auto !important;
+    justify-content: flex-start !important;
+    align-items: flex-start !important;
+    flex-shrink: 0 !important;
+  }
+  .fp-page[data-slug="magicast"] .fp-section-visual .fp-mvs-frame:not(.fp-section-visual-wallpaper):not(.shelf-win):not(.mc-window):not(.mc-bubble):not(.fp-tags-magnify),
+  .fp-page[data-slug="magicast"] .fp-hero-stage .fp-mvs-frame:not(.fp-section-visual-wallpaper):not(.shelf-win):not(.mc-window):not(.mc-bubble):not(.fp-tags-magnify) {
+    position: relative !important;
+    width: 1133px !important;
+    max-width: 1133px !important;
+    aspect-ratio: 1133 / 720 !important;
+    flex-shrink: 0 !important;
+    transform: scale(0.5) !important;
+    transform-origin: top left !important;
+  }
+  /* Inner viewer fills the frame at 100%×100% (no own transform).
+     Without this, the standalone fp-mv-win mobile rule above (which
+     forces width: 1133px and its own transform: scale(0.5)) would
+     double-scale the viewer inside the frame. Specificity needs to
+     beat that rule (0,8,0) — adding `.fp-mvs-frame` (one more class)
+     gets us to 0,9,0. */
+  .fp-page[data-slug="magicast"] .fp-section-visual .fp-mvs-frame .fp-mv-win:not(.fp-section-visual-wallpaper):not(.shelf-win):not(.mc-window):not(.mc-bubble):not(.fp-tags-magnify),
+  .fp-page[data-slug="magicast"] .fp-hero-stage .fp-mvs-frame .fp-mv-win:not(.fp-section-visual-wallpaper):not(.shelf-win):not(.mc-window):not(.mc-bubble):not(.fp-tags-magnify) {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 100% !important;
+    aspect-ratio: auto !important;
+    transform: none !important;
+  }
+
+  /* AInbox window on Magicast page — same recipe as
+     ainbox/magic-minutes scopes (see further below). */
+  .fp-page[data-slug="magicast"] .fp-section-visual .ainbox-window:not(.fp-section-visual-wallpaper):not(.shelf-win):not(.mc-window):not(.mc-bubble):not(.fp-tags-magnify),
+  .fp-page[data-slug="magicast"] .fp-hero-stage .ainbox-window:not(.fp-section-visual-wallpaper):not(.shelf-win):not(.mc-window):not(.mc-bubble):not(.fp-tags-magnify) {
+    transform: scale(0.75) !important;
+    transform-origin: top left !important;
+  }
+
+  /* sc-onit-window (AI Assistant Integration) — fill width with
+     32px horizontal padding, fixed 520 height like the small DM
+     windows. Same fix as Magic Minutes "On-It picks up the slack". */
+  .fp-page[data-slug="magicast"] .fp-section-visual:has(.sc-onit-window) {
+    height: auto !important;
+    padding: 32px !important;
+    align-items: stretch !important;
+    justify-content: stretch !important;
+  }
+  .fp-page[data-slug="magicast"] .fp-section-visual .sc-onit-window {
+    position: relative !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 520px !important;
+    aspect-ratio: auto !important;
+    flex-shrink: 0 !important;
+    transform: none !important;
+    margin: 0 !important;
+  }
+
+  /* Magic Minutes "HubSpot integration" section uses
+     <HubSpotIntegrationPreview /> which wraps a MagicMinutes window
+     plus a scrim+dialog overlay in `.fp-hubspot-frame`. Treat the
+     frame as a meeting-style window: 780×580 scaled 0.75 from top
+     center, visual hugs at 499px (= 32 + 435 + 32). The :not()
+     chain bumps specificity past the reset rule. The inner .mm-win
+     keeps its 100% fill; scrim+dialog overlay clip to the frame's
+     overflow:hidden. */
+  .fp-page[data-slug="magic-minutes"] .fp-section-visual:has(.fp-hubspot-frame) {
+    height: 499px !important;
+    padding: 32px 0 0 !important;
+    align-items: flex-start !important;
+    justify-content: center !important;
+  }
+  .fp-page[data-slug="magic-minutes"] .fp-section-visual .fp-mm-preview:has(.fp-hubspot-frame) {
+    width: auto !important;
+    flex-shrink: 0 !important;
+  }
+  .fp-page[data-slug="magic-minutes"] .fp-section-visual .fp-hubspot-frame:not(.fp-section-visual-wallpaper):not(.shelf-win):not(.mc-window):not(.mc-bubble):not(.fp-tags-magnify),
+  .fp-page[data-slug="magic-minutes"] .fp-hero-stage .fp-hubspot-frame:not(.fp-section-visual-wallpaper):not(.shelf-win):not(.mc-window):not(.mc-bubble):not(.fp-tags-magnify) {
+    width: 780px !important;
+    height: 580px !important;
+    flex-shrink: 0 !important;
+    transform: scale(0.75) !important;
+    transform-origin: top center !important;
+  }
+
+  /* Magic Minutes "Desktop Recordings" section uses
+     <DesktopRecordingsPreview /> which renders `.fp-desktop`. Pin
+     flush top-left (0,0) with no padding and fill the visual
+     width — no scaling. The menubar (left menus + right status)
+     and dropdown read at native size against the wallpaper. The
+     reset rule (specificity 0,6,0) forces `position: relative` etc.
+     so re-assert with the :not() chain (specificity 0,8,0). */
+  .fp-page[data-slug="magic-minutes"] .fp-section-visual:has(.fp-desktop) {
+    height: auto !important;
+    padding: 0 0 32px 0 !important;
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+  }
+  /* `.fp-desktop` in normal flow (position: relative) so its
+     content contributes to the visual's auto height. The reset rule
+     would force `transform: none` etc.; the :not() chain re-asserts
+     positioning + clears transform. `padding-bottom: 0` overrides
+     the desktop CSS `padding-bottom: 72px` which otherwise added
+     dead space below the dropdown. */
+  .fp-page[data-slug="magic-minutes"] .fp-section-visual .fp-desktop:not(.fp-section-visual-wallpaper):not(.shelf-win):not(.mc-window):not(.mc-bubble):not(.fp-tags-magnify),
+  .fp-page[data-slug="magic-minutes"] .fp-hero-stage .fp-desktop:not(.fp-section-visual-wallpaper):not(.shelf-win):not(.mc-window):not(.mc-bubble):not(.fp-tags-magnify) {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    width: 100% !important;
+    max-width: none !important;
+    transform: none !important;
+    padding-bottom: 0 !important;
+  }
+  /* Hide the left-side menubar items (Apple, Roam, File, Edit, View,
+     Go, Window, Help) — too cramped at mobile width. Keep just the
+     right-side status + dropdown menu. With menus hidden, the
+     menubar's `justify-content: space-between` collapses to put the
+     status on the LEFT — flip to flex-end so it stays right-anchored. */
+  .fp-page[data-slug="magic-minutes"] .fp-section-visual .fp-desktop-menus,
+  .fp-page[data-slug="magic-minutes"] .fp-hero-stage .fp-desktop-menus {
+    display: none !important;
+  }
+  .fp-page[data-slug="magic-minutes"] .fp-section-visual .fp-desktop-menubar-content,
+  .fp-page[data-slug="magic-minutes"] .fp-hero-stage .fp-desktop-menubar-content {
+    justify-content: flex-end !important;
+  }
+  /* Recordings window (.fp-rec-preview .rec-win) — same fix. */
+  .fp-page[data-slug="magic-minutes"] .fp-section-visual .fp-rec-preview:not(.fp-section-visual-wallpaper):not(.shelf-win):not(.mc-window):not(.mc-bubble):not(.fp-tags-magnify),
+  .fp-page[data-slug="magic-minutes"] .fp-hero-stage .fp-rec-preview:not(.fp-section-visual-wallpaper):not(.shelf-win):not(.mc-window):not(.mc-bubble):not(.fp-tags-magnify) {
+    transform: none !important;
+  }
+  .fp-page[data-slug="magic-minutes"] .fp-section-visual .fp-rec-preview .rec-win,
+  .fp-page[data-slug="magic-minutes"] .fp-hero-stage .fp-rec-preview .rec-win {
+    transform: scale(0.75) !important;
+    transform-origin: top left !important;
+  }
+
+  /* Prose variant ("An Assistant for All", "The Future of On-It")
+     stacks title above body on mobile — desktop has title in cols
+     1-6 and body in cols 7-12, which leaves the title in a narrow
+     side column on small viewports. Force both to span the full
+     grid AND width: 100% so they stack vertically and fill the
+     content area. */
+  .fp-section-prose .fp-explore-text,
+  .fp-section-prose .fp-prose-body {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+    justify-self: stretch !important;
+  }
+
+  /* Section sub-bullets — desktop inherits `text-body` 16/24. Bump
+     down a step on mobile so the bullet lists feel like supporting
+     copy rather than a second body block. */
+  .fp-section-sub-bullets {
+    font-size: 13px !important;
+    line-height: 18px !important;
+    letter-spacing: -0.2px !important;
+  }
+
+  /* Explore variant bullet items — same treatment as sub-bullets.
+     Desktop is 16/24/-0.32. */
+  .fp-explore-item {
+    font-size: 13px !important;
+    line-height: 18px !important;
+    letter-spacing: -0.2px !important;
+  }
+
+  /* Columns-cards body text (.fp-col-desc) — same ramp. */
+  .fp-col-desc {
+    font-size: 13px !important;
+    line-height: 18px !important;
+    letter-spacing: -0.2px !important;
+  }
+
+  /* Curtain visual — scale the RSVP content overlay (title, desc,
+     date/host/buttons) so it fits the narrower mobile frame.
+     Smaller scale so the title stays inside the 16:10 aspect frame
+     instead of getting clipped at the top by overflow:hidden.
+     `translateY` nudges the content down to add a bit of top
+     wallpaper between the visual edge and the title. */
+  .fp-page[data-slug="on-air"] .fp-section-visual .fp-onair-curtain-content {
+    transform: scale(0.45) translateY(60px) !important;
+    transform-origin: center !important;
+  }
+
+  /* On-Air hero (Epcot image) — desktop is 1:1 ish; force 16:9
+     aspect ratio on mobile. The image stays object-fit: cover with
+     center positioning, so the frame crops to a wider, lower
+     letterbox without distorting Walt's portrait. */
+  .fp-page[data-slug="on-air"] .fp-hero-stage:has(.fp-onair-epcot-img) {
+    aspect-ratio: 16 / 9 !important;
+    height: auto !important;
+    padding: 0 !important;
+  }
+
+  /* ─────────── On-Air feature page ───────────
+     Most sections use frame-style components (.fp-oai-frame for
+     Invite/Blast/Manage/Press Kit, .fp-lbk-browser for RsvpPreview,
+     .fp-onair-rsvp-wp for OnAirPreview). Apply the standard
+     scale-not-resize recipe at desktop intrinsic widths with scale
+     0.5, pinned top-left. */
+
+  /* fp-oai-frame sections — Invite, Press Kit, Blast, Manage. Keep
+     intrinsic 1133×640, scale 0.5 from top-center, centered, visual
+     hugs at 32 + 320 + 32 = 384. */
+  .fp-page[data-slug="on-air"] .fp-section-visual:has(.fp-oai-frame) {
+    height: 384px !important;
+    padding: 32px 0 !important;
+    align-items: flex-start !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+  }
+  .fp-page[data-slug="on-air"] .fp-section-visual .fp-oai-stage {
+    width: 100% !important;
+    justify-content: center !important;
+    align-items: flex-start !important;
+    flex-shrink: 0 !important;
+  }
+  .fp-page[data-slug="on-air"] .fp-section-visual .fp-oai-frame:not(.fp-section-visual-wallpaper):not(.shelf-win):not(.mc-window):not(.mc-bubble):not(.fp-tags-magnify) {
+    width: 1133px !important;
+    max-width: 1133px !important;
+    height: 640px !important;
+    flex-shrink: 0 !important;
+    transform: scale(0.5) !important;
+    transform-origin: top center !important;
+  }
+
+  /* RSVP Preview ("Introducing On-Air") — wraps in .fp-lbk-browser
+     with .fp-onair-rsvp-browser. Same scale-not-resize recipe as
+     the Lobby hero. */
+  .fp-page[data-slug="on-air"] .fp-section-visual:has(.fp-onair-rsvp-browser) {
+    height: 414px !important;
+    padding: 32px 0 32px 32px !important;
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+    overflow: hidden !important;
+  }
+  .fp-page[data-slug="on-air"] .fp-section-visual .fp-lbk-stage {
+    align-items: flex-start !important;
+    width: auto !important;
+    flex-shrink: 0 !important;
+  }
+  .fp-page[data-slug="on-air"] .fp-section-visual .fp-onair-rsvp-browser:not(.fp-section-visual-wallpaper):not(.shelf-win):not(.mc-window):not(.mc-bubble):not(.fp-tags-magnify) {
+    width: 980px !important;
+    max-width: 980px !important;
+    flex-shrink: 0 !important;
+    align-self: flex-start !important;
+    margin: 0 !important;
+    transform: scale(0.5) !important;
+    transform-origin: top left !important;
+  }
+
+  /* OnAirPreview ("Create Your RSVP Page") — wrapped in
+     .fp-onair-rsvp-wp (display: contents on desktop). The
+     `.onair-window` inside is full-width portrait by the global
+     mobile rule. Center it with 32px wallpaper on both sides and
+     32px vert padding so it reads as a phone-style mock with even
+     margins. */
+  .fp-page[data-slug="on-air"] .fp-section-visual:has(.fp-onair-rsvp-wp) {
+    height: auto !important;
+    padding: 32px !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+  }
+
+  /* On-It feature page — most sections use <OnItFeatureChat />
+     (`.sc-onit-window`). Same fill-width recipe as Magic Minutes
+     "On-It picks up the slack": fill the visual width with 32px
+     horizontal padding, fixed 520 height. */
+  .fp-page[data-slug="on-it"] .fp-section-visual:has(.sc-onit-window) {
+    height: auto !important;
+    padding: 32px !important;
+    align-items: stretch !important;
+    justify-content: stretch !important;
+  }
+  .fp-page[data-slug="on-it"] .fp-section-visual .sc-onit-window {
+    position: relative !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 520px !important;
+    aspect-ratio: auto !important;
+    flex-shrink: 0 !important;
+    transform: none !important;
+    margin: 0 !important;
+  }
+  /* Hero stage uses sc-onit-window too — same treatment. */
+  .fp-page[data-slug="on-it"] .fp-hero-stage:has(.sc-onit-window) {
+    height: auto !important;
+    padding: 32px !important;
+    align-items: stretch !important;
+    justify-content: stretch !important;
+  }
+  .fp-page[data-slug="on-it"] .fp-hero-stage .sc-onit-window {
+    position: relative !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 520px !important;
+    aspect-ratio: auto !important;
+    flex-shrink: 0 !important;
+    transform: none !important;
+    margin: 0 !important;
+  }
+
+  /* Magic Minutes "Catch Up" section uses <MeetingPreview /> which
+     renders `.meeting-win`. Same reset-rule specificity issue as
+     `.ainbox-window` — the global mobile transform rule loses to
+     `transform: none !important`. Bump specificity past the reset
+     so the meeting-win actually scales. Catch Up is the only
+     meeting-win on this page, so right-pin: visual `justify-content:
+     flex-end; padding-right: 32px` and origin `top right`. */
+  .fp-page[data-slug="magic-minutes"] .fp-section-visual:has(.meeting-win),
+  .fp-page[data-slug="magic-minutes"] .fp-hero-stage:has(.meeting-win) {
+    justify-content: flex-end !important;
+    padding-right: 32px !important;
+    padding-left: 0 !important;
+  }
+  .fp-page[data-slug="magic-minutes"] .fp-section-visual .meeting-win:not(.fp-section-visual-wallpaper):not(.shelf-win):not(.mc-window):not(.mc-bubble):not(.fp-tags-magnify),
+  .fp-page[data-slug="magic-minutes"] .fp-hero-stage .meeting-win:not(.fp-section-visual-wallpaper):not(.shelf-win):not(.mc-window):not(.mc-bubble):not(.fp-tags-magnify) {
+    transform: scale(0.75) !important;
+    transform-origin: top right !important;
+  }
+  /* Folders override — same scale, origin pinned to bottom-left so
+     the auto-added folders at the bottom of the sidebar remain
+     anchored as the list grows. (AInbox feature page only — Folders
+     is a section unique to that page.) */
+  .fp-page[data-slug="ainbox"] .fp-section-visual:has(.fp-ainbox-folders) .ainbox-window:not(.fp-section-visual-wallpaper):not(.shelf-win):not(.mc-window):not(.mc-bubble):not(.fp-tags-magnify),
+  .fp-page[data-slug="ainbox"] .fp-hero-stage:has(.fp-ainbox-folders) .ainbox-window:not(.fp-section-visual-wallpaper):not(.shelf-win):not(.mc-window):not(.mc-bubble):not(.fp-tags-magnify) {
+    transform: scale(0.75) !important;
+    transform-origin: bottom left !important;
+  }
+
+  /* Split variant ("Why Enterprise Messaging from Roam?" etc.) —
+     desktop right-aligns the bullets via `justify-self: end` and
+     the @media(max-width:900px) block sets padding: 40px. On mobile
+     left-align the bullets and tighten padding to 24px. Match the
+     `.fp-col-*` (columns-cards) typography so split panels read
+     consistently with neighboring card sections: title at 16px /
+     line-height 1.15 / letter-spacing -0.4px, bullets in
+     text-secondary. */
+  .fp-split-inner {
+    padding: 24px !important;
+  }
+  .fp-split-title {
+    font-size: 16px !important;
+    line-height: 1.15 !important;
+    letter-spacing: -0.4px !important;
+  }
+  .fp-split-bullets {
+    justify-self: start !important;
+  }
+  .fp-split-bullets li {
+    color: var(--text-secondary) !important;
+  }
+
+  /* Additional variant ("Additional Features in your AI-Powered
+     Virtual Office") — desktop centers eyebrow, title, and desc
+     and constrains them to grid cols 3-10 (8 of 12) with `max-width`
+     caps. On mobile left-align everything and let the text fill the
+     full content area (16px horizontal padding inherited from the
+     base `.fp-section` rule). The grid-column override needs the
+     same 0,3,0 specificity as the desktop rule to win. */
+  .fp-section-additional .fp-section-text {
+    grid-column: 1 / -1 !important;
+    align-items: flex-start !important;
+    text-align: left !important;
+  }
+  .fp-section-additional .fp-section-eyebrow,
+  .fp-section-additional .fp-section-title,
+  .fp-section-additional .fp-section-desc {
+    align-self: flex-start !important;
+    text-align: left !important;
+    max-width: none !important;
+  }
+  /* Desktop title is `clamp(28px, 3vw, 44px)` which floors at 28
+     on mobile — too dominant. Bump down to 22 / line-height 1.1
+     to read as a section header, not a hero. */
+  .fp-section-additional .fp-section-title {
+    font-size: 22px !important;
+    line-height: 1.1 !important;
+    letter-spacing: -0.4px !important;
+  }
+
+  /* Folders — bottom-pin instead of top-pin. Same 499px visual
+     height as siblings, same 32px wallpaper padding, only the
+     alignment direction flips. */
+  .fp-section-visual:has(.fp-ainbox-folders),
+  .fp-hero-stage:has(.fp-ainbox-folders) {
+    align-items: flex-end !important;
+    padding-top: 0 !important;
+    padding-bottom: 32px !important;
+  }
+  .fp-section-visual:has(.fp-ainbox-folders) .ainbox-window,
+  .fp-hero-stage:has(.fp-ainbox-folders) .ainbox-window {
+    transform-origin: bottom left !important;
+  }
+
+  /* Hero animated wrapper — desktop centers it; on mobile the parent
+     visual already does the alignment, so make this a passthrough. */
+  .fp-hero-stage .fp-ainbox-hero-anim,
+  .fp-section-visual .fp-ainbox-hero-anim {
+    width: auto !important;
+    height: auto !important;
+    display: block !important;
+    flex-shrink: 0 !important;
+  }
+
+  /* MiniChatPreview (Direct Messages, Confidential Messages on the
+     AInbox feature page) — phone-style chat at intrinsic 320×520.
+     Center it in the visual at desktop intrinsic size (320 fits on
+     mobile viewports ≥320). Scoped to `data-slug="ainbox"` so it
+     doesn't clobber the portaled animated DM popup (`.mc-window`)
+     that lives inside `.fp-section-visual:has(.fp-map-preview)` on
+     other feature pages — that one needs to stay pinned at 16/16
+     with `transform: scale(0.75)`. */
+  .fp-page[data-slug="ainbox"] .fp-section-visual:has(> .mc-window),
+  .fp-page[data-slug="ainbox"] .fp-hero-stage:has(> .mc-window) {
+    height: auto !important;
+    padding: 32px 0 !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  .fp-page[data-slug="ainbox"] .fp-section-visual > .mc-window,
+  .fp-page[data-slug="ainbox"] .fp-hero-stage > .mc-window {
+    position: relative !important;
+    left: auto !important;
+    top: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    width: 320px !important;
+    height: 520px !important;
+    flex-shrink: 0 !important;
+    transform: none !important;
+    z-index: auto !important;
+    margin: 0 auto !important;
+  }
 }

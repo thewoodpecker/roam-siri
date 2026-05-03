@@ -22,7 +22,7 @@ const sections = [
       { title: 'Our Story', href: '/about/story' },
       { title: 'Our Team', href: '/about/team' },
       { title: 'Careers', href: '/about/careers' },
-      { title: 'Pricing', href: '/pricing' },
+      { title: 'Pricing', href: '#/pricing' },
       { title: 'Download', href: '/download' },
       { title: 'Sign In', href: 'https://ro.am/r/' },
     ],
