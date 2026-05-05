@@ -3709,3 +3709,95 @@
 .fp-knock-frame {
   box-shadow: none !important;
 }
+
+/* ===========================
+   Spinner view — Roam loaders
+   =========================== */
+.spinner-view {
+  position: fixed;
+  inset: 0;
+  background: var(--bg-surface-primary);
+  color: var(--text-primary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 96px;
+  padding: 48px;
+  overflow: auto;
+}
+
+/* Light-mode overrides — mirrors the relevant tokens from
+   .sc-viewport[data-theme="light"] in ShowcaseMap.css. Only the tokens
+   the spinners and the theme capsule actually consume. The spinner's own
+   ghost-ring vars live in SpinnerComets.css and flip on the same
+   data-theme attr. */
+.spinner-view[data-theme="light"] {
+  --bg-surface-primary: #FFFFFF;
+  --background-primary: rgba(0,0,0,0.04);
+  --bg-secondary: rgba(0,0,0,0.06);
+  --text-primary: #1D1D1F;
+  --text-secondary: rgba(0,0,0,0.5);
+  --text-disabled: rgba(0,0,0,0.3);
+  --icon-primary: #1D1D1F;
+  --icon-secondary: rgba(0,0,0,0.5);
+  --border: rgba(0,0,0,0.1);
+}
+
+/* The theme capsule's active-icon color is scoped to .sc-viewport in
+   ShowcaseMap.css; mirror it for the spinner view. */
+.spinner-view[data-theme="light"] .sc-theme-capsule-icon.active {
+  color: var(--icon-primary);
+}
+
+.spinner-right-controls {
+  position: fixed;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 999999;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+}
+.spinner-svg { display: block; overflow: visible; }
+.spinner-gallery {
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.spinner-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px 16px;
+}
+.spinner-tile-stage {
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.spinner-tile-label {
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+}
+.spinner-fade-toggle {
+  margin-top: 16px;
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  corner-shape: superellipse(1.6);
+  background: var(--background-primary);
+  color: var(--text-primary);
+  border: 0.5px solid var(--border);
+  cursor: pointer;
+  font-size: 12px;
+}
+.spinner-fade-toggle:hover { background: var(--bg-secondary); }

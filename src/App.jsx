@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef, useMemo, useCallback, lazy, Suspens
 import SiriGlow from './SiriGlow';
 import { offices as officeData, meetingRooms } from './data';
 import ShowcaseMap from './ShowcaseMap';
+import { SpinnerComets } from './SpinnerComets';
 import './App.css';
 
 // FeaturePage is ~380K and only renders for #/feature/* routes — keep it
@@ -1344,6 +1345,7 @@ function TabSwitcher({ activeTab, onTabChange }) {
     { id: 'war-room', label: 'War Room' },
     { id: 'big-meetings', label: 'Big Meetings' },
     { id: 'experimental', label: 'EPCOT' },
+    { id: 'spinner', label: 'Spinner' },
   ];
 
   return (
@@ -3229,10 +3231,42 @@ function ExperimentalView() {
   );
 }
 
+function SpinnerView() {
+  const [theme, setTheme] = useState('dark');
+  const [visible, setVisible] = useState(true);
+  const sizes = [24, 32, 40, 56];
+  return (
+    <div className="spinner-view" data-theme={theme}>
+      <div className="spinner-gallery">
+        {sizes.map(size => (
+          <div key={size} className="spinner-tile">
+            <div className="spinner-tile-stage"><SpinnerComets size={size} visible={visible} /></div>
+            <div className="spinner-tile-label">{size}px</div>
+          </div>
+        ))}
+      </div>
+      <button className="spinner-fade-toggle" onClick={() => setVisible(v => !v)}>
+        {visible ? 'Hide' : 'Show'}
+      </button>
+      <div className="spinner-right-controls">
+        <div className="sc-theme-capsule" onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')}>
+          <div className={`sc-theme-capsule-knob ${theme === 'light' ? 'bottom' : ''}`} />
+          <div className={`sc-theme-capsule-icon ${theme === 'dark' ? 'active' : ''}`}>
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M14 8.5C13.3 12.1 10 14.5 6.5 13.5C3 12.5 1 9.5 2 6C2.8 3.2 5.5 1.5 8.5 2C7 3.5 6.5 6 8 8.5C9 10 11 11 14 8.5Z" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" /></svg>
+          </div>
+          <div className={`sc-theme-capsule-icon ${theme === 'light' ? 'active' : ''}`}>
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="3" stroke="currentColor" strokeWidth="1.3" /><path d="M8 2V3.5M8 12.5V14M2 8H3.5M12.5 8H14M3.8 3.8L4.8 4.8M11.2 11.2L12.2 12.2M3.8 12.2L4.8 11.2M11.2 4.8L12.2 3.8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" /></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function useHashTab() {
   const getTab = () => {
     const hash = window.location.hash.replace('#', '');
-    const valid = ['map-v3', 'claude-max', 'big-vibe', 'big-meetings', 'war-room', 'experimental', 'showcase'];
+    const valid = ['map-v3', 'claude-max', 'big-vibe', 'big-meetings', 'war-room', 'experimental', 'spinner', 'showcase'];
     return valid.includes(hash) ? hash : 'showcase';
   };
   const [tab, setTab] = useState(getTab);
@@ -3302,6 +3336,7 @@ export default function App() {
       {activeTab === 'war-room' && <WarRoomView />}
       {activeTab === 'big-meetings' && <BigMeetingsView />}
       {activeTab === 'experimental' && <ExperimentalView />}
+      {activeTab === 'spinner' && <SpinnerView />}
       {activeTab === 'showcase' && <ShowcaseMap />}
     </div>
   );

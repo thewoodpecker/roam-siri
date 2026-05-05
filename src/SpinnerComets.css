@@ -1,0 +1,48 @@
+/* Reusable Comets spinner — three quarter-arc trails orbiting the Roam ring set.
+   Standard sizes: 24, 32, 40, 56. Color hierarchy reads as depth: front planet
+   full opacity, back planets dimmer. Glow from drop-shadow on the head dot.
+
+   Theme-aware: ghost-ring tints flip when an ancestor sets data-theme="light".
+   Planet color uses var(--icon-primary) which is expected to flip already. */
+
+.spinner-comets-svg {
+  display: block;
+  overflow: visible;
+  opacity: 0;
+  transition: opacity 240ms ease;
+  --spinner-ghost-1: rgba(255, 255, 255, 0.05);
+  --spinner-ghost-2: rgba(255, 255, 255, 0.08);
+  --spinner-ghost-3: rgba(255, 255, 255, 0.12);
+}
+.spinner-comets-svg[data-state="visible"] { opacity: 1; }
+
+[data-theme="light"] .spinner-comets-svg {
+  --spinner-ghost-1: rgba(0, 0, 0, 0.05);
+  --spinner-ghost-2: rgba(0, 0, 0, 0.08);
+  --spinner-ghost-3: rgba(0, 0, 0, 0.12);
+}
+
+@keyframes spinner-comets-spin { to { transform: rotate(360deg); } }
+
+.spinner-comets-ghosts circle { fill: none; }
+.spinner-comets-ghosts circle:nth-child(1) { stroke: var(--spinner-ghost-1); }
+.spinner-comets-ghosts circle:nth-child(2) { stroke: var(--spinner-ghost-2); }
+.spinner-comets-ghosts circle:nth-child(3) { stroke: var(--spinner-ghost-3); }
+
+.spinner-comets-outer,
+.spinner-comets-mid,
+.spinner-comets-inner {
+  animation: spinner-comets-spin 3.6s linear infinite;
+}
+
+.spinner-comets path { fill: none; opacity: 0.5; }
+.spinner-comets circle {
+  fill: currentColor;
+  filter: drop-shadow(0 0 2px currentColor);
+}
+[data-theme="light"] .spinner-comets circle { filter: none; }
+
+/* Depth opacity per planet — outer brightest, inner dimmest. */
+.spinner-comets-outer.spinner-comets { color: var(--icon-primary); opacity: 1; }
+.spinner-comets-mid.spinner-comets   { color: var(--icon-primary); opacity: 0.6; }
+.spinner-comets-inner.spinner-comets { color: var(--icon-primary); opacity: 0.3; }
