@@ -32,7 +32,7 @@
 .spinner-comets-ghosts circle:nth-child(3) { stroke: var(--spinner-ghost-3); }
 
 .spinner-comets-orbit {
-  animation: spinner-comets-spin 3.6s linear infinite;
+  animation: spinner-comets-spin 2.6s linear infinite;
   /* Promote each orbit to its own compositor layer — rotation runs on the
      GPU and doesn't repaint the SVG body. */
   will-change: transform;
