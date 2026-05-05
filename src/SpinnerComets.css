@@ -83,6 +83,44 @@
 .spinner-comets-svg--tempo .spinner-comets-orbit-1 { --orbit-dur: 2.6s; opacity: 0.6; }
 .spinner-comets-svg--tempo .spinner-comets-orbit-2 { --orbit-dur: 3.6s; opacity: 1; }
 
+/* Palindrome variant — comet sequence is inner → mid → outer → mid then
+   loops to inner for the next cycle. Each ring revolution takes 0.867s
+   (matching baton); the cycle is 4 × 0.867s = 3.467s total. Mid fires
+   twice per cycle, so it gets a 1.733s animation that runs through its
+   own keyframes twice per total cycle; inner and outer fire once each
+   from a 3.467s animation with the rotation in the first 25% only.
+   3% crossfade at each handoff mirrors the baton variant. */
+/* Crossfade percentages tuned per-keyframes so the real-time fade is the
+   same across all three rings (~78ms in/out). Mid runs a 1.733s timeline
+   so its 4.5% = 78ms; inner/outer run 3.467s timelines so their 2.25%
+   also = 78ms. Each head rotates 32.4° during fade-in (matches baton). */
+@keyframes spinner-comets-palindrome-edge {
+  0%      { opacity: 0; transform: rotate(0deg); }
+  2.25%   { opacity: 1; transform: rotate(32.4deg); }
+  25%     { opacity: 1; transform: rotate(360deg); }
+  27.25%  { opacity: 0; transform: rotate(360deg); }
+  100%    { opacity: 0; transform: rotate(360deg); }
+}
+@keyframes spinner-comets-palindrome-mid {
+  0%      { opacity: 0; transform: rotate(0deg); }
+  4.5%    { opacity: 1; transform: rotate(32.4deg); }
+  50%     { opacity: 1; transform: rotate(360deg); }
+  54.5%   { opacity: 0; transform: rotate(360deg); }
+  100%    { opacity: 0; transform: rotate(360deg); }
+}
+.spinner-comets-svg--palindrome .spinner-comets-orbit-0 {
+  animation: spinner-comets-palindrome-edge 3.467s linear infinite;
+  animation-delay: 0s;
+}
+.spinner-comets-svg--palindrome .spinner-comets-orbit-1 {
+  animation: spinner-comets-palindrome-mid 1.733s linear infinite;
+  animation-delay: 0.867s;
+}
+.spinner-comets-svg--palindrome .spinner-comets-orbit-2 {
+  animation: spinner-comets-palindrome-edge 3.467s linear infinite;
+  animation-delay: 1.733s;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .spinner-comets-svg { transition: none; }
   .spinner-comets-orbit { animation: none; }

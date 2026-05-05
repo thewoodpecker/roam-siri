@@ -3231,33 +3231,23 @@ function ExperimentalView() {
   );
 }
 
+const SPINNER_VARIANTS = [
+  { id: 'baton', label: 'Baton' },
+  { id: 'classic', label: 'Classic' },
+  { id: 'tempo', label: 'Tempo' },
+  { id: 'palindrome', label: 'Palindrome' },
+];
+
 function SpinnerView() {
   const [theme, setTheme] = useState('dark');
   const [visible, setVisible] = useState(true);
-  const sizes = [24, 32, 40, 56];
   return (
     <div className="spinner-view" data-theme={theme}>
       <div className="spinner-gallery">
-        {sizes.map(size => (
-          <div key={size} className="spinner-tile">
-            <div className="spinner-tile-stage"><SpinnerComets size={size} visible={visible} /></div>
-            <div className="spinner-tile-label">{size}px</div>
-          </div>
-        ))}
-      </div>
-      <div className="spinner-gallery">
-        {sizes.map(size => (
-          <div key={size} className="spinner-tile">
-            <div className="spinner-tile-stage"><SpinnerComets size={size} visible={visible} variant="classic" /></div>
-            <div className="spinner-tile-label">{size}px</div>
-          </div>
-        ))}
-      </div>
-      <div className="spinner-gallery">
-        {sizes.map(size => (
-          <div key={size} className="spinner-tile">
-            <div className="spinner-tile-stage"><SpinnerComets size={size} visible={visible} variant="tempo" /></div>
-            <div className="spinner-tile-label">{size}px</div>
+        {SPINNER_VARIANTS.map(v => (
+          <div key={v.id} className="spinner-tile">
+            <div className="spinner-tile-stage"><SpinnerComets size={40} visible={visible} variant={v.id} /></div>
+            <div className="spinner-tile-label">{v.label}</div>
           </div>
         ))}
       </div>
