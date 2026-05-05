@@ -1,15 +1,17 @@
-/* Reusable Comets spinner — three quarter-arc trails orbiting the Roam ring set.
-   Standard sizes: 24, 32, 40, 56. Color hierarchy reads as depth: front planet
-   full opacity, back planets dimmer. Glow from drop-shadow on the head dot.
-
-   Theme-aware: ghost-ring tints flip when an ancestor sets data-theme="light".
-   Planet color uses var(--icon-primary) which is expected to flip already. */
+/* Reusable Comets spinner.
+   - Three quarter-arc trails orbiting the Roam ring set.
+   - Standard sizes: 24, 32, 40, 56.
+   - Theme-aware: ghost-ring tints and the head-glow flip when an ancestor
+     sets `[data-theme="light"]`. Planet color resolves from --icon-primary
+     which is expected to flip already. */
 
 .spinner-comets-svg {
   display: block;
   overflow: visible;
+  pointer-events: none;
   opacity: 0;
   transition: opacity 240ms ease;
+  color: var(--icon-primary);
   --spinner-ghost-1: rgba(255, 255, 255, 0.05);
   --spinner-ghost-2: rgba(255, 255, 255, 0.08);
   --spinner-ghost-3: rgba(255, 255, 255, 0.12);
@@ -29,20 +31,20 @@
 .spinner-comets-ghosts circle:nth-child(2) { stroke: var(--spinner-ghost-2); }
 .spinner-comets-ghosts circle:nth-child(3) { stroke: var(--spinner-ghost-3); }
 
-.spinner-comets-outer,
-.spinner-comets-mid,
-.spinner-comets-inner {
+.spinner-comets-orbit {
   animation: spinner-comets-spin 3.6s linear infinite;
+  /* Promote each orbit to its own compositor layer — rotation runs on the
+     GPU and doesn't repaint the SVG body. */
+  will-change: transform;
 }
-
-.spinner-comets path { fill: none; opacity: 0.5; }
-.spinner-comets circle {
+.spinner-comets-orbit path { fill: none; opacity: 0.5; }
+.spinner-comets-orbit circle {
   fill: currentColor;
   filter: drop-shadow(0 0 2px currentColor);
 }
-[data-theme="light"] .spinner-comets circle { filter: none; }
+[data-theme="light"] .spinner-comets-orbit circle { filter: none; }
 
-/* Depth opacity per planet — outer brightest, inner dimmest. */
-.spinner-comets-outer.spinner-comets { color: var(--icon-primary); opacity: 1; }
-.spinner-comets-mid.spinner-comets   { color: var(--icon-primary); opacity: 0.6; }
-.spinner-comets-inner.spinner-comets { color: var(--icon-primary); opacity: 0.3; }
+@media (prefers-reduced-motion: reduce) {
+  .spinner-comets-svg { transition: none; }
+  .spinner-comets-orbit { animation: none; }
+}
