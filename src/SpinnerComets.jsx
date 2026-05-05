@@ -3,16 +3,18 @@ import './SpinnerComets.css';
 
 const FADE_MS = 240;
 
-// Ring set, ordered back-to-front (smallest paints first → largest on top).
-// `c` = circle center x (cy is always 12), `r` = ring radius, `d` = head-dot
-// radius, `o` = depth opacity (front planet brightest, back dimmest).
+// Ring set, ordered inner → outer. The CSS animation fires baton-style
+// across these in index order — orbit-0 first (inner), then -1 (mid),
+// then -2 (outer). All three share (21, 12) as their head's start/end
+// position, so the comet hands off cleanly at the 3 o'clock tangent.
+// `c` = circle center x (cy is always 12), `r` = ring radius, `d` = head-dot radius.
 const PLANETS = [
-  { c: 18, r: 3, d: 0.6,  o: 0.3 },
-  { c: 15, r: 6, d: 0.85, o: 0.6 },
-  { c: 12, r: 9, d: 1.1,  o: 1.0 },
+  { c: 18, r: 3, d: 0.6  },
+  { c: 15, r: 6, d: 0.85 },
+  { c: 12, r: 9, d: 1.1  },
 ];
 
-function SpinnerCometsImpl({ size = 40, visible = true, className = '' }) {
+function SpinnerCometsImpl({ size = 40, visible = true, variant = 'baton', className = '' }) {
   // Per-instance id keeps SVG <defs> (gradient + masks) collision-free
   // when multiple spinners coexist on the page.
   const uid = useId();
@@ -46,7 +48,11 @@ function SpinnerCometsImpl({ size = 40, visible = true, className = '' }) {
 
   return (
     <svg
-      className={className ? `spinner-comets-svg ${className}` : 'spinner-comets-svg'}
+      className={[
+        'spinner-comets-svg',
+        variant !== 'baton' && `spinner-comets-svg--${variant}`,
+        className,
+      ].filter(Boolean).join(' ')}
       data-state={shown ? 'visible' : 'hidden'}
       width={size}
       height={size}
@@ -87,11 +93,11 @@ function SpinnerCometsImpl({ size = 40, visible = true, className = '' }) {
         ))}
       </g>
 
-      {PLANETS.map(({ c, r, d, o }, i) => (
+      {PLANETS.map(({ c, r, d }, i) => (
         <g
           key={r}
           className={`spinner-comets-orbit spinner-comets-orbit-${i}`}
-          style={{ transformOrigin: `${c}px 12px`, opacity: o }}
+          style={{ transformOrigin: `${c}px 12px` }}
         >
           <path
             d={`M 21 12 A ${r} ${r} 0 0 0 ${c} ${12 - r}`}

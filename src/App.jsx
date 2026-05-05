@@ -3245,6 +3245,22 @@ function SpinnerView() {
           </div>
         ))}
       </div>
+      <div className="spinner-gallery">
+        {sizes.map(size => (
+          <div key={size} className="spinner-tile">
+            <div className="spinner-tile-stage"><SpinnerComets size={size} visible={visible} variant="classic" /></div>
+            <div className="spinner-tile-label">{size}px</div>
+          </div>
+        ))}
+      </div>
+      <div className="spinner-gallery">
+        {sizes.map(size => (
+          <div key={size} className="spinner-tile">
+            <div className="spinner-tile-stage"><SpinnerComets size={size} visible={visible} variant="tempo" /></div>
+            <div className="spinner-tile-label">{size}px</div>
+          </div>
+        ))}
+      </div>
       <button className="spinner-fade-toggle" onClick={() => setVisible(v => !v)}>
         {visible ? 'Hide' : 'Show'}
       </button>
