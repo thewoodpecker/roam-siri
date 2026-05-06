@@ -1022,7 +1022,14 @@ function GameRoomCard({ room }) {
           {visible.length > 0 && (
             <div className="game-room-roster">
               {visible.map((person, i) => (
-                <GameHex key={person.name || i} person={person} rank={i < 3 ? i + 1 : null} colorIndex={i} talking={!!talking[person.name]} />
+                <GameHex
+                  key={person.name || i}
+                  person={person}
+                  rank={!room.onPersonClick && i < 3 ? i + 1 : null}
+                  colorIndex={i}
+                  talking={!!talking[person.name]}
+                  onClick={room.onPersonClick ? (e) => { e.stopPropagation(); room.onPersonClick(person); } : undefined}
+                />
               ))}
             </div>
           )}
@@ -1030,9 +1037,13 @@ function GameRoomCard({ room }) {
             <button
               type="button"
               className="game-room-leaderboard-btn"
-              onClick={(e) => { e.stopPropagation(); setBoardOpen(true); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (room.onLeaderboardClick) room.onLeaderboardClick();
+                else setBoardOpen(true);
+              }}
             >
-              <span>Leaderboard</span>
+              <span>{room.leaderboardLabel || 'Leaderboard'}</span>
               <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
                 <path d="M4.5 3l3 3-3 3" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
@@ -1104,11 +1115,19 @@ function GameLeaderboardDialog({ roomName, people, onClose }) {
   );
 }
 
-function GameHex({ person, rank, small = false, colorIndex = 0, talking = false }) {
+function GameHex({ person, rank, small = false, colorIndex = 0, talking = false, onClick }) {
   const rankClass = rank === 1 ? 'gold' : rank === 2 ? 'silver' : rank === 3 ? 'bronze' : null;
   const colorClass = `game-hex-c${(colorIndex % 8) + 1}`;
+  const [hovered, setHovered] = useState(false);
+  const hover = person._hoverInfo;
   return (
-    <div className={`game-hex ${colorClass} ${small ? 'game-hex-small' : ''} ${talking ? 'game-hex-talking' : ''}`}>
+    <div
+      className={`game-hex ${colorClass} ${small ? 'game-hex-small' : ''} ${talking ? 'game-hex-talking' : ''}`}
+      onClick={onClick}
+      onMouseEnter={hover ? () => setHovered(true) : undefined}
+      onMouseLeave={hover ? () => setHovered(false) : undefined}
+      style={onClick ? { cursor: 'pointer' } : undefined}
+    >
       <div className="game-hex-border">
         <div
           className="game-hex-avatar"
@@ -1118,6 +1137,18 @@ function GameHex({ person, rank, small = false, colorIndex = 0, talking = false 
       {rankClass && (
         <div className={`game-hex-rank game-hex-rank-${rankClass}`}>
           <span>{rank}</span>
+        </div>
+      )}
+      {hover && hovered && (
+        <div className="game-hex-hover" role="tooltip">
+          <div className="game-hex-hover-name">{hover.name}</div>
+          {hover.task && <div className="game-hex-hover-task">{hover.task}</div>}
+          {hover.status && (
+            <div className="game-hex-hover-status">
+              <span className={`game-hex-hover-dot game-hex-hover-dot-${hover.status}`} />
+              {hover.status === 'working' ? 'Working' : 'Idle'}
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -1936,11 +1967,11 @@ function ShelfWindow({ win, onDrag, photoIdx, direction, onPrev, onNext }) {
 }
 
 // Main showcase component
-export default function ShowcaseMap({ initialFloor = 'R&D', embedded = false, autoKnock = false, spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, hideOnIt = false, onItAutoOpen = false, shelfAutoOpen = false, shareAutoOpen = false, theme, autoCycleFloors = false, autoCycleDms = false, showPhysicalTags = false, onAirOverride = null } = {}) {
+export default function ShowcaseMap({ initialFloor = 'R&D', embedded = false, autoKnock = false, spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, hideOnIt = false, onItAutoOpen = false, shelfAutoOpen = false, shareAutoOpen = false, theme, autoCycleFloors = false, autoCycleDms = false, showPhysicalTags = false, onAirOverride = null, agentsRoom = null, officeAgents = null } = {}) {
   return (
     <ChatProvider>
       <WindowManagerProvider initialWindows={INITIAL_WINDOWS}>
-        <ShowcaseMapInner initialFloor={initialFloor} embedded={embedded} autoKnock={autoKnock} spotifyAlwaysOpen={spotifyAlwaysOpen} githubAlwaysOpen={githubAlwaysOpen} figmaAlwaysOpen={figmaAlwaysOpen} hideOnIt={hideOnIt} onItAutoOpen={onItAutoOpen} shelfAutoOpen={shelfAutoOpen} shareAutoOpen={shareAutoOpen} themeOverride={theme} autoCycleFloors={autoCycleFloors} autoCycleDms={autoCycleDms} showPhysicalTags={showPhysicalTags} onAirOverride={onAirOverride} />
+        <ShowcaseMapInner initialFloor={initialFloor} embedded={embedded} autoKnock={autoKnock} spotifyAlwaysOpen={spotifyAlwaysOpen} githubAlwaysOpen={githubAlwaysOpen} figmaAlwaysOpen={figmaAlwaysOpen} hideOnIt={hideOnIt} onItAutoOpen={onItAutoOpen} shelfAutoOpen={shelfAutoOpen} shareAutoOpen={shareAutoOpen} themeOverride={theme} autoCycleFloors={autoCycleFloors} autoCycleDms={autoCycleDms} showPhysicalTags={showPhysicalTags} onAirOverride={onAirOverride} agentsRoom={agentsRoom} officeAgents={officeAgents} />
       </WindowManagerProvider>
     </ChatProvider>
   );
@@ -2104,7 +2135,7 @@ function useTargetHintStyle(targetRef, active, offset = { top: -30, left: 'cente
   return style;
 }
 
-function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = false, spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, hideOnIt = false, onItAutoOpen = false, shelfAutoOpen = false, shareAutoOpen = false, themeOverride = null, autoCycleFloors = false, autoCycleDms = false, showPhysicalTags = false, onAirOverride = null }) {
+function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = false, spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, hideOnIt = false, onItAutoOpen = false, shelfAutoOpen = false, shareAutoOpen = false, themeOverride = null, autoCycleFloors = false, autoCycleDms = false, showPhysicalTags = false, onAirOverride = null, agentsRoom = null, officeAgents = null }) {
   const [themeState, setThemeState] = useState('dark');
   const theme = themeOverride || themeState;
   const setTheme = themeOverride ? () => {} : setThemeState;
@@ -2208,6 +2239,10 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
   };
 
   const openMiniChat = (person, e) => {
+    if (typeof person._onAgentClick === 'function') {
+      person._onAgentClick(person);
+      return;
+    }
     const chatId = getChatIdForAvatar(person.avatar);
     if (!chatId) return;
     const rect = e.currentTarget.getBoundingClientRect();
@@ -2491,9 +2526,27 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
       if (room.id === 'oa-theater' && onAirOverride?.title) {
         name = onAirOverride.title;
       }
+      // Optional: replace a specific room with an "Agents" game room.
+      if (agentsRoom && room.id === agentsRoom.replacesId) {
+        return {
+          ...room,
+          type: 'game',
+          name: agentsRoom.name || 'Agents',
+          people: agentsRoom.people || [],
+          leaderboardLabel: agentsRoom.leaderboardLabel,
+          onLeaderboardClick: agentsRoom.onLeaderboardClick,
+          onPersonClick: agentsRoom.onPersonClick,
+          _anim: movements.anim[room.id] || null,
+        };
+      }
+      // Inject any per-office agents (e.g. "Howard L." gets his Writing Agent
+      // sitting next to him in his private office).
+      if (officeAgents && room.type === 'private' && officeAgents[room.name]?.length) {
+        people = [...people, ...officeAgents[room.name]];
+      }
       return { ...room, name, people, _anim: movements.anim[room.id] || null };
     });
-  }, [activeFloor, movements, onAirOverride]);
+  }, [activeFloor, movements, onAirOverride, agentsRoom, officeAgents]);
 
   const theaterSpeakers = useMemo(() => {
     if (activeFloor === 'TheaterOnAir') {

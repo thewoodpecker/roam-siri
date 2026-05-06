@@ -2,6 +2,8 @@ import React, { useEffect, useState, useRef, useMemo, useCallback, lazy, Suspens
 import SiriGlow from './SiriGlow';
 import { offices as officeData, meetingRooms } from './data';
 import ShowcaseMap from './ShowcaseMap';
+import AgentMapView from './AgentMap';
+import AgentGarageView from './AgentGarage';
 import { SpinnerComets } from './SpinnerComets';
 import './App.css';
 
@@ -1339,6 +1341,8 @@ function TabSwitcher({ activeTab, onTabChange }) {
   const tabs = [
     { id: 'showcase', label: 'Showcase' },
     { section: 'WIP' },
+    { id: 'design-studio', label: 'Roam Design Studio' },
+    { id: 'agent-garage', label: 'Agent Garage' },
     { id: 'map-v3', label: 'Map V3' },
     { id: 'claude-max', label: 'Vibe Code' },
     { id: 'big-vibe', label: 'Big Vibe' },
@@ -1617,7 +1621,7 @@ const EDIT_BG_COLORS = [
   { id: 'pink',   dark: { color: '#201318', room: '#2E1E24' }, light: { color: '#FBDDE7', room: '#FEF0F5' }, swatch: '#C2185B', label: 'Pink' },
 ];
 
-export function EditMapView({ onThemeChange } = {}) {
+export function EditMapView({ onThemeChange, studioMode = false } = {}) {
   const baseRoom = meetingRooms.find(r => r.id === 'alan-kay');
   const [peopleCount, setPeopleCount] = useState(500);
   const [speakerCount, setSpeakerCount] = useState(3);
@@ -1796,9 +1800,51 @@ export function EditMapView({ onThemeChange } = {}) {
     { id: 'theater', name: 'Theater' }, { id: 'game', name: 'Game Room' }, { id: 'command', name: 'Command Center' },
   ];
   const [showAddMenu, setShowAddMenu] = useState(false);
+  const setGlobalTheme = (t) => {
+    if (typeof document !== 'undefined') document.documentElement.setAttribute('data-theme', t);
+  };
+  const selectedRoomData = rooms.find(r => r.id === selectedRoom);
+
+  const ROAM_AGENTS = [
+    { id: 'designer',   name: 'Design Agent',     letter: 'D', color: '#C2185B', aiTool: 'designer',   role: 'Mockups & briefs' },
+    { id: 'engineer',   name: 'Engineering Agent', letter: 'E', color: '#835CE9', aiTool: 'engineer',   role: 'PRs & code reviews' },
+    { id: 'researcher', name: 'Research Agent',   letter: 'R', color: '#FFC107', aiTool: 'researcher', role: 'Market & pricing research' },
+    { id: 'pricing',    name: 'Pricing Agent',    letter: 'P', color: '#FFC107', aiTool: 'pricing',    role: 'Influencer & deal pricing' },
+    { id: 'writer',     name: 'Writing Agent',    letter: 'W', color: '#46D08F', aiTool: 'writer',     role: 'Meeting notes & drafts' },
+    { id: 'sales',      name: 'Sales Agent',      letter: 'S', color: '#4DD0E1', aiTool: 'sales',      role: 'Leads & signals' },
+    { id: 'monitor',    name: 'Monitoring Agent', letter: 'M', color: '#FF6F00', aiTool: 'monitor',    role: 'Alerts & triggers' },
+  ];
+
+  const agentAvatar = (agent) => agent.avatar || (
+    `data:image/svg+xml;utf8,${encodeURIComponent(
+      `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="${agent.color}"/><text x="16" y="22" text-anchor="middle" fill="white" font-family="Inter, system-ui, sans-serif" font-weight="600" font-size="16">${agent.letter}</text></svg>`
+    )}`
+  );
+
+  const addAgent = (agent) => {
+    const person = { name: agent.name, avatar: agentAvatar(agent), aiTool: agent.aiTool };
+    if (selectedRoom) {
+      const target = rooms.find(r => r.id === selectedRoom);
+      if (target) {
+        const rd = target.roomData || baseRoom;
+        const nextAssignees = [...(rd.assignees || []), person];
+        const nextPeople = [...(rd.people || []), person];
+        updateRoom(target.id, { roomData: { ...rd, people: nextPeople, assignees: nextAssignees } });
+        return;
+      }
+    }
+    const newId = `agent-${Date.now()}`;
+    setRooms(prev => [...prev, {
+      id: newId,
+      roomData: { ...baseRoom, id: newId, name: `${agent.name}`, type: 'private', people: [person], assignees: [person] },
+      size: { w: 200, h: 150 },
+      pos: { x: 0, y: 0 },
+    }]);
+    setSelectedRoom(newId);
+  };
 
   return (
-    <div ref={viewRef} className="big-meetings-view edit-mode" style={{ backgroundColor: themeColors.color }} onMouseDown={onBgMouseDown}>
+    <div ref={viewRef} className={`big-meetings-view edit-mode${studioMode ? ' studio-mode' : ''}`} style={{ backgroundColor: themeColors.color }} onMouseDown={onBgMouseDown}>
       <div ref={gridRef} className="grid-bg grid-bg-visible" />
       <div className="big-meetings-center">
         {rooms.map(room => {
@@ -1897,34 +1943,154 @@ export function EditMapView({ onThemeChange } = {}) {
           <div className="drawing-room-preview" style={{ position: 'absolute', left: '50%', top: '50%', width: drawingRoom.w, height: drawingRoom.h, transform: `translate(${drawingRoom.x}px, ${drawingRoom.y}px)` }} />
         )}
       </div>
-      <div className="map-toolbar">
-        <div className="map-toolbar-inner" style={{ backgroundColor: themeColors.room }}>
-          <button className={`toolbar-btn ${!selectedRoom ? 'toolbar-disabled-btn' : ''}`}
-            onClick={() => { if (selectedRoom) { setRooms(prev => prev.filter(r => r.id !== selectedRoom)); setSelectedRoom(null); } }} title="Delete Room">
-            <svg width="14" height="14" viewBox="0 0 12 12" fill="none"><path d="M5 3H7C7 2.44772 6.55228 2 6 2C5.44772 2 5 2.44772 5 3ZM4 3C4 1.89543 4.89543 1 6 1C7.10457 1 8 1.89543 8 3L10.5 3C10.7761 3 11 3.22386 11 3.5C11 3.77614 10.7761 4 10.5 4H10.059L9.61576 9.1708C9.52709 10.2054 8.66143 11 7.62307 11H4.37693C3.33857 11 2.47291 10.2054 2.38424 9.1708L1.94102 4H1.5C1.22386 4 1 3.77614 1 3.5C1 3.22386 1.22386 3 1.5 3L4 3ZM7.5 6C7.5 5.72386 7.27614 5.5 7 5.5C6.72386 5.5 6.5 5.72386 6.5 6V8C6.5 8.27614 6.72386 8.5 7 8.5C7.27614 8.5 7.5 8.27614 7.5 8V6ZM5 5.5C4.72386 5.5 4.5 5.72386 4.5 6V8C4.5 8.27614 4.72386 8.5 5 8.5C5.27614 8.5 5.5 8.27614 5.5 8V6C5.5 5.72386 5.27614 5.5 5 5.5Z" fill="currentColor"/></svg>
-          </button>
-          <div className="toolbar-add-wrap" style={{ position: 'relative' }}>
-            <button className="toolbar-btn" onClick={() => setShowAddMenu(!showAddMenu)} title="Add Room">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 3V13M3 8H13" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>
+      {!studioMode && (
+        <div className="map-toolbar">
+          <div className="map-toolbar-inner" style={{ backgroundColor: themeColors.room }}>
+            <button className={`toolbar-btn ${!selectedRoom ? 'toolbar-disabled-btn' : ''}`}
+              onClick={() => { if (selectedRoom) { setRooms(prev => prev.filter(r => r.id !== selectedRoom)); setSelectedRoom(null); } }} title="Delete Room">
+              <svg width="14" height="14" viewBox="0 0 12 12" fill="none"><path d="M5 3H7C7 2.44772 6.55228 2 6 2C5.44772 2 5 2.44772 5 3ZM4 3C4 1.89543 4.89543 1 6 1C7.10457 1 8 1.89543 8 3L10.5 3C10.7761 3 11 3.22386 11 3.5C11 3.77614 10.7761 4 10.5 4H10.059L9.61576 9.1708C9.52709 10.2054 8.66143 11 7.62307 11H4.37693C3.33857 11 2.47291 10.2054 2.38424 9.1708L1.94102 4H1.5C1.22386 4 1 3.77614 1 3.5C1 3.22386 1.22386 3 1.5 3L4 3ZM7.5 6C7.5 5.72386 7.27614 5.5 7 5.5C6.72386 5.5 6.5 5.72386 6.5 6V8C6.5 8.27614 6.72386 8.5 7 8.5C7.27614 8.5 7.5 8.27614 7.5 8V6ZM5 5.5C4.72386 5.5 4.5 5.72386 4.5 6V8C4.5 8.27614 4.72386 8.5 5 8.5C5.27614 8.5 5.5 8.27614 5.5 8V6C5.5 5.72386 5.27614 5.5 5 5.5Z" fill="currentColor"/></svg>
             </button>
-            {showAddMenu && (
-              <div className="add-room-menu">
-                {roomTypes.map(t => (<button key={t.id} className="add-room-option" onClick={() => { addRoom(t.id); setShowAddMenu(false); }}><span className="add-room-name">{t.name}</span></button>))}
-              </div>
-            )}
-          </div>
-          <div className="toolbar-bg-swatches">
-            {EDIT_BG_COLORS.map(c => {
-              const swatch = c.id === 'black' && pageTheme === 'light' ? '#FFFFFF' : c.swatch;
-              return (
-                <button key={c.id} className={`toolbar-swatch ${bgColor === c.id ? 'toolbar-swatch-active' : ''}`}
-                  style={{ background: swatch }}
-                  onClick={() => setBgColor(c.id)} title={c.label} />
-              );
-            })}
+            <div className="toolbar-add-wrap" style={{ position: 'relative' }}>
+              <button className="toolbar-btn" onClick={() => setShowAddMenu(!showAddMenu)} title="Add Room">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 3V13M3 8H13" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>
+              </button>
+              {showAddMenu && (
+                <div className="add-room-menu">
+                  {roomTypes.map(t => (<button key={t.id} className="add-room-option" onClick={() => { addRoom(t.id); setShowAddMenu(false); }}><span className="add-room-name">{t.name}</span></button>))}
+                </div>
+              )}
+            </div>
+            <div className="toolbar-bg-swatches">
+              {EDIT_BG_COLORS.map(c => {
+                const swatch = c.id === 'black' && pageTheme === 'light' ? '#FFFFFF' : c.swatch;
+                return (
+                  <button key={c.id} className={`toolbar-swatch ${bgColor === c.id ? 'toolbar-swatch-active' : ''}`}
+                    style={{ background: swatch }}
+                    onClick={() => setBgColor(c.id)} title={c.label} />
+                );
+              })}
+            </div>
           </div>
         </div>
-      </div>
+      )}
+      {studioMode && (
+        <aside className="rds-sidebar" onMouseDown={(e) => e.stopPropagation()}>
+          <div className="rds-header">
+            <span className="rds-title-strong">Roam</span>
+            <span className="rds-title-soft">Design Studio</span>
+          </div>
+
+          <div className="rds-section">
+            <div className="rds-section-label">Theme</div>
+            <div className="rds-seg">
+              <button className={`rds-seg-btn ${pageTheme === 'dark' ? 'rds-seg-active' : ''}`} onClick={() => setGlobalTheme('dark')}>Dark</button>
+              <button className={`rds-seg-btn ${pageTheme === 'light' ? 'rds-seg-active' : ''}`} onClick={() => setGlobalTheme('light')}>Light</button>
+            </div>
+          </div>
+
+          <div className="rds-section">
+            <div className="rds-section-label">Background</div>
+            <div className="rds-swatch-grid">
+              {EDIT_BG_COLORS.map(c => {
+                const swatch = c.id === 'black' && pageTheme === 'light' ? '#FFFFFF' : c.swatch;
+                return (
+                  <button key={c.id} className={`rds-swatch ${bgColor === c.id ? 'rds-swatch-active' : ''}`}
+                    style={{ background: swatch }} onClick={() => setBgColor(c.id)} title={c.label} aria-label={c.label} />
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="rds-section">
+            <div className="rds-section-label">Agents</div>
+            <div className="rds-agent-grid">
+              {ROAM_AGENTS.map(a => (
+                <button key={a.id} className="rds-agent-card" onClick={() => addAgent(a)} title={`${a.role} — ${selectedRoom ? `add to selected room` : `drop on canvas`}`}>
+                  {a.avatar ? (
+                    <img className="rds-agent-avatar" src={a.avatar} alt="" />
+                  ) : (
+                    <span className="rds-agent-avatar rds-agent-letter" style={{ background: a.color }}>{a.letter}</span>
+                  )}
+                  <span className="rds-agent-name">{a.name}</span>
+                </button>
+              ))}
+            </div>
+            <div className="rds-hint">{selectedRoom ? 'Adds the agent to the selected room.' : 'Drops a new agent room on the canvas.'}</div>
+          </div>
+
+          <div className="rds-section">
+            <div className="rds-section-label">Add Room</div>
+            <div className="rds-room-grid">
+              {roomTypes.map(t => (
+                <button key={t.id} className="rds-room-card" onClick={() => addRoom(t.id)}>
+                  <div className={`rds-room-thumb rds-room-thumb-${t.id}`} aria-hidden="true">
+                    {t.id === 'theater' && <><span className="rds-thumb-stage" /><span className="rds-thumb-row" /><span className="rds-thumb-row" /></>}
+                    {t.id === 'private' && <span className="rds-thumb-seat" />}
+                    {t.id === 'team' && <><span className="rds-thumb-seat" /><span className="rds-thumb-seat" /><span className="rds-thumb-seat" /></>}
+                    {t.id === 'meeting' && <><span className="rds-thumb-line" /><span className="rds-thumb-line" /><span className="rds-thumb-line" /></>}
+                    {t.id === 'game' && <span className="rds-thumb-zigzag" />}
+                    {t.id === 'command' && <><span className="rds-thumb-screen" /><span className="rds-thumb-screen" /><span className="rds-thumb-screen" /></>}
+                  </div>
+                  <span className="rds-room-name">{t.name}</span>
+                </button>
+              ))}
+            </div>
+            <div className="rds-hint">Or drag on the canvas to draw a room.</div>
+          </div>
+
+          {selectedRoomData && (
+            <div className="rds-section">
+              <div className="rds-section-label">Selection</div>
+              <input
+                className="rds-input"
+                value={(selectedRoomData.roomData || baseRoom).name}
+                onChange={(e) => updateRoom(selectedRoomData.id, { roomData: { ...(selectedRoomData.roomData || baseRoom), name: e.target.value } })}
+                placeholder="Room name"
+              />
+              <select
+                className="rds-select"
+                value={(selectedRoomData.roomData || baseRoom).type || 'meeting'}
+                onChange={(e) => {
+                  const type = e.target.value;
+                  const names = { private: 'Private Office', team: 'Team Room', meeting: 'Meeting Room', theater: 'Theater', game: 'Game Room', command: 'Command Center' };
+                  const rd = selectedRoomData.roomData || baseRoom;
+                  updateRoom(selectedRoomData.id, { roomData: { ...rd, type, name: names[type] || rd.name } });
+                }}
+              >
+                {roomTypes.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+              </select>
+              {(selectedRoomData.roomData?.assignees || (selectedRoomData.roomData?.type === 'private' && (selectedRoomData.roomData?.assignees || []).length === 0)) && (selectedRoomData.roomData?.type === 'private') && (
+                <div className="rds-people">
+                  {(selectedRoomData.roomData?.assignees || []).map((p, i) => (
+                    <div key={i} className="rds-person-row">
+                      <img className="rds-person-avatar" src={p.avatar} alt="" />
+                      <span className="rds-person-name">{p.name}</span>
+                      <button
+                        className="rds-person-remove"
+                        onClick={() => {
+                          const rd = selectedRoomData.roomData || baseRoom;
+                          const assignees = (rd.assignees || []).filter((_, idx) => idx !== i);
+                          updateRoom(selectedRoomData.id, { roomData: { ...rd, assignees } });
+                        }}
+                        title="Remove"
+                      >×</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <button
+                className="rds-btn rds-btn-danger"
+                onClick={() => { setRooms(prev => prev.filter(r => r.id !== selectedRoomData.id)); setSelectedRoom(null); }}
+              >Delete room</button>
+            </div>
+          )}
+
+          <div className="rds-section">
+            <div className="rds-section-label">Tools</div>
+            <button className="rds-btn" onClick={() => window.dispatchEvent(new Event('toggle-grid'))}>Toggle Grid</button>
+          </div>
+        </aside>
+      )}
     </div>
   );
 }
@@ -3272,7 +3438,7 @@ function SpinnerView() {
 function useHashTab() {
   const getTab = () => {
     const hash = window.location.hash.replace('#', '');
-    const valid = ['map-v3', 'claude-max', 'big-vibe', 'big-meetings', 'war-room', 'experimental', 'spinner', 'showcase'];
+    const valid = ['map-v3', 'design-studio', 'agent-garage', 'claude-max', 'big-vibe', 'big-meetings', 'war-room', 'experimental', 'spinner', 'showcase'];
     return valid.includes(hash) ? hash : 'showcase';
   };
   const [tab, setTab] = useState(getTab);
@@ -3337,6 +3503,8 @@ export default function App() {
         <TabSwitcher activeTab={activeTab} onTabChange={setActiveTab} />
       </div>
       {activeTab === 'map-v3' && <EditMapView />}
+      {activeTab === 'design-studio' && <EditMapView studioMode />}
+      {activeTab === 'agent-garage' && <AgentGarageView />}
       {activeTab === 'claude-max' && <ClaudeMaxView />}
       {activeTab === 'big-vibe' && <BigVibeView />}
       {activeTab === 'war-room' && <WarRoomView />}

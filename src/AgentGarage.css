@@ -1,0 +1,396 @@
+.ag-shell {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: var(--bg-surface-primary);
+  color: var(--text-primary);
+}
+
+.ag-wallpaper {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  z-index: 0;
+}
+
+/* Embedded ShowcaseMap host — strip homepage chrome and center the map app window. */
+.ag-map-host {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+}
+.ag-map-host > * { pointer-events: auto; }
+
+.ag-map-host .sc-viewport,
+.ag-map-host .miniRoamOS {
+  position: relative !important;
+  inset: auto !important;
+  width: auto !important;
+  height: auto !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  overflow: visible !important;
+  background: transparent !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.ag-map-host .sc-window {
+  width: min(1280px, 100%) !important;
+  max-width: 1280px !important;
+  height: auto !important;
+  max-height: 100% !important;
+  aspect-ratio: 16 / 9 !important;
+  flex-shrink: 0 !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+  isolation: isolate;
+}
+
+/* Hide all homepage chrome — keep only .miniRoamOS, and inside it only .sc-window. */
+.ag-map-host .sc-viewport > *:not(.miniRoamOS) {
+  display: none !important;
+}
+.ag-map-host .miniRoamOS > *:not(.sc-window) {
+  display: none !important;
+}
+.ag-map-host .sc-right-controls,
+.ag-map-host .fp-floating-cta,
+.ag-map-host .floating-cta,
+.ag-map-host .theater-preview-reactions {
+  display: none !important;
+}
+
+/* Kill the embedded map's scale-up/scale-down pulse animations
+   (mount fade-in + floor-switch pulse). */
+.ag-map-host .sc-window,
+.ag-map-host .sc-window-mounted,
+.ag-map-host .sc-window-mounted.sc-window-pulse {
+  animation: none !important;
+}
+
+/* Elevator floor cards are visible but not interactive in the agent garage. */
+.ag-map-host .sc-sidebar { pointer-events: none !important; }
+
+/* Use circular avatars (not hexagons) for agents in the Agents room. */
+.ag-shell .game-hex {
+  width: 36px;
+  height: 36px;
+  transition: transform 0.15s ease;
+}
+.ag-shell .game-hex:hover {
+  transform: scale(1.15);
+}
+.ag-shell .game-hex::before,
+.ag-shell .game-hex::after {
+  display: none !important;
+}
+.ag-shell .game-hex-border {
+  -webkit-mask-image: none !important;
+  mask-image: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+  border-radius: var(--radius-full);
+}
+.ag-shell .game-hex-avatar {
+  -webkit-mask-image: none !important;
+  mask-image: none !important;
+  border-radius: var(--radius-full);
+  background-color: transparent;
+}
+.ag-shell .game-hex-rank { display: none !important; }
+
+/* Hover card on map agents — shows what they're up to. */
+.game-hex-hover {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 10px);
+  transform: translateX(-50%);
+  z-index: 50;
+  min-width: 160px;
+  max-width: 240px;
+  padding: 8px 10px;
+  background: var(--bg-surface-elevated-primary);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  corner-shape: superellipse(1.6);
+  box-shadow: var(--shadow-3);
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  animation: game-hex-hover-in 120ms ease;
+  white-space: normal;
+}
+.game-hex-hover::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid var(--bg-surface-elevated-primary);
+}
+@keyframes game-hex-hover-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(2px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0);   }
+}
+.game-hex-hover-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 16px;
+}
+.game-hex-hover-task {
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 15px;
+}
+.game-hex-hover-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  letter-spacing: 0.02em;
+  margin-top: 2px;
+}
+.game-hex-hover-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--text-secondary);
+}
+.game-hex-hover-dot-working { background: var(--text-positive); }
+
+/* Drop the inner dark container + zigzag pattern behind the agent avatars,
+   and lay them out flat like meeting room people (top-left aligned). */
+.ag-shell .game-room-lines { display: none !important; }
+.ag-shell .game-room-roster {
+  background: transparent !important;
+  padding: 0 12px !important;
+  margin: 8px 0 0 !important;
+  border-radius: 0 !important;
+  gap: 6px !important;
+  justify-content: flex-start !important;
+  align-content: flex-start !important;
+  flex: 0 0 auto !important;
+}
+.ag-shell .game-room-leaderboard-btn {
+  margin-top: auto !important;
+}
+
+/* Kill the miniRoamOS vignette + force transparent backgrounds */
+.ag-map-host .miniRoamOS::before,
+.ag-map-host .miniRoamOS::after,
+.ag-map-host .sc-viewport::before,
+.ag-map-host .sc-viewport::after {
+  display: none !important;
+  content: none !important;
+}
+.ag-map-host .sc-viewport,
+.ag-map-host .miniRoamOS {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+}
+
+/* Agent dock — portaled inline into the .sc-toolbar's left group, styled as a pill cluster. */
+.ag-dock {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 4px 4px 6px;
+  border-radius: 20px;
+  background: var(--bg-surface-elevated-primary);
+  box-shadow: inset 0 0.5px 0 0 var(--border);
+}
+.ag-dock-list {
+  display: flex;
+  gap: 4px;
+}
+.ag-dock-agent {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-full);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.15s ease;
+}
+.ag-dock-agent:hover { transform: scale(1.08); }
+.ag-dock-agent-active .ag-dock-letter {
+  box-shadow: 0 0 0 2px var(--text-primary);
+}
+.ag-dock-letter {
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-full);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--solid-white);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  transition: box-shadow 0.15s ease;
+}
+.ag-dock-divider {
+  width: 0.5px;
+  height: 20px;
+  background: var(--border);
+  margin: 0 2px;
+}
+.ag-dock-garage {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--text-primary);
+  font: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.ag-dock-garage:hover { background: var(--bg-secondary); }
+.ag-dock-garage img { display: block; }
+
+/* Agent mini-chats reuse MiniChat.css (.mc-window, .mc-header, .mc-msg, etc.) and AInbox.css (.ainbox-composer). */
+
+/* (Tabs were removed — context decides whether the chat shows capabilities
+    or task details.) */
+
+/* Activity panel — uses AgentMap's .am-recent / .am-inbox-link / .am-btn classes */
+.agc-activity {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 14px 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--text-primary);
+}
+.agc-activity-title {
+  font-size: 14px;
+  font-weight: 600;
+}
+.agc-activity-meta {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+.agc-activity-brief {
+  margin: 0;
+  font-size: 12px;
+  line-height: 17px;
+  color: var(--text-secondary);
+}
+.agc-activity-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.agc-activity-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  letter-spacing: 0.02em;
+}
+
+/* Rich agent bubble — used for the "What do you want me to do?" intro
+   sent by an unassigned agent. Wider than a normal text bubble so the
+   capability list reads cleanly. */
+.mc-msg-bubble.agc-msg-capabilities {
+  max-width: 100%;
+  width: 100%;
+  padding: 12px 12px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.agc-prompt-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.1px;
+}
+.agc-prompt-sub {
+  font-size: 11px;
+  color: var(--text-secondary);
+  letter-spacing: 0.02em;
+}
+.agc-capabilities {
+  list-style: none;
+  padding: 0;
+  margin: 2px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.agc-capability {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--text-primary);
+  padding: 6px 10px 6px 24px;
+  border-radius: var(--radius-sm);
+  corner-shape: superellipse(1.6);
+  background: var(--white-opacity-50);
+  position: relative;
+}
+.agc-capability::before {
+  content: '';
+  position: absolute;
+  left: 10px;
+  top: 11px;
+  width: 5px;
+  height: 5px;
+  border-radius: var(--radius-full);
+  background: var(--text-secondary);
+}
+
+/* Garage popup — full-screen command-center treatment, draggable but
+   sized to fill (almost) the entire viewport so every agent / file /
+   session can breathe. */
+.ag-garage-popup {
+  position: absolute;
+  z-index: 50;
+  width: calc(100vw - 64px);
+  height: calc(100vh - 64px);
+  animation: ag-popup-in 200ms ease;
+}
+.ag-garage-popup .agent-map-window {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  aspect-ratio: auto !important;
+}
+@keyframes ag-popup-in {
+  from { opacity: 0; transform: scale(0.97); }
+  to   { opacity: 1; transform: scale(1);    }
+}
