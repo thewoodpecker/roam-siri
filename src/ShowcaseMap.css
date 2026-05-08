@@ -1775,6 +1775,7 @@
   height: 100%;
 }
 
+
 .sc-grid-cell {
   min-width: 0;
   min-height: 0;
@@ -2023,6 +2024,23 @@
   height: 16px;
   flex-shrink: 0;
   border-radius: 3px;
+}
+/* Symbol-on-colored-square variant — matches the agent-badge shape so all
+   three (Claude, Codex, agents) read as one stacked group. */
+.sc-ai-icon-badge {
+  width: 15px;
+  height: 15px;
+  border-radius: 3px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.sc-ai-icon-symbol {
+  width: 11px;
+  height: 11px;
+  display: block;
+  flex-shrink: 0;
 }
 
 .sc-ai-icon-combo {
@@ -5519,3 +5537,577 @@
     display: none !important;
   }
 }
+
+/* ──────────────────────────────────────────────────────────────────────
+   Agent Garage — squircle avatar, mega agent room with department
+   columns, and per-office agent dock.
+   ────────────────────────────────────────────────────────────────────── */
+.sc-agent-squircle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: rgba(0, 0, 0, 0.62);
+  cursor: pointer;
+  flex-shrink: 0;
+  font-family: Inter, system-ui, sans-serif;
+  corner-shape: superellipse(1.6);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18), 0 1px 2px rgba(0, 0, 0, 0.18);
+  transition: transform 0.12s ease;
+}
+.sc-agent-squircle:hover { transform: translateY(-1px); }
+.sc-agent-squircle:not(button) { cursor: default; }
+.sc-agent-squircle-letter { line-height: 1; display: block; }
+.sc-agent-squircle-glyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: inherit;
+}
+.sc-agent-squircle-icon {
+  display: block;
+  width: 62%;
+  height: 62%;
+  background: white;
+  -webkit-mask-size: contain;          mask-size: contain;
+  -webkit-mask-position: center;       mask-position: center;
+  -webkit-mask-repeat: no-repeat;      mask-repeat: no-repeat;
+}
+.sc-agent-squircle::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  corner-shape: superellipse(1.6);
+  box-shadow: 0 0 0 1px var(--border, rgba(255, 255, 255, 0.16));
+  pointer-events: none;
+}
+.sc-agent-squircle-working::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: inherit;
+  corner-shape: superellipse(1.6);
+  box-shadow: 0 0 8px 0 currentColor;
+  opacity: 0.16;
+  pointer-events: none;
+  animation: sc-agent-pulse 2.4s ease-in-out infinite;
+}
+@keyframes sc-agent-pulse {
+  0%, 100% { opacity: 0.10; }
+  50% { opacity: 0.22; }
+}
+
+/* Inline agent badge inside the office card-header — matches the size +
+   shape of the Claude/Codex vibe icon (.sc-ai-icon: 16×16, 3px radius,
+   regular rounded corners — no superellipse, no outer ring). */
+.sc-private-agent-badge {
+  position: relative;
+  width: 15px !important;
+  height: 15px !important;
+  border-radius: 3px !important;
+  corner-shape: round !important;
+  flex-shrink: 0;
+  /* Flat fill — graphite-500 (lighter than elevated-secondary so it
+     reads in dark mode against the office card bg). */
+  background: var(--graphite-500) !important;
+  /* 1px outside ring in elevated-primary so overlapping badges read as
+     stacked tiles. */
+  box-shadow: 0 0 0 1px var(--bg-surface-elevated-primary) !important;
+}
+/* Stack badges horizontally with a 4px overlap. Card-header has gap: 4px,
+   so margin-left: -8px gives the desired -4px effective offset. */
+.sc-room-card .card-header .sc-ai-icon-wrap + .sc-ai-icon-wrap,
+.sc-room-card .card-header .sc-ai-icon-wrap + .sc-private-agent-badge-wrap,
+.sc-room-card .card-header .sc-private-agent-badge-wrap + .sc-private-agent-badge-wrap {
+  margin-left: -8px;
+}
+
+/* Disable the hover lift on agent badges — keep them static. */
+.sc-private-agent-badge:hover { transform: none !important; }
+
+/* Tooltip wrapper for agent badges. */
+.sc-private-agent-badge-wrap {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+}
+.sc-private-agent-badge-tooltip {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 8px;
+  background: var(--bg-surface-elevated-secondary);
+  color: var(--text-primary);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  border-radius: 6px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+  box-shadow: var(--shadow-3);
+  z-index: 30;
+}
+.sc-private-agent-badge-wrap:hover .sc-private-agent-badge-tooltip {
+  opacity: 1;
+}
+.sc-private-agent-badge::before,
+.sc-private-agent-badge::after {
+  display: none !important;
+  content: none !important;
+}
+.sc-private-agent-badge .sc-agent-squircle-glyph {
+  color: inherit;
+}
+
+.sc-room-card.sc-agentroom .sc-agentroom-card {
+  background: var(--bg-surface-elevated-primary, var(--bg-surface-primary));
+}
+.sc-agentroom .card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.sc-agentroom-badge {
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-tertiary, rgba(255, 255, 255, 0.45));
+  padding: 2px 6px;
+  border-radius: var(--radius-xs, 4px);
+  border: 1px solid var(--border);
+  corner-shape: superellipse(1.6);
+}
+.sc-agentroom-visitors {
+  display: flex;
+  gap: 6px;
+  padding: 6px 12px 0;
+}
+.sc-agentroom-visitors .avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--border);
+}
+
+.sc-agentroom-rack {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px;
+  margin-top: auto;
+}
+
+.sc-agentroom-depts {
+  flex: 1 1 auto;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  padding: 10px 12px 14px;
+  align-items: start;
+  min-height: 0;
+}
+.sc-agentroom-dept {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.sc-agentroom-dept-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 0 4px 4px;
+  border-bottom: 1px solid var(--border);
+}
+.sc-agentroom-dept-name {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary, rgba(255, 255, 255, 0.7));
+}
+.sc-agentroom-dept-count {
+  font-size: 10px;
+  color: var(--text-tertiary, rgba(255, 255, 255, 0.45));
+  font-variant-numeric: tabular-nums;
+}
+.sc-agentroom-dept-rack {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sc-agentroom-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  background: var(--background-primary, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm, 8px);
+  corner-shape: superellipse(1.6);
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  transition: background 0.15s ease, transform 0.12s ease;
+  min-width: 0;
+}
+.sc-agentroom-row:hover {
+  background: var(--bg-surface-elevated-primary-subdued, rgba(255, 255, 255, 0.07));
+  transform: translateY(-1px);
+}
+.sc-agentroom-row-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  gap: 1px;
+}
+.sc-agentroom-row-name {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sc-agentroom-row-task {
+  font-size: 10px;
+  color: var(--text-tertiary, rgba(255, 255, 255, 0.45));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sc-agentroom-row-status {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.sc-agentroom-row-status-working {
+  background: #46D08F;
+  box-shadow: 0 0 6px rgba(70, 208, 143, 0.6);
+}
+.sc-agentroom-row-status-idle {
+  background: var(--text-tertiary, rgba(255, 255, 255, 0.35));
+}
+.sc-agentroom-row-attention-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #FF6F00;
+  box-shadow: 0 0 8px rgba(255, 111, 0, 0.7);
+  flex-shrink: 0;
+  animation: sc-agentroom-attention 1.6s ease-in-out infinite;
+}
+@keyframes sc-agentroom-attention {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+}
+
+/* Editable map mode — switch from CSS Grid to absolute positioning so
+   rooms can drop anywhere on an 8px snap grid. */
+.sc-grid.sc-grid-editable {
+  display: block !important;
+  position: relative !important;
+}
+
+/* In edit mode the dot-grid surface sits BELOW the titlebar with its own
+   rounded top corners — same pattern as the Control Room window. The
+   .sc-window keeps its native translucent + blur (no override); the
+   .sc-titlebar inherits that look. */
+.sc-content:has(.sc-grid-editable) {
+  background-color: var(--bg-surface-primary-subdued) !important;
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.07) 0.8px, transparent 1.2px) !important;
+  background-size: 8px 8px !important;
+  background-position: 0 0 !important;
+  background-repeat: repeat !important;
+  border-radius: 20px 20px 0 0 !important;
+  border-top: 0.5px solid var(--border) !important;
+}
+.sc-grid-editable .sc-grid-cell-editable {
+  cursor: grab;
+}
+.sc-grid-editable .sc-grid-cell-editable:active {
+  cursor: grabbing;
+}
+.sc-grid-editable .sc-grid-cell-editable .sc-room-card {
+  outline: 1px dashed transparent;
+  outline-offset: 2px;
+  transition: outline-color 0.12s ease;
+}
+.sc-grid-editable .sc-grid-cell-editable:hover .sc-room-card {
+  outline-color: var(--border, rgba(255, 255, 255, 0.25));
+}
+.sc-grid-cell-dragging {
+  z-index: 20;
+}
+.sc-grid-cell-dragging .sc-room-card {
+  outline-color: var(--text-primary) !important;
+  box-shadow: var(--shadow-4);
+}
+
+/* Resize handles — 8 directions on each editable cell. Edge handles are
+   thin strips along the cell border; corner handles are small squares. */
+.sc-resize-handle {
+  position: absolute;
+  z-index: 5;
+  background: transparent;
+}
+.sc-grid-cell-editable:hover .sc-resize-handle::after,
+.sc-grid-cell-dragging .sc-resize-handle::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+/* Edge strips */
+.sc-resize-n,
+.sc-resize-s {
+  left: 8px;
+  right: 8px;
+  height: 6px;
+  cursor: ns-resize;
+}
+.sc-resize-n { top: -3px; }
+.sc-resize-s { bottom: -3px; }
+.sc-resize-e,
+.sc-resize-w {
+  top: 8px;
+  bottom: 8px;
+  width: 6px;
+  cursor: ew-resize;
+}
+.sc-resize-e { right: -3px; }
+.sc-resize-w { left: -3px; }
+/* Corner squares */
+.sc-resize-ne,
+.sc-resize-nw,
+.sc-resize-se,
+.sc-resize-sw {
+  width: 12px;
+  height: 12px;
+}
+.sc-resize-ne { top: -3px; right: -3px; cursor: nesw-resize; }
+.sc-resize-nw { top: -3px; left: -3px; cursor: nwse-resize; }
+.sc-resize-se { bottom: -3px; right: -3px; cursor: nwse-resize; }
+.sc-resize-sw { bottom: -3px; left: -3px; cursor: nesw-resize; }
+
+/* Agent Workshop — large room dedicated to agent activity. */
+.sc-room-card.sc-agent-workshop .sc-agent-workshop-card {
+  background: var(--bg-surface-elevated-primary, var(--bg-surface-primary));
+  position: relative;
+}
+.sc-agent-workshop-body {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 24px 16px;
+  min-height: 0;
+}
+
+/* Control Room — agents grouped by department, no labels (compact). */
+.sc-control-room-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+.sc-control-room-dept {
+  display: flex;
+  flex-direction: column;
+}
+.sc-control-room-dept-label {
+  font-family: Menlo, ui-monospace, SFMono-Regular, Monaco, Consolas, monospace;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  padding-right: 4px;
+}
+.sc-control-room-tiles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.sc-control-room-tile {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  border-radius: 13px;
+  corner-shape: superellipse(1.6);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  cursor: pointer;
+  background: linear-gradient(180deg, var(--graphite-600) 0%, var(--graphite-700) 100%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06), 0 1px 2px rgba(0, 0, 0, 0.25);
+  transform-origin: center;
+  transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.sc-control-room-tile:hover,
+.sc-control-room-tile:focus-visible {
+  transform: scale(1.2);
+  z-index: 2;
+}
+.sc-control-room-tile:active {
+  transform: scale(1.1);
+  transition-duration: 100ms;
+}
+.sc-control-room-tile-icon {
+  color: var(--agent-color, rgba(255, 255, 255, 0.85));
+}
+
+/* Hover popover for an agent tile — sits above the tile. */
+.sc-control-room-popover {
+  position: absolute;
+  z-index: 30;
+  min-width: 200px;
+  max-width: 260px;
+  padding: 10px 12px;
+  background: var(--bg-surface-elevated-secondary);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-md, 10px);
+  corner-shape: superellipse(1.6);
+  box-shadow: var(--shadow-4);
+  pointer-events: none;
+  transform: translate(-50%, -100%);
+  animation: sc-control-room-popover-in 120ms ease;
+}
+@keyframes sc-control-room-popover-in {
+  from { opacity: 0; transform: translate(-50%, calc(-100% + 4px)); }
+  to   { opacity: 1; transform: translate(-50%, -100%); }
+}
+.sc-control-room-popover-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.sc-control-room-popover-mark {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: linear-gradient(180deg, var(--graphite-600) 0%, var(--graphite-700) 100%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+.sc-control-room-popover-mark-icon {
+  color: var(--agent-color, rgba(255, 255, 255, 0.85));
+}
+.sc-control-room-popover-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+.sc-control-room-popover-summary {
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1.35;
+  margin-bottom: 6px;
+}
+.sc-control-room-popover-capabilities {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.sc-control-room-popover-capabilities li {
+  font-size: 10.5px;
+  color: var(--text-secondary);
+  line-height: 1.35;
+  padding-left: 10px;
+  position: relative;
+}
+.sc-control-room-popover-capabilities li::before {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: 6px;
+  width: 3px;
+  height: 3px;
+  background: var(--text-tertiary, rgba(255, 255, 255, 0.45));
+  border-radius: 50%;
+}
+/* Workshop header — pinned to the top of the card, 8px from the top edge,
+   so the title sits at the same Y as the top corner bolts. */
+.sc-agent-workshop-header {
+  position: absolute !important;
+  top: 8px;
+  left: 0;
+  right: 0;
+  height: auto;
+  padding: 0 32px !important;
+  margin: 0 !important;
+  display: flex !important;
+  align-items: flex-start;
+  justify-content: center;
+  text-align: center;
+  flex-shrink: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+.sc-agent-workshop-header .office-name {
+  margin: 0;
+  line-height: 1;
+  font-family: Menlo, ui-monospace, SFMono-Regular, Monaco, Consolas, monospace;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  background: linear-gradient(
+    90deg,
+    var(--text-secondary) 0%,
+    var(--text-secondary) 42%,
+    var(--text-primary) 50%,
+    var(--text-secondary) 58%,
+    var(--text-secondary) 100%
+  );
+  background-size: 300% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: sc-control-room-shimmer 5s linear infinite;
+}
+@keyframes sc-control-room-shimmer {
+  0%   { background-position: 100% 0; }
+  100% { background-position: 0% 0; }
+}
+
+/* Hexagon bolts in each corner — decorative "workshop" cue. */
+.sc-workshop-bolt {
+  position: absolute;
+  display: inline-flex;
+  width: 10px;
+  height: 10px;
+  color: rgba(255, 255, 255, 0.14);
+  pointer-events: none;
+  z-index: 2;
+}
+.sc-workshop-bolt-nw { top: 8px; left: 8px; }
+.sc-workshop-bolt-ne { top: 8px; right: 8px; }
+.sc-workshop-bolt-sw { bottom: 8px; left: 8px; }
+.sc-workshop-bolt-se { bottom: 8px; right: 8px; }

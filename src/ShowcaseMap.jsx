@@ -21,6 +21,8 @@ import ShareDialog from './ShareDialog';
 import Footer from './Footer';
 import FloatingCTA from './FloatingCTA';
 import FooterCTA from './FooterCTA';
+import AgentSquircle from './AgentSquircle';
+import AgentGlyph from './AgentGlyph';
 import './ShowcaseMap.css';
 
 // Flip to `false` to show the nav, bottom bar, and theme toggle
@@ -670,7 +672,7 @@ function FigmaBadge({ figma, alwaysOpen = false, visible = true }) {
 }
 
 // AI vibe icon with a hover tooltip ("Clauding" / "Codex" / "Vibing").
-function AiVibeIcon({ src, label, combo = false }) {
+function AiVibeIcon({ src, label, combo = false, bg }) {
   const [hovered, setHovered] = useState(false);
   const [tipPhase, setTipPhase] = useState(null);
   useEffect(() => {
@@ -689,7 +691,13 @@ function AiVibeIcon({ src, label, combo = false }) {
       onMouseLeave={() => setHovered(false)}
       onClick={(e) => e.stopPropagation()}
     >
-      <img className={`sc-ai-icon${combo ? ' sc-ai-icon-combo' : ''}`} src={src} alt="" />
+      {bg ? (
+        <span className="sc-ai-icon sc-ai-icon-badge" style={{ background: bg }}>
+          <img className="sc-ai-icon-symbol" src={src} alt="" />
+        </span>
+      ) : (
+        <img className={`sc-ai-icon${combo ? ' sc-ai-icon-combo' : ''}`} src={src} alt="" />
+      )}
       {tipPhase !== null && (
         <div className={`sc-ai-tooltip sc-ai-tooltip-${tipPhase}`} role="tooltip">
           {label}
@@ -700,7 +708,7 @@ function AiVibeIcon({ src, label, combo = false }) {
 }
 
 // Private office room card — uses the same markup as mapv3
-function PrivateRoomCard({ room, storyBubble, onPersonClick, onRoomClick, spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, showPhysicalTags = false }) {
+function PrivateRoomCard({ room, storyBubble, onPersonClick, onRoomClick, spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, showPhysicalTags = false, vibeOverride = false }) {
   const [talking, setTalking] = useState({});
   const hasTalk = room.people.length > 1;
 
@@ -729,7 +737,7 @@ function PrivateRoomCard({ room, storyBubble, onPersonClick, onRoomClick, spotif
   }, [hasTalk]);
 
   const isEmpty = room.people.length === 0;
-  const activeVibe = !isEmpty ? room.vibe : null; // 'claude' | 'codex' | 'both' | null
+  const activeVibe = !isEmpty && !vibeOverride ? room.vibe : null; // 'claude' | 'codex' | 'both' | null
   const prevVibeRef = useRef(null);
   const [showGlow, setShowGlow] = useState(false);
   const [renderedVibe, setRenderedVibe] = useState(null);
@@ -769,9 +777,24 @@ function PrivateRoomCard({ room, storyBubble, onPersonClick, onRoomClick, spotif
         <div className="meeting-room-card" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
           <div className="card-header" style={{ padding: '0 12px' }}>
             <h3 className={`office-name ${isEmpty ? 'sc-office-empty' : ''}`}>{room.name}</h3>
-            {activeVibe === 'claude' && <AiVibeIcon src="/icons/claude.svg" label="Clauding" />}
-            {activeVibe === 'codex' && <AiVibeIcon src="/icons/codex-white.svg" label="Codex" />}
-            {activeVibe === 'both' && <AiVibeIcon src="/icons/vibe-combo.svg" label="Vibing" combo />}
+            {(activeVibe === 'claude' || activeVibe === 'both') && <AiVibeIcon src="/icons/claude-symbol.svg" bg="#DD6B4A" label="Clauding" />}
+            {(activeVibe === 'codex'  || activeVibe === 'both') && <AiVibeIcon src="/icons/codex-symbol.svg"  bg="#FFFFFF" label="Codex" />}
+            {room.agentDock?.length > 0 && room.agentDock.map((agent) => (
+              <span key={agent.id || agent.name} className="sc-private-agent-badge-wrap">
+                <AgentSquircle
+                  color={agent.color}
+                  letter={agent.letter}
+                  icon={agent.icon}
+                  iconIndex={agent.iconIndex}
+                  name={agent.name}
+                  size={16}
+                  working={agent.status === 'working'}
+                  onClick={agent.onClick ? (e) => { e.stopPropagation(); agent.onClick(agent); } : undefined}
+                  className="sc-private-agent-badge"
+                />
+                <span className="sc-private-agent-badge-tooltip" role="tooltip">{agent.name}</span>
+              </span>
+            ))}
             {room.spotify && <SpotifyBadge spotify={room.spotify} alwaysOpen={spotifyAlwaysOpen} visible={!isEmpty && !activeVibe} />}
             {room.github && <GitHubBadge github={room.github} alwaysOpen={githubAlwaysOpen} visible={!isEmpty && !activeVibe} />}
             {room.figma && <FigmaBadge figma={room.figma} alwaysOpen={figmaAlwaysOpen} visible={!isEmpty && !activeVibe} />}
@@ -791,6 +814,86 @@ function PrivateRoomCard({ room, storyBubble, onPersonClick, onRoomClick, spotif
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Agent workroom card — flat rack OR multi-column departmental layout.
+function AgentRoomCard({ room, onAgentClick, onPersonClick }) {
+  const visitors = room.people || [];
+  const agents = room.agents || [];
+  const departments = room.departments || null;
+
+  const renderRow = (agent) => (
+    <button
+      key={agent.id || agent.name}
+      type="button"
+      className={`sc-agentroom-row ${agent.attention ? 'sc-agentroom-row-attention' : ''}`}
+      onClick={(e) => { e.stopPropagation(); onAgentClick && onAgentClick(agent); }}
+    >
+      <AgentSquircle
+        color={agent.color}
+        letter={agent.letter}
+        icon={agent.icon}
+        name={agent.name}
+        size={20}
+        working={agent.status === 'working'}
+      />
+      <span className="sc-agentroom-row-body">
+        <span className="sc-agentroom-row-name">{agent.name}</span>
+        {agent.task && <span className="sc-agentroom-row-task">{agent.task}</span>}
+      </span>
+      {agent.attention ? (
+        <span className="sc-agentroom-row-attention-dot" aria-label={agent.attention} />
+      ) : (
+        <span className={`sc-agentroom-row-status sc-agentroom-row-status-${agent.status || 'idle'}`} aria-hidden="true" />
+      )}
+    </button>
+  );
+
+  return (
+    <div className={`sc-room-card sc-agentroom ${departments ? 'sc-agentroom-departmental' : ''}`}>
+      <div className="big-meeting-card-inner" style={{ height: '100%' }}>
+        <div className="meeting-room-card sc-agentroom-card" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+          <div className="card-header" style={{ padding: '0 12px' }}>
+            <h3 className="office-name">{room.name}</h3>
+            <span className="sc-agentroom-badge" aria-hidden="true">Agent Workroom</span>
+          </div>
+          {visitors.length > 0 && (
+            <div className="sc-agentroom-visitors">
+              {visitors.map((person, i) => (
+                <div
+                  key={person.name + i}
+                  className="sc-agentroom-visitor"
+                  onClick={(e) => { e.stopPropagation(); onPersonClick && onPersonClick(person, e); }}
+                  style={{ cursor: getChatIdForAvatar(person.avatar) ? 'pointer' : 'default' }}
+                >
+                  <img className="avatar" src={person.avatar} alt={person.name} />
+                </div>
+              ))}
+            </div>
+          )}
+          {departments ? (
+            <div className="sc-agentroom-depts">
+              {departments.map((dept) => (
+                <div key={dept.name} className="sc-agentroom-dept">
+                  <div className="sc-agentroom-dept-head">
+                    <span className="sc-agentroom-dept-name">{dept.name}</span>
+                    <span className="sc-agentroom-dept-count">{(dept.agents || []).length}</span>
+                  </div>
+                  <div className="sc-agentroom-dept-rack">
+                    {(dept.agents || []).map(renderRow)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="sc-agentroom-rack">
+              {agents.map(renderRow)}
             </div>
           )}
         </div>
@@ -1148,6 +1251,103 @@ function GameHex({ person, rank, small = false, colorIndex = 0, talking = false,
               <span className={`game-hex-hover-dot game-hex-hover-dot-${hover.status}`} />
               {hover.status === 'working' ? 'Working' : 'Idle'}
             </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Agent Workshop card — large room dedicated to agent work.
+function AgentWorkshopCard({ room, onRoomClick }) {
+  const [hovered, setHovered] = useState(null); // { agent, x, y, flip }
+  const cardRef = useRef(null);
+
+  const onTileEnter = (e, agent) => {
+    const tile = e.currentTarget;
+    const card = cardRef.current;
+    if (!card) return;
+    const tr = tile.getBoundingClientRect();
+    const cr = card.getBoundingClientRect();
+    const cx = tr.left - cr.left + tr.width / 2;
+    // Always show above the tile.
+    const top = tr.top - cr.top - 8;
+    setHovered({ agent, x: cx, y: top });
+  };
+  const onTileLeave = () => setHovered(null);
+
+  return (
+    <div
+      className="sc-room-card sc-agent-workshop"
+      ref={cardRef}
+      onClick={onRoomClick ? (e) => { e.stopPropagation(); onRoomClick(room); } : undefined}
+      style={onRoomClick ? { cursor: 'pointer' } : undefined}
+    >
+      <div className="big-meeting-card-inner" style={{ height: '100%' }}>
+        <div className="meeting-room-card sc-agent-workshop-card" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+          {['nw', 'ne', 'sw', 'se'].map(corner => (
+            <span key={corner} className={`sc-workshop-bolt sc-workshop-bolt-${corner}`} aria-hidden="true">
+              <svg viewBox="0 0 16 16" width="10" height="10">
+                <path
+                  d="M8 1 L14.062 4.5 L14.062 11.5 L8 15 L1.938 11.5 L1.938 4.5 Z"
+                  fill="currentColor"
+                />
+              </svg>
+            </span>
+          ))}
+          <div className="card-header sc-agent-workshop-header">
+            <h3 className="office-name">{room.name || 'AI Control Room'}</h3>
+          </div>
+          <div className="sc-agent-workshop-body">
+            {room.departments?.length > 0 && (
+              <div className="sc-control-room-grid">
+                {room.departments.map(dept => (
+                  <div key={dept.name} className="sc-control-room-dept">
+                    <div className="sc-control-room-tiles">
+                      {dept.agents.map(agent => (
+                        <span
+                          key={agent.name}
+                          className="sc-control-room-tile"
+                          style={{ '--agent-color': agent.color || dept.color }}
+                          aria-label={agent.name}
+                          onMouseEnter={(e) => onTileEnter(e, { ...agent, deptColor: dept.color })}
+                          onMouseLeave={onTileLeave}
+                        >
+                          <AgentGlyph index={agent.iconIndex} size={20} className="sc-control-room-tile-icon" />
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+      {hovered && (
+        <div
+          className="sc-control-room-popover"
+          style={{ left: hovered.x, top: hovered.y }}
+        >
+          <div className="sc-control-room-popover-head">
+            <span
+              className="sc-control-room-popover-mark"
+              style={{ '--agent-color': hovered.agent.deptColor }}
+              aria-hidden="true"
+            >
+              <AgentGlyph index={hovered.agent.iconIndex} size={14} className="sc-control-room-popover-mark-icon" />
+            </span>
+            <span className="sc-control-room-popover-title">{hovered.agent.name}</span>
+          </div>
+          {hovered.agent.summary && (
+            <div className="sc-control-room-popover-summary">{hovered.agent.summary}</div>
+          )}
+          {hovered.agent.capabilities?.length > 0 && (
+            <ul className="sc-control-room-popover-capabilities">
+              {hovered.agent.capabilities.map(c => (
+                <li key={c}>{c}</li>
+              ))}
+            </ul>
           )}
         </div>
       )}
@@ -1967,11 +2167,11 @@ function ShelfWindow({ win, onDrag, photoIdx, direction, onPrev, onNext }) {
 }
 
 // Main showcase component
-export default function ShowcaseMap({ initialFloor = 'R&D', embedded = false, autoKnock = false, spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, hideOnIt = false, onItAutoOpen = false, shelfAutoOpen = false, shareAutoOpen = false, theme, autoCycleFloors = false, autoCycleDms = false, showPhysicalTags = false, onAirOverride = null, agentsRoom = null, officeAgents = null } = {}) {
+export default function ShowcaseMap({ initialFloor = 'R&D', embedded = false, autoKnock = false, spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, hideOnIt = false, onItAutoOpen = false, shelfAutoOpen = false, shareAutoOpen = false, theme, autoCycleFloors = false, autoCycleDms = false, showPhysicalTags = false, onAirOverride = null, agentsRoom = null, officeAgents = null, workrooms = null, peopleOverrides = null, vibeOverride = false, hideElevator = false, hiddenRooms = null, extraRooms = null, editable = false, defaultLayout = null, onPersonalAgentsClick = null } = {}) {
   return (
     <ChatProvider>
       <WindowManagerProvider initialWindows={INITIAL_WINDOWS}>
-        <ShowcaseMapInner initialFloor={initialFloor} embedded={embedded} autoKnock={autoKnock} spotifyAlwaysOpen={spotifyAlwaysOpen} githubAlwaysOpen={githubAlwaysOpen} figmaAlwaysOpen={figmaAlwaysOpen} hideOnIt={hideOnIt} onItAutoOpen={onItAutoOpen} shelfAutoOpen={shelfAutoOpen} shareAutoOpen={shareAutoOpen} themeOverride={theme} autoCycleFloors={autoCycleFloors} autoCycleDms={autoCycleDms} showPhysicalTags={showPhysicalTags} onAirOverride={onAirOverride} agentsRoom={agentsRoom} officeAgents={officeAgents} />
+        <ShowcaseMapInner initialFloor={initialFloor} embedded={embedded} autoKnock={autoKnock} spotifyAlwaysOpen={spotifyAlwaysOpen} githubAlwaysOpen={githubAlwaysOpen} figmaAlwaysOpen={figmaAlwaysOpen} hideOnIt={hideOnIt} onItAutoOpen={onItAutoOpen} shelfAutoOpen={shelfAutoOpen} shareAutoOpen={shareAutoOpen} themeOverride={theme} autoCycleFloors={autoCycleFloors} autoCycleDms={autoCycleDms} showPhysicalTags={showPhysicalTags} onAirOverride={onAirOverride} agentsRoom={agentsRoom} officeAgents={officeAgents} workrooms={workrooms} peopleOverrides={peopleOverrides} vibeOverride={vibeOverride} hideElevator={hideElevator} hiddenRooms={hiddenRooms} extraRooms={extraRooms} editable={editable} defaultLayout={defaultLayout} onPersonalAgentsClick={onPersonalAgentsClick} />
       </WindowManagerProvider>
     </ChatProvider>
   );
@@ -2135,7 +2335,7 @@ function useTargetHintStyle(targetRef, active, offset = { top: -30, left: 'cente
   return style;
 }
 
-function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = false, spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, hideOnIt = false, onItAutoOpen = false, shelfAutoOpen = false, shareAutoOpen = false, themeOverride = null, autoCycleFloors = false, autoCycleDms = false, showPhysicalTags = false, onAirOverride = null, agentsRoom = null, officeAgents = null }) {
+function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = false, spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, hideOnIt = false, onItAutoOpen = false, shelfAutoOpen = false, shareAutoOpen = false, themeOverride = null, autoCycleFloors = false, autoCycleDms = false, showPhysicalTags = false, onAirOverride = null, agentsRoom = null, officeAgents = null, workrooms = null, peopleOverrides = null, vibeOverride = false, hideElevator = false, hiddenRooms = null, extraRooms = null, editable = false, defaultLayout = null, onPersonalAgentsClick = null }) {
   const [themeState, setThemeState] = useState('dark');
   const theme = themeOverride || themeState;
   const setTheme = themeOverride ? () => {} : setThemeState;
@@ -2201,8 +2401,170 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
   const [viewedStories, setViewedStories] = useState({});
   // People movement — occasionally move someone between offices and meeting rooms
   const [movements, setMovements] = useState({ removed: {}, added: {}, anim: {} }); // anim: { roomId: 'leaving' | 'arriving' }
+  // Edit mode — per-room { col, row, colSpan, rowSpan } overrides applied on
+  // top of the floor data. Mutated by the drag handlers below.
+  const [layoutOverrides, setLayoutOverrides] = useState({});
+  const [draggingRoomId, setDraggingRoomId] = useState(null);
+  const gridRef = useRef(null);
   const [miniChats, setMiniChats] = useState([]);
   const { setMessages: setChatMessages } = useChat();
+
+  // Edit mode — free positioning on an 8px grid. Storage shape:
+  //   layoutOverrides[roomId] = { x, y, w, h }   (pixels relative to grid)
+  // Initial coords are seeded from the room's grid pos/colSpan/rowSpan
+  // converted with the measured grid cell size.
+  const SNAP = 8;
+  const snap = (v) => Math.round(v / SNAP) * SNAP;
+
+  // Compute the absolute box (x, y, w, h) for a room — either the cached
+  // layout override OR derived from the floor data + measured grid size.
+  const getRoomBox = (room) => {
+    const lo = layoutOverrides[room.id];
+    if (lo && typeof lo.x === 'number') return lo;
+    const grid = gridRef.current;
+    if (!grid) return null;
+    const gw = grid.clientWidth;
+    const gh = grid.clientHeight;
+    const cols = 6;
+    const rows = 5;
+    const colW = gw / cols;
+    const rowH = gh / rows;
+    const cspan = room.colSpan || room.span || 1;
+    const rspan = room.rowSpan || 1;
+    return {
+      x: snap(room.pos.col * colW),
+      y: snap(room.pos.row * rowH),
+      w: snap(cspan * colW),
+      h: snap(rspan * rowH),
+    };
+  };
+
+  // On entering edit mode, seed every visible room's initial absolute box
+  // so the layout matches the previous grid render exactly. Defers to
+  // rAF so the grid has finished its initial layout before we measure.
+  useEffect(() => {
+    if (!editable) return;
+    let raf = 0;
+    const seed = () => {
+      const grid = gridRef.current;
+      if (!grid || !grid.clientWidth) {
+        raf = requestAnimationFrame(seed);
+        return;
+      }
+      const gw = grid.clientWidth;
+      const gh = grid.clientHeight;
+      const colW = gw / 6;
+      const rowH = gh / 5;
+      setLayoutOverrides(prev => {
+        const next = { ...prev };
+        currentFloorRooms.forEach(room => {
+          if (next[room.id] && typeof next[room.id].x === 'number') return;
+          // Explicit default from the caller wins over grid-derived pos.
+          const explicit = defaultLayout && defaultLayout[room.id];
+          if (explicit) {
+            next[room.id] = {
+              x: snap(explicit.x),
+              y: snap(explicit.y),
+              w: snap(explicit.w),
+              h: snap(explicit.h),
+            };
+            return;
+          }
+          const cspan = room.colSpan || room.span || 1;
+          const rspan = room.rowSpan || 1;
+          next[room.id] = {
+            x: snap(room.pos.col * colW),
+            y: snap(room.pos.row * rowH),
+            w: snap(cspan * colW),
+            h: snap(rspan * rowH),
+          };
+        });
+        return next;
+      });
+    };
+    raf = requestAnimationFrame(seed);
+    return () => cancelAnimationFrame(raf);
+    // Only seed on transition into edit mode.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editable]);
+
+  const handleCellDragStart = (e, room) => {
+    if (e.button !== 0) return;
+    if (e.target.closest('button, a, input, .sc-story-bubble, .sc-resize-handle')) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const grid = gridRef.current;
+    if (!grid) return;
+    const box = getRoomBox(room);
+    if (!box) return;
+    setDraggingRoomId(room.id);
+    const startX = e.clientX, startY = e.clientY;
+    const startBox = { ...box };
+    let moved = false;
+    const onMove = (ev) => {
+      const dx = ev.clientX - startX;
+      const dy = ev.clientY - startY;
+      if (!moved && (Math.abs(dx) > 3 || Math.abs(dy) > 3)) moved = true;
+      if (!moved) return;
+      const x = snap(startBox.x + dx);
+      const y = snap(startBox.y + dy);
+      setLayoutOverrides(prev => ({
+        ...prev,
+        [room.id]: { ...startBox, ...prev[room.id], x, y },
+      }));
+    };
+    const onUp = () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+      setDraggingRoomId(null);
+      // Treat a no-movement mousedown+up as a click — fires room.onClick
+      // for editable cells (e.g. opening the AI Control Room window).
+      if (!moved && typeof room.onClick === 'function') room.onClick(room);
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+  };
+
+  // 8-directional resize. `dir` is one of 'n','s','e','w','ne','nw','se','sw'.
+  const handleResizeStart = (e, room, dir) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const box = getRoomBox(room);
+    if (!box) return;
+    setDraggingRoomId(room.id);
+    const startX = e.clientX, startY = e.clientY;
+    const startBox = { ...box };
+    const MIN = 80;
+    const onMove = (ev) => {
+      const dx = ev.clientX - startX;
+      const dy = ev.clientY - startY;
+      let { x, y, w, h } = startBox;
+      if (dir.includes('e')) w = Math.max(MIN, snap(startBox.w + dx));
+      if (dir.includes('s')) h = Math.max(MIN, snap(startBox.h + dy));
+      if (dir.includes('w')) {
+        const newW = Math.max(MIN, snap(startBox.w - dx));
+        x = startBox.x + (startBox.w - newW);
+        w = newW;
+      }
+      if (dir.includes('n')) {
+        const newH = Math.max(MIN, snap(startBox.h - dy));
+        y = startBox.y + (startBox.h - newH);
+        h = newH;
+      }
+      setLayoutOverrides(prev => ({
+        ...prev,
+        [room.id]: { x, y, w, h },
+      }));
+    };
+    const onUp = () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+      setDraggingRoomId(null);
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+  };
 
   const openOnItChat = () => {
     const chatId = 'on-it';
@@ -2512,13 +2874,21 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
   }, [autoKnock, activeFloor]);
 
   // Apply movements to get the current floor rooms
+  const hiddenSet = useMemo(() => new Set(hiddenRooms || []), [hiddenRooms]);
   const currentFloorRooms = useMemo(() => {
-    return FLOORS[activeFloor].map(room => {
+    const base = FLOORS[activeFloor];
+    const all = extraRooms?.length ? [...base, ...extraRooms] : base;
+    return all.filter(room => !hiddenSet.has(room.id)).map(room => {
       let people = room.people;
       if (movements.removed[room.id]) people = [];
       if (movements.added[room.id]) {
         const incoming = Array.isArray(movements.added[room.id]) ? movements.added[room.id] : [movements.added[room.id]];
         people = [...people, ...incoming.map(p => ({ ...p, _new: true }))];
+      }
+      // Per-room people override — used by the Garage view to thin
+      // existing humans out of offices/meetings without forking FLOORS.
+      if (peopleOverrides && Object.prototype.hasOwnProperty.call(peopleOverrides, room.id)) {
+        people = peopleOverrides[room.id] || [];
       }
       // For the on-air floor, allow the FeaturePage to override the theater
       // room's display name with the active event's title.
@@ -2526,7 +2896,22 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
       if (room.id === 'oa-theater' && onAirOverride?.title) {
         name = onAirOverride.title;
       }
-      // Optional: replace a specific room with an "Agents" game room.
+      // Replace a specific room with an "agentroom" workroom (rack or
+      // departmental columns of agents).
+      if (workrooms && workrooms[room.id]) {
+        const wr = workrooms[room.id];
+        return {
+          ...room,
+          type: 'agentroom',
+          name: wr.name || room.name,
+          people: wr.visitors || [],
+          agents: wr.agents || null,
+          departments: wr.departments || null,
+          onAgentClick: wr.onAgentClick,
+          _anim: movements.anim[room.id] || null,
+        };
+      }
+      // Legacy: replace a specific room with an "Agents" game room.
       if (agentsRoom && room.id === agentsRoom.replacesId) {
         return {
           ...room,
@@ -2539,14 +2924,16 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
           _anim: movements.anim[room.id] || null,
         };
       }
-      // Inject any per-office agents (e.g. "Howard L." gets his Writing Agent
-      // sitting next to him in his private office).
+      // Per-office agent dock — agents docked at the bottom of an office.
+      // Stored on `agentDock` (not appended to `people`) so the seats stay
+      // human-only.
+      let agentDock = null;
       if (officeAgents && room.type === 'private' && officeAgents[room.name]?.length) {
-        people = [...people, ...officeAgents[room.name]];
+        agentDock = officeAgents[room.name];
       }
-      return { ...room, name, people, _anim: movements.anim[room.id] || null };
+      return { ...room, name, people, agentDock, _anim: movements.anim[room.id] || null };
     });
-  }, [activeFloor, movements, onAirOverride, agentsRoom, officeAgents]);
+  }, [activeFloor, movements, onAirOverride, agentsRoom, officeAgents, workrooms, peopleOverrides, hiddenSet, extraRooms]);
 
   const theaterSpeakers = useMemo(() => {
     if (activeFloor === 'TheaterOnAir') {
@@ -3026,29 +3413,42 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
         <div className="sc-content">
           {/* Map grid */}
           <div className="sc-map">
-            <div className={`sc-grid sc-floor-${floorTransition}`}>
+            <div ref={gridRef} className={`sc-grid sc-floor-${floorTransition} ${editable ? 'sc-grid-editable' : ''}`} data-floor={activeFloor}>
               {currentFloorRooms.map(room => {
-                const gridColumn = room.colSpan
-                  ? `${room.pos.col + 1} / span ${room.colSpan}`
-                  : `${room.pos.col + 1}`;
-                const gridRow = room.rowSpan
-                  ? `${room.pos.row + 1} / span ${room.rowSpan}`
-                  : `${room.pos.row + 1}`;
+                let cellStyle;
+                if (editable) {
+                  const box = layoutOverrides[room.id];
+                  if (box && typeof box.x === 'number') {
+                    cellStyle = { position: 'absolute', left: box.x, top: box.y, width: box.w, height: box.h };
+                  } else {
+                    // First render before useEffect seeds the box — hide briefly.
+                    cellStyle = { position: 'absolute', left: 0, top: 0, width: 0, height: 0, visibility: 'hidden' };
+                  }
+                } else {
+                  const gridColumn = room.colSpan
+                    ? `${room.pos.col + 1} / span ${room.colSpan}`
+                    : `${room.pos.col + 1}`;
+                  const gridRow = room.rowSpan
+                    ? `${room.pos.row + 1} / span ${room.rowSpan}`
+                    : `${room.pos.row + 1}`;
+                  cellStyle = { gridColumn, gridRow };
+                }
 
                 return (
                   <div
                     key={room.id}
-                    className={`sc-grid-cell ${room._anim ? `sc-move-${room._anim}` : ''} ${autoKnock && joinedRoomId === room.id ? 'sc-room-joined-pulse' : ''} ${joinedRoomId === room.id && room.type === 'private' && room.people.some(p => p.avatar === JOE.avatar) ? 'sc-room-own-office' : ''}`}
+                    className={`sc-grid-cell ${room._anim ? `sc-move-${room._anim}` : ''} ${autoKnock && joinedRoomId === room.id ? 'sc-room-joined-pulse' : ''} ${joinedRoomId === room.id && room.type === 'private' && room.people.some(p => p.avatar === JOE.avatar) ? 'sc-room-own-office' : ''} ${editable ? 'sc-grid-cell-editable' : ''} ${draggingRoomId === room.id ? 'sc-grid-cell-dragging' : ''}`}
                     data-room-type={room.type}
                     data-room-name={room.name}
-                    style={{ gridColumn, gridRow }}
+                    style={cellStyle}
+                    onMouseDown={editable ? (e) => handleCellDragStart(e, room) : undefined}
                   >
                     {room.type === 'theater' ? (
                       <TheaterRoomCard
                         room={room}
                         speakers={theaterSpeakers}
-                        onPersonClick={openMiniChat}
-                        onRoomClick={() => theaterWin.open()}
+                        onPersonClick={editable ? undefined : openMiniChat}
+                        onRoomClick={editable ? undefined : () => theaterWin.open()}
                         speakerStories={speakerStories}
                         viewedStories={viewedStories}
                         onStoryClick={(storyImage) => {
@@ -3061,7 +3461,7 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
                         }}
                       />
                     ) : room.type === 'meeting' ? (
-                      <MeetingRoomCardShowcase showPhysicalTags={showPhysicalTags} room={{ ...room, people: joinedRoomId === room.id && !room.people.some(p => p.avatar === JOE.avatar) ? [...room.people, { ...JOE, isJoining: true }] : room.people }} onPersonClick={openMiniChat} onRoomClick={(r) => {
+                      <MeetingRoomCardShowcase showPhysicalTags={showPhysicalTags} room={{ ...room, people: joinedRoomId === room.id && !room.people.some(p => p.avatar === JOE.avatar) ? [...room.people, { ...JOE, isJoining: true }] : room.people }} onPersonClick={editable ? undefined : openMiniChat} onRoomClick={editable ? undefined : (r) => {
                         setJoinedRoomId(r.id);
                         // Mirror the map cell: only people with .video render
                         // tiles. Then de-dupe by avatar so the same headshot
@@ -3076,16 +3476,28 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
                       }} />
                     ) : room.type === 'game' ? (
                       <GameRoomCard room={room} />
+                    ) : room.type === 'agentroom' ? (
+                      <AgentRoomCard
+                        room={room}
+                        onAgentClick={editable ? undefined : room.onAgentClick}
+                        onPersonClick={editable ? undefined : openMiniChat}
+                      />
+                    ) : room.type === 'agent-workshop' ? (
+                      <AgentWorkshopCard
+                        room={room}
+                        onRoomClick={editable ? undefined : room.onClick}
+                      />
                     ) : room.type === 'command' ? (
                       <CommandCenterCard room={room} />
                     ) : (
                       <PrivateRoomCard
+                        vibeOverride={vibeOverride}
                         showPhysicalTags={showPhysicalTags}
                         spotifyAlwaysOpen={spotifyAlwaysOpen}
                         githubAlwaysOpen={githubAlwaysOpen}
                         figmaAlwaysOpen={figmaAlwaysOpen}
-                        onPersonClick={openMiniChat}
-                        onRoomClick={room.people.length === 0 ? undefined : (r) => {
+                        onPersonClick={editable ? undefined : openMiniChat}
+                        onRoomClick={editable || room.people.length === 0 ? undefined : (r) => {
                           if (joinedRoomId === r.id) return;
                           const isMyOffice = room.people.some(p => p.avatar === JOE.avatar);
                           if (isMyOffice) {
@@ -3137,24 +3549,33 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
                         ) : null}
                       />
                     )}
+                    {editable && ['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw'].map(dir => (
+                      <span
+                        key={dir}
+                        className={`sc-resize-handle sc-resize-${dir}`}
+                        onMouseDown={(e) => handleResizeStart(e, room, dir)}
+                      />
+                    ))}
                   </div>
                 );
               })}
             </div>
           </div>
 
-          {/* Right sidebar — elevator */}
-          <div className="sc-sidebar">
-            {FLOOR_NAMES.map(floorName => (
-              <FloorCard
-                key={floorName}
-                name={floorName}
-                rooms={FLOORS[floorName]}
-                active={activeFloor === floorName}
-                onClick={() => switchFloor(floorName)}
-              />
-            ))}
-          </div>
+          {/* Right sidebar — elevator. Hidden when caller passes hideElevator. */}
+          {!hideElevator && (
+            <div className="sc-sidebar">
+              {FLOOR_NAMES.map(floorName => (
+                <FloorCard
+                  key={floorName}
+                  name={floorName}
+                  rooms={FLOORS[floorName]}
+                  active={activeFloor === floorName}
+                  onClick={() => switchFloor(floorName)}
+                />
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Shelf overlay — dims the entire window behind the open shelf */}
@@ -3257,6 +3678,23 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
             <div className="sc-toolbar-pill" data-tooltip="AInbox" onClick={() => { ainboxWin.open(); }}>
               <img src="/icons/chat.svg" width="16" height="16" alt="" />
             </div>
+            {onPersonalAgentsClick && (
+              <div
+                className="sc-toolbar-pill sc-toolbar-pill-personal-agents"
+                data-tooltip="Personal Agents"
+                onClick={(e) => { e.stopPropagation(); onPersonalAgentsClick(); }}
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <path
+                    d="M3.5 6.75 L8 2.75 L12.5 6.75 M3.5 9.25 L8 13.25 L12.5 9.25"
+                    stroke="white"
+                    strokeWidth="1"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </div>
+            )}
           </div>
 
           {/* Center group */}

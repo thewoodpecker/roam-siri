@@ -3437,7 +3437,9 @@ function SpinnerView() {
 
 function useHashTab() {
   const getTab = () => {
-    const hash = window.location.hash.replace('#', '');
+    // Strip off any trailing &foo=bar params (e.g. Figma's capture hash) so
+    // the route still matches when external tools append params to the hash.
+    const hash = window.location.hash.replace('#', '').split(/[&?]/)[0];
     const valid = ['map-v3', 'design-studio', 'agent-garage', 'claude-max', 'big-vibe', 'big-meetings', 'war-room', 'experimental', 'spinner', 'showcase'];
     return valid.includes(hash) ? hash : 'showcase';
   };
