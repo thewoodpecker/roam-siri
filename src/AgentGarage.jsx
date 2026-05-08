@@ -703,7 +703,84 @@ const PERSONAL_AGENT_LIST = [
   },
 ];
 
-function PersonalAgentsPopup({ onClose, agents, title }) {
+// Sample files in the user's personal "agent project". The kind drives
+// the preview rendering — text shows a TEXT badge, chart-bar renders a
+// mini bar chart, table shows a small data grid, pdf shows a
+// document-style preview with a PDF badge.
+const PERSONAL_FILES = [
+  { id: 'price-increase', name: 'Price Increase', desc: '2 lines', kind: 'text' },
+  { id: 'sales-process',  name: 'Sales Process',  desc: '1 line',  kind: 'text' },
+  { id: 'the-goal',       name: 'The Goal',       desc: '1 line',  kind: 'text' },
+  { id: 'q1-forecast',    name: 'Q1 Forecast',    desc: 'chart',   kind: 'chart-blue',
+    bars: [4, 7, 5, 8, 6, 9, 7, 10, 8, 11, 9, 12] },
+  { id: 'daily-users',    name: 'Daily Users',    desc: 'chart',   kind: 'chart-green',
+    bars: [3, 5, 4, 6, 5, 7, 8, 6, 9, 7, 10, 8, 11, 9, 12, 10, 13, 11, 14, 12] },
+  { id: 'measure-values', name: 'Measure Values', desc: 'table',   kind: 'table' },
+  { id: 'onboarding-pipeline', name: 'Onboarding Pipeline', desc: 'pdf', kind: 'pdf' },
+];
+
+function FilesView() {
+  return (
+    <div className="pa-files">
+      <div className="pa-files-head">
+        <h3 className="pa-files-title">Files</h3>
+        <button type="button" className="pa-files-upload">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+            <path d="M7 9.5V2M7 2L3.5 5.5M7 2l3.5 3.5M2.5 11.5h9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          <span>Upload file</span>
+        </button>
+      </div>
+      <div className="pa-files-grid">
+        {PERSONAL_FILES.map(f => (
+          <div key={f.id} className="pa-file">
+            <div className="pa-file-name">{f.name}</div>
+            <div className="pa-file-meta">{f.desc}</div>
+            <div className={`pa-file-preview pa-file-preview-${f.kind}`}>
+              {f.kind === 'text' && <span className="pa-file-badge">TEXT</span>}
+              {f.kind === 'pdf' && (
+                <>
+                  <div className="pa-file-pdf-lines" aria-hidden="true">
+                    {Array.from({ length: 9 }).map((_, i) => <div key={i} />)}
+                  </div>
+                  <span className="pa-file-badge">PDF</span>
+                </>
+              )}
+              {(f.kind === 'chart-blue' || f.kind === 'chart-green') && (
+                <svg className="pa-file-chart" viewBox={`0 0 ${f.bars.length * 8} 48`} preserveAspectRatio="none">
+                  {f.bars.map((v, i) => (
+                    <rect
+                      key={i}
+                      x={i * 8 + 1}
+                      y={48 - v * 3.2}
+                      width={6}
+                      height={v * 3.2}
+                      fill={f.kind === 'chart-blue' ? '#3B82F6' : '#22C55E'}
+                      rx={1}
+                    />
+                  ))}
+                </svg>
+              )}
+              {f.kind === 'table' && (
+                <div className="pa-file-table" aria-hidden="true">
+                  {Array.from({ length: 6 }).map((_, r) => (
+                    <div key={r} className="pa-file-table-row">
+                      {Array.from({ length: 5 }).map((_, c) => (
+                        <span key={c} className="pa-file-table-cell" />
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function PersonalAgentsPopup({ onClose, rooms, currentRoomId, onRoomChange, pinnedAgentIds, onTogglePin }) {
   const [pos, setPos] = useState({ x: 80, y: 60 });
   const draggingRef = useRef(false);
 
@@ -739,22 +816,76 @@ function PersonalAgentsPopup({ onClose, agents, title }) {
       <PersonalAgentsWindow
         onTitlebarMouseDown={onTitlebarMouseDown}
         onClose={onClose}
-        agents={agents}
-        title={title}
+        rooms={rooms}
+        currentRoomId={currentRoomId}
+        onRoomChange={onRoomChange}
+        pinnedAgentIds={pinnedAgentIds}
+        onTogglePin={onTogglePin}
       />
     </div>
   );
 }
 
-function PersonalAgentsWindow({ onTitlebarMouseDown, onClose, agents: initialAgents, title }) {
-  const seed = initialAgents || PERSONAL_AGENT_LIST;
-  const [agents, setAgents] = useState(seed);
-  const [selectedId, setSelectedId] = useState(seed[0]?.id);
+function PersonalAgentsWindow({ onTitlebarMouseDown, onClose, rooms, currentRoomId, onRoomChange, pinnedAgentIds = [], onTogglePin }) {
+  // Per-room state — agents (with their sessions) keyed by roomId so
+  // switching rooms via the dropdown preserves any sessions/messages the
+  // user added in each room.
+  const [agentsByRoom, setAgentsByRoom] = useState(() => {
+    const map = {};
+    rooms.forEach(r => { map[r.id] = r.agents; });
+    return map;
+  });
+  const currentRoom = rooms.find(r => r.id === currentRoomId) || rooms[0];
+  const baseAgents = agentsByRoom[currentRoom.id] || [];
+
+  // For the Personal room only: append shared agents the user has pinned.
+  // Pinned entries are looked up across all dept rooms so they keep their
+  // original color/iconIndex.
+  const pinnedAgents = currentRoom.id === 'personal'
+    ? pinnedAgentIds
+        .map(id => {
+          for (const r of rooms) {
+            if (r.id === 'personal') continue;
+            const a = (agentsByRoom[r.id] || r.agents).find(x => x.id === id);
+            if (a) return a;
+          }
+          return null;
+        })
+        .filter(Boolean)
+    : [];
+  const agents = currentRoom.id === 'personal' ? [...baseAgents, ...pinnedAgents] : baseAgents;
+  const setAgents = (updater) => {
+    setAgentsByRoom(prev => ({
+      ...prev,
+      [currentRoom.id]: typeof updater === 'function' ? updater(prev[currentRoom.id] || []) : updater,
+    }));
+  };
+
+  const [selectedId, setSelectedId] = useState(agents[0]?.id);
   const [selectedSessionId, setSelectedSessionId] = useState(null);
   const [draft, setDraft] = useState('');
   const [composerScrolled, setComposerScrolled] = useState(false);
+  const [roomMenuOpen, setRoomMenuOpen] = useState(false);
+  const [addAgentMenuOpen, setAddAgentMenuOpen] = useState(false);
+  // Personal-room only: when 'files' view is active, the entire body
+  // (sidebar + main pane) is replaced with the FilesView component.
+  const [view, setView] = useState('agent');
   const messagesRef = useRef(null);
-  const selected = agents.find(a => a.id === selectedId);
+
+  // When the room changes (via dropdown OR external click), reset selection
+  // to that room's first agent and clear the active session.
+  useEffect(() => {
+    const list = currentRoom.id === 'personal' ? [...(agentsByRoom[currentRoom.id] || []), ...pinnedAgents] : (agentsByRoom[currentRoom.id] || []);
+    setSelectedId(list[0]?.id);
+    setSelectedSessionId(null);
+    setView('agent');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentRoom.id]);
+
+  // When the room changes, selectedId is briefly stale (still the prior
+  // room's agent) until the effect below runs. Fall back to the first
+  // agent in the current room so selected is always defined.
+  const selected = agents.find(a => a.id === selectedId) || agents[0];
 
   // Auto-scroll to the bottom whenever the active session's messages change.
   const activeMessages = selected?.sessions.find(s => s.id === selectedSessionId)?.messages || [];
@@ -858,29 +989,125 @@ function PersonalAgentsWindow({ onTitlebarMouseDown, onClose, agents: initialAge
           <span className="pa-light pa-light-min" />
           <span className="pa-light pa-light-max" />
         </div>
-        <div className="pa-title">{title || 'Personal Agents'}</div>
+        <button
+          type="button"
+          className="pa-title pa-title-dropdown"
+          onMouseDown={(e) => e.stopPropagation()}
+          onClick={() => setRoomMenuOpen(v => !v)}
+        >
+          <span>{currentRoom.id === 'personal' ? 'Personal Agents' : currentRoom.name}</span>
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+            <path d="M2.5 4l2.5 2.5L7.5 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
+        {roomMenuOpen && (
+          <>
+            <div
+              className="pa-room-menu-backdrop"
+              onMouseDown={(e) => { e.stopPropagation(); setRoomMenuOpen(false); }}
+            />
+            <div className="pa-room-menu" onMouseDown={(e) => e.stopPropagation()}>
+              {rooms.map(r => (
+                <button
+                  key={r.id}
+                  type="button"
+                  className="pa-room-menu-item"
+                  onClick={() => { onRoomChange(r.id); setRoomMenuOpen(false); }}
+                >
+                  <span className="pa-room-menu-label">{r.id === 'personal' ? 'Personal Agents' : r.name}</span>
+                  {r.id === currentRoom.id && (
+                    <svg className="pa-room-menu-check" width="14" height="14" viewBox="0 0 14 14" fill="none">
+                      <path d="M3 7.5L5.5 10L11 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  )}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
       </div>
       <div className="pa-body">
+        <div className="pa-tabs-row">
         <div className="pa-tabs">
-          {agents.map(a => (
+          {currentRoom.id === 'personal' && (
+            <button
+              type="button"
+              className={`pa-tab pa-tab-files ${view === 'files' ? 'pa-tab-active' : ''}`}
+              onClick={() => setView('files')}
+            >
+              <span className="pa-tab-emoji" aria-hidden="true">
+                <span
+                  className="pa-tab-folder"
+                  style={{ WebkitMaskImage: 'url(/icons/folder.svg)', maskImage: 'url(/icons/folder.svg)' }}
+                />
+              </span>
+              <span className="pa-tab-name">Files</span>
+            </button>
+          )}
+          {agents.map(a => {
+            const isPersonal = PERSONAL_AGENT_LIST.some(p => p.id === a.id);
+            return (
             <button
               key={a.id}
               type="button"
-              className={`pa-tab ${a.id === selectedId ? 'pa-tab-active' : ''}`}
-              onClick={() => { setSelectedId(a.id); setSelectedSessionId(null); }}
+              className={`pa-tab ${a.id === selectedId && view === 'agent' ? 'pa-tab-active' : ''}`}
+              onClick={() => { setSelectedId(a.id); setSelectedSessionId(null); setView('agent'); }}
             >
-              <span className="pa-tab-emoji" style={{ color: a.color }} aria-hidden="true">
+              <span
+                className="pa-tab-emoji"
+                style={{ color: isPersonal ? 'var(--icon-primary)' : a.color }}
+                aria-hidden="true"
+              >
                 <AgentGlyph index={a.iconIndex} size={14} />
               </span>
               <span className="pa-tab-name">{a.name}</span>
             </button>
-          ))}
-          <button type="button" className="pa-tab-add" aria-label="Add agent">
+            );
+          })}
+          </div>
+          <button
+            type="button"
+            className="pa-tab-add"
+            aria-label="Add agent"
+            onClick={() => setAddAgentMenuOpen(v => !v)}
+          >
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
               <path d="M6 2v8M2 6h8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
             </svg>
           </button>
+          {addAgentMenuOpen && currentRoom.id === 'personal' && (
+            <>
+              <div className="pa-room-menu-backdrop" onClick={() => setAddAgentMenuOpen(false)} />
+              <div className="pa-room-menu pa-add-agent-menu">
+                {rooms.filter(r => r.id !== 'personal').flatMap(r =>
+                  (agentsByRoom[r.id] || r.agents).map(a => ({ ...a, _roomName: r.name }))
+                ).map(a => {
+                  const pinned = pinnedAgentIds.includes(a.id);
+                  return (
+                    <button
+                      key={a.id}
+                      type="button"
+                      className="pa-room-menu-item pa-add-agent-item"
+                      onClick={() => onTogglePin(a.id)}
+                    >
+                      <span className="pa-add-agent-glyph" style={{ color: a.color }} aria-hidden="true">
+                        <AgentGlyph index={a.iconIndex} size={14} />
+                      </span>
+                      <span className="pa-room-menu-label">{a.name}</span>
+                      <span className="pa-add-agent-room">{a._roomName}</span>
+                      {pinned && (
+                        <svg className="pa-room-menu-check" width="14" height="14" viewBox="0 0 14 14" fill="none">
+                          <path d="M3 7.5L5.5 10L11 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          )}
         </div>
+        {view === 'files' ? <FilesView /> : (
         <div className="pa-content">
           <aside className="pa-sidebar">
             <button
@@ -1011,10 +1238,12 @@ function PersonalAgentsWindow({ onTitlebarMouseDown, onClose, agents: initialAge
                   </div>
                 </div>
               </div>
+              <div className="pa-prompt-spacer" aria-hidden="true" />
             </div>
             )}
           </main>
         </div>
+        )}
       </div>
     </div>
   );
@@ -1553,6 +1782,280 @@ const CONTROL_ROOM_DEPTS = [
   },
 ];
 
+// Seed sessions per workroom agent so dept rooms aren't empty on first
+// open. State of `working` shows the agent is mid-task; `idle` shows a
+// completed thread the user can scroll back through.
+const WORKROOM_SESSIONS = {
+  // ── Support ──────────────────────────────────────────────────────────
+  'Customer Onboarding': [
+    { id: 'co-1', name: 'Acme welcome flow', state: 'working',
+      messages: [
+        { from: 'user',  text: 'Acme just signed — kick off their week-1 onboarding plan.' },
+        { from: 'agent', thought: 'Thought for 3s', text: 'On it. Pulled their seat list (12) and admin contacts. Day-1 emails go out at 8am ET tomorrow with their workspace URL + one-click setup. I\'ll watch activation through Friday and ping you if any seats stall.' },
+      ],
+    },
+    { id: 'co-2', name: 'Brightline first-week health', state: 'idle',
+      messages: [
+        { from: 'user',  text: 'How is Brightline tracking on activation?' },
+        { from: 'agent', thought: 'Thought for 2s', text: '8/10 seats activated, 2 stalled at SSO. I sent a nudge with a Loom walkthrough — both should land by EOD. Their workspace usage is 2.3× the cohort median for week 1.' },
+      ],
+    },
+    { id: 'co-3', name: 'Day-1 checklist refresh', state: 'idle', messages: [] },
+  ],
+  'Support Manager': [
+    { id: 'sm-1', name: 'SLA breach roll-up', state: 'working',
+      messages: [
+        { from: 'user',  text: 'Anything breaching SLA right now?' },
+        { from: 'agent', thought: 'Thought for 1s', text: 'Three tickets within 30 min of breach: TKT-2841 (Magic Minutes export), TKT-2849 (knock dialog stuck on iOS 17), TKT-2855 (calendar sync 401). Routed all three to the on-call engineer + flagged the iOS one as P1.' },
+      ],
+    },
+    { id: 'sm-2', name: 'Friday triage', state: 'idle',
+      messages: [
+        { from: 'user',  text: 'Sweep this week\'s ticket backlog and group by theme.' },
+        { from: 'agent', thought: 'Thought for 5s', text: 'Top themes (62 tickets):\n- **Theater playback** (18) — most resolved by the v3.4 fix.\n- **AInbox sync** (14) — points to a token refresh edge case, see TKT-2811.\n- **Magic Minutes share** (10) — already in the Friday hotfix.\n- **Misc** (20) — handled inline.' },
+      ],
+    },
+  ],
+  'Referral Analyzer': [
+    { id: 'ra-1', name: 'Q1 channel lift', state: 'idle',
+      messages: [
+        { from: 'user',  text: 'Which referral channel had the biggest lift in Q1?' },
+        { from: 'agent', thought: 'Thought for 4s', text: 'Customer-to-customer DMs (in-product invite) drove **34% of new signups**, up from 18% in Q4. Twitter/X mentions held steady at 22%. The new "invite a teammate" prompt added in March is the largest single contributor — 2.1× lift on that surface alone.' },
+      ],
+    },
+    { id: 'ra-2', name: 'Top referrer dashboard', state: 'working', messages: [
+      { from: 'user', text: 'Build a leaderboard of our top 25 referrers this quarter.' },
+    ] },
+  ],
+
+  // ── Marketing ────────────────────────────────────────────────────────
+  'Lead Researcher': [
+    { id: 'lr-1', name: 'Series-B fintechs to target', state: 'idle',
+      messages: [
+        { from: 'user',  text: 'Find me 20 series-B fintechs that match our ICP and have remote-first cultures.' },
+        { from: 'agent', thought: 'Thought for 7s', text: 'Pulled 23 from Crunchbase + LinkedIn. Top 5 by fit score:\n- **Mercury** (1,200 employees, 92% remote)\n- **Ramp** (1,800, hybrid w/ remote-friendly engineering)\n- **Pilot** (~600, fully remote)\n- **Brex** (1,100, hybrid)\n- **Modern Treasury** (~400, remote-first)\nFull list w/ contacts in the attached CSV.' },
+      ],
+    },
+    { id: 'lr-2', name: 'Acme intent signals', state: 'working',
+      messages: [
+        { from: 'user',  text: 'Acme keeps showing up in our docs traffic — pull intent signals.' },
+        { from: 'agent', thought: 'Thought for 6s', text: 'Tracked 48 Acme employees viewing /pricing and /security in the last 14 days. Three of them visited the integrations docs >5 times each — looks like an evaluation in progress. Suggesting a warm outreach to their VP Eng (Mira Patel) with a security-focused pitch.' },
+      ],
+    },
+    { id: 'lr-3', name: 'Org-chart enrichment', state: 'idle', messages: [] },
+  ],
+  'Content Drafter': [
+    { id: 'cd-1', name: 'Drop-In meetings launch post', state: 'idle',
+      messages: [
+        { from: 'user',  text: 'Draft the launch post for Drop-In meetings. Tone: confident, casual.' },
+        { from: 'agent', thought: 'Thought for 8s', text: '**Title options:**\n1. "Drop in. Don\'t schedule."\n2. "The end of \'Got 5 minutes?\'"\n3. "Knock first, then talk."\n\nDraft body in the attached doc. Hooked the intro to the calendar-fatigue stat we used in the Q4 deck. Three CTA placements; final one nudges toward a free-trial signup.' },
+      ],
+    },
+    { id: 'cd-2', name: 'AInbox case study', state: 'working',
+      messages: [
+        { from: 'user',  text: 'Spin up a case study from the Spotify AInbox usage data.' },
+      ],
+    },
+    { id: 'cd-3', name: 'Newsletter — May edition', state: 'idle', messages: [] },
+  ],
+  'Social Manager': [
+    { id: 'sm-1', name: 'This week\'s schedule', state: 'idle',
+      messages: [
+        { from: 'user',  text: 'Lay out the social schedule for the week of May 12.' },
+        { from: 'agent', thought: 'Thought for 3s', text: '7 posts queued across X/LinkedIn:\n- Mon 9am ET: Drop-In launch teaser\n- Tue 11am: customer quote (Brightline)\n- Wed 2pm: short product demo (Theater)\n- Thu 9am: design-team thread\n- Fri 4pm: weekend recap\nAll auto-published; I\'ll pause if engagement drops 30% below baseline.' },
+      ],
+    },
+    { id: 'sm-2', name: 'Engagement dip on X', state: 'working',
+      messages: [
+        { from: 'user',  text: 'Engagement on X dropped 40% last week — what changed?' },
+      ],
+    },
+  ],
+  'X Scanner': [
+    { id: 'xs-1', name: 'Competitor mentions today', state: 'idle',
+      messages: [
+        { from: 'user',  text: 'What are people saying about us vs Loom on X right now?' },
+        { from: 'agent', thought: 'Thought for 2s', text: '47 mentions in the last 24h. Sentiment:\n- 64% positive (mostly Magic Minutes praise)\n- 12% negative (3 complaints about iOS knock animation)\n- 24% neutral comparisons\nLoom mentions skewing more negative this week — pricing change pushback. Worth a comparison post.' },
+      ],
+    },
+    { id: 'xs-2', name: 'Brand-mention watchlist', state: 'working', messages: [
+      { from: 'user', text: 'Add @sahilbloom and @swyx to the watchlist.' },
+    ] },
+  ],
+  'TikTok Pricing Analyzer': [
+    { id: 'tk-1', name: 'Creator rate card v2', state: 'idle',
+      messages: [
+        { from: 'user',  text: 'Refresh our creator rate card with last quarter\'s data.' },
+        { from: 'agent', thought: 'Thought for 5s', text: 'Updated tiers:\n- Micro (10–50k): $1.2k–$2.5k flat + 1.5% rev share\n- Mid (50–250k): $3k–$8k + 2% rev share\n- Top (250k+): negotiate, base $12k floor\nFloor moved up 8% from Q4 due to category competition. Ready to share with the partnerships team.' },
+      ],
+    },
+    { id: 'tk-2', name: 'May campaign forecast', state: 'working', messages: [
+      { from: 'user', text: 'Forecast reach for the May 6 creators we just signed.' },
+    ] },
+  ],
+  'G2 Review Notification': [
+    { id: 'g2-1', name: '5★ from Mercury — amplify?', state: 'idle',
+      messages: [
+        { from: 'user',  text: 'New 5★ G2 review from Mercury came in.' },
+        { from: 'agent', thought: 'Thought for 1s', text: 'Yes — review highlights Magic Minutes specifically. Drafted a quote card and a thread thread variant. Suggested amplification: LinkedIn (best fit for B2B fintech), with the customer-success team\'s permission. Want me to queue it?' },
+      ],
+    },
+  ],
+  'Reddit Scanner': [
+    { id: 'rs-1', name: 'r/remotework hot thread', state: 'working',
+      messages: [
+        { from: 'user',  text: 'Anything popping in r/remotework today?' },
+        { from: 'agent', thought: 'Thought for 4s', text: 'One thread at 1.2k upvotes asking "what\'s the best video tool that doesn\'t feel like a meeting?" — three top comments mention us by name (positive). Two suggest Loom. Worth a CMO-level chime-in; drafting a non-promotional reply that leans into the Drop-In angle.' },
+      ],
+    },
+  ],
+  'Blog Post Generator': [
+    { id: 'bg-1', name: '"How async DMs save meetings" draft', state: 'idle',
+      messages: [
+        { from: 'user',  text: 'Draft a 1,500-word post on how AInbox async DMs reduce meeting load.' },
+        { from: 'agent', thought: 'Thought for 9s', text: 'Outline + draft attached. Hook: a stat that 38% of internal meetings could be async. Sections: (1) the meeting-tax problem, (2) how AInbox flips the default, (3) three Roam customer stories. Internal-link suggestions to /features/ainbox and /pricing.' },
+      ],
+    },
+    { id: 'bg-2', name: 'Theater on-air SEO post', state: 'working', messages: [
+      { from: 'user', text: 'Need a long-form post targeting "all-hands meeting tools".' },
+    ] },
+  ],
+  'Web Traffic Analyzer': [
+    { id: 'wt-1', name: 'Drop-In landing performance', state: 'idle',
+      messages: [
+        { from: 'user',  text: 'How is the new /drop-in landing converting?' },
+        { from: 'agent', thought: 'Thought for 3s', text: 'CTR from organic landed at **6.4%** (vs site avg 3.1%). Trial-start rate from /drop-in is 11%, ahead of /features avg of 8%. Biggest drop-off is mid-page near the pricing comparison — recommend tightening the first paragraph + moving the CTA up.' },
+      ],
+    },
+  ],
+  'Keyword Researcher': [
+    { id: 'kw-1', name: '"Async standup" cluster', state: 'idle',
+      messages: [
+        { from: 'user',  text: 'Build a keyword cluster around "async standup".' },
+        { from: 'agent', thought: 'Thought for 6s', text: '32 queries in the cluster. Big hits: "async standup tool" (2.4k/mo, low difficulty), "standup without meeting" (880, low), "remote standup template" (1.6k, mid). Three competitor pages dominating but none matching our Magic Minutes angle. Strong opening here.' },
+      ],
+    },
+  ],
+
+  // ── Sales ────────────────────────────────────────────────────────────
+  'Sales Coordinator': [
+    { id: 'sc-1', name: 'Inbound from Stripe', state: 'working',
+      messages: [
+        { from: 'user',  text: 'Stripe inquiry came in via /contact — route it.' },
+        { from: 'agent', thought: 'Thought for 2s', text: 'Routed to Marc (enterprise west). Flagged as "tier-1 strategic" since contact is their head of internal tools. I\'ve queued the prep doc with their public security FAQ + a comparison sheet vs their current stack.' },
+      ],
+    },
+    { id: 'sc-2', name: 'Pipeline hygiene', state: 'idle',
+      messages: [
+        { from: 'user',  text: 'Find stale deals in the pipeline.' },
+        { from: 'agent', thought: 'Thought for 4s', text: '14 deals haven\'t had activity in 21+ days. 6 are likely closed-lost, 4 need a follow-up nudge, 4 have an answer pending from us. Sent the rep summaries with suggested next steps.' },
+      ],
+    },
+  ],
+  'Meeting Analyzer': [
+    { id: 'ma-1', name: 'Brightline win debrief', state: 'idle',
+      messages: [
+        { from: 'user',  text: 'What worked in the Brightline win call?' },
+        { from: 'agent', thought: 'Thought for 5s', text: 'Three things stood out:\n1. The rep let the buyer talk for 71% of the call (vs our 60% baseline).\n2. Pricing was anchored to ROI specifically tied to their Q3 OKR.\n3. Demo focused on Magic Minutes, not the full product. Recommend documenting this as a play.' },
+      ],
+    },
+    { id: 'ma-2', name: 'Loss patterns this month', state: 'working', messages: [
+      { from: 'user', text: 'Any common patterns in our 4 closed-lost deals last month?' },
+    ] },
+  ],
+  'Meeting Coach': [
+    { id: 'mc-1', name: 'Coaching plan — Sam', state: 'idle',
+      messages: [
+        { from: 'user',  text: 'Build a coaching plan for Sam based on his last 5 calls.' },
+        { from: 'agent', thought: 'Thought for 6s', text: 'Two main areas:\n- **Discovery depth** — talk-time at 58%; he\'s answering objections too quickly. Practice: "tell me more" pause drills.\n- **Pricing framing** — he leads with cost. Recommend reframing around value via the ROI calc.\nBoth fixable in 2–3 weeks. Drafted role-play scripts for tomorrow\'s 1:1.' },
+      ],
+    },
+  ],
+
+  // ── R&D ──────────────────────────────────────────────────────────────
+  'Build Manager': [
+    { id: 'bm-1', name: 'CI flakes this week', state: 'idle',
+      messages: [
+        { from: 'user',  text: 'What\'s flaky in CI right now?' },
+        { from: 'agent', thought: 'Thought for 2s', text: 'Two suites consistently flaking:\n- `theater.spec.ts` — 14% failure rate, race in the recording-finalize step.\n- `ainbox-sync.spec.ts` — 9%, looks like the test seeds before the DB migration completes.\nAuto-retried both; opened ROAM-201 and ROAM-202 with reproduction.' },
+      ],
+    },
+    { id: 'bm-2', name: 'Build time trend', state: 'working', messages: [
+      { from: 'user', text: 'Build times went up 18% this week — figure out why.' },
+    ] },
+  ],
+  'Alert Triage': [
+    { id: 'at-1', name: 'Pager — staging DB', state: 'idle',
+      messages: [
+        { from: 'user',  text: 'Got paged on staging DB connection spikes — anything actionable?' },
+        { from: 'agent', thought: 'Thought for 3s', text: 'It was a noisy alert — connection pool transient. Didn\'t affect prod. Auto-resolved at 02:14 UTC. I lowered the threshold for staging from 50→80 connections to cut the noise. Want me to keep it that way or revert in 7 days?' },
+      ],
+    },
+    { id: 'at-2', name: 'P1 — Theater on-air down', state: 'working',
+      messages: [
+        { from: 'user',  text: 'Theater on-air is failing for ~3% of users.' },
+        { from: 'agent', thought: 'Thought for 4s', text: 'Paging on-call. Looks like the recording-finalize service is throwing on long sessions (>2hr). Workaround: split the session into chunks. I\'ll keep monitoring; ETA on fix from oncall is 30 min.' },
+      ],
+    },
+  ],
+  'Bug Investigator': [
+    { id: 'bi-1', name: 'Knock dialog stuck on iOS 17', state: 'idle',
+      messages: [
+        { from: 'user',  text: 'Customers reporting the knock dialog freezes on iOS 17 in low power mode.' },
+        { from: 'agent', thought: 'Thought for 7s', text: 'Reproduced. Root cause: our pulse animation uses `requestAnimationFrame` which is throttled to 1Hz under low-power. The dialog never reaches steady state. Fix: detect low-power via `prefers-reduced-motion` proxy and swap to a CSS-only pulse. Patch ready at PR #4421.' },
+      ],
+    },
+    { id: 'bi-2', name: 'Magic Minutes export 500', state: 'working', messages: [
+      { from: 'user', text: 'Export-to-PDF is 500ing on long meetings.' },
+    ] },
+  ],
+  'Code Reviewer': [
+    { id: 'cr-1', name: 'PR #4421 — knock fix review', state: 'idle',
+      messages: [
+        { from: 'user',  text: 'Review PR #4421.' },
+        { from: 'agent', thought: 'Thought for 5s', text: 'Looks good with two suggestions:\n1. The `prefers-reduced-motion` check should be a memoized hook so it doesn\'t re-evaluate every render.\n2. Add a regression test for low-power state. I drafted one — see inline comment.\nStyle + safety pass: clean. Approving with optional changes.' },
+      ],
+    },
+    { id: 'cr-2', name: 'PR #4435 — RFC scaffolding', state: 'working', messages: [
+      { from: 'user', text: 'Take a pass on #4435, especially the migration plan.' },
+    ] },
+  ],
+  'RFC Drafter': [
+    { id: 'rd-1', name: 'Federated workspaces RFC', state: 'idle',
+      messages: [
+        { from: 'user',  text: 'Draft an RFC for the federated workspaces project.' },
+        { from: 'agent', thought: 'Thought for 11s', text: 'Drafted 12-page RFC. Sections: motivation, current vs proposed architecture, identity model, data residency, migration plan, open questions. Three trade-offs called out:\n- single tenancy vs cell-based\n- read-after-write semantics\n- compliance regimes per region\nReady for the architecture review on Friday.' },
+      ],
+    },
+  ],
+
+  // ── HR ───────────────────────────────────────────────────────────────
+  'Employee Onboarding': [
+    { id: 'eo-1', name: 'Day-1 kit for May 13 cohort', state: 'working',
+      messages: [
+        { from: 'user',  text: '6 new hires starting May 13. Get day-1 kits ready.' },
+        { from: 'agent', thought: 'Thought for 4s', text: 'IT provisioning queued for all 6, equipment ships May 9. Welcome emails scheduled, calendar invites for orientation + buddy 1:1s sent. Each gets a custom kit based on role. Three engineers, two designers, one ops.' },
+      ],
+    },
+  ],
+  'Resume Triage': [
+    { id: 'rt-1', name: 'Senior FE — 47 resumes', state: 'idle',
+      messages: [
+        { from: 'user',  text: 'Triage the 47 senior FE resumes from this week.' },
+        { from: 'agent', thought: 'Thought for 8s', text: 'Top 8 by fit score (≥85):\n- 4 strong React + design-systems backgrounds\n- 2 with explicit prior remote-first experience\n- 2 from related design-tool companies (good cultural fit)\nOne maybe-pile of 12 worth a phone screen. Auto-rejected 27 with kind, specific declines.' },
+      ],
+    },
+  ],
+  'Recruiting Coordinator': [
+    { id: 'rc-1', name: 'Schedule onsites', state: 'working',
+      messages: [
+        { from: 'user',  text: 'Schedule onsites for the 8 senior FE finalists.' },
+        { from: 'agent', thought: 'Thought for 3s', text: 'Booking interviewer panels across May 19–23. Each candidate gets 5 sessions: hiring manager, system design, coding, design review, exec chat. Travel + hotel queued for the 2 in-person finalists.' },
+      ],
+    },
+  ],
+};
+
 function controlRoomInitials(name) {
   const words = name.split(/\s+/).filter(Boolean);
   // Treat short tokens like 'G2' or 'X' as canonical (use as-is when ≤ 2 chars).
@@ -1591,8 +2094,12 @@ export default function AgentGarageView() {
 
   const [openAgents, setOpenAgents] = useState([]);
   const [focusedId, setFocusedId] = useState(null);
-  const [activeWorkroom, setActiveWorkroom] = useState(null);
-  const [personalAgentsOpen, setPersonalAgentsOpen] = useState(false);
+  // Unified agent window — one window for both Personal Agents and any
+  // workroom. `roomId` is 'personal' or a dept name. null means closed.
+  const [agentsWindow, setAgentsWindow] = useState(null);
+  const [pinnedAgentIds, setPinnedAgentIds] = useState([]);
+  const togglePin = (id) =>
+    setPinnedAgentIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
 
   // Show only one story bubble on the embedded map.
   useEffect(() => {
@@ -1671,21 +2178,23 @@ export default function AgentGarageView() {
     return null;
   };
 
-  // Per-department workrooms. Each dept becomes its own room on the map
-  // and opens the PersonalAgentsWindow shell with just that dept's roster.
-  const workroomsByDept = Object.fromEntries(
-    enrichedDepartments.map(dept => [
-      dept.name,
-      dept.agents.map(a => ({
+  // Unified rooms registry — Personal + every dept workroom. Each room is
+  // {id, name, agents}. Personal seeds from PERSONAL_AGENT_LIST; dept rooms
+  // seed from their flattened control-room agents.
+  const rooms = [
+    { id: 'personal', name: 'Personal', agents: PERSONAL_AGENT_LIST },
+    ...enrichedDepartments.map(dept => ({
+      id: dept.name,
+      name: dept.name,
+      agents: dept.agents.map(a => ({
         id: a.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
         name: a.name,
         color: a.color,
         iconIndex: a.iconIndex,
-        sessions: [],
+        sessions: WORKROOM_SESSIONS[a.name] || [],
       })),
-    ])
-  );
-  const activeWorkroomAgents = activeWorkroom ? workroomsByDept[activeWorkroom] : null;
+    })),
+  ];
 
   // Per-office agent docks — pick 1-2 control-room agents working with each
   // human. Renders below the human's avatar in their private office card.
@@ -1720,7 +2229,7 @@ export default function AgentGarageView() {
       details: { title: agent.name, summary: agent.summary },
       unassigned: true,
     });
-    setActiveWorkroom(null);
+    setAgentsWindow(null);
   };
 
   return (
@@ -1733,20 +2242,20 @@ export default function AgentGarageView() {
           initialFloor="VirtualOffice"
           hideElevator={true}
           editable={true}
-          onPersonalAgentsClick={() => setPersonalAgentsOpen(true)}
+          onPersonalAgentsClick={() => setAgentsWindow({ roomId: 'personal' })}
           officeAgents={officeAgents}
           // Default editable layout — three offices centered in a row at the
           // top, Agent Workshop centered below. Coordinates are pixels
           // relative to the .sc-grid (which fills the .sc-content area).
           defaultLayout={{
-            vo1:          { x: 152, y: 0,   w: 176, h: 96  }, // Brooke F.
+            vo1:          { x: 160, y: 0,   w: 176, h: 96  }, // Brooke F.
             vo7:          { x: 344, y: 0,   w: 176, h: 96  }, // Jessica H.
-            vo3:          { x: 536, y: 0,   w: 176, h: 96  }, // Sarah M.
-            'ag-Support':   { x: 32,  y: 112, w: 144, h: 240 },
-            'ag-Marketing': { x: 184, y: 112, w: 144, h: 240 },
-            'ag-Sales':     { x: 336, y: 112, w: 144, h: 240 },
-            'ag-R&D':       { x: 488, y: 112, w: 144, h: 240 },
-            'ag-HR':        { x: 640, y: 112, w: 144, h: 240 },
+            vo3:          { x: 528, y: 0,   w: 176, h: 96  }, // Sarah M.
+            'ag-Support':   { x: 56,  y: 104, w: 144, h: 88  },
+            'ag-Marketing': { x: 208, y: 104, w: 144, h: 208 },
+            'ag-Sales':     { x: 360, y: 104, w: 144, h: 88  },
+            'ag-R&D':       { x: 512, y: 104, w: 144, h: 128 },
+            'ag-HR':        { x: 664, y: 104, w: 144, h: 88  },
           }}
           // Show only 3 offices — vo1 (Brooke F.), vo3 (Sarah M.), vo7 (Jessica H.).
           hiddenRooms={[
@@ -1764,7 +2273,7 @@ export default function AgentGarageView() {
             colSpan: 1,
             rowSpan: 3,
             departments: [dept],
-            onClick: () => setActiveWorkroom(dept.name),
+            onClick: () => setAgentsWindow({ roomId: dept.name }),
           }))}
         />
       </div>
@@ -1780,16 +2289,15 @@ export default function AgentGarageView() {
         />
       ))}
 
-      {activeWorkroom && activeWorkroomAgents && (
+      {agentsWindow && (
         <PersonalAgentsPopup
-          onClose={() => setActiveWorkroom(null)}
-          agents={activeWorkroomAgents}
-          title={activeWorkroom}
+          onClose={() => setAgentsWindow(null)}
+          rooms={rooms}
+          currentRoomId={agentsWindow.roomId}
+          onRoomChange={(roomId) => setAgentsWindow({ ...agentsWindow, roomId })}
+          pinnedAgentIds={pinnedAgentIds}
+          onTogglePin={togglePin}
         />
-      )}
-
-      {personalAgentsOpen && (
-        <PersonalAgentsPopup onClose={() => setPersonalAgentsOpen(false)} />
       )}
     </div>
   );

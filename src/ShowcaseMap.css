@@ -5913,9 +5913,9 @@
 .sc-agent-workshop-body {
   flex: 1 1 auto;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 32px 24px 16px;
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding: 16px;
   min-height: 0;
 }
 
@@ -5943,13 +5943,13 @@
 .sc-control-room-tiles {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 8px;
 }
 .sc-control-room-tile {
   position: relative;
-  width: 36px;
-  height: 36px;
-  border-radius: 13px;
+  width: 32px;
+  height: 32px;
+  border-radius: 11px;
   corner-shape: superellipse(1.6);
   display: inline-flex;
   align-items: center;
