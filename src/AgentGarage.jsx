@@ -780,7 +780,7 @@ function FilesView() {
   );
 }
 
-function PersonalAgentsPopup({ onClose, rooms, currentRoomId, onRoomChange, pinnedAgentIds, onTogglePin }) {
+function PersonalAgentsPopup({ onClose, rooms, currentRoomId, initialAgentId, onRoomChange, pinnedAgentIds, onTogglePin }) {
   const [pos, setPos] = useState({ x: 80, y: 60 });
   const draggingRef = useRef(false);
 
@@ -818,6 +818,7 @@ function PersonalAgentsPopup({ onClose, rooms, currentRoomId, onRoomChange, pinn
         onClose={onClose}
         rooms={rooms}
         currentRoomId={currentRoomId}
+        initialAgentId={initialAgentId}
         onRoomChange={onRoomChange}
         pinnedAgentIds={pinnedAgentIds}
         onTogglePin={onTogglePin}
@@ -826,7 +827,7 @@ function PersonalAgentsPopup({ onClose, rooms, currentRoomId, onRoomChange, pinn
   );
 }
 
-function PersonalAgentsWindow({ onTitlebarMouseDown, onClose, rooms, currentRoomId, onRoomChange, pinnedAgentIds = [], onTogglePin }) {
+function PersonalAgentsWindow({ onTitlebarMouseDown, onClose, rooms, currentRoomId, initialAgentId, onRoomChange, pinnedAgentIds = [], onTogglePin }) {
   // Per-room state — agents (with their sessions) keyed by roomId so
   // switching rooms via the dropdown preserves any sessions/messages the
   // user added in each room.
@@ -872,15 +873,17 @@ function PersonalAgentsWindow({ onTitlebarMouseDown, onClose, rooms, currentRoom
   const [view, setView] = useState('agent');
   const messagesRef = useRef(null);
 
-  // When the room changes (via dropdown OR external click), reset selection
-  // to that room's first agent and clear the active session.
+  // When the room changes (via dropdown OR external click), reset selection.
+  // If the caller passed an initialAgentId for this open, honor it; else
+  // fall back to the room's first agent.
   useEffect(() => {
     const list = currentRoom.id === 'personal' ? [...(agentsByRoom[currentRoom.id] || []), ...pinnedAgents] : (agentsByRoom[currentRoom.id] || []);
-    setSelectedId(list[0]?.id);
+    const target = (initialAgentId && list.some(a => a.id === initialAgentId)) ? initialAgentId : list[0]?.id;
+    setSelectedId(target);
     setSelectedSessionId(null);
     setView('agent');
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentRoom.id]);
+  }, [currentRoom.id, initialAgentId]);
 
   // When the room changes, selectedId is briefly stale (still the prior
   // room's agent) until the effect below runs. Fall back to the first
@@ -2169,11 +2172,13 @@ export default function AgentGarageView() {
     })),
   }));
 
-  // Helper — find an enriched control-room agent record by name.
+  // Helper — find an enriched control-room agent record by name. Also
+  // returns the dept name so the caller can route a click to the right
+  // workroom in the unified agents window.
   const findAgent = (name) => {
     for (const dept of enrichedDepartments) {
       const a = dept.agents.find(x => x.name === name);
-      if (a) return { ...a, deptColor: dept.color };
+      if (a) return { ...a, deptColor: dept.color, deptName: dept.name };
     }
     return null;
   };
@@ -2218,18 +2223,12 @@ export default function AgentGarageView() {
     ])
   );
 
+  // Clicking an agent badge on an office (or anywhere that hands us an
+  // enriched dept agent) opens the unified agents window scoped to that
+  // agent's home dept room with that agent's tab pre-selected.
   const handleControlRoomAgentClick = (agent) => {
-    toggleAgent({
-      id: agent.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
-      name: agent.name,
-      letter: agent.letter,
-      color: agent.color,
-      tag: agent.summary,
-      capabilities: agent.capabilities || [],
-      details: { title: agent.name, summary: agent.summary },
-      unassigned: true,
-    });
-    setAgentsWindow(null);
+    const agentId = agent.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    setAgentsWindow({ roomId: agent.deptName, agentId });
   };
 
   return (
@@ -2251,11 +2250,11 @@ export default function AgentGarageView() {
             vo1:          { x: 160, y: 0,   w: 176, h: 96  }, // Brooke F.
             vo7:          { x: 344, y: 0,   w: 176, h: 96  }, // Jessica H.
             vo3:          { x: 528, y: 0,   w: 176, h: 96  }, // Sarah M.
-            'ag-Support':   { x: 56,  y: 104, w: 144, h: 88  },
-            'ag-Marketing': { x: 208, y: 104, w: 144, h: 208 },
-            'ag-Sales':     { x: 360, y: 104, w: 144, h: 88  },
-            'ag-R&D':       { x: 512, y: 104, w: 144, h: 128 },
-            'ag-HR':        { x: 664, y: 104, w: 144, h: 88  },
+            'ag-Support':   { x: 56,  y: 104, w: 144, h: 256 },
+            'ag-Marketing': { x: 208, y: 104, w: 144, h: 256 },
+            'ag-Sales':     { x: 360, y: 104, w: 144, h: 256 },
+            'ag-R&D':       { x: 512, y: 104, w: 144, h: 256 },
+            'ag-HR':        { x: 664, y: 104, w: 144, h: 256 },
           }}
           // Show only 3 offices — vo1 (Brooke F.), vo3 (Sarah M.), vo7 (Jessica H.).
           hiddenRooms={[
@@ -2294,7 +2293,8 @@ export default function AgentGarageView() {
           onClose={() => setAgentsWindow(null)}
           rooms={rooms}
           currentRoomId={agentsWindow.roomId}
-          onRoomChange={(roomId) => setAgentsWindow({ ...agentsWindow, roomId })}
+          initialAgentId={agentsWindow.agentId}
+          onRoomChange={(roomId) => setAgentsWindow({ ...agentsWindow, roomId, agentId: undefined })}
           pinnedAgentIds={pinnedAgentIds}
           onTogglePin={togglePin}
         />
