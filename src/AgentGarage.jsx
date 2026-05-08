@@ -2101,6 +2101,7 @@ export default function AgentGarageView() {
   // workroom. `roomId` is 'personal' or a dept name. null means closed.
   const [agentsWindow, setAgentsWindow] = useState(null);
   const [pinnedAgentIds, setPinnedAgentIds] = useState([]);
+  const [variantId, setVariantId] = useState('lab');
   const togglePin = (id) =>
     setPinnedAgentIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
 
@@ -2201,6 +2202,78 @@ export default function AgentGarageView() {
     })),
   ];
 
+  // Three pre-baked map variants — different mixes of offices, dept
+  // workrooms, and meeting rooms. Switched via the tab selector below
+  // the map. Each variant supplies the visible offices/depts/meetings,
+  // a `defaultLayout` of pixel boxes, and a list of all other rooms to
+  // hide. Coordinates use SNAP=8 throughout.
+  const ALL_BUILTIN_ROOMS = [
+    'vo1','vo2','vo3','vo4','vo5','vo6','vo7','vo8','vo9','vo10','vo11','vo12','vo13','vo14',
+    'vo-pitch','vo-brainstorm','vo-snack','vo-theater','vo-demo','vo-reading',
+  ];
+  const MAP_VARIANTS = [
+    {
+      id: 'lab',
+      label: 'Lab',
+      visibleRooms: ['vo1','vo7','vo3'],
+      visibleDepts: ['Support','Marketing','Sales','R&D','HR'],
+      layout: {
+        vo1: { x: 160, y: 0, w: 176, h: 96 },
+        vo7: { x: 344, y: 0, w: 176, h: 96 },
+        vo3: { x: 528, y: 0, w: 176, h: 96 },
+        'ag-Support':   { x: 56,  y: 104, w: 144, h: 256 },
+        'ag-Marketing': { x: 208, y: 104, w: 144, h: 256 },
+        'ag-Sales':     { x: 360, y: 104, w: 144, h: 256 },
+        'ag-R&D':       { x: 512, y: 104, w: 144, h: 256 },
+        'ag-HR':        { x: 664, y: 104, w: 144, h: 256 },
+      },
+    },
+    {
+      id: 'office',
+      label: 'Office',
+      visibleRooms: ['vo1','vo7','vo3','vo-pitch'],
+      visibleDepts: ['Marketing','Sales','R&D'],
+      layout: {
+        // Pitch Deck on the left — full-height feature spanning both
+        // the office row and the dept-room row. Total span (32 →
+        // 832 = 800) leaves equal 32px margins on both sides so the
+        // whole arrangement is centered in the map content area.
+        'vo-pitch': { x: 32,  y: 0,   w: 248, h: 400 },
+        // Offices across the top right, dept rooms directly underneath
+        // so each office visually pairs with a dept agent room.
+        vo1: { x: 288, y: 0,   w: 176, h: 96  },
+        vo7: { x: 472, y: 0,   w: 176, h: 96  },
+        vo3: { x: 656, y: 0,   w: 176, h: 96  },
+        // Depts column-align to the offices above (offset by 16 so the
+        // narrower 144-wide dept card centers under the 176-wide office).
+        'ag-Marketing': { x: 304, y: 104, w: 144, h: 296 },
+        'ag-Sales':     { x: 488, y: 104, w: 144, h: 296 },
+        'ag-R&D':       { x: 672, y: 104, w: 144, h: 296 },
+      },
+    },
+    {
+      id: 'hq',
+      label: 'HQ',
+      visibleRooms: ['vo1','vo7','vo3','vo5','vo9','vo10'],
+      visibleDepts: ['Marketing','R&D'],
+      layout: {
+        // 6 offices in 2 rows of 3 (vo1/vo7/vo3 top, vo5/vo9/vo10 bottom).
+        // 3*176 + 2*8 = 544. Centered at 432: start 160.
+        vo1:  { x: 160, y: 0,   w: 176, h: 96 },
+        vo7:  { x: 344, y: 0,   w: 176, h: 96 },
+        vo3:  { x: 528, y: 0,   w: 176, h: 96 },
+        vo5:  { x: 160, y: 104, w: 176, h: 96 },
+        vo9:  { x: 344, y: 104, w: 176, h: 96 },
+        vo10: { x: 528, y: 104, w: 176, h: 96 },
+        // 2 depts below: 2*144 + 8 = 296. Centered at 432: start 284.
+        'ag-Marketing': { x: 284, y: 208, w: 144, h: 192 },
+        'ag-R&D':       { x: 436, y: 208, w: 144, h: 192 },
+      },
+    },
+  ];
+  const variant = MAP_VARIANTS.find(v => v.id === variantId) || MAP_VARIANTS[0];
+  const hiddenRoomsForVariant = ALL_BUILTIN_ROOMS.filter(id => !variant.visibleRooms.includes(id));
+
   // Per-office agent docks — pick 1-2 control-room agents working with each
   // human. Renders below the human's avatar in their private office card.
   const officeAgentAssignments = {
@@ -2243,38 +2316,40 @@ export default function AgentGarageView() {
           editable={true}
           onPersonalAgentsClick={() => setAgentsWindow({ roomId: 'personal' })}
           officeAgents={officeAgents}
-          // Default editable layout — three offices centered in a row at the
-          // top, Agent Workshop centered below. Coordinates are pixels
-          // relative to the .sc-grid (which fills the .sc-content area).
-          defaultLayout={{
-            vo1:          { x: 160, y: 0,   w: 176, h: 96  }, // Brooke F.
-            vo7:          { x: 344, y: 0,   w: 176, h: 96  }, // Jessica H.
-            vo3:          { x: 528, y: 0,   w: 176, h: 96  }, // Sarah M.
-            'ag-Support':   { x: 56,  y: 104, w: 144, h: 256 },
-            'ag-Marketing': { x: 208, y: 104, w: 144, h: 256 },
-            'ag-Sales':     { x: 360, y: 104, w: 144, h: 256 },
-            'ag-R&D':       { x: 512, y: 104, w: 144, h: 256 },
-            'ag-HR':        { x: 664, y: 104, w: 144, h: 256 },
-          }}
-          // Show only 3 offices — vo1 (Brooke F.), vo3 (Sarah M.), vo7 (Jessica H.).
-          hiddenRooms={[
-            'vo2', 'vo4', 'vo5', 'vo6', 'vo8', 'vo9', 'vo10',
-            'vo11', 'vo12', 'vo13', 'vo14',
-            'vo-pitch', 'vo-brainstorm', 'vo-snack',
-            'vo-theater', 'vo-demo', 'vo-reading',
-          ]}
-          extraRooms={enrichedDepartments.map((dept, i) => ({
-            id: `ag-${dept.name}`,
-            type: 'agent-workshop',
-            name: dept.name,
-            people: [],
-            pos: { col: i, row: 2 },
-            colSpan: 1,
-            rowSpan: 3,
-            departments: [dept],
-            onClick: () => setAgentsWindow({ roomId: dept.name }),
-          }))}
+          key={variant.id}
+          defaultLayout={variant.layout}
+          hiddenRooms={hiddenRoomsForVariant}
+          extraRooms={enrichedDepartments
+            .filter(dept => variant.visibleDepts.includes(dept.name))
+            .map((dept, i) => ({
+              id: `ag-${dept.name}`,
+              type: 'agent-workshop',
+              name: dept.name,
+              people: [],
+              pos: { col: i, row: 2 },
+              colSpan: 1,
+              rowSpan: 3,
+              departments: [dept],
+              onClick: () => setAgentsWindow({ roomId: dept.name }),
+            }))}
         />
+      </div>
+
+      <div className="ag-variant-bar">
+        <div className="ag-variant-segments" role="tablist" aria-label="Map layout">
+          {MAP_VARIANTS.map(v => (
+            <button
+              key={v.id}
+              type="button"
+              role="tab"
+              aria-selected={v.id === variantId}
+              className={`ag-variant-tab ${v.id === variantId ? 'ag-variant-tab-active' : ''}`}
+              onClick={() => setVariantId(v.id)}
+            >
+              {v.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {openAgents.map(agent => (
