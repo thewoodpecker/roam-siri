@@ -7904,11 +7904,29 @@ export const FEATURES = {
     ],
   },
   'pricing': {
-    eyebrow: 'Pricing',
+    eyebrow: 'Virtual Office',
     title: 'Save 93% With Our 9 for 1 Bundle',
-    hero: 'Customer-friendly pricing principles that respect your team and your budget.',
+    hero: (
+      <>
+        <span className="fp-pricing-hero-lead">Customer-Friendly Everyday Low Prices:</span>
+        <ul className="fp-pricing-hero-list">
+          <li>Pay Only for Active Members.</li>
+          <li>No Annual Commitments. Monthly Billing.</li>
+          <li>No Discounts.</li>
+          <li>No Upsells or Service Charges.</li>
+          <li>One Super Bundle with All Features.</li>
+        </ul>
+      </>
+    ),
     visual: null,
     sections: [
+      {
+        variant: 'price-cards',
+        cards: [
+          { year: '2026 Price', value: '$19.50', metaTop: 'USD / month', metaBottom: 'per active member' },
+          { year: '2027 Price', value: '$20.88', metaTop: 'USD / month', metaBottom: 'per active member' },
+        ],
+      },
       STANDARD_PRICING_COMPARE,
       {
         variant: 'explore',
@@ -8190,6 +8208,24 @@ function FeatureSection({ eyebrow, title, subtitle, titleImage, desc, visual, ic
       <section className="fp-section fp-section-compare">
         <CompareColumn side="left" data={left} />
         <CompareColumn side="right" data={right} />
+      </section>
+    );
+  }
+  if (variant === 'price-cards' && cards && cards.length > 0) {
+    return (
+      <section className="fp-section fp-section-price-cards">
+        {cards.map((c, i) => (
+          <div key={i} className="fp-price-card">
+            <div className="fp-price-card-year text-body-emphasis">{c.year}</div>
+            <div className="fp-price-card-body">
+              <span className="fp-price-card-value">{c.value}</span>
+              <span className="fp-price-card-meta">
+                <span className="fp-price-card-meta-line">{c.metaTop}</span>
+                <span className="fp-price-card-meta-line">{c.metaBottom}</span>
+              </span>
+            </div>
+          </div>
+        ))}
       </section>
     );
   }

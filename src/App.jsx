@@ -1355,7 +1355,7 @@ function TabSwitcher({ activeTab, onTabChange }) {
   return (
     <div className="dev-settings-wrap" ref={menuRef}>
       <button className="dev-settings-btn" onClick={() => setOpen(!open)}>
-        <img src="/icons/Settings.svg" alt="" width="16" height="16" className="dev-settings-icon" />
+        <img src="/icons/settings.svg" alt="" width="16" height="16" className="dev-settings-icon" />
       </button>
       {open && (
         <div className="dev-settings-menu">
@@ -3437,11 +3437,16 @@ function SpinnerView() {
 
 function useHashTab() {
   const getTab = () => {
-    // Strip off any trailing &foo=bar params (e.g. Figma's capture hash) so
-    // the route still matches when external tools append params to the hash.
-    const hash = window.location.hash.replace('#', '').split(/[&?]/)[0];
+    // Split the hash into segments so external tools (e.g. Figma's capture
+    // script) can prepend their own params and the route still matches.
+    const segments = window.location.hash.replace('#', '').split(/[&?]/);
     const valid = ['map-v3', 'design-studio', 'agent-garage', 'claude-max', 'big-vibe', 'big-meetings', 'war-room', 'experimental', 'spinner', 'showcase'];
-    return valid.includes(hash) ? hash : 'showcase';
+    for (const seg of segments) {
+      if (valid.includes(seg)) return seg;
+      const [k, v] = seg.split('=');
+      if (k === 'tab' && valid.includes(v)) return v;
+    }
+    return 'showcase';
   };
   const [tab, setTab] = useState(getTab);
 

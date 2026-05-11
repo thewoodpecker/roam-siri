@@ -125,13 +125,20 @@
   padding-bottom: 96px;
 }
 
-/* Pricing — no hero stage; the comparison section is the lead visual. */
+/* Pricing — no hero stage; the price cards section is the lead
+   visual. Same left-aligned hero as other feature pages, just with
+   a bulleted intro instead of a single paragraph. */
 .fp-page[data-slug="pricing"] .fp-hero-visual {
   display: none;
 }
 
 .fp-page[data-slug="pricing"] .fp-hero {
-  margin-bottom: 96px;
+  padding-bottom: 32px;
+  margin-bottom: 0;
+}
+
+.fp-page[data-slug="pricing"] .fp-section-compare {
+  padding-top: 32px;
 }
 
 .fp-page[data-slug="pricing"] .fp-section-cards {
@@ -5816,13 +5823,17 @@
      on `.fp-explore-desc` are right for mobile already — no
      overrides needed. */
 
-  /* Compare — stack the two columns. */
+  /* Compare — stack the two columns, Roam (right/featured) first
+     so the user sees the bundle pricing before the legacy stack. */
   .fp-section-compare {
     grid-template-columns: 1fr;
     row-gap: 16px;
   }
   .fp-compare-col {
     grid-column: 1 / -1;
+  }
+  .fp-compare-col-right {
+    order: -1;
   }
 
   /* Cards-row variant — stack to a single column. */
@@ -6691,6 +6702,90 @@
   background: var(--accent);
   border: none;
   margin-bottom: 4px;
+}
+
+/* Pricing — two big "2026 Price" / "2027 Price" cards above the
+   compare table. Each card spans 6 of the 12-column grid to match
+   the compare columns below. */
+.fp-section-price-cards {
+  row-gap: 0;
+  padding-top: 16px;
+  padding-bottom: 16px;
+  align-items: stretch;
+}
+
+.fp-price-card {
+  grid-column: span 6;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  background: var(--graphite-800);
+  border: 0.5px solid var(--border);
+  overflow: hidden;
+}
+
+[data-theme="light"] .fp-price-card {
+  background: var(--graphite-50);
+}
+
+.fp-price-card-year {
+  padding: 20px 32px;
+  color: var(--text-primary);
+  border-bottom: 0.5px solid var(--border);
+  text-align: left;
+}
+
+.fp-price-card-body {
+  padding: 28px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 16px;
+  color: var(--text-secondary);
+  text-align: left;
+}
+
+.fp-price-card-value {
+  font-family: 'Possibility', serif;
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.8px;
+  color: var(--text-primary);
+}
+
+.fp-price-card-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fp-price-card-meta-line {
+  font-size: 12px;
+  line-height: 13px;
+  letter-spacing: -0.1px;
+  color: var(--text-secondary);
+}
+
+/* Pricing hero — centered, single column with a bulleted intro. */
+.fp-pricing-hero-lead {
+  display: block;
+  margin-bottom: 12px;
+}
+
+.fp-pricing-hero-list {
+  list-style: disc;
+  padding-left: 20px;
+  margin: 0;
+  text-align: left;
+  display: inline-block;
+  color: var(--text-secondary);
+}
+
+.fp-pricing-hero-list li {
+  margin: 4px 0;
 }
 
 /* ──────────────────────────────────────────
@@ -9566,6 +9661,62 @@ button.fp-lbk-day {
     padding-top: 32px !important;
     padding-bottom: 32px !important;
     row-gap: 16px !important;
+  }
+
+  /* Pricing page mobile — compact the hero so the price cards are
+     visible above the fold; section padding tightened throughout
+     so the stacked panels don't have huge dead space between them. */
+  .fp-page[data-slug="pricing"] .fp-hero {
+    padding-top: 120px !important;
+    padding-bottom: 16px !important;
+  }
+  .fp-page[data-slug="pricing"] .fp-section-price-cards {
+    row-gap: 16px !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+  }
+  .fp-page[data-slug="pricing"] .fp-price-card {
+    grid-column: 1 / -1 !important;
+  }
+  /* Match the compare-head/compare-row mobile padding (24px h) so
+     the two cards align with the comparison cards beneath them. */
+  .fp-page[data-slug="pricing"] .fp-price-card-year,
+  .fp-page[data-slug="pricing"] .fp-price-card-body {
+    padding-left: 24px !important;
+    padding-right: 24px !important;
+  }
+  /* Tighter type ramp on mobile so the price cards read like the
+     compare-col cards below (title ~16px, body ~13px). */
+  .fp-page[data-slug="pricing"] .fp-price-card-year {
+    font-size: 14px !important;
+    letter-spacing: -0.2px !important;
+    padding-top: 16px !important;
+    padding-bottom: 16px !important;
+  }
+  .fp-page[data-slug="pricing"] .fp-price-card-body {
+    padding-top: 20px !important;
+    padding-bottom: 20px !important;
+    gap: 12px !important;
+  }
+  .fp-page[data-slug="pricing"] .fp-price-card-value {
+    font-size: 22px !important;
+    letter-spacing: -0.4px !important;
+  }
+  .fp-page[data-slug="pricing"] .fp-price-card-meta-line {
+    font-size: 11px !important;
+    line-height: 12px !important;
+  }
+  .fp-page[data-slug="pricing"] .fp-section-compare {
+    padding-top: 16px !important;
+    padding-bottom: 16px !important;
+  }
+  .fp-page[data-slug="pricing"] .fp-section {
+    padding-top: 32px !important;
+    padding-bottom: 32px !important;
+  }
+  .fp-page[data-slug="pricing"] .fp-pricing-hero-list {
+    font-size: 13px !important;
+    line-height: 18px !important;
   }
 
   /* Footer CTA banner (playbook §7) — desktop `.fp-footer-cta-*`
