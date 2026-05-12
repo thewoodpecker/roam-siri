@@ -2186,11 +2186,11 @@ function ShelfWindow({ win, onDrag, photoIdx, direction, onPrev, onNext }) {
 }
 
 // Main showcase component
-export default function ShowcaseMap({ initialFloor = 'R&D', embedded = false, autoKnock = false, spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, hideOnIt = false, onItAutoOpen = false, shelfAutoOpen = false, shareAutoOpen = false, theme, autoCycleFloors = false, autoCycleDms = false, showPhysicalTags = false, onAirOverride = null, agentsRoom = null, officeAgents = null, workrooms = null, peopleOverrides = null, vibeOverride = false, hideElevator = false, hiddenRooms = null, extraRooms = null, editable = false, defaultLayout = null, onPersonalAgentsClick = null } = {}) {
+export default function ShowcaseMap({ initialFloor = 'R&D', embedded = false, autoKnock = false, spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, hideOnIt = false, onItAutoOpen = false, shelfAutoOpen = false, shareAutoOpen = false, theme, autoCycleFloors = false, autoCycleDms = false, showPhysicalTags = false, onAirOverride = null, agentsRoom = null, officeAgents = null, workrooms = null, peopleOverrides = null, peopleLimits = null, vibeOverride = false, hideElevator = false, hiddenRooms = null, extraRooms = null, editable = false, allowWindowOpens = false, defaultLayout = null, onPersonalAgentsClick = null } = {}) {
   return (
     <ChatProvider>
       <WindowManagerProvider initialWindows={INITIAL_WINDOWS}>
-        <ShowcaseMapInner initialFloor={initialFloor} embedded={embedded} autoKnock={autoKnock} spotifyAlwaysOpen={spotifyAlwaysOpen} githubAlwaysOpen={githubAlwaysOpen} figmaAlwaysOpen={figmaAlwaysOpen} hideOnIt={hideOnIt} onItAutoOpen={onItAutoOpen} shelfAutoOpen={shelfAutoOpen} shareAutoOpen={shareAutoOpen} themeOverride={theme} autoCycleFloors={autoCycleFloors} autoCycleDms={autoCycleDms} showPhysicalTags={showPhysicalTags} onAirOverride={onAirOverride} agentsRoom={agentsRoom} officeAgents={officeAgents} workrooms={workrooms} peopleOverrides={peopleOverrides} vibeOverride={vibeOverride} hideElevator={hideElevator} hiddenRooms={hiddenRooms} extraRooms={extraRooms} editable={editable} defaultLayout={defaultLayout} onPersonalAgentsClick={onPersonalAgentsClick} />
+        <ShowcaseMapInner initialFloor={initialFloor} embedded={embedded} autoKnock={autoKnock} spotifyAlwaysOpen={spotifyAlwaysOpen} githubAlwaysOpen={githubAlwaysOpen} figmaAlwaysOpen={figmaAlwaysOpen} hideOnIt={hideOnIt} onItAutoOpen={onItAutoOpen} shelfAutoOpen={shelfAutoOpen} shareAutoOpen={shareAutoOpen} themeOverride={theme} autoCycleFloors={autoCycleFloors} autoCycleDms={autoCycleDms} showPhysicalTags={showPhysicalTags} onAirOverride={onAirOverride} agentsRoom={agentsRoom} officeAgents={officeAgents} workrooms={workrooms} peopleOverrides={peopleOverrides} peopleLimits={peopleLimits} vibeOverride={vibeOverride} hideElevator={hideElevator} hiddenRooms={hiddenRooms} extraRooms={extraRooms} editable={editable} allowWindowOpens={allowWindowOpens} defaultLayout={defaultLayout} onPersonalAgentsClick={onPersonalAgentsClick} />
       </WindowManagerProvider>
     </ChatProvider>
   );
@@ -2354,7 +2354,7 @@ function useTargetHintStyle(targetRef, active, offset = { top: -30, left: 'cente
   return style;
 }
 
-function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = false, spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, hideOnIt = false, onItAutoOpen = false, shelfAutoOpen = false, shareAutoOpen = false, themeOverride = null, autoCycleFloors = false, autoCycleDms = false, showPhysicalTags = false, onAirOverride = null, agentsRoom = null, officeAgents = null, workrooms = null, peopleOverrides = null, vibeOverride = false, hideElevator = false, hiddenRooms = null, extraRooms = null, editable = false, defaultLayout = null, onPersonalAgentsClick = null }) {
+function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = false, spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, hideOnIt = false, onItAutoOpen = false, shelfAutoOpen = false, shareAutoOpen = false, themeOverride = null, autoCycleFloors = false, autoCycleDms = false, showPhysicalTags = false, onAirOverride = null, agentsRoom = null, officeAgents = null, workrooms = null, peopleOverrides = null, peopleLimits = null, vibeOverride = false, hideElevator = false, hiddenRooms = null, extraRooms = null, editable = false, allowWindowOpens = false, defaultLayout = null, onPersonalAgentsClick = null }) {
   const [themeState, setThemeState] = useState('dark');
   const theme = themeOverride || themeState;
   const setTheme = themeOverride ? () => {} : setThemeState;
@@ -2506,6 +2506,19 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
     // Only seed on transition into edit mode.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editable]);
+
+  // Legacy helper kept as a no-op for the click handlers — JSX-level
+  // override (below, after useWindow declarations) handles positioning.
+  const pinAppWindow = () => {};
+
+  const pinPosition = (side, width = 780) => {
+    if (typeof window === 'undefined') return { x: 32, y: 32 };
+    if (side === 'right') {
+      const w = miniRoamRef.current?.getBoundingClientRect().width || window.innerWidth;
+      return { x: Math.max(32, w - width - 32), y: 32 };
+    }
+    return { x: 32, y: 32 };
+  };
 
   const handleCellDragStart = (e, room) => {
     if (e.button !== 0) return;
@@ -2909,6 +2922,12 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
       if (peopleOverrides && Object.prototype.hasOwnProperty.call(peopleOverrides, room.id)) {
         people = peopleOverrides[room.id] || [];
       }
+      // Per-room people cap — slice the array down to N without
+      // replacing it. Used by the Garage view to thin a meeting room
+      // like Pitch Deck without having to enumerate the kept people.
+      if (peopleLimits && peopleLimits[room.id] != null) {
+        people = people.slice(0, peopleLimits[room.id]);
+      }
       // For the on-air floor, allow the FeaturePage to override the theater
       // room's display name with the active event's title.
       let name = room.name;
@@ -2959,7 +2978,7 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
       const names = onAirOverride?.stageNames || ['Joe W.', 'Will H.'];
       return names.map(n => p(n));
     }
-    return [p('Camila T.'), p('Megan T.'), p('Hannah B.')];
+    return [p('Howard L.'), p('Tom D.')];
   }, [activeFloor, onAirOverride]);
 
   // Only one private office and one agent room render a SiriGlow at a
@@ -3283,6 +3302,35 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
     window.addEventListener('mouseup', onUp);
   };
 
+  // Pin app windows (AInbox / Theater / Meeting) to top-left or top-right
+  // in embedded + allowWindowOpens mode. JSX-level override of win.position
+  // — deterministic, no dependency on WM reducer batching. `hasDragged`
+  // tracks whether the user has dragged each window since its last open;
+  // once dragged, render falls through to WM state so the drag sticks.
+  const [hasDragged, setHasDragged] = useState({ ainbox: false, meeting: false, theater: false });
+  const markDragged = (key) => setHasDragged(prev => prev[key] ? prev : { ...prev, [key]: true });
+  const prevAinboxOpenRef = useRef(false);
+  useEffect(() => {
+    if (!prevAinboxOpenRef.current && ainboxWin.isOpen) {
+      setHasDragged(prev => prev.ainbox ? { ...prev, ainbox: false } : prev);
+    }
+    prevAinboxOpenRef.current = ainboxWin.isOpen;
+  }, [ainboxWin.isOpen]);
+  const prevTheaterOpenRef = useRef(false);
+  useEffect(() => {
+    if (!prevTheaterOpenRef.current && theaterWin.isOpen) {
+      setHasDragged(prev => prev.theater ? { ...prev, theater: false } : prev);
+    }
+    prevTheaterOpenRef.current = theaterWin.isOpen;
+  }, [theaterWin.isOpen]);
+  const prevMeetingOpenRef = useRef(false);
+  useEffect(() => {
+    if (!prevMeetingOpenRef.current && meetingWin.isOpen) {
+      setHasDragged(prev => prev.meeting ? { ...prev, meeting: false } : prev);
+    }
+    prevMeetingOpenRef.current = meetingWin.isOpen;
+  }, [meetingWin.isOpen]);
+
   // Randomly cycle vibe coding — spread across private rooms all over the floor
   useEffect(() => {
     if (spotifyAlwaysOpen || githubAlwaysOpen) return; // feature-preview maps: no vibes
@@ -3530,7 +3578,7 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
                         room={room}
                         speakers={theaterSpeakers}
                         onPersonClick={editable ? undefined : openMiniChat}
-                        onRoomClick={editable ? undefined : () => theaterWin.open()}
+                        onRoomClick={editable && !allowWindowOpens ? undefined : () => { pinAppWindow(theaterWin, 'right'); theaterWin.open(); }}
                         speakerStories={speakerStories}
                         viewedStories={viewedStories}
                         onStoryClick={(storyImage) => {
@@ -3543,7 +3591,7 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
                         }}
                       />
                     ) : room.type === 'meeting' ? (
-                      <MeetingRoomCardShowcase showPhysicalTags={showPhysicalTags} room={{ ...room, people: joinedRoomId === room.id && !room.people.some(p => p.avatar === JOE.avatar) ? [...room.people, { ...JOE, isJoining: true }] : room.people }} onPersonClick={editable ? undefined : openMiniChat} onRoomClick={editable ? undefined : (r) => {
+                      <MeetingRoomCardShowcase showPhysicalTags={showPhysicalTags} room={{ ...room, people: joinedRoomId === room.id && !room.people.some(p => p.avatar === JOE.avatar) ? [...room.people, { ...JOE, isJoining: true }] : room.people }} onPersonClick={editable ? undefined : openMiniChat} onRoomClick={editable && !allowWindowOpens ? undefined : (r) => {
                         setJoinedRoomId(r.id);
                         // Mirror the map cell: only people with .video render
                         // tiles. Then de-dupe by avatar so the same headshot
@@ -3554,6 +3602,7 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
                         const unique = onScreen.filter(p => seen.has(p.avatar) ? false : (seen.add(p.avatar), true));
                         const ppl = unique.some(p => p.avatar === JOE.avatar) ? unique : [...unique, JOE];
                         setActiveMeetingRoom({ ...r, people: ppl });
+                        pinAppWindow(meetingWin, 'right');
                         meetingWin.open();
                       }} />
                     ) : room.type === 'game' ? (
@@ -3763,7 +3812,7 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
         <div className="sc-toolbar">
           {/* Left group */}
           <div className="sc-toolbar-group">
-            <div className="sc-toolbar-pill" data-tooltip="AInbox" onClick={() => { ainboxWin.open(); }}>
+            <div className="sc-toolbar-pill" data-tooltip="AInbox" onClick={() => { pinAppWindow(ainboxWin, 'left'); ainboxWin.open(); }}>
               <img src="/icons/chat.svg" width="16" height="16" alt="" />
             </div>
             {onPersonalAgentsClick && (
@@ -3881,10 +3930,25 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
         )),
         dmPortalTarget
       )}
-      {ainboxWin.isOpen && <AInbox win={ainboxWin} onDrag={makeDragHandler(ainboxWin)} onOpenMagicMinutes={() => magicminutesWin.open()} />}
+      {ainboxWin.isOpen && (() => {
+        const pinned = allowWindowOpens && !hasDragged.ainbox;
+        const winProp = pinned ? { ...ainboxWin, position: pinPosition('left') } : ainboxWin;
+        const dragWrapped = (e) => { markDragged('ainbox'); makeDragHandler(ainboxWin)(e); };
+        return <AInbox win={winProp} onDrag={dragWrapped} onOpenMagicMinutes={() => magicminutesWin.open()} />;
+      })()}
       {onairWin.isOpen && <OnAir win={onairWin} onDrag={makeDragHandler(onairWin)} demo />}
-      {meetingWin.isOpen && activeMeetingRoom && <MeetingWindow win={meetingWin} onDrag={makeDragHandler(meetingWin)} roomName={activeMeetingRoom.name} people={activeMeetingRoom.people} onOpenChat={() => ainboxWin.open()} onOpenOnAir={() => onairWin.open()} />}
-      {theaterWin.isOpen && <TheaterWindow win={theaterWin} onDrag={makeDragHandler(theaterWin)} speakers={theaterSpeakers} audience={SHOWCASE_PEOPLE} me={JOE} onOpenChat={() => ainboxWin.open()} />}
+      {meetingWin.isOpen && activeMeetingRoom && (() => {
+        const pinned = allowWindowOpens && !hasDragged.meeting;
+        const winProp = pinned ? { ...meetingWin, position: pinPosition('right') } : meetingWin;
+        const dragWrapped = (e) => { markDragged('meeting'); makeDragHandler(meetingWin)(e); };
+        return <MeetingWindow win={winProp} onDrag={dragWrapped} roomName={activeMeetingRoom.name} people={activeMeetingRoom.people} onOpenChat={() => ainboxWin.open()} onOpenOnAir={() => onairWin.open()} />;
+      })()}
+      {theaterWin.isOpen && (() => {
+        const pinned = allowWindowOpens && !hasDragged.theater;
+        const winProp = pinned ? { ...theaterWin, position: pinPosition('right') } : theaterWin;
+        const dragWrapped = (e) => { markDragged('theater'); makeDragHandler(theaterWin)(e); };
+        return <TheaterWindow win={winProp} onDrag={dragWrapped} speakers={theaterSpeakers} audience={SHOWCASE_PEOPLE} me={JOE} onOpenChat={() => ainboxWin.open()} />;
+      })()}
       {shelfWin.isOpen && (
         shelfWinHost
           ? ReactDOM.createPortal(

@@ -3415,7 +3415,6 @@
    slow + low-opacity so it reads as ambient signal, not an alert. */
 .sc-toolbar-pill-personal-agents {
   position: relative;
-  overflow: hidden;
 }
 .sc-toolbar-pill-personal-agents > * {
   position: relative;
@@ -3426,16 +3425,17 @@
 }
 /* Use ::before so the tooltip's ::after (content: attr(data-tooltip))
    doesn't override it — same specificity, later source order would
-   otherwise win. */
+   otherwise win. Positioned fully inside the pill so we don't need
+   overflow:hidden on the pill (which would clip the tooltip). */
 .sc-toolbar-pill-personal-agents.sc-toolbar-pill-working::before {
   content: '';
   position: absolute;
   left: 50%;
-  bottom: -55%;
+  bottom: 0;
   transform: translateX(-50%) scale(1);
   transform-origin: center bottom;
-  width: 110%;
-  height: 90%;
+  width: 100%;
+  height: 60%;
   border-radius: 50%;
   background: radial-gradient(
     ellipse at center,
@@ -5890,18 +5890,10 @@
   cursor: grabbing;
 }
 .sc-grid-editable .sc-grid-cell-editable .sc-room-card {
-  outline: 1px dashed transparent;
-  outline-offset: 2px;
-  transition: outline-color 0.12s ease;
+  outline: none;
 }
 .sc-grid-editable .sc-grid-cell-editable:hover .sc-room-card {
-  outline-color: var(--border, rgba(255, 255, 255, 0.25));
-}
-/* Suppress the editable-cell hover dashed outline on agent rooms —
-   the SiriGlow already provides the focus affordance. */
-.sc-grid-editable .sc-grid-cell-editable:hover .sc-room-card.sc-agent-workshop,
-.sc-grid-editable .sc-grid-cell-editable:hover .sc-room-card.sc-agentroom {
-  outline-color: transparent !important;
+  outline: none;
 }
 .sc-grid-cell-dragging {
   z-index: 20;

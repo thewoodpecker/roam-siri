@@ -2353,7 +2353,16 @@ export default function AgentGarageView() {
   // workroom. `roomId` is 'personal' or a dept name. null means closed.
   const [agentsWindow, setAgentsWindow] = useState(null);
   const [pinnedAgentIds, setPinnedAgentIds] = useState([]);
-  const [variantId, setVariantId] = useState('lab');
+  const [variantId, setVariantId] = useState(() => {
+    try {
+      return localStorage.getItem('ag-map-variant') || 'lab';
+    } catch {
+      return 'lab';
+    }
+  });
+  useEffect(() => {
+    try { localStorage.setItem('ag-map-variant', variantId); } catch {}
+  }, [variantId]);
   const togglePin = (id) =>
     setPinnedAgentIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
 
@@ -2522,6 +2531,30 @@ export default function AgentGarageView() {
         'ag-R&D':       { x: 436, y: 208, w: 144, h: 192 },
       },
     },
+    {
+      // Fully-utilized floor with a theater + 3 personal offices on top,
+      // theater spanning the lower-left, two dept agent rooms on the right.
+      // Both rows are 728px wide (4×176 + 3×8 = 728, also 360 + 2×176 + 2×8
+      // = 728) and start at x=68 so the whole group is horizontally
+      // centered in the ~864-wide map content area used by the other
+      // variants (matches HQ centering at x=432).
+      id: 'town-hall',
+      label: 'Town Hall',
+      visibleRooms: ['vo-pitch','vo1','vo7','vo3','vo-theater'],
+      visibleDepts: ['Marketing','R&D'],
+      layout: {
+        // Top row — 4 offices, each 176w with 8px gaps. Starts x=68, ends x=796.
+        'vo-pitch': { x: 68,  y: 0, w: 176, h: 96 },
+        vo1:        { x: 252, y: 0, w: 176, h: 96 },
+        vo7:        { x: 436, y: 0, w: 176, h: 96 },
+        vo3:        { x: 620, y: 0, w: 176, h: 96 },
+        // Theater spans the wide left bottom; two dept rooms align right
+        // under vo7 and vo3 respectively.
+        'vo-theater':   { x: 68,  y: 104, w: 360, h: 296 },
+        'ag-Marketing': { x: 436, y: 104, w: 176, h: 296 },
+        'ag-R&D':       { x: 620, y: 104, w: 176, h: 296 },
+      },
+    },
   ];
   const variant = MAP_VARIANTS.find(v => v.id === variantId) || MAP_VARIANTS[0];
   const hiddenRoomsForVariant = ALL_BUILTIN_ROOMS.filter(id => !variant.visibleRooms.includes(id));
@@ -2571,6 +2604,7 @@ export default function AgentGarageView() {
           key={variant.id}
           defaultLayout={variant.layout}
           hiddenRooms={hiddenRoomsForVariant}
+          peopleLimits={{ 'vo-pitch': 3 }}
           extraRooms={enrichedDepartments
             .filter(dept => variant.visibleDepts.includes(dept.name))
             .map((dept, i) => ({
