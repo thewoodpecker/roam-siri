@@ -708,16 +708,41 @@ const PERSONAL_AGENT_LIST = [
 // mini bar chart, table shows a small data grid, pdf shows a
 // document-style preview with a PDF badge.
 const PERSONAL_FILES = [
-  { id: 'price-increase', name: 'Price Increase', desc: '2 lines', kind: 'text' },
-  { id: 'sales-process',  name: 'Sales Process',  desc: '1 line',  kind: 'text' },
-  { id: 'the-goal',       name: 'The Goal',       desc: '1 line',  kind: 'text' },
-  { id: 'q1-forecast',    name: 'Q1 Forecast',    desc: 'chart',   kind: 'chart-blue',
-    bars: [4, 7, 5, 8, 6, 9, 7, 10, 8, 11, 9, 12] },
-  { id: 'daily-users',    name: 'Daily Users',    desc: 'chart',   kind: 'chart-green',
-    bars: [3, 5, 4, 6, 5, 7, 8, 6, 9, 7, 10, 8, 11, 9, 12, 10, 13, 11, 14, 12] },
-  { id: 'measure-values', name: 'Measure Values', desc: 'table',   kind: 'table' },
-  { id: 'onboarding-pipeline', name: 'Onboarding Pipeline', desc: 'pdf', kind: 'pdf' },
+  { id: 'studio-bedroom',          name: 'Studio Bedroom Moodboard', desc: 'image', kind: 'image', src: '/desktop/images/studio-bedroom.jpg' },
+  { id: 'white-sands-storm',       name: 'White Sands Storm',        desc: 'image', kind: 'image', src: '/desktop/images/white-sands-storm.jpg' },
+  { id: 'tokyo-night-blur',        name: 'Tokyo Night Blur',         desc: 'image', kind: 'image', src: '/desktop/images/tokyo-night-blur.jpg' },
+  { id: 'cactus-adobe-wall',       name: 'Cactus & Adobe Wall',      desc: 'image', kind: 'image', src: '/desktop/images/cactus-adobe-wall.jpg' },
+  { id: 'lunar-eclipse',           name: 'Lunar Eclipse Phases',     desc: 'image', kind: 'image', src: '/desktop/images/lunar-eclipse-phases.jpg' },
+  { id: 'palace-marquee',          name: 'Palace Marquee',           desc: 'image', kind: 'image', src: '/desktop/images/palace-marquee.jpg' },
+  { id: 'vintage-armchair',        name: 'Vintage Armchair',         desc: 'image', kind: 'image', src: '/desktop/images/vintage-armchair.jpg' },
+  { id: 'coastal-camp',            name: 'Coastal Camp',             desc: 'image', kind: 'image', src: '/desktop/images/coastal-camp.jpg' },
+  { id: 'leather-tile-grid',       name: 'Leather Tile Grid',        desc: 'image', kind: 'image', src: '/desktop/images/leather-tile-grid.jpg' },
+  { id: 'light-and-shadow',        name: 'Light & Shadow',           desc: 'image', kind: 'image', src: '/desktop/images/light-and-shadow.jpg' },
+  { id: 'half-earth-orbit',        name: 'Half Earth from Orbit',    desc: 'image', kind: 'image', src: '/desktop/images/half-earth-orbit.jpg' },
+  { id: 'mountain-trail-signpost', name: 'Mountain Trail Signpost',  desc: 'image', kind: 'image', src: '/desktop/images/mountain-trail-signpost.jpg' },
 ];
+
+// Image preview that fades in once the underlying <img> finishes loading.
+// Handles browser-cached images by checking `complete` after mount.
+function FileImage({ src }) {
+  const [loaded, setLoaded] = useState(false);
+  const ref = useRef(null);
+  useEffect(() => {
+    if (ref.current?.complete && ref.current.naturalWidth > 0) {
+      setLoaded(true);
+    }
+  }, [src]);
+  return (
+    <img
+      ref={ref}
+      src={src}
+      alt=""
+      loading="lazy"
+      className={`pa-file-image${loaded ? ' pa-file-image-loaded' : ''}`}
+      onLoad={() => setLoaded(true)}
+    />
+  );
+}
 
 function FilesView() {
   return (
@@ -737,6 +762,9 @@ function FilesView() {
             <div className="pa-file-name">{f.name}</div>
             <div className="pa-file-meta">{f.desc}</div>
             <div className={`pa-file-preview pa-file-preview-${f.kind}`}>
+              {f.kind === 'image' && (
+                <FileImage src={f.src} />
+              )}
               {f.kind === 'text' && <span className="pa-file-badge">TEXT</span>}
               {f.kind === 'pdf' && (
                 <>
@@ -868,6 +896,8 @@ function PersonalAgentsWindow({ onTitlebarMouseDown, onClose, rooms, currentRoom
   const [composerScrolled, setComposerScrolled] = useState(false);
   const [roomMenuOpen, setRoomMenuOpen] = useState(false);
   const [addAgentMenuOpen, setAddAgentMenuOpen] = useState(false);
+  const [modelMenuOpen, setModelMenuOpen] = useState(false);
+  const [selectedModel, setSelectedModel] = useState('Opus 4.7');
   // Personal-room only: when 'files' view is active, the entire body
   // (sidebar + main pane) is replaced with the FilesView component.
   const [view, setView] = useState('agent');
@@ -916,10 +946,51 @@ function PersonalAgentsWindow({ onTitlebarMouseDown, onClose, rooms, currentRoom
     };
   }, [selectedSessionId, selectedId]);
 
+  // Stream an agent reply character-by-character into the session's
+  // last message so the chat feels like a live model typing. Uses a
+  // ~22ms tick; long messages scale up the step so total typing time
+  // stays under ~4 seconds.
+  const streamAgentReply = (sessionId, reply) => {
+    // Seed the empty message that we'll grow.
+    setAgents(prev => prev.map(a => a.id !== selectedId ? a : ({
+      ...a,
+      sessions: a.sessions.map(s => s.id !== sessionId ? s : ({
+        ...s,
+        state: 'idle',
+        messages: [...s.messages, { from: 'agent', thought: reply.thought, text: '', streaming: true }],
+      })),
+    })));
+
+    const full = reply.text;
+    const MAX_MS = 3500;
+    const TICK_MS = 22;
+    const step = Math.max(1, Math.ceil(full.length / (MAX_MS / TICK_MS)));
+    let i = 0;
+    const interval = setInterval(() => {
+      i = Math.min(i + step, full.length);
+      const done = i >= full.length;
+      const partial = full.slice(0, i);
+      setAgents(prev => prev.map(a => a.id !== selectedId ? a : ({
+        ...a,
+        sessions: a.sessions.map(s => s.id !== sessionId ? s : ({
+          ...s,
+          messages: s.messages.map((m, idx) => idx !== s.messages.length - 1 ? m : ({
+            ...m,
+            text: partial,
+            streaming: !done,
+          })),
+        })),
+      })));
+      if (done) clearInterval(interval);
+    }, TICK_MS);
+  };
+
   const sendMessage = () => {
     const text = draft.trim();
     if (!text) return;
     setDraft('');
+
+    const reply = pickAgentReply(selected?.name);
 
     if (selectedSessionId) {
       // Append to the active session.
@@ -931,17 +1002,8 @@ function PersonalAgentsWindow({ onTitlebarMouseDown, onClose, rooms, currentRoom
           messages: [...s.messages, { from: 'user', text }],
         })),
       })));
-      // Simulated agent response.
-      setTimeout(() => {
-        setAgents(prev => prev.map(a => a.id !== selectedId ? a : ({
-          ...a,
-          sessions: a.sessions.map(s => s.id !== selectedSessionId ? s : ({
-            ...s,
-            state: 'idle',
-            messages: [...s.messages, { from: 'agent', thought: 'Thought for 2s', text: "Got it — picking that up now. I'll surface anything that needs a decision back to you here." }],
-          })),
-        })));
-      }, 1400);
+      // Simulated agent response — typewriter effect.
+      setTimeout(() => streamAgentReply(selectedSessionId, reply), 1400);
       return;
     }
 
@@ -960,16 +1022,7 @@ function PersonalAgentsWindow({ onTitlebarMouseDown, onClose, rooms, currentRoom
       sessions: [newSession, ...a.sessions],
     })));
     setSelectedSessionId(newId);
-    setTimeout(() => {
-      setAgents(prev => prev.map(a => a.id !== selectedId ? a : ({
-        ...a,
-        sessions: a.sessions.map(s => s.id !== newId ? s : ({
-          ...s,
-          state: 'idle',
-          messages: [...s.messages, { from: 'agent', thought: 'Thought for 3s', text: "On it. I'll set up the work and report back here." }],
-        })),
-      })));
-    }, 1400);
+    setTimeout(() => streamAgentReply(newId, reply), 1400);
   };
 
   const onComposerKey = (e) => {
@@ -1115,7 +1168,7 @@ function PersonalAgentsWindow({ onTitlebarMouseDown, onClose, rooms, currentRoom
           <aside className="pa-sidebar">
             <button
               type="button"
-              className="pa-sidebar-head"
+              className={`pa-sidebar-head ${!selectedSessionId ? 'pa-sidebar-head-active' : ''}`}
               onClick={() => setSelectedSessionId(null)}
             >
               <span className="pa-sidebar-head-plus" aria-hidden="true">
@@ -1157,7 +1210,7 @@ function PersonalAgentsWindow({ onTitlebarMouseDown, onClose, rooms, currentRoom
                             {m.thought}
                           </div>
                         )}
-                        <div className="pa-msg-body">
+                        <div className={`pa-msg-body${m.streaming ? ' pa-msg-body-streaming' : ''}`}>
                           {m.text.split('\n\n').map((para, idx) => (
                             <p key={idx} dangerouslySetInnerHTML={{
                               __html: para
@@ -1220,13 +1273,50 @@ function PersonalAgentsWindow({ onTitlebarMouseDown, onClose, rooms, currentRoom
                     </svg>
                   </button>
                   <div className="pa-composer-bar-end">
-                    <button type="button" className="pa-composer-model" aria-haspopup="listbox">
-                      <span className="pa-composer-model-name">Opus 4.7</span>
-                      <span className="pa-composer-model-mode">Adaptive</span>
-                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-                        <path d="M3 4.5l3 3 3-3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    </button>
+                    <div className="pa-composer-model-wrap">
+                      <button
+                        type="button"
+                        className="pa-composer-model"
+                        aria-haspopup="listbox"
+                        aria-expanded={modelMenuOpen}
+                        onClick={() => setModelMenuOpen(v => !v)}
+                      >
+                        <span className="pa-composer-model-name">{selectedModel}</span>
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                          <path d="M3 4.5l3 3 3-3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </button>
+                      {modelMenuOpen && (
+                        <>
+                          <div
+                            className="pa-model-menu-backdrop"
+                            onMouseDown={(e) => { e.stopPropagation(); setModelMenuOpen(false); }}
+                          />
+                          <div className="pa-model-menu" role="listbox" onMouseDown={(e) => e.stopPropagation()}>
+                            {MODEL_OPTIONS.map(m => (
+                              <button
+                                key={m.name}
+                                type="button"
+                                role="option"
+                                aria-selected={m.name === selectedModel}
+                                className="pa-model-menu-item"
+                                onClick={() => { setSelectedModel(m.name); setModelMenuOpen(false); }}
+                              >
+                                <span className="pa-model-menu-text">
+                                  <span className="pa-model-menu-name">{m.name}</span>
+                                  <span className="pa-model-menu-detail">{m.detail}</span>
+                                </span>
+                                {m.name === selectedModel && (
+                                  <svg className="pa-model-menu-check" width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                                    <path d="M3 7.5L5.5 10L11 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                  </svg>
+                                )}
+                              </button>
+                            ))}
+                          </div>
+                        </>
+                      )}
+                    </div>
                     <button
                       type="button"
                       className="pa-send-icon"
@@ -2059,6 +2149,168 @@ const WORKROOM_SESSIONS = {
   ],
 };
 
+// Pool of agent-specific replies, used when the user sends a prompt
+// in the AgentGarage chat. Each agent has a few options so successive
+// sends in the same session don't all read identically. Pick one with
+// pickAgentReply(name) which avoids repeating the last index per agent.
+const AGENT_REPLIES = {
+  // ── Sales ──
+  'Sales Coordinator': [
+    { thought: 'Thought for 2s', text: "On it. Pulling the latest queue — I'll route by territory + ICP fit and flag anything over $50k ARR for human review before assignment." },
+    { thought: 'Thought for 3s', text: "Looking at pipeline hygiene now. 14 deals haven't moved in >21 days — drafting nudge emails to the AEs and tagging the 3 enterprise ones for escalation." },
+    { thought: 'Thought for 1s', text: "Got it. I'll cross-check the new lead against the existing accounts, dedupe, and drop the routing decision in #sales-routing within the hour." },
+  ],
+  'Meeting Analyzer': [
+    { thought: 'Thought for 4s', text: "Pulling the last 14 closed-won + closed-lost calls. Initial pattern: discovery talk-time is 41% on wins vs 58% on losses — reps are still over-pitching. Full breakdown in 5." },
+    { thought: 'Thought for 3s', text: "Running win/loss on Q1 deals now. Surfacing the top 3 objections by frequency and the language that correlates with wins. I'll post the deck in the channel when it's ready." },
+    { thought: 'Thought for 2s', text: "Got it — scoring the call against our top performers' baseline. Watching for filler ratio, question depth, and time-to-pricing. Report drops here." },
+  ],
+  'Meeting Coach': [
+    { thought: 'Thought for 3s', text: "Reviewing the recording now. I'll send each rep a 3-bullet feedback note tonight covering one strength, one growth area, and one suggested phrase to try on the next call." },
+    { thought: 'Thought for 2s', text: "On it. Drafting a coaching plan for the Q1 cohort: 2× weekly 15-min sessions focused on objection handling. First session can start Monday — want me to send the invites?" },
+    { thought: 'Thought for 4s', text: "Comparing this rep's last 5 calls against the team benchmark. Big delta on discovery depth — I'll queue up the 3 specific moments to coach on in your 1:1." },
+  ],
+  // ── R&D ──
+  'Build Manager': [
+    { thought: 'Thought for 1s', text: "On it. CI queue has 3 PRs ahead; I'll watch and auto-retry any flake on the runner pool. Estimated wait ~6 min." },
+    { thought: 'Thought for 2s', text: "Build trend looks healthy — pass rate up to 96% this week from 91% last. The remaining flakes cluster around the AInbox snapshot tests; I'll open a ticket." },
+    { thought: 'Thought for 3s', text: "Watching the deploy. I'll roll back automatically if error rate exceeds 0.5% in the first 5 minutes and page you here either way." },
+  ],
+  'Alert Triage': [
+    { thought: 'Thought for 1s', text: "Live alert: latency p95 on staging-eu crossed 800ms. Already correlated with the migration that landed 8 min ago — paging the on-call owner and attaching the deploy SHA." },
+    { thought: 'Thought for 2s', text: "Two alerts fired in the last hour; both look like transients (recovered <30s). Suppressing for the rest of the window unless they trip a third time." },
+    { thought: 'Thought for 3s', text: "Got it. I'll watch the dashboard and only escalate if the error budget burns >2% per hour. Otherwise it stays here." },
+  ],
+  'Bug Investigator': [
+    { thought: 'Thought for 5s', text: "Reproduced #4812 locally. Ghost state happens when a stale meeting socket reconnects after a tab sleep — narrowing the root cause to the reconnection handler. I'll have a PR up shortly." },
+    { thought: 'Thought for 4s', text: "Bisecting the regression now. It's between b6c0762 and a919cb3 — three commits, isolating which one introduced the off-by-one on the calendar view." },
+    { thought: 'Thought for 6s', text: "Pulled the user's session replay. The crash is deterministic on Safari 17 when an empty roamoji array hits the parser. Patching the guard + adding a regression test." },
+  ],
+  'Code Reviewer': [
+    { thought: 'Thought for 3s', text: "Reviewing the two open PRs. First pass: 18 comments — mostly nits on naming + a real correctness issue on the new debounce helper. I'll re-review on push." },
+    { thought: 'Thought for 4s', text: "On it. Style + safety pass complete. Two of the touched files are below 60% coverage — flagging those for the author to add tests before merge." },
+    { thought: 'Thought for 2s', text: "Looking now. The change is small but touches the auth path — I'll ping the security on-call for a second pair of eyes before approving." },
+  ],
+  'RFC Drafter': [
+    { thought: 'Thought for 7s', text: "Drafting the RFC. Three architectural options on the table: (1) stay on the current grid, (2) move to a CSS-grid auto-flow approach, (3) virtualize. I'll lay out trade-offs + a recommendation in the doc." },
+    { thought: 'Thought for 5s', text: "On it. I'll pull from the existing project notes + last quarter's perf review and ship a v0 by EOD for you to redline." },
+    { thought: 'Thought for 4s', text: "Got it. Structuring as: context, goals, non-goals, options, recommendation, open questions. Will keep the trade-offs section honest about what we're giving up." },
+  ],
+  // ── HR ──
+  'Employee Onboarding': [
+    { thought: 'Thought for 2s', text: "Spinning up day-1 kits for the new hires. Laptops shipped, SSO + workspace provisioned, calendar pre-loaded with their first-week meetings. I'll send the welcome email at 9am their local time on day-1." },
+    { thought: 'Thought for 3s', text: "On it. IT provisioning is queued (typically 4 hours to complete), and I'll book the welcome circle, manager 1:1, and team intro coffees automatically once their calendar populates." },
+    { thought: 'Thought for 1s', text: "Got it. I'll prep the new-hire checklist + ship the team-intro doc out 48 hours before their start date so the welcome feels intentional." },
+  ],
+  'Resume Triage': [
+    { thought: 'Thought for 4s', text: "Scoring 38 incoming resumes against the JD. 6 strong fits, 11 maybes, 21 below bar. Pulling the highlight summaries for the top 6 — should be in your inbox in 2 min." },
+    { thought: 'Thought for 3s', text: "On it. Filtering by minimum fit threshold + flagging any candidate with a prior connection to a current team member so we can warm-intro." },
+    { thought: 'Thought for 5s', text: "Sweeping the new applicants. Two candidates jump out — one is a referral from a current senior IC, the other has open-source work that maps directly to our roadmap. Surfacing them up top." },
+  ],
+  'Recruiting Coordinator': [
+    { thought: 'Thought for 2s', text: "On it. 9 interviews to schedule — I'll find 45-min slots across the panels this week and send the candidates 3 options each. Travel for the in-person finalists will queue once they confirm." },
+    { thought: 'Thought for 3s', text: "Booking the onsite. Each candidate gets a 5-session loop: hiring manager, system design, coding, design review, exec chat. I'll aggregate feedback in the scorecard within 24h after each loop." },
+    { thought: 'Thought for 1s', text: "Got it. I'll chase pending feedback from interviewers — 4 scorecards outstanding from last week — and roll up a debrief packet for the hiring panel by Friday." },
+  ],
+  // ── Support ──
+  'Customer Onboarding': [
+    { thought: 'Thought for 2s', text: "On it. Kicking off the week-1 plan — day-1 welcome email, admin SSO setup, sample workspace seeded, and a 30-min onboarding call booked with their primary admin." },
+    { thought: 'Thought for 3s', text: "Looking at the cohort. 8/10 seats activated within 72 hours — the 2 stalled ones are both blocked on SSO. Sending a targeted nudge with a Loom walkthrough." },
+    { thought: 'Thought for 4s', text: "Got it. I'll watch activation through Friday and surface any seats that haven't logged in by then — usually a sign they need a hand or weren't a real user." },
+  ],
+  'Support Manager': [
+    { thought: 'Thought for 1s', text: "Scanning the queue. Three tickets within 30 min of SLA breach — routing them to the on-call engineer now and flagging the iOS one as P1." },
+    { thought: 'Thought for 5s', text: "Sweeping this week's backlog. Top three themes are Theater playback, AInbox sync, and Magic Minutes share. I'll roll up the breakdown and link each to its current fix-status." },
+    { thought: 'Thought for 2s', text: "On it. Routing by specialty and watching sentiment — if a ticket trends negative I'll escalate to a human early rather than letting it linger." },
+  ],
+  'Referral Analyzer': [
+    { thought: 'Thought for 4s', text: "Pulling Q1 referral data. Customer-to-customer DMs are the biggest lift this quarter — up to 34% of new signups, from 18% in Q4. The new in-product invite prompt is doing most of the work." },
+    { thought: 'Thought for 3s', text: "Building the leaderboard now. Ranking by referrals-converted-to-paid, not raw signups — gives a truer view of which advocates actually drive revenue." },
+    { thought: 'Thought for 5s', text: "On it. I'll cross-reference channel attribution with cohort retention so we can see which referral sources produce the stickiest customers, not just the loudest funnels." },
+  ],
+  // ── Marketing ──
+  'Lead Researcher': [
+    { thought: 'Thought for 6s', text: "Profiling the account. 1,200 employees, 92% remote per their public job posts, recent Series B led by a16z. Three of their VPs follow us on LinkedIn — warm intro path available." },
+    { thought: 'Thought for 7s', text: "Pulling 20 series-B fintechs matching ICP. Top fits by remote-culture + size: Mercury, Ramp, Pilot, Brex, Modern Treasury. Full enriched list with contacts coming." },
+    { thought: 'Thought for 5s', text: "Tracking intent signals on that domain. 48 visits to /pricing and /security in 14 days, three of them >5 visits each — strong evaluation signal, recommending warm outreach to their VP Eng." },
+  ],
+  'Content Drafter': [
+    { thought: 'Thought for 8s', text: "Drafting now. Three title options, an intro hooked to the calendar-fatigue stat, and three CTA placements with the final one pointing at free trial. v1 will be in the doc within the hour." },
+    { thought: 'Thought for 6s', text: "On it. Pulling the brand tone from the last 5 launch posts so the voice stays consistent, and queuing two headline A/B variants for the email send." },
+    { thought: 'Thought for 5s', text: "Got the brief. Structuring as problem → existing-tools-fall-short → here's how Roam reframes it → demo CTA. I'll keep it under 600 words and front-load the hook." },
+  ],
+  'Social Manager': [
+    { thought: 'Thought for 3s', text: "Scheduling across X, LinkedIn, and TikTok. Optimal-time picker says Tuesday 10am ET for LinkedIn, Thursday 2pm ET for X. Drafts in the queue for review." },
+    { thought: 'Thought for 2s', text: "On it. I'll thread the announcement on X with three follow-ups across the week so it stays in feed longer, and cross-post a 60-sec cut to TikTok and Reels." },
+    { thought: 'Thought for 4s', text: "Pulled this week's engagement analytics. Carousels are outperforming single-image posts 3.2× on LinkedIn — recommending we bias the next 4 posts toward that format." },
+  ],
+  'X Scanner': [
+    { thought: 'Thought for 2s', text: "On it. Watching brand-mention feed live. 23 mentions in the last 24h, 4 negative (all from one disgruntled trial that already closed). Surfacing the 6 most amplifiable positives." },
+    { thought: 'Thought for 3s', text: "Tracking competitor chatter. A new launch hit yesterday from one of the meeting tools — already getting some sideways comparisons to us. Drafting a response thread for review." },
+    { thought: 'Thought for 1s', text: "Got it. I'll tag every brand mention by sentiment and flag anything >5k impressions for a human reply within 30 minutes." },
+  ],
+  'TikTok Pricing Analyzer': [
+    { thought: 'Thought for 5s', text: "Pulling creator rate cards across the 50–500k follower band. Median is $1,800/sponsored post, with engagement-rate as the strongest predictor of variance. Tiered card coming up." },
+    { thought: 'Thought for 4s', text: "On it. Forecasting the campaign at three budget levels — $25k, $50k, $100k — with reach + CPM projections for each. Should help you decide where to land." },
+    { thought: 'Thought for 6s', text: "Got it. I'll model tiered pricing for nano, micro, and mid-tier creators and surface where the cost-per-engaged-view crosses over." },
+  ],
+  'G2 Review Notification': [
+    { thought: 'Thought for 1s', text: "Two new G2 reviews dropped overnight. One 5-star calling out Magic Minutes specifically — perfect for amplification. One 3-star flagging the mobile knock dialog issue we already shipped a fix for." },
+    { thought: 'Thought for 2s', text: "On it. Watching the G2 page for any new reviews — I'll alert here within 5 min of one being posted and pre-score sentiment so you can decide whether to amplify or respond." },
+    { thought: 'Thought for 3s', text: "Sentiment scan for the week: 4.7 average across 12 new reviews. Three themes worth highlighting in social: ease of setup, AI quality, and pricing transparency." },
+  ],
+  'Reddit Scanner': [
+    { thought: 'Thought for 2s', text: "On it. r/remotework, r/sales, r/startups — watching for relevant threads. One thread in r/startups today has 240 upvotes and asks 'best Zoom alternative' — natural opening to chime in." },
+    { thought: 'Thought for 3s', text: "Watching the subreddit list. Pulling a digest of the top 5 threads from the last 48h with audience signal scored — useful for thinking about content the team should make next." },
+    { thought: 'Thought for 1s', text: "Got it. I'll flag any hot thread (>100 upvotes, on-topic) within 30 min and draft a sample reply with the right tone for our brand voice." },
+  ],
+  'Blog Post Generator': [
+    { thought: 'Thought for 7s', text: "Drafting the long-form post now. SEO outline locked: primary keyword in H1 + URL, three sub-headers covering the cluster terms, and 4 internal links to relevant feature pages. v1 in 20." },
+    { thought: 'Thought for 5s', text: "On it. Pulling from the existing brief + last quarter's posts so the voice stays consistent. Targeting 1,400 words with a strong hook in the first 80." },
+    { thought: 'Thought for 6s', text: "Got it. I'll cross-link to three high-performing existing posts to spread the SEO juice and queue meta description variants for you to pick from." },
+  ],
+  'Web Traffic Analyzer': [
+    { thought: 'Thought for 4s', text: "Looking at the funnel. Top-of-funnel is healthy (28k visits this week, up 12%), but the pricing → signup conversion dropped from 4.1% to 2.8% — worth investigating the recent A/B." },
+    { thought: 'Thought for 3s', text: "On it. Pulling source attribution. Organic search is the biggest channel by volume; paid social has the best conversion rate. I'll dashboard both with a recommendation on where to invest more." },
+    { thought: 'Thought for 5s', text: "Drop-off analysis: biggest leak is the /pricing → trial-signup step. 62% of visitors who scroll past the bundle card never make it to the form. Worth shortening that flow." },
+  ],
+  'Keyword Researcher': [
+    { thought: 'Thought for 6s', text: "Building the cluster. 32 queries in scope. Big hits: 'async standup tool' (2.4k/mo, low difficulty), 'standup without meeting' (880, low). Three competitor pages dominate but none match our angle — solid opening." },
+    { thought: 'Thought for 5s', text: "On it. Grouping by search intent — informational vs comparison vs transactional. The comparison cluster is where we have the biggest gap to fill in our existing content." },
+    { thought: 'Thought for 7s', text: "Competitive gap analysis: of 180 keywords our top 3 competitors rank for, we rank for 62. Top 5 worth chasing are all in the meeting-summary cluster — clear roadmap for the next quarter of content." },
+  ],
+};
+
+const AGENT_GENERIC_REPLIES = [
+  { thought: 'Thought for 2s', text: "On it. I'll get started and report back here with progress and anything that needs a decision." },
+  { thought: 'Thought for 3s', text: "Got it — picking that up now. I'll surface any blockers or open questions back to you here." },
+  { thought: 'Thought for 1s', text: "Working on it. Watch this thread — I'll update as soon as I have something concrete." },
+];
+
+// Track the last-picked reply index per agent so a follow-up message
+// doesn't immediately repeat the same canned reply.
+const LAST_REPLY_INDEX = new Map();
+
+// Models available in the composer model picker. Anthropic's flagship
+// lineup first, then the next-best alternatives.
+const MODEL_OPTIONS = [
+  { name: 'Opus 4.7',   detail: 'Most capable · slowest' },
+  { name: 'Sonnet 4.6', detail: 'Balanced' },
+  { name: 'Haiku 4.5',  detail: 'Fast · cheapest' },
+  { name: 'GPT-5.4',    detail: 'OpenAI flagship' },
+  { name: 'Gemini 3 Pro', detail: 'Google flagship' },
+];
+
+function pickAgentReply(agentName) {
+  const pool = AGENT_REPLIES[agentName] || AGENT_GENERIC_REPLIES;
+  if (pool.length === 1) return pool[0];
+  const last = LAST_REPLY_INDEX.get(agentName);
+  let i = Math.floor(Math.random() * pool.length);
+  if (i === last) i = (i + 1) % pool.length;
+  LAST_REPLY_INDEX.set(agentName, i);
+  return pool[i];
+}
+
 function controlRoomInitials(name) {
   const words = name.split(/\s+/).filter(Boolean);
   // Treat short tokens like 'G2' or 'X' as canonical (use as-is when ≤ 2 chars).
@@ -2214,7 +2466,7 @@ export default function AgentGarageView() {
   const MAP_VARIANTS = [
     {
       id: 'lab',
-      label: 'Lab',
+      label: 'Science Lab',
       visibleRooms: ['vo1','vo7','vo3'],
       visibleDepts: ['Support','Marketing','Sales','R&D','HR'],
       layout: {
@@ -2230,7 +2482,7 @@ export default function AgentGarageView() {
     },
     {
       id: 'office',
-      label: 'Office',
+      label: 'Computer Room',
       visibleRooms: ['vo1','vo7','vo3','vo-pitch'],
       visibleDepts: ['Marketing','Sales','R&D'],
       layout: {
@@ -2253,7 +2505,7 @@ export default function AgentGarageView() {
     },
     {
       id: 'hq',
-      label: 'HQ',
+      label: 'Design Studio',
       visibleRooms: ['vo1','vo7','vo3','vo5','vo9','vo10'],
       visibleDepts: ['Marketing','R&D'],
       layout: {
@@ -2331,6 +2583,7 @@ export default function AgentGarageView() {
               rowSpan: 3,
               departments: [dept],
               onClick: () => setAgentsWindow({ roomId: dept.name }),
+              onAgentClick: (agent) => handleControlRoomAgentClick({ ...agent, deptName: dept.name }),
             }))}
         />
       </div>

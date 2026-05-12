@@ -708,7 +708,7 @@ function AiVibeIcon({ src, label, combo = false, bg }) {
 }
 
 // Private office room card — uses the same markup as mapv3
-function PrivateRoomCard({ room, storyBubble, onPersonClick, onRoomClick, spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, showPhysicalTags = false, vibeOverride = false }) {
+function PrivateRoomCard({ room, storyBubble, onPersonClick, onRoomClick, spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, showPhysicalTags = false, vibeOverride = false, glowOfficeId = null, glowOfficeVibe = null }) {
   const [talking, setTalking] = useState({});
   const hasTalk = room.people.length > 1;
 
@@ -736,8 +736,14 @@ function PrivateRoomCard({ room, storyBubble, onPersonClick, onRoomClick, spotif
     return () => clearTimeout(timer);
   }, [hasTalk]);
 
-  const isEmpty = room.people.length === 0;
-  const activeVibe = !isEmpty && !vibeOverride ? room.vibe : null; // 'claude' | 'codex' | 'both' | null
+  const isEmpty = room.people.length === 0 && (room.agentDock?.length || 0) === 0;
+  // Only one office at a time shows the SiriGlow — the parent cycles
+  // glowOfficeId on a timer. When this room is the chosen one, prefer
+  // the parent's explicit glowOfficeVibe (which also seeds a vibe for
+  // offices that don't carry one in activeVibes — e.g. Agent Garage
+  // offices that have an agentDock but no people).
+  const allowVibe = !isEmpty && !vibeOverride && room.id === glowOfficeId;
+  const activeVibe = allowVibe ? (glowOfficeVibe || room.vibe) : null; // 'claude' | 'codex' | 'both' | null
   const prevVibeRef = useRef(null);
   const [showGlow, setShowGlow] = useState(false);
   const [renderedVibe, setRenderedVibe] = useState(null);
@@ -823,7 +829,8 @@ function PrivateRoomCard({ room, storyBubble, onPersonClick, onRoomClick, spotif
 }
 
 // Agent workroom card — flat rack OR multi-column departmental layout.
-function AgentRoomCard({ room, onAgentClick, onPersonClick }) {
+function AgentRoomCard({ room, onAgentClick, onPersonClick, glowAgentRoomId = null, glowAgentColor = null }) {
+  const showGlow = !!glowAgentRoomId && room.id === glowAgentRoomId && !!glowAgentColor;
   const visitors = room.people || [];
   const agents = room.agents || [];
   const departments = room.departments || null;
@@ -857,6 +864,11 @@ function AgentRoomCard({ room, onAgentClick, onPersonClick }) {
 
   return (
     <div className={`sc-room-card sc-agentroom ${departments ? 'sc-agentroom-departmental' : ''}`}>
+      <div className={`sc-glow-fade ${showGlow ? 'sc-glow-visible' : ''}`}>
+        {showGlow && (
+          <SiriGlow active={true} color={glowAgentColor} intensity={3} borderRadius={12} />
+        )}
+      </div>
       <div className="big-meeting-card-inner" style={{ height: '100%' }}>
         <div className="meeting-room-card sc-agentroom-card" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
           <div className="card-header" style={{ padding: '0 12px' }}>
@@ -1259,9 +1271,10 @@ function GameHex({ person, rank, small = false, colorIndex = 0, talking = false,
 }
 
 // Agent Workshop card — large room dedicated to agent work.
-function AgentWorkshopCard({ room, onRoomClick }) {
+function AgentWorkshopCard({ room, onRoomClick, glowAgentRoomId = null, glowAgentColor = null }) {
   const [hovered, setHovered] = useState(null); // { agent, x, y, flip }
   const cardRef = useRef(null);
+  const showGlow = !!glowAgentRoomId && room.id === glowAgentRoomId && !!glowAgentColor;
 
   const onTileEnter = (e, agent) => {
     const tile = e.currentTarget;
@@ -1283,6 +1296,11 @@ function AgentWorkshopCard({ room, onRoomClick }) {
       onClick={onRoomClick ? (e) => { e.stopPropagation(); onRoomClick(room); } : undefined}
       style={onRoomClick ? { cursor: 'pointer' } : undefined}
     >
+      <div className={`sc-glow-fade ${showGlow ? 'sc-glow-visible' : ''}`}>
+        {showGlow && (
+          <SiriGlow active={true} color={glowAgentColor} intensity={3} borderRadius={12} />
+        )}
+      </div>
       <div className="big-meeting-card-inner" style={{ height: '100%' }}>
         <div className="meeting-room-card sc-agent-workshop-card" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
           {['nw', 'ne', 'sw', 'se'].map(corner => (
@@ -1308,10 +1326,11 @@ function AgentWorkshopCard({ room, onRoomClick }) {
                         <span
                           key={agent.name}
                           className="sc-control-room-tile"
-                          style={{ '--agent-color': agent.color || dept.color }}
+                          style={{ '--agent-color': agent.color || dept.color, cursor: room.onAgentClick ? 'pointer' : undefined }}
                           aria-label={agent.name}
                           onMouseEnter={(e) => onTileEnter(e, { ...agent, deptColor: dept.color })}
                           onMouseLeave={onTileLeave}
+                          onClick={room.onAgentClick ? (e) => { e.stopPropagation(); room.onAgentClick(agent); } : undefined}
                         >
                           <AgentGlyph index={agent.iconIndex} size={20} className="sc-control-room-tile-icon" />
                         </span>
@@ -2942,6 +2961,69 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
     }
     return [p('Camila T.'), p('Megan T.'), p('Hannah B.')];
   }, [activeFloor, onAirOverride]);
+
+  // Only one private office and one agent room render a SiriGlow at a
+  // time. Both cycle on a 4.5s interval so the eye is drawn to a single
+  // point of focus rather than every vibing office at once. The agent
+  // room glow picks up its currently-working agent's color.
+  // Candidate offices for the rotating glow: any private office with
+  // someone (humans OR docked agents) on it. The room object doesn't
+  // carry a `vibe` field — that's tracked separately in activeVibes,
+  // which my rotation falls back to (and seeds itself when missing).
+  const candidateOffices = useMemo(
+    () => currentFloorRooms.filter(r =>
+      r.type === 'private' && ((r.people?.length || 0) > 0 || (r.agentDock?.length || 0) > 0)
+    ),
+    [currentFloorRooms]
+  );
+  const agentRooms = useMemo(
+    () => currentFloorRooms.filter(r => r.type === 'agentroom' || r.type === 'agent-workshop'),
+    [currentFloorRooms]
+  );
+  const [glowOfficeId, setGlowOfficeId] = useState(null);
+  const [glowOfficeVibe, setGlowOfficeVibe] = useState(null);
+  const [glowAgentRoomId, setGlowAgentRoomId] = useState(null);
+  const [glowAgentColor, setGlowAgentColor] = useState(null);
+  useEffect(() => {
+    const VIBES = ['claude', 'codex', 'both'];
+    const pickAgentColor = (room) => {
+      if (room.departments) {
+        const all = room.departments.flatMap(d =>
+          (d.agents || []).map(a => ({ ...a, _deptColor: d.color }))
+        );
+        const working = all.find(a => a.status === 'working') || all[0];
+        return working?.color || working?._deptColor || '#7B6CFB';
+      }
+      const list = room.agents || [];
+      const working = list.find(a => a.status === 'working') || list[0];
+      return working?.color || '#7B6CFB';
+    };
+    let officeIdx = 0;
+    let agentIdx = 0;
+    const tick = () => {
+      if (candidateOffices.length > 0) {
+        const r = candidateOffices[officeIdx % candidateOffices.length];
+        setGlowOfficeId(r.id);
+        setGlowOfficeVibe(activeVibes[r.id] || VIBES[officeIdx % VIBES.length]);
+        officeIdx += 1;
+      } else {
+        setGlowOfficeId(null);
+        setGlowOfficeVibe(null);
+      }
+      if (agentRooms.length > 0) {
+        const r = agentRooms[agentIdx % agentRooms.length];
+        setGlowAgentRoomId(r.id);
+        setGlowAgentColor(pickAgentColor(r));
+        agentIdx += 1;
+      } else {
+        setGlowAgentRoomId(null);
+        setGlowAgentColor(null);
+      }
+    };
+    tick();
+    const id = setInterval(tick, 4500);
+    return () => clearInterval(id);
+  }, [candidateOffices, agentRooms, activeVibes]);
   const speakerStories = {};
 
   const allStoryRooms = useMemo(() => {
@@ -3481,16 +3563,22 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
                         room={room}
                         onAgentClick={editable ? undefined : room.onAgentClick}
                         onPersonClick={editable ? undefined : openMiniChat}
+                        glowAgentRoomId={glowAgentRoomId}
+                        glowAgentColor={glowAgentColor}
                       />
                     ) : room.type === 'agent-workshop' ? (
                       <AgentWorkshopCard
                         room={room}
                         onRoomClick={editable ? undefined : room.onClick}
+                        glowAgentRoomId={glowAgentRoomId}
+                        glowAgentColor={glowAgentColor}
                       />
                     ) : room.type === 'command' ? (
                       <CommandCenterCard room={room} />
                     ) : (
                       <PrivateRoomCard
+                        glowOfficeId={glowOfficeId}
+                        glowOfficeVibe={glowOfficeVibe}
                         vibeOverride={vibeOverride}
                         showPhysicalTags={showPhysicalTags}
                         spotifyAlwaysOpen={spotifyAlwaysOpen}
@@ -3680,18 +3768,29 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
             </div>
             {onPersonalAgentsClick && (
               <div
-                className="sc-toolbar-pill sc-toolbar-pill-personal-agents"
+                className="sc-toolbar-pill sc-toolbar-pill-personal-agents sc-toolbar-pill-working"
                 data-tooltip="Personal Agents"
                 onClick={(e) => { e.stopPropagation(); onPersonalAgentsClick(); }}
+                style={{ '--agent-glow-color': glowAgentColor || '#7B6CFB' }}
               >
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <svg
+                  width="13"
+                  height="13"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  aria-hidden="true"
+                  style={{ color: 'var(--icon-primary)' }}
+                >
                   <path
-                    d="M3.5 6.75 L8 2.75 L12.5 6.75 M3.5 9.25 L8 13.25 L12.5 9.25"
-                    stroke="white"
-                    strokeWidth="1"
-                    strokeLinecap="round"
+                    d="M4 1.5 L12 1.5 L15 8 L12 14.5 L4 14.5 L1 8 Z"
+                    stroke="currentColor"
+                    strokeWidth="1.2"
                     strokeLinejoin="round"
+                    fill="none"
                   />
+                  <rect x="5.5" y="6" width="1.2" height="3.2" rx="0.6" fill="currentColor" />
+                  <rect x="9.3" y="6" width="1.2" height="3.2" rx="0.6" fill="currentColor" />
+                  <rect x="6.5" y="10.6" width="3" height="0.9" rx="0.45" fill="currentColor" />
                 </svg>
               </div>
             )}

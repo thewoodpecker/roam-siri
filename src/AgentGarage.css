@@ -1962,8 +1962,10 @@
   background: var(--bg-secondary);
 }
 .pa-session-active,
-.pa-session-active:hover {
-  background: var(--bg-surface-elevated-secondary);
+.pa-session-active:hover,
+.pa-sidebar-head-active,
+.pa-sidebar-head-active:hover {
+  background: var(--bg-secondary);
 }
 .pa-session-name {
   display: block;
@@ -2071,8 +2073,8 @@
   transition: border-color 0.12s ease, box-shadow 0.12s ease;
 }
 .pa-composer:focus-within {
-  border-color: rgba(255, 255, 255, 0.18);
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.04);
+  border-color: var(--border);
+  box-shadow: none;
 }
 .pa-composer-text {
   width: 100%;
@@ -2146,6 +2148,71 @@
 }
 .pa-composer-model-name { color: var(--text-primary); font-weight: 500; }
 .pa-composer-model-mode { color: var(--text-secondary); }
+
+/* Model picker dropdown — anchored above the model button. */
+.pa-composer-model-wrap {
+  position: relative;
+  display: inline-flex;
+}
+.pa-model-menu-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+}
+.pa-model-menu {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  right: 0;
+  min-width: 240px;
+  background: var(--bg-surface-elevated-primary);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-lg, 14px);
+  corner-shape: superellipse(1.6);
+  box-shadow: var(--shadow-5);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  z-index: 41;
+}
+.pa-model-menu-item {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  corner-shape: superellipse(1.6);
+  transition: background 0.12s ease;
+}
+.pa-model-menu-item:hover {
+  background: var(--bg-secondary);
+}
+.pa-model-menu-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.pa-model-menu-name {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+.pa-model-menu-detail {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+.pa-model-menu-check {
+  color: var(--text-primary);
+  flex-shrink: 0;
+}
 
 /* Capsule composer — pill-shaped input with inline buttons. */
 .pa-input {
@@ -2300,6 +2367,23 @@
 .pa-msg-body p { margin: 0 0 8px; }
 .pa-msg-body p:last-child { margin: 0; }
 
+/* Typewriter caret — blinks at the end of the last paragraph while
+   the agent is still streaming its reply. */
+.pa-msg-body-streaming p:last-child::after {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 14px;
+  margin-left: 3px;
+  vertical-align: -2px;
+  background: var(--text-primary);
+  animation: pa-msg-caret 1s steps(2, end) infinite;
+}
+@keyframes pa-msg-caret {
+  0%, 50% { opacity: 1; }
+  50.01%, 100% { opacity: 0; }
+}
+
 .pa-chat-composer-bar {
   position: absolute;
   left: 0;
@@ -2381,8 +2465,27 @@
 }
 .pa-files-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 14px;
+}
+.pa-file-preview-image {
+  margin-top: 12px;
+  padding: 0;
+  align-items: stretch;
+  border-radius: var(--radius-md, 10px);
+  corner-shape: superellipse(1.6);
+  background: var(--background-primary);
+}
+.pa-file-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  opacity: 0;
+  transition: opacity 0.45s ease;
+}
+.pa-file-image-loaded {
+  opacity: 1;
 }
 .pa-file {
   background: var(--bg-surface-elevated-primary);
