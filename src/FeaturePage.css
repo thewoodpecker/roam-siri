@@ -6654,29 +6654,37 @@
   background: var(--graphite-50);
 }
 
-/* pricing — highlight the featured (Roam) column with an animated
-   SiriGlow perimeter instead of a different surface color. */
+/* pricing — give the featured (Roam) column the same surface as the
+   offer card's "What's included" panel: the translucent
+   --background-primary overlay composited over the offer card's base
+   surface (graphite-800 dark / graphite-50 light). Mirror those exact
+   values rather than --bg-surface-raised, which diverges to solid
+   white in light mode. */
 .fp-page[data-slug="pricing"] .fp-compare-col-featured {
-  position: relative;
-  overflow: hidden;
+  background:
+    linear-gradient(var(--background-primary), var(--background-primary)),
+    var(--graphite-800);
 }
-.fp-compare-glow {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
+[data-theme="light"] .fp-page[data-slug="pricing"] .fp-compare-col-featured {
+  background:
+    linear-gradient(var(--background-primary), var(--background-primary)),
+    var(--graphite-50);
 }
-/* Two stacked SiriGlows for extra intensity. Each emits halo, main,
-   core canvases (every 3rd is the sharp core stroke) — drop the cores
-   so there's no hard border line. */
-.fp-compare-glow canvas:nth-child(3n) {
-  display: none;
+
+/* pricing — the two compare columns sit flush with a single shared
+   hairline between them instead of a gutter. */
+.fp-page[data-slug="pricing"] .fp-section-compare {
+  column-gap: 0;
 }
-/* Keep the column's content above the glow. */
-.fp-compare-col-featured > .fp-compare-head,
-.fp-compare-col-featured > .fp-compare-rows {
-  position: relative;
-  z-index: 1;
+.fp-page[data-slug="pricing"] .fp-compare-col-left {
+  border-right: 0;
+}
+/* pricing — accent badges + the positive total chip use the on-light
+   text token (scoped here so the shared compare components on other
+   feature pages are untouched). */
+.fp-page[data-slug="pricing"] .fp-compare-badge,
+.fp-page[data-slug="pricing"] .fp-compare-row-positive.fp-compare-row-total .fp-compare-row-price {
+  color: var(--text-primary-on-light);
 }
 
 .fp-compare-col-left .fp-compare-row-price,
@@ -10757,10 +10765,9 @@ body:has(.fp-page[data-slug="pricing"]) .dev-settings-menu {
 }
 
 /* Hero — hide the empty hero stage and tighten the hero spacing,
-   same as the original pricing page. The hero CTAs are hidden too:
-   the offer card and sticky bar carry the conversion actions. */
+   same as the original pricing page. Hero keeps its primary CTAs;
+   the offer card's CTAs are secondary-styled reinforcement. */
 .fp-page[data-slug="pricing"] .fp-hero-visual { display: none; }
-.fp-page[data-slug="pricing"] .fp-hero .fp-cta-row { display: none; }
 .fp-page[data-slug="pricing"] .fp-hero {
   padding-bottom: 24px;
   margin-bottom: 0;
@@ -10846,13 +10853,14 @@ body:has(.fp-page[data-slug="pricing"]) .dev-settings-menu {
   background: var(--background-primary);
 }
 .fp-offer-badge {
+  align-self: flex-start;
   font-family: var(--font-family-primary);
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   padding: 4px 8px;
-  color: var(--solid-black);
+  color: var(--text-primary-on-light);
   background: var(--accent);
 }
 .fp-offer-name {
@@ -10885,23 +10893,6 @@ body:has(.fp-page[data-slug="pricing"]) .dev-settings-menu {
   letter-spacing: -1.2px;
   color: var(--text-primary);
 }
-.fp-offer-price-next {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  font-size: 13px;
-  line-height: 1.4;
-  letter-spacing: -0.1px;
-  color: var(--text-secondary);
-}
-.fp-offer-price-next svg {
-  flex-shrink: 0;
-  color: var(--text-positive, var(--accent));
-}
-.fp-offer-price-next strong {
-  color: var(--text-primary);
-  font-weight: 600;
-}
 .fp-offer-price-meta {
   display: flex;
   flex-direction: column;
@@ -10913,41 +10904,26 @@ body:has(.fp-page[data-slug="pricing"]) .dev-settings-menu {
   color: var(--text-secondary);
   letter-spacing: -0.05px;
 }
-.fp-offer-sub {
+.fp-offer-summary {
   margin: 0;
   font-size: 14px;
-  line-height: 1.45;
+  line-height: 1.5;
   letter-spacing: -0.1px;
   color: var(--text-secondary);
 }
+.fp-offer-summary strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+/* CTAs pinned to the bottom of the panel. */
 .fp-offer-ctas {
   display: flex;
   gap: 12px;
-  margin-top: 6px;
+  margin-top: auto;
   width: 100%;
 }
 .fp-offer-ctas .sc-promo-btn {
   flex: 1;
-}
-.fp-offer-fineprint,
-.fp-offer-pricelock {
-  margin: 0;
-  font-size: 12px;
-  line-height: 1.4;
-  color: var(--text-secondary);
-  letter-spacing: -0.05px;
-}
-.fp-offer-pricelock {
-  margin-top: auto;
-  padding-top: 4px;
-  opacity: 0.85;
-}
-.fp-offer-right-label {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--text-secondary);
 }
 .fp-offer-bullets {
   list-style: none;
@@ -10985,16 +10961,26 @@ body:has(.fp-page[data-slug="pricing"]) .dev-settings-menu {
   color: var(--text-secondary);
 }
 
-/* Secondary CTA button — outlined, neutral. */
+/* Secondary CTA button — subtle fill with a faint inset highlight,
+   matching the navbar's Book Demo / Free Trial treatment. */
 .sc-promo-btn-secondary {
-  background: transparent;
+  background: rgba(255, 255, 255, 0.05);
   color: var(--text-primary);
-  border: 0.5px solid var(--border);
-  box-shadow: inset 0 0 0 0.5px var(--border);
+  border: none;
+  box-shadow: inset 0 0.5px 0 0 rgba(255, 255, 255, 0.1);
+  transition: background 0.2s, opacity 0.2s;
+}
+.sc-promo-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  opacity: 1;
 }
 [data-theme="light"] .sc-promo-btn-secondary {
-  background: transparent;
+  background: rgba(0, 0, 0, 0.04);
   color: var(--text-primary);
+  box-shadow: none;
+}
+[data-theme="light"] .sc-promo-btn-secondary:hover {
+  background: rgba(0, 0, 0, 0.08);
 }
 
 /* ---- Plans — Self-Serve / Enterprise side by side ---- */
@@ -11187,43 +11173,107 @@ body:has(.fp-page[data-slug="pricing"]) .dev-settings-menu {
   flex-direction: column;
 }
 .fp-faq-item {
-  border-top: 0.5px solid var(--border);
   padding: 20px 0;
 }
-.fp-faq-item:last-child {
-  border-bottom: 0.5px solid var(--border);
-}
 .fp-faq-q {
-  list-style: none;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  cursor: pointer;
+  margin: 0;
   font-size: 16px;
   font-weight: 500;
   line-height: 1.4;
   letter-spacing: -0.2px;
   color: var(--text-primary);
 }
-.fp-faq-q::-webkit-details-marker { display: none; }
-.fp-faq-toggle {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  color: var(--text-secondary);
-  transition: transform 180ms ease;
-  flex-shrink: 0;
-}
-.fp-faq-item[open] .fp-faq-toggle {
-  transform: rotate(180deg);
-}
 .fp-faq-a {
   margin-top: 12px;
   color: var(--text-secondary);
   max-width: 68ch;
+}
+
+/* ---- Review cards — real, cost-focused customer quotes ---- */
+.fp-section-review-cards {
+  row-gap: 32px;
+}
+.fp-review-cards-title {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-family: 'Possibility', 'Inter', serif;
+  font-size: clamp(16px, 1.4vw, 20px);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.4px;
+  text-transform: uppercase;
+  text-wrap: balance;
+  color: var(--text-primary);
+}
+.fp-review-cards-grid {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--grid-gutter);
+}
+.fp-review-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 24px;
+  margin: 0;
+  padding: 28px;
+  background: var(--graphite-800);
+  border: 0.5px solid var(--border);
+  box-sizing: border-box;
+}
+[data-theme="light"] .fp-review-card {
+  background: var(--graphite-50);
+}
+.fp-review-card-quote {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.5;
+  letter-spacing: -0.15px;
+  color: var(--text-primary);
+}
+.fp-review-card-author {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.fp-review-card-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.fp-review-card-author-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.fp-review-card-name {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.1px;
+  color: var(--text-primary);
+}
+.fp-review-card-role {
+  font-size: 12px;
+  letter-spacing: -0.05px;
+  color: var(--text-secondary);
+}
+.fp-review-card-link {
+  margin-left: auto;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  color: var(--text-secondary);
+  transition: color 0.15s ease;
+}
+.fp-review-card-link:hover {
+  color: var(--text-primary);
 }
 
 /* ---- Sticky bottom CTA ---- */
@@ -11312,7 +11362,9 @@ body:has(.fp-page[data-slug="pricing"]) .dev-settings-menu {
     padding-bottom: 16px;
   }
   .fp-section-trust { padding: 12px var(--grid-margin); }
-  .fp-trust-list { font-size: 12px; column-gap: 16px; justify-content: center; }
+  .fp-trust-list { font-size: 12px; column-gap: 16px; justify-content: flex-start; }
+
+  .fp-review-cards-grid { grid-template-columns: 1fr; }
 
   .fp-section-price-offer {
     padding-top: 16px;
@@ -11333,11 +11385,10 @@ body:has(.fp-page[data-slug="pricing"]) .dev-settings-menu {
   }
   .fp-offer-price { font-size: 44px; letter-spacing: -1px; }
   .fp-offer-price-meta-line { font-size: 12px; }
-  .fp-offer-sub { font-size: 14px; }
+  .fp-offer-summary { font-size: 14px; }
   .fp-offer-bullet { font-size: 13px; }
   .fp-offer-ctas { flex-direction: column; width: 100%; }
   .fp-offer-ctas .sc-promo-btn { width: 100%; }
-  .fp-offer-pricelock { margin-top: 8px; }
 
   .fp-section-plans { padding: 40px var(--grid-margin); row-gap: 24px; }
   .fp-plans-head { gap: 8px; }
@@ -11365,4 +11416,6 @@ body:has(.fp-page[data-slug="pricing"]) .dev-settings-menu {
   .fp-sticky-cta-sub { white-space: normal; font-size: 11px; }
   .fp-sticky-cta-ctas { width: 100%; }
   .fp-sticky-cta-ctas .sc-promo-btn { flex: 1; }
+  /* Mobile sticky bar — single CTA only (Book Demo). */
+  .fp-sticky-cta-ctas .sc-promo-btn:last-child { display: none; }
 }

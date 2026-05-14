@@ -42,7 +42,6 @@ function RightControls({ theme, onToggleTheme, showGrid, onToggleGrid }) {
 }
 import Navbar from './Navbar';
 import Footer from './Footer';
-import SiriGlow from './SiriGlow';
 import FloatingCTA from './FloatingCTA';
 import FooterCTA from './FooterCTA';
 import AInbox, { TypingIndicator } from './AInbox';
@@ -6231,26 +6230,26 @@ function BootChatPreview() {
 /* Pricing comparison shared across feature pages — Legacy stack vs. the
    bundled Virtual Office. Page-agnostic so it can sit at the bottom of
    every feature page below the social-post reviews. */
-// Cleaned-up compare table for the pricing page — Cubicle removed, more
-// credible (non-round) competitor prices, all list prices footnoted
-// with a date for procurement credibility.
+// Compare table for the pricing page: the legacy SaaS stack vs. the
+// Roam bundle. Figures match the canonical values in wonder's
+// data/pricing.ts and marketing/redesign/FeaturePage.tsx.
 const STANDARD_PRICING_COMPARE_V2 = {
   variant: 'compare',
   left: {
     title: 'Your current stack',
-    subtitle: '9 vendors. Nothing talks to each other. $268.50/month per person.',
+    subtitle: 'Manual, not integrated. $282/month per person.',
     rows: [
-      { name: 'Zoom Business',           value: '$26.99/mo', note: 'Endless 30-minute meetings' },
-      { name: 'Slack Business+',         value: '$32.50/mo', note: 'No real meetings' },
-      { name: 'Hopin / Webinar',         value: '$24.50/mo', note: 'Outside your office' },
-      { name: 'Calendly Teams',          value: '$16.00/mo', note: 'Can’t meet now' },
-      { name: 'Otter for Teams',         value: '$28.99/mo', note: 'Annoying bot in every call' },
-      { name: 'Loom Business',           value: '$20.00/mo', note: 'Yet another extension' },
-      { name: 'AI meeting assistant',    value: '$49.99/mo', note: 'No office awareness' },
-      { name: 'Zoom Webinars',           value: '$83.00/mo', note: 'Yahoo-era webinars' },
-      { name: 'SSO + provisioning',      value: '$6.50/mo',  note: 'Charged per seat by every vendor' },
+      { name: 'Zoom',                    value: '$27/month',    note: 'Endless 30-minute meetings' },
+      { name: 'Hopin',                   value: '$25/month',    note: 'Outside your office' },
+      { name: 'Calendly',                value: '$16/month',    note: 'Can’t meet now' },
+      { name: 'Slack',                   value: '$32/month',    note: 'No meetings' },
+      { name: 'Otter',                   value: '$29/month',    note: 'Annoying bot' },
+      { name: 'Loom',                    value: '$20/month',    note: 'Annoying extension' },
+      { name: 'Standalone AI Assistant', value: '$50/month',    note: 'No office awareness' },
+      { name: 'Zoom Webinars',           value: '$83/month',    note: 'Yahoo-era webinars' },
+      { name: 'Cubicle',                 value: '$1,000/month', note: 'Commute, manual' },
     ],
-    total: { label: 'Total per person, per month', value: '$268.50/mo', tone: 'negative' },
+    total: { label: 'Total per person, per month', value: '$282/month', tone: 'negative' },
   },
   right: {
     featured: true,
@@ -6258,19 +6257,18 @@ const STANDARD_PRICING_COMPARE_V2 = {
     title: 'Virtual Office Platform',
     subtitle: '9 products. One bill. AI in every surface. $19.50/month per active member.',
     rows: [
-      { name: 'Drop-In Meetings',  href: '/drop-in-meetings', value: 'Included', note: '8-minute average' },
-      { name: 'Theater',           href: '/theater',          value: 'Included', note: 'In your office' },
-      { name: 'Lobby',             href: '/lobby',            value: 'Included', note: 'Meet now or later' },
-      { name: 'AInbox',            href: '/ainbox',           value: 'Included', note: 'Prompt your meetings' },
-      { name: 'Magic Minutes',     href: '/magic-minutes',    value: 'Included', note: 'No annoying bot' },
-      { name: 'Magicast',          href: '/magicast',         value: 'Included', note: 'No download' },
-      { name: 'On-It',             href: '/on-it',            value: 'Included', note: 'Office-aware AI' },
-      { name: 'On-Air',            href: '/on-air',           value: 'Included', note: 'Creator-era events' },
-      { name: 'Virtual Office',    href: '/virtual-office',   value: 'Included', note: 'Whole company, no commute' },
+      { name: 'Drop-In Meetings',  href: '#/feature/drop-in-meetings', value: 'Included', note: '8-minute average' },
+      { name: 'Theater',           href: '#/feature/theater',          value: 'Included', note: 'In your office' },
+      { name: 'Lobby',             href: '#/feature/lobby',            value: 'Included', note: 'Meet now or later' },
+      { name: 'AInbox',            href: '#/feature/ainbox',           value: 'Included', note: 'Prompt your meetings' },
+      { name: 'Magic Minutes',     href: '#/feature/magic-minutes',    value: 'Included', note: 'No annoying bot' },
+      { name: 'Magicast',          href: '#/feature/magicast',         value: 'Included', note: 'No download' },
+      { name: 'On-It',             href: '#/feature/on-it',            value: 'Included', note: 'Office-aware AI' },
+      { name: 'On-Air',            href: '#/feature/on-air',           value: 'Included', note: 'Creator-era events' },
+      { name: 'Virtual Office',    href: '#/feature/virtual-office',   value: 'Included', note: 'Whole company, no commute' },
     ],
-    total: { label: 'All 9, per active member', value: '$19.50/mo', tone: 'positive' },
+    total: { label: 'All 9, per active member', value: '$19.50/month', tone: 'positive' },
   },
-  footnote: 'List prices for the Business / Teams tier of each vendor, retrieved May 2026. SSO row reflects the average upcharge across the stack. Cancel anything to save anything.',
 };
 
 const STANDARD_PRICING_COMPARE = {
@@ -6297,15 +6295,15 @@ const STANDARD_PRICING_COMPARE = {
     title: 'Virtual Office Super Bundle',
     subtitle: 'AI-Powered, Integrated, $19.50/month',
     rows: [
-      { name: 'Drop-In Meetings', href: '/drop-in-meetings', value: 'Included', note: '8-minute average' },
-      { name: 'Theater', href: '/theater', value: 'Included', note: 'In your office' },
-      { name: 'Lobby', href: '/lobby', value: 'Included', note: 'Meet now or later' },
-      { name: 'AInbox', href: '/ainbox', value: 'Included', note: 'Prompt your meetings' },
-      { name: 'Magic Minutes', href: '/magic-minutes', value: 'Included', note: 'No annoying bot' },
-      { name: 'Magicast', href: '/magicast', value: 'Included', note: 'No download' },
-      { name: 'On-It', href: '/on-it', value: 'Included', note: 'Office-aware AI' },
-      { name: 'On-Air', href: '/on-air', value: 'Included', note: 'Creator-era events' },
-      { name: 'Virtual Office', href: '/virtual-office', value: 'Included', note: 'Whole company, no commute' },
+      { name: 'Drop-In Meetings', href: '#/feature/drop-in-meetings', value: 'Included', note: '8-minute average' },
+      { name: 'Theater', href: '#/feature/theater', value: 'Included', note: 'In your office' },
+      { name: 'Lobby', href: '#/feature/lobby', value: 'Included', note: 'Meet now or later' },
+      { name: 'AInbox', href: '#/feature/ainbox', value: 'Included', note: 'Prompt your meetings' },
+      { name: 'Magic Minutes', href: '#/feature/magic-minutes', value: 'Included', note: 'No annoying bot' },
+      { name: 'Magicast', href: '#/feature/magicast', value: 'Included', note: 'No download' },
+      { name: 'On-It', href: '#/feature/on-it', value: 'Included', note: 'Office-aware AI' },
+      { name: 'On-Air', href: '#/feature/on-air', value: 'Included', note: 'Creator-era events' },
+      { name: 'Virtual Office', href: '#/feature/virtual-office', value: 'Included', note: 'Whole company, no commute' },
     ],
     total: { label: '9 products for the price of 1', value: '$19.50/month', tone: 'positive' },
   },
@@ -7949,6 +7947,10 @@ export const FEATURES = {
   'pricing': {
     eyebrow: 'Pricing',
     title: 'One office. One price.',
+    seo: {
+      title: 'Pricing — Roam Virtual Office Platform',
+      description: 'Roam is $19.50 per active member, per month — nine integrated products, one bill, no contracts. Pay only for active members; guests are free.',
+    },
     hero: (
       <>
         <strong className="fp-hero-sub-strong">$19.50 per active member, per month.</strong>
@@ -7973,13 +7975,16 @@ export const FEATURES = {
         variant: 'price-offer',
         offer: {
           badge: 'Everything included',
-          name: 'Roam Office',
+          name: 'Virtual Office Platform',
           priceYear: '2026 rate',
           price: '$19.50',
           priceMetaTop: 'USD / month',
           priceMetaBottom: 'per active member',
-          priceNext: { year: '2027', value: '$20.88' },
-          sub: 'Everything your distributed team needs to work together, in one place.',
+          summary: (
+            <>
+              Everything your distributed team needs to work together, in one place. No credit card to start, set up in 5 minutes. Today’s rate is $19.50; it rises to <strong>$20.88</strong> in 2027 — published two years ahead so you can plan.
+            </>
+          ),
           bullets: [
             'All 9 products — Drop-In, Theater, AInbox, Magic Minutes, Magicast, On-It, On-Air, Lobby, Virtual Office.',
             'Pay only for active members. Inactive seats are free.',
@@ -7988,88 +7993,32 @@ export const FEATURES = {
             'Monthly billing. Cancel anytime.',
           ],
           ctas: [
-            { label: 'Book Demo' },
-            { label: 'Free Trial' },
+            { label: 'Book Demo', kind: 'secondary' },
+            { label: 'Free Trial', kind: 'secondary' },
           ],
-          fineprint: 'No credit card to start · set up in 10 minutes · current customers grandfathered against future rate changes.',
-          guarantee: '30-day money-back guarantee. No questions, no calls.',
+          guarantee: '9 out of 10 users feel more connected within 3 days — guaranteed.',
         },
       },
-      {
-        eyebrow: 'Why bundle',
-        title: 'Stop paying 9 vendors for one workday.',
-        desc: 'Your team is paying for Zoom, Slack, Calendly, Otter, Loom, Hopin, an AI notetaker, webinar software, and probably a real-estate lease — for tools that don’t talk to each other. Roam is all of it, integrated by default, for less than the price of any one of them.',
-        ctas: [
-          { label: 'Book Demo' },
-          { label: 'Free Trial' },
-        ],
-      },
       { ...STANDARD_PRICING_COMPARE_V2 },
-      {
-        variant: 'plans',
-        title: 'Same price. Different levels of service.',
-        desc: 'A 5-person startup and a 5,000-person Fortune 500 pay the same per-member rate. Enterprise just gets more handholding.',
-        price: '$19.50',
-        priceMeta: 'per active member / month',
-        plans: [
-          {
-            name: 'Self-Serve',
-            sub: 'For teams who want to be up and running by lunch.',
-            bullets: [
-              'All 9 products, in full',
-              'Pay only for active members',
-              'Free guests',
-              '14-day free trial · monthly billing',
-              'Email + community support',
-            ],
-            cta: 'Free Trial',
-          },
-          {
-            name: 'Enterprise',
-            sub: 'For procurement-led organizations (50+ seats).',
-            bullets: [
-              'Everything in Self-Serve',
-              'SSO / SAML + SCIM provisioning',
-              'SOC 2 Type II report + DPA + MSA',
-              'Dedicated CSM and white-glove onboarding',
-              'Annual billing, POs, and net-60 invoicing',
-            ],
-            cta: 'Book Demo',
-          },
-        ],
-      },
-      {
-        variant: 'cards',
-        cards: [
-          { title: 'Pay only for active members', desc: 'You’re only charged for members who joined a Roam meeting, used AInbox, or entered the office during the billing cycle. Inactive seats are free — and your admin sees the count daily.' },
-          { title: '14-day free trial', desc: 'Every new member gets 14 days of full Roam, free, before they show up on your bill. No credit card needed to start.' },
-          { title: 'Guests are always free', desc: 'External collaborators with guest badges never count toward your active-member total. Invite as many customers, partners, and prospects as you want.' },
-          { title: 'No annual contracts', desc: 'Monthly billing by default. Cancel anytime. Or lock in annual at the same rate and we’ll grandfather you against future price changes.' },
-          { title: 'One fair price for everyone', desc: 'A 5-person startup and a 5,000-person Fortune 500 pay the same per-member rate. No discount theater, no special pricing.' },
-          { title: '30-day money-back guarantee', desc: 'If Roam doesn’t replace at least three of your existing tools in the first month, email us — we’ll refund the month, no questions asked.' },
-        ],
-      },
-      {
-        type: 'quote',
-        quote: '“In two days, we were off Zoom. We’re ripping the band aid off — we’re on Roam, everybody’s moving around, they’re joking, they’re jumping in rooms. This is great. We’re handling stuff.”',
-        author: 'Jordan Vreeland',
-        role: 'President, Vreeland Real Estate',
-      },
       {
         variant: 'faq',
         title: 'Pricing FAQ',
         items: [
           {
             q: 'What counts as an “active” member?',
-            a: 'A member is active in a given billing cycle if they joined at least one Roam meeting, used AInbox, or entered the virtual office during that month. Members who don’t sign in aren’t charged. Your admin can see active-member counts daily in the admin panel.',
+            a: 'You’re only charged for members who actually use Roam during a given billing cycle. Members who don’t sign in that month aren’t counted, and your admin can see active-member counts in Roam Administration.',
+          },
+          {
+            q: 'Is there a free trial?',
+            a: 'Yes — every new member gets 14 days of full Roam, free, before they show up on your bill. No credit card needed to start.',
           },
           {
             q: 'Do you offer annual pricing?',
-            a: 'Yes — annual billing is available at the same $19.50/active member rate, with a price-lock guarantee through the next published rate change (2027: $20.88). If you prefer monthly with no commitment, that’s the default and the headline price.',
+            a: 'No — Roam is monthly billing only, with no annual commitments or contracts. You pay month to month and can cancel anytime. Rate changes are published two years in advance (2027: $20.88), so you can always plan ahead.',
           },
           {
             q: 'Is there really no enterprise tier?',
-            a: 'There’s no enterprise PRICE tier — every customer pays the same per-member rate. There IS an Enterprise service plan: SSO/SCIM, SOC 2 report, MSA/DPA, a dedicated CSM, custom onboarding, POs, and net-60 invoicing. Same price, more hands.',
+            a: 'No — there’s no enterprise tier and no enterprise pricing. Every customer pays the same per-member rate, whether you’re 5 people or 5,000. Enterprise capabilities like SSO and SCIM provisioning are included for everyone, not gated behind a separate plan.',
           },
           {
             q: 'How are guests charged?',
@@ -8077,7 +8026,7 @@ export const FEATURES = {
           },
           {
             q: 'Can I cancel anytime?',
-            a: 'Yes. Cancel in your admin panel and you won’t be billed for the next cycle. We also offer a 30-day money-back guarantee on your first month if Roam isn’t a fit.',
+            a: 'Yes. Roam is monthly with no commitment — cancel anytime and you won’t be billed for the next cycle.',
           },
           {
             q: 'How do you compare to negotiating Zoom + Slack + everything else?',
@@ -8085,7 +8034,33 @@ export const FEATURES = {
           },
         ],
       },
-      { variant: 'reviews' },
+      {
+        variant: 'review-cards',
+        title: 'What teams say after they switch',
+        reviews: [
+          {
+            quote: 'We started using Roam and replaced Slack, Zoom, Calendly and Read.ai for a 10th of the price.',
+            author: 'Agus Echague',
+            role: 'Co-Founder, Archie',
+            avatar: '/headshots/agus-echague.jpeg',
+            url: 'https://www.linkedin.com/feed/update/urn:li:activity:7308487541131751424',
+          },
+          {
+            quote: 'If you are a small or medium-sized startup and you aren’t using Roam, think again. Dirt cheap for what it does.',
+            author: 'Michael Arrington',
+            role: 'Founder, TechCrunch & Arrington Capital',
+            avatar: '/headshots/michael-arrington.jpg',
+            url: 'https://x.com/arrington/status/1857098914891006341',
+          },
+          {
+            quote: 'Roam has replaced my entire meeting stack — transcription, video meetings, calendar booking, screen recording. It bundles everyday tools at a fraction of the cost.',
+            author: 'Scott Murtaugh',
+            role: 'Founder, Growth Process Automation',
+            avatar: '/headshots/scott-murtaugh.jpg',
+            url: 'https://www.linkedin.com/posts/scottmurtaugh_ive-been-using-roam-and-n8n-months-so-activity-7407081968930013184-KYnV',
+          },
+        ],
+      },
     ],
   },
 };
@@ -8106,12 +8081,6 @@ export const FEATURE_ORDER = [
 function CompareColumn({ side, data }) {
   return (
     <div className={`fp-compare-col fp-compare-col-${side}${data.featured ? ' fp-compare-col-featured' : ''}`}>
-      {data.featured && (
-        <div className="fp-compare-glow" aria-hidden="true">
-          <SiriGlow active color="#46D08F" intensity={14} borderRadius={0} speedMult={1} />
-          <SiriGlow active color="#46D08F" intensity={14} borderRadius={0} speedMult={1} />
-        </div>
-      )}
       <div className="fp-compare-head">
         {data.badge && <div className="fp-compare-badge">{data.badge}</div>}
         <h3 className="fp-compare-col-title">{data.title}</h3>
@@ -8236,7 +8205,7 @@ function LazyVisualMount({ children, minHeight = 499, rootMargin = '600px 0px' }
   return <div ref={ref} style={{ minHeight, width: '100%' }} aria-hidden="true" />;
 }
 
-function FeatureSection({ eyebrow, title, subtitle, titleImage, desc, visual, icons, variant, cards, bullets, left, right, columns, columnsStyle, leadContent, items, itemMarker, flashcards, featureSlug, rows, body, subBullets, footer, mapAlign, interactive, offer, plans, footnote, ctas, trust, price, priceMeta }) {
+function FeatureSection({ eyebrow, title, subtitle, titleImage, desc, visual, icons, variant, cards, bullets, left, right, columns, columnsStyle, leadContent, items, itemMarker, flashcards, featureSlug, rows, body, subBullets, footer, mapAlign, interactive, offer, plans, footnote, ctas, trust, price, priceMeta, reviews }) {
   if (variant === 'reviews') {
     return <HomepageReviews limit={items?.length || 6} />;
   }
@@ -8356,7 +8325,6 @@ function FeatureSection({ eyebrow, title, subtitle, titleImage, desc, visual, ic
       <section className="fp-section fp-section-price-offer">
         <div className="fp-offer-card">
           <div className="fp-offer-left">
-            {offer.badge && <div className="fp-offer-badge">{offer.badge}</div>}
             <div className="fp-offer-name">{offer.name}</div>
             {offer.priceYear && <div className="fp-offer-price-year">{offer.priceYear}</div>}
             <div className="fp-offer-price-row">
@@ -8366,17 +8334,7 @@ function FeatureSection({ eyebrow, title, subtitle, titleImage, desc, visual, ic
                 <span className="fp-offer-price-meta-line">{offer.priceMetaBottom}</span>
               </span>
             </div>
-            {offer.priceNext && (
-              <div className="fp-offer-price-next">
-                <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                  <path d="M7 11V3M7 3L3.5 6.5M7 3l3.5 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-                <span>
-                  Goes up to <strong>{offer.priceNext.value}</strong> in {offer.priceNext.year} — lock in today’s rate.
-                </span>
-              </div>
-            )}
-            {offer.sub && <p className="fp-offer-sub">{offer.sub}</p>}
+            {offer.summary && <p className="fp-offer-summary">{offer.summary}</p>}
             {offer.ctas && offer.ctas.length > 0 && (
               <div className="fp-offer-ctas">
                 {offer.ctas.map((c, i) => (
@@ -8389,12 +8347,10 @@ function FeatureSection({ eyebrow, title, subtitle, titleImage, desc, visual, ic
                 ))}
               </div>
             )}
-            {offer.fineprint && <p className="fp-offer-fineprint">{offer.fineprint}</p>}
-            {offer.priceLock && <p className="fp-offer-pricelock">{offer.priceLock}</p>}
           </div>
           {offer.bullets && offer.bullets.length > 0 && (
             <div className="fp-offer-right">
-              <div className="fp-offer-right-label">What’s included</div>
+              {offer.badge && <div className="fp-offer-badge">{offer.badge}</div>}
               <ul className="fp-offer-bullets">
                 {offer.bullets.map((b, i) => (
                   <li key={i} className="fp-offer-bullet">
@@ -8463,25 +8419,73 @@ function FeatureSection({ eyebrow, title, subtitle, titleImage, desc, visual, ic
     );
   }
   if (variant === 'faq' && items && items.length > 0) {
+    const faqSchema = {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: items.map((it) => ({
+        '@type': 'Question',
+        name: it.q,
+        acceptedAnswer: { '@type': 'Answer', text: it.a },
+      })),
+    };
     return (
       <section className="fp-section fp-section-faq">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+        />
         <div className="fp-faq-head">
           {title && <h2 className="fp-faq-title">{title}</h2>}
           {desc && <p className="fp-faq-desc text-body">{desc}</p>}
         </div>
         <div className="fp-faq-list">
           {items.map((it, i) => (
-            <details key={i} className="fp-faq-item">
-              <summary className="fp-faq-q">
-                <span>{it.q}</span>
-                <span className="fp-faq-toggle" aria-hidden="true">
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                    <path d="M3 5.5l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </span>
-              </summary>
+            <div key={i} className="fp-faq-item">
+              <h3 className="fp-faq-q">{it.q}</h3>
               <div className="fp-faq-a text-body">{it.a}</div>
-            </details>
+            </div>
+          ))}
+        </div>
+      </section>
+    );
+  }
+  if (variant === 'review-cards' && reviews && reviews.length > 0) {
+    return (
+      <section className="fp-section fp-section-review-cards">
+        {title && <h2 className="fp-review-cards-title">{title}</h2>}
+        <div className="fp-review-cards-grid">
+          {reviews.map((r, i) => (
+            <figure key={i} className="fp-review-card">
+              <blockquote className="fp-review-card-quote">{r.quote}</blockquote>
+              <figcaption className="fp-review-card-author">
+                {r.avatar && (
+                  <img className="fp-review-card-avatar" src={r.avatar} alt="" width="40" height="40" loading="lazy" decoding="async" />
+                )}
+                <span className="fp-review-card-author-text">
+                  <span className="fp-review-card-name">{r.author}</span>
+                  <span className="fp-review-card-role">{r.role}</span>
+                </span>
+                {r.url && (
+                  <a
+                    className="fp-review-card-link"
+                    href={r.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`View ${r.author}’s post`}
+                  >
+                    {/x\.com|twitter\.com/.test(r.url) ? (
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <path d="M18.9 1.15h3.68l-8.04 9.19L24 22.85h-7.41l-5.8-7.58-6.64 7.58H.47l8.6-9.83L0 1.15h7.59l5.24 6.93 6.07-6.93zm-1.29 19.5h2.04L6.48 3.24H4.29l13.32 17.41z" />
+                      </svg>
+                    ) : (
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <path d="M20.45 20.45h-3.56v-5.57c0-1.33-.03-3.04-1.85-3.04-1.86 0-2.14 1.45-2.14 2.94v5.67H9.34V9h3.42v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.72V1.72C24 .77 23.2 0 22.22 0z" />
+                      </svg>
+                    )}
+                  </a>
+                )}
+              </figcaption>
+            </figure>
           ))}
         </div>
       </section>
@@ -8699,22 +8703,24 @@ function PricingStickyCTA() {
   }, [visible]);
 
   useEffect(() => {
-    const onScroll = () => {
-      const scrolled = window.scrollY > 600;
-      const footerBanner = document.querySelector('.fp-footer-cta');
-      let footerVisible = false;
-      if (footerBanner) {
-        const r = footerBanner.getBoundingClientRect();
-        footerVisible = r.top < window.innerHeight - 80;
-      }
-      setVisible(scrolled && !footerVisible);
+    let raf = 0;
+    // Fade in once past the hero, then stay pinned — including at the
+    // very bottom of the page over the footer. rAF-throttled so the
+    // scroll listener does at most one read per frame.
+    const compute = () => {
+      raf = 0;
+      setVisible(window.scrollY > 600);
     };
-    onScroll();
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(compute);
+    };
+    compute();
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', onScroll);
     return () => {
       window.removeEventListener('scroll', onScroll);
       window.removeEventListener('resize', onScroll);
+      if (raf) cancelAnimationFrame(raf);
     };
   }, []);
 
@@ -8766,6 +8772,23 @@ function FeaturePageInner({ slug }) {
       window.removeEventListener('storage', syncHandler);
     };
   }, []);
+  // Per-page SEO: set document title + meta description from the
+  // feature's `seo` block (falling back to its title), restoring the
+  // originals on unmount so navigating away doesn't leave them stale.
+  useEffect(() => {
+    if (!feature) return;
+    const prevTitle = document.title;
+    const metaDesc = document.querySelector('meta[name="description"]');
+    const prevDesc = metaDesc ? metaDesc.getAttribute('content') : null;
+    document.title = feature.seo?.title || `${feature.title} — Roam`;
+    if (metaDesc && feature.seo?.description) {
+      metaDesc.setAttribute('content', feature.seo.description);
+    }
+    return () => {
+      document.title = prevTitle;
+      if (metaDesc && prevDesc != null) metaDesc.setAttribute('content', prevDesc);
+    };
+  }, [feature]);
   useEffect(() => {
     // If the URL points at a specific section (#/feature/<slug>/<section-slug>),
     // scroll to that section after layout settles. Otherwise jump to top.
