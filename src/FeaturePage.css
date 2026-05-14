@@ -6675,6 +6675,31 @@
   background: var(--graphite-50);
 }
 
+/* pricing-v2 — highlight the featured (Roam) column with an animated
+   SiriGlow perimeter instead of a different surface color. */
+.fp-page[data-slug="pricing-v2"] .fp-compare-col-featured {
+  position: relative;
+  overflow: hidden;
+}
+.fp-compare-glow {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+/* Two stacked SiriGlows for extra intensity. Each emits halo, main,
+   core canvases (every 3rd is the sharp core stroke) — drop the cores
+   so there's no hard border line. */
+.fp-compare-glow canvas:nth-child(3n) {
+  display: none;
+}
+/* Keep the column's content above the glow. */
+.fp-compare-col-featured > .fp-compare-head,
+.fp-compare-col-featured > .fp-compare-rows {
+  position: relative;
+  z-index: 1;
+}
+
 .fp-compare-col-left .fp-compare-row-price,
 .fp-compare-col-left .fp-compare-row-note,
 .fp-compare-col-left .fp-compare-row-name {
@@ -10775,4 +10800,646 @@ button.fp-lbk-day {
     z-index: auto !important;
     margin: 0 auto !important;
   }
+}
+
+
+/* ============================================================
+   Pricing v2 — #/pricing-v2
+   ============================================================ */
+
+/* Dev-settings toolbar — on pricing-v2 it floats bottom-left and
+   collides with the full-width sticky CTA. Dock it into the
+   right-side control stack instead, just below the theme + grid
+   capsules (each 60px tall, 8px gap → stack half-height is 64px). */
+body:has(.fp-page[data-slug="pricing-v2"]) .toolbar {
+  bottom: auto;
+  left: auto;
+  right: 16px;
+  top: calc(50% + 72px);
+  transform: none;
+  height: auto;
+}
+body:has(.fp-page[data-slug="pricing-v2"]) .dev-settings-btn {
+  width: 32px;
+  height: 32px;
+  background: var(--background-primary);
+  border: 0.5px solid var(--border);
+  border-radius: 50%;
+}
+/* Menu opens from the button's left edge by default — off-screen now
+   that the button sits at the right edge. Flip it to right-aligned. */
+body:has(.fp-page[data-slug="pricing-v2"]) .dev-settings-menu {
+  left: auto;
+  right: 0;
+}
+
+/* Hero — hide the empty hero stage and tighten the hero spacing,
+   same as the original pricing page. The hero CTAs are hidden too:
+   the offer card and sticky bar carry the conversion actions. */
+.fp-page[data-slug="pricing-v2"] .fp-hero-visual { display: none; }
+.fp-page[data-slug="pricing-v2"] .fp-hero .fp-cta-row { display: none; }
+.fp-page[data-slug="pricing-v2"] .fp-hero {
+  padding-bottom: 24px;
+  margin-bottom: 0;
+}
+.fp-page[data-slug="pricing-v2"] .fp-hero-sub-strong {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+/* Trust strip — small, secondary, centered. Single line of badges
+   separated by dot dividers, no decoration. */
+.fp-section-trust {
+  padding-top: 24px;
+  padding-bottom: 24px;
+  justify-items: center;
+}
+.fp-trust-list {
+  grid-column: 1 / -1;
+  width: 100%;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  column-gap: 24px;
+  row-gap: 8px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  letter-spacing: -0.1px;
+}
+.fp-trust-item {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+.fp-trust-dot {
+  flex-shrink: 0;
+  width: 3px;
+  height: 3px;
+  border-radius: 999px;
+  background: var(--text-tertiary, var(--text-secondary));
+  opacity: 0.6;
+}
+
+/* ---- Price offer — the big hero offer card ---- */
+.fp-section-price-offer {
+  padding-top: 24px;
+  padding-bottom: 48px;
+  justify-items: center;
+}
+.fp-offer-card {
+  grid-column: 1 / -1;
+  width: 100%;
+  display: flex;
+  align-items: stretch;
+  background: var(--graphite-800);
+  border: 0.5px solid var(--border);
+  box-sizing: border-box;
+  overflow: hidden;
+}
+[data-theme="light"] .fp-offer-card {
+  background: var(--graphite-50);
+}
+.fp-offer-left {
+  flex: 1 1 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 40px;
+  box-sizing: border-box;
+}
+.fp-offer-right {
+  flex: 1 1 50%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 40px;
+  box-sizing: border-box;
+  border-left: 0.5px solid var(--border);
+  background: var(--background-primary);
+}
+.fp-offer-badge {
+  font-family: var(--font-family-primary);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  color: var(--solid-black);
+  background: var(--accent);
+}
+.fp-offer-name {
+  font-family: 'Possibility', serif;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  text-transform: uppercase;
+  color: var(--text-primary);
+}
+.fp-offer-price-year {
+  font-family: var(--font-family-primary);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-bottom: -4px;
+}
+.fp-offer-price-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.fp-offer-price {
+  font-family: 'Possibility', serif;
+  font-size: clamp(40px, 3.6vw, 52px);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -1.2px;
+  color: var(--text-primary);
+}
+.fp-offer-price-next {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  line-height: 1.4;
+  letter-spacing: -0.1px;
+  color: var(--text-secondary);
+}
+.fp-offer-price-next svg {
+  flex-shrink: 0;
+  color: var(--text-positive, var(--accent));
+}
+.fp-offer-price-next strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+.fp-offer-price-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.fp-offer-price-meta-line {
+  font-size: 12px;
+  line-height: 1.3;
+  color: var(--text-secondary);
+  letter-spacing: -0.05px;
+}
+.fp-offer-sub {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.45;
+  letter-spacing: -0.1px;
+  color: var(--text-secondary);
+}
+.fp-offer-ctas {
+  display: flex;
+  gap: 12px;
+  margin-top: 6px;
+  width: 100%;
+}
+.fp-offer-ctas .sc-promo-btn {
+  flex: 1;
+}
+.fp-offer-fineprint,
+.fp-offer-pricelock {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--text-secondary);
+  letter-spacing: -0.05px;
+}
+.fp-offer-pricelock {
+  margin-top: auto;
+  padding-top: 4px;
+  opacity: 0.85;
+}
+.fp-offer-right-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.fp-offer-bullets {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  flex: 1;
+}
+.fp-offer-bullet {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 14px;
+  line-height: 1.45;
+  letter-spacing: -0.1px;
+  color: var(--text-primary);
+}
+.fp-offer-check {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  color: var(--text-positive, var(--accent));
+}
+.fp-offer-guarantee {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  letter-spacing: -0.1px;
+  color: var(--text-secondary);
+}
+
+/* Secondary CTA button — outlined, neutral. */
+.sc-promo-btn-secondary {
+  background: transparent;
+  color: var(--text-primary);
+  border: 0.5px solid var(--border);
+  box-shadow: inset 0 0 0 0.5px var(--border);
+}
+[data-theme="light"] .sc-promo-btn-secondary {
+  background: transparent;
+  color: var(--text-primary);
+}
+
+/* ---- Plans — Self-Serve / Enterprise side by side ---- */
+.fp-section-plans {
+  padding-top: 64px;
+  padding-bottom: 64px;
+  row-gap: 40px;
+}
+.fp-plans-head {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  gap: 20px;
+}
+.fp-plans-title {
+  font-family: 'Possibility', 'Inter', serif;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  text-wrap: balance;
+  color: var(--text-primary);
+  margin: 0;
+}
+.fp-plans-desc {
+  margin: 0;
+  color: var(--text-secondary);
+}
+.fp-plans-price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-top: 4px;
+}
+.fp-plans-price {
+  font-family: 'Possibility', serif;
+  font-size: clamp(36px, 3.4vw, 48px);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -1px;
+  color: var(--text-primary);
+}
+.fp-plans-price-meta {
+  font-size: 13px;
+  line-height: 1.3;
+  letter-spacing: -0.05px;
+  color: var(--text-secondary);
+}
+.fp-plans-grid {
+  display: contents;
+}
+.fp-plan-card {
+  grid-column: span 6;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 32px;
+  background: var(--graphite-800);
+  border: 0.5px solid var(--border);
+  box-sizing: border-box;
+}
+[data-theme="light"] .fp-plan-card {
+  background: var(--graphite-50);
+}
+.fp-plan-head {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-bottom: 24px;
+  border-bottom: 0.5px solid var(--border);
+}
+.fp-plan-badge {
+  align-self: flex-start;
+  font-family: var(--font-family-primary);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  margin-bottom: 4px;
+  color: var(--solid-black);
+  background: var(--accent);
+  border-radius: var(--radius-sm);
+  corner-shape: superellipse(1.6);
+}
+.fp-plan-name {
+  margin: 0;
+  font-family: 'Possibility', serif;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.4px;
+  text-transform: uppercase;
+  color: var(--text-primary);
+}
+.fp-plan-sub {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  letter-spacing: -0.1px;
+  color: var(--text-secondary);
+}
+.fp-plan-bullets {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+.fp-plan-bullet {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+  line-height: 1.45;
+  letter-spacing: -0.05px;
+  color: var(--text-secondary);
+}
+.fp-plan-check {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  color: var(--text-positive, var(--accent));
+}
+.fp-plan-cta-row {
+  display: flex;
+  margin-top: 4px;
+}
+.fp-plan-cta-row .sc-promo-btn {
+  width: 100%;
+}
+
+/* ---- Compare footnote ---- */
+.fp-compare-footnote {
+  grid-column: 1 / -1;
+  margin: 16px 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+  letter-spacing: -0.05px;
+  color: var(--text-secondary);
+  opacity: 0.75;
+  max-width: 92ch;
+}
+
+/* ---- FAQ ---- */
+.fp-section-faq {
+  padding-top: 96px;
+  padding-bottom: 96px;
+  row-gap: 32px;
+}
+.fp-faq-head {
+  grid-column: 1 / span 6;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: sticky;
+  top: 96px;
+  align-self: start;
+  /* Match the first FAQ row's top padding so the label lines up
+     with the first question, not the list's border-top edge. */
+  padding-top: 20px;
+}
+.fp-faq-title {
+  margin: 0;
+  font-family: 'Possibility', serif;
+  font-size: clamp(16px, 1.4vw, 20px);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.4px;
+  text-transform: uppercase;
+  text-wrap: balance;
+  color: var(--text-primary);
+}
+.fp-faq-desc {
+  margin: 0;
+  color: var(--text-secondary);
+}
+.fp-faq-list {
+  grid-column: 7 / span 6;
+  display: flex;
+  flex-direction: column;
+}
+.fp-faq-item {
+  border-top: 0.5px solid var(--border);
+  padding: 20px 0;
+}
+.fp-faq-item:last-child {
+  border-bottom: 0.5px solid var(--border);
+}
+.fp-faq-q {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: -0.2px;
+  color: var(--text-primary);
+}
+.fp-faq-q::-webkit-details-marker { display: none; }
+.fp-faq-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  color: var(--text-secondary);
+  transition: transform 180ms ease;
+  flex-shrink: 0;
+}
+.fp-faq-item[open] .fp-faq-toggle {
+  transform: rotate(180deg);
+}
+.fp-faq-a {
+  margin-top: 12px;
+  color: var(--text-secondary);
+  max-width: 68ch;
+}
+
+/* ---- Sticky bottom CTA ---- */
+.fp-sticky-cta {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 90;
+  opacity: 0;
+  pointer-events: none;
+  background: var(--bg-surface-raised);
+  border-top: 0.5px solid var(--border);
+}
+.fp-sticky-cta.is-visible {
+  opacity: 1;
+  pointer-events: auto;
+  animation: fp-sticky-cta-in 320ms ease both;
+}
+.fp-sticky-cta.is-leaving {
+  opacity: 0;
+  pointer-events: none;
+  animation: fp-sticky-cta-out 320ms ease both;
+}
+@keyframes fp-sticky-cta-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes fp-sticky-cta-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+.fp-sticky-cta-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  /* Align to the navbar, not the centered page grid: nav labels sit
+     at mx-4(16) + px-3(12) + px-5(20) = 48px; the nav buttons' visual
+     right edge sits at mx-4(16) + px-3(12) = 28px. */
+  padding: 14px 28px 14px 48px;
+  box-sizing: border-box;
+}
+.fp-sticky-cta-lead {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+.fp-sticky-cta-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.fp-sticky-cta-title {
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.15px;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.fp-sticky-cta-price {
+  font-weight: 700;
+  color: var(--text-positive, var(--accent));
+}
+.fp-sticky-cta-sub {
+  font-size: 12px;
+  letter-spacing: -0.05px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.fp-sticky-cta-ctas {
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+/* ---- Pricing v2 mobile ---- */
+@media (max-width: 768px) {
+  .fp-page[data-slug="pricing-v2"] .fp-hero {
+    padding-bottom: 16px;
+  }
+  .fp-section-trust { padding: 12px var(--grid-margin); }
+  .fp-trust-list { font-size: 12px; column-gap: 16px; justify-content: center; }
+
+  .fp-section-price-offer {
+    padding-top: 16px;
+    padding-bottom: 32px;
+  }
+  .fp-offer-card {
+    grid-column: 1 / -1;
+    flex-direction: column;
+  }
+  .fp-offer-left,
+  .fp-offer-right {
+    flex: 1 1 auto;
+    padding: 24px 20px;
+  }
+  .fp-offer-right {
+    border-left: 0;
+    border-top: 0.5px solid var(--border);
+  }
+  .fp-offer-price { font-size: 44px; letter-spacing: -1px; }
+  .fp-offer-price-meta-line { font-size: 12px; }
+  .fp-offer-sub { font-size: 14px; }
+  .fp-offer-bullet { font-size: 13px; }
+  .fp-offer-ctas { flex-direction: column; width: 100%; }
+  .fp-offer-ctas .sc-promo-btn { width: 100%; }
+  .fp-offer-pricelock { margin-top: 8px; }
+
+  .fp-section-plans { padding: 40px var(--grid-margin); row-gap: 24px; }
+  .fp-plans-head { gap: 8px; }
+  .fp-plan-card { grid-column: 1 / -1; padding: 24px; }
+  .fp-plans-price { font-size: 36px; }
+
+  .fp-compare-footnote { padding: 0 var(--grid-margin); font-size: 11px; }
+
+  .fp-section-faq { padding: 48px var(--grid-margin); row-gap: 24px; }
+  .fp-faq-head {
+    grid-column: 1 / -1;
+    position: static;
+  }
+  .fp-faq-list { grid-column: 1 / -1; }
+  .fp-faq-q { font-size: 15px; }
+
+  .fp-sticky-cta-inner {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 12px var(--grid-margin);
+  }
+  .fp-sticky-cta-text { text-align: left; }
+  .fp-sticky-cta-title { white-space: normal; font-size: 13px; }
+  .fp-sticky-cta-sub { white-space: normal; font-size: 11px; }
+  .fp-sticky-cta-ctas { width: 100%; }
+  .fp-sticky-cta-ctas .sc-promo-btn { flex: 1; }
 }

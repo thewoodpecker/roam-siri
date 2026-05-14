@@ -1627,10 +1627,39 @@
 .pa-popup {
   position: absolute;
   z-index: 50;
-  width: 880px;
-  height: 700px;
   animation: ag-popup-in 200ms ease;
 }
+
+/* 8-way resize handles — thick edges and chunky corner pads. Sit
+   fully inside .pa-popup so the parent's overflow:hidden never
+   clips the hit target, and overlap the visible window border for
+   an intuitive grab. z-index sits above the inner .pa-window so
+   clicks are captured here, not by the window's own mousedown. */
+.pa-resize {
+  position: absolute;
+  display: block;
+  z-index: 60;
+  pointer-events: auto;
+}
+.pa-resize-n { top: 0; left: 18px; right: 18px; height: 12px; cursor: ns-resize; }
+.pa-resize-s { bottom: 0; left: 18px; right: 18px; height: 12px; cursor: ns-resize; }
+.pa-resize-e { right: 0; top: 18px; bottom: 18px; width: 12px; cursor: ew-resize; }
+.pa-resize-w { left: 0; top: 18px; bottom: 18px; width: 12px; cursor: ew-resize; }
+.pa-resize-ne { top: 0; right: 0; width: 18px; height: 18px; cursor: nesw-resize; }
+.pa-resize-nw { top: 0; left: 0; width: 18px; height: 18px; cursor: nwse-resize; }
+.pa-resize-se {
+  bottom: 0;
+  right: 0;
+  width: 20px;
+  height: 20px;
+  cursor: nwse-resize;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding: 3px;
+  color: var(--text-secondary);
+}
+.pa-resize-sw { bottom: 0; left: 0; width: 18px; height: 18px; cursor: nesw-resize; }
 .pa-window {
   width: 100%;
   height: 100%;

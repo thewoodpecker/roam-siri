@@ -122,7 +122,7 @@ function createConicGradient(ctx, cx, cy, params, angle) {
   return grad;
 }
 
-export default function SiriGlow({ active, color = '#EB6139', intensity = 1, width, height, borderRadius = 12, cornerExponent }) {
+export default function SiriGlow({ active, color = '#EB6139', intensity = 1, width, height, borderRadius = 12, cornerExponent, speedMult = 1 }) {
   // Three stacked canvases: halo (heavy blur), main (medium blur), core
   // (no blur). Blur is applied via CSS `filter: blur(...)` on each canvas
   // element rather than `ctx.filter`, because Safari does not support the
@@ -190,7 +190,7 @@ export default function SiriGlow({ active, color = '#EB6139', intensity = 1, wid
     const iScale = Math.min(1 + (iRaw - 1) * 0.12, 2.5);
     const iOpacity = Math.min(1 + (iRaw - 1) * 0.03, 1.3);
 
-    const rotSpeed = (60 + Math.min(iRaw, 8) * 15) * Math.PI / 180;
+    const rotSpeed = (60 + Math.min(iRaw, 8) * 15) * Math.PI / 180 * speedMult;
     angleRef.current += dt * rotSpeed;
     const angle = angleRef.current;
 
@@ -228,7 +228,7 @@ export default function SiriGlow({ active, color = '#EB6139', intensity = 1, wid
     drawLayer(core, 3 * iScale, 1.0 * iOpacity);
 
     animRef.current = requestAnimationFrame(render);
-  }, [active, borderRadius, cornerExponent]);
+  }, [active, borderRadius, cornerExponent, speedMult]);
 
   useEffect(() => {
     if (active) {

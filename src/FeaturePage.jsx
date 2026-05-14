@@ -42,6 +42,7 @@ function RightControls({ theme, onToggleTheme, showGrid, onToggleGrid }) {
 }
 import Navbar from './Navbar';
 import Footer from './Footer';
+import SiriGlow from './SiriGlow';
 import FloatingCTA from './FloatingCTA';
 import FooterCTA from './FooterCTA';
 import AInbox, { TypingIndicator } from './AInbox';
@@ -6230,6 +6231,48 @@ function BootChatPreview() {
 /* Pricing comparison shared across feature pages — Legacy stack vs. the
    bundled Virtual Office. Page-agnostic so it can sit at the bottom of
    every feature page below the social-post reviews. */
+// Cleaned-up compare table for pricing v2 — Cubicle removed, more
+// credible (non-round) competitor prices, all list prices footnoted
+// with a date for procurement credibility.
+const STANDARD_PRICING_COMPARE_V2 = {
+  variant: 'compare',
+  left: {
+    title: 'Your current stack',
+    subtitle: '9 vendors. Nothing talks to each other. $268.50/month per person.',
+    rows: [
+      { name: 'Zoom Business',           value: '$26.99/mo', note: 'Endless 30-minute meetings' },
+      { name: 'Slack Business+',         value: '$32.50/mo', note: 'No real meetings' },
+      { name: 'Hopin / Webinar',         value: '$24.50/mo', note: 'Outside your office' },
+      { name: 'Calendly Teams',          value: '$16.00/mo', note: 'Can’t meet now' },
+      { name: 'Otter for Teams',         value: '$28.99/mo', note: 'Annoying bot in every call' },
+      { name: 'Loom Business',           value: '$20.00/mo', note: 'Yet another extension' },
+      { name: 'AI meeting assistant',    value: '$49.99/mo', note: 'No office awareness' },
+      { name: 'Zoom Webinars',           value: '$83.00/mo', note: 'Yahoo-era webinars' },
+      { name: 'SSO + provisioning',      value: '$6.50/mo',  note: 'Charged per seat by every vendor' },
+    ],
+    total: { label: 'Total per person, per month', value: '$268.50/mo', tone: 'negative' },
+  },
+  right: {
+    featured: true,
+    badge: 'Save 93%',
+    title: 'Virtual Office Platform',
+    subtitle: '9 products. One bill. AI in every surface. $19.50/month per active member.',
+    rows: [
+      { name: 'Drop-In Meetings',  href: '/drop-in-meetings', value: 'Included', note: '8-minute average' },
+      { name: 'Theater',           href: '/theater',          value: 'Included', note: 'In your office' },
+      { name: 'Lobby',             href: '/lobby',            value: 'Included', note: 'Meet now or later' },
+      { name: 'AInbox',            href: '/ainbox',           value: 'Included', note: 'Prompt your meetings' },
+      { name: 'Magic Minutes',     href: '/magic-minutes',    value: 'Included', note: 'No annoying bot' },
+      { name: 'Magicast',          href: '/magicast',         value: 'Included', note: 'No download' },
+      { name: 'On-It',             href: '/on-it',            value: 'Included', note: 'Office-aware AI' },
+      { name: 'On-Air',            href: '/on-air',           value: 'Included', note: 'Creator-era events' },
+      { name: 'Virtual Office',    href: '/virtual-office',   value: 'Included', note: 'Whole company, no commute' },
+    ],
+    total: { label: 'All 9, per active member', value: '$19.50/mo', tone: 'positive' },
+  },
+  footnote: 'List prices for the Business / Teams tier of each vendor, retrieved May 2026. SSO row reflects the average upcharge across the stack. Cancel anything to save anything.',
+};
+
 const STANDARD_PRICING_COMPARE = {
   variant: 'compare',
   left: {
@@ -7903,6 +7946,149 @@ export const FEATURES = {
       STANDARD_PRICING_COMPARE,
     ],
   },
+  'pricing-v2': {
+    eyebrow: 'Pricing',
+    title: 'One office. One price.',
+    hero: (
+      <>
+        <strong className="fp-hero-sub-strong">$19.50 per active member, per month.</strong>
+        {' '}
+        9 integrated products. No contracts. Pay only for the people who actually use it. Guests are free.
+      </>
+    ),
+    visual: null,
+    sections: [
+      {
+        variant: 'trust-strip',
+        trust: [
+          '4.9 ★ on G2',
+          'SOC 2 Type II',
+          'GDPR-ready',
+          '8-minute average meeting',
+          'From the team behind Yext',
+          'Used by distributed teams in 40+ countries',
+        ],
+      },
+      {
+        variant: 'price-offer',
+        offer: {
+          badge: 'Everything included',
+          name: 'Roam Office',
+          priceYear: '2026 rate',
+          price: '$19.50',
+          priceMetaTop: 'USD / month',
+          priceMetaBottom: 'per active member',
+          priceNext: { year: '2027', value: '$20.88' },
+          sub: 'Everything your distributed team needs to work together, in one place.',
+          bullets: [
+            'All 9 products — Drop-In, Theater, AInbox, Magic Minutes, Magicast, On-It, On-Air, Lobby, Virtual Office.',
+            'Pay only for active members. Inactive seats are free.',
+            'Guests are free — bring in customers, prospects, and partners.',
+            'AI built into every surface. No “AI add-on” SKU.',
+            'Monthly billing. Cancel anytime.',
+          ],
+          ctas: [
+            { label: 'Book Demo' },
+            { label: 'Free Trial' },
+          ],
+          fineprint: 'No credit card to start · set up in 10 minutes · current customers grandfathered against future rate changes.',
+          guarantee: '30-day money-back guarantee. No questions, no calls.',
+        },
+      },
+      {
+        eyebrow: 'Why bundle',
+        title: 'Stop paying 9 vendors for one workday.',
+        desc: 'Your team is paying for Zoom, Slack, Calendly, Otter, Loom, Hopin, an AI notetaker, webinar software, and probably a real-estate lease — for tools that don’t talk to each other. Roam is all of it, integrated by default, for less than the price of any one of them.',
+        ctas: [
+          { label: 'Book Demo' },
+          { label: 'Free Trial' },
+        ],
+      },
+      { ...STANDARD_PRICING_COMPARE_V2 },
+      {
+        variant: 'plans',
+        title: 'Same price. Different levels of service.',
+        desc: 'A 5-person startup and a 5,000-person Fortune 500 pay the same per-member rate. Enterprise just gets more handholding.',
+        price: '$19.50',
+        priceMeta: 'per active member / month',
+        plans: [
+          {
+            name: 'Self-Serve',
+            sub: 'For teams who want to be up and running by lunch.',
+            bullets: [
+              'All 9 products, in full',
+              'Pay only for active members',
+              'Free guests',
+              '14-day free trial · monthly billing',
+              'Email + community support',
+            ],
+            cta: 'Free Trial',
+          },
+          {
+            name: 'Enterprise',
+            sub: 'For procurement-led organizations (50+ seats).',
+            bullets: [
+              'Everything in Self-Serve',
+              'SSO / SAML + SCIM provisioning',
+              'SOC 2 Type II report + DPA + MSA',
+              'Dedicated CSM and white-glove onboarding',
+              'Annual billing, POs, and net-60 invoicing',
+            ],
+            cta: 'Book Demo',
+          },
+        ],
+      },
+      {
+        variant: 'cards',
+        cards: [
+          { title: 'Pay only for active members', desc: 'You’re only charged for members who joined a Roam meeting, used AInbox, or entered the office during the billing cycle. Inactive seats are free — and your admin sees the count daily.' },
+          { title: '14-day free trial', desc: 'Every new member gets 14 days of full Roam, free, before they show up on your bill. No credit card needed to start.' },
+          { title: 'Guests are always free', desc: 'External collaborators with guest badges never count toward your active-member total. Invite as many customers, partners, and prospects as you want.' },
+          { title: 'No annual contracts', desc: 'Monthly billing by default. Cancel anytime. Or lock in annual at the same rate and we’ll grandfather you against future price changes.' },
+          { title: 'One fair price for everyone', desc: 'A 5-person startup and a 5,000-person Fortune 500 pay the same per-member rate. No discount theater, no special pricing.' },
+          { title: '30-day money-back guarantee', desc: 'If Roam doesn’t replace at least three of your existing tools in the first month, email us — we’ll refund the month, no questions asked.' },
+        ],
+      },
+      {
+        type: 'quote',
+        quote: '“In two days, we were off Zoom. We’re ripping the band aid off — we’re on Roam, everybody’s moving around, they’re joking, they’re jumping in rooms. This is great. We’re handling stuff.”',
+        author: 'Jordan Vreeland',
+        role: 'President, Vreeland Real Estate',
+      },
+      {
+        variant: 'faq',
+        title: 'Pricing FAQ',
+        items: [
+          {
+            q: 'What counts as an “active” member?',
+            a: 'A member is active in a given billing cycle if they joined at least one Roam meeting, used AInbox, or entered the virtual office during that month. Members who don’t sign in aren’t charged. Your admin can see active-member counts daily in the admin panel.',
+          },
+          {
+            q: 'Do you offer annual pricing?',
+            a: 'Yes — annual billing is available at the same $19.50/active member rate, with a price-lock guarantee through the next published rate change (2027: $20.88). If you prefer monthly with no commitment, that’s the default and the headline price.',
+          },
+          {
+            q: 'Is there really no enterprise tier?',
+            a: 'There’s no enterprise PRICE tier — every customer pays the same per-member rate. There IS an Enterprise service plan: SSO/SCIM, SOC 2 report, MSA/DPA, a dedicated CSM, custom onboarding, POs, and net-60 invoicing. Same price, more hands.',
+          },
+          {
+            q: 'How are guests charged?',
+            a: 'They aren’t. Anyone with a guest badge — customers, prospects, partners, candidates — can join your Roam without taking a paid seat. There’s no cap on guests.',
+          },
+          {
+            q: 'Can I cancel anytime?',
+            a: 'Yes. Cancel in your admin panel and you won’t be billed for the next cycle. We also offer a 30-day money-back guarantee on your first month if Roam isn’t a fit.',
+          },
+          {
+            q: 'How do you compare to negotiating Zoom + Slack + everything else?',
+            a: 'You don’t need to negotiate. Roam is $19.50/active member, full stop — typically 90%+ less than the SaaS stack it replaces. If you want a side-by-side ROI calculation for your team size, our team can build one in under a day.',
+          },
+        ],
+      },
+      { variant: 'reviews' },
+    ],
+  },
+
   'pricing': {
     eyebrow: 'Virtual Office',
     title: 'Save 93% With Our 9 for 1 Bundle',
@@ -7973,6 +8159,12 @@ export const FEATURE_ORDER = [
 function CompareColumn({ side, data }) {
   return (
     <div className={`fp-compare-col fp-compare-col-${side}${data.featured ? ' fp-compare-col-featured' : ''}`}>
+      {data.featured && (
+        <div className="fp-compare-glow" aria-hidden="true">
+          <SiriGlow active color="#46D08F" intensity={14} borderRadius={0} speedMult={1} />
+          <SiriGlow active color="#46D08F" intensity={14} borderRadius={0} speedMult={1} />
+        </div>
+      )}
       <div className="fp-compare-head">
         {data.badge && <div className="fp-compare-badge">{data.badge}</div>}
         <h3 className="fp-compare-col-title">{data.title}</h3>
@@ -8097,7 +8289,7 @@ function LazyVisualMount({ children, minHeight = 499, rootMargin = '600px 0px' }
   return <div ref={ref} style={{ minHeight, width: '100%' }} aria-hidden="true" />;
 }
 
-function FeatureSection({ eyebrow, title, subtitle, titleImage, desc, visual, icons, variant, cards, bullets, left, right, columns, columnsStyle, leadContent, items, itemMarker, flashcards, featureSlug, rows, body, subBullets, footer, mapAlign, interactive }) {
+function FeatureSection({ eyebrow, title, subtitle, titleImage, desc, visual, icons, variant, cards, bullets, left, right, columns, columnsStyle, leadContent, items, itemMarker, flashcards, featureSlug, rows, body, subBullets, footer, mapAlign, interactive, offer, plans, footnote, ctas, trust, price, priceMeta }) {
   if (variant === 'reviews') {
     return <HomepageReviews limit={items?.length || 6} />;
   }
@@ -8208,6 +8400,157 @@ function FeatureSection({ eyebrow, title, subtitle, titleImage, desc, visual, ic
       <section className="fp-section fp-section-compare">
         <CompareColumn side="left" data={left} />
         <CompareColumn side="right" data={right} />
+        {footnote && <p className="fp-compare-footnote">{footnote}</p>}
+      </section>
+    );
+  }
+  if (variant === 'price-offer' && offer) {
+    return (
+      <section className="fp-section fp-section-price-offer">
+        <div className="fp-offer-card">
+          <div className="fp-offer-left">
+            {offer.badge && <div className="fp-offer-badge">{offer.badge}</div>}
+            <div className="fp-offer-name">{offer.name}</div>
+            {offer.priceYear && <div className="fp-offer-price-year">{offer.priceYear}</div>}
+            <div className="fp-offer-price-row">
+              <span className="fp-offer-price">{offer.price}</span>
+              <span className="fp-offer-price-meta">
+                <span className="fp-offer-price-meta-line">{offer.priceMetaTop}</span>
+                <span className="fp-offer-price-meta-line">{offer.priceMetaBottom}</span>
+              </span>
+            </div>
+            {offer.priceNext && (
+              <div className="fp-offer-price-next">
+                <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                  <path d="M7 11V3M7 3L3.5 6.5M7 3l3.5 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <span>
+                  Goes up to <strong>{offer.priceNext.value}</strong> in {offer.priceNext.year} — lock in today’s rate.
+                </span>
+              </div>
+            )}
+            {offer.sub && <p className="fp-offer-sub">{offer.sub}</p>}
+            {offer.ctas && offer.ctas.length > 0 && (
+              <div className="fp-offer-ctas">
+                {offer.ctas.map((c, i) => (
+                  <button
+                    key={i}
+                    className={`sc-promo-btn ${c.kind === 'secondary' ? 'sc-promo-btn-secondary' : ''}`}
+                  >
+                    {c.label}
+                  </button>
+                ))}
+              </div>
+            )}
+            {offer.fineprint && <p className="fp-offer-fineprint">{offer.fineprint}</p>}
+            {offer.priceLock && <p className="fp-offer-pricelock">{offer.priceLock}</p>}
+          </div>
+          {offer.bullets && offer.bullets.length > 0 && (
+            <div className="fp-offer-right">
+              <div className="fp-offer-right-label">What’s included</div>
+              <ul className="fp-offer-bullets">
+                {offer.bullets.map((b, i) => (
+                  <li key={i} className="fp-offer-bullet">
+                    <span className="fp-offer-check" aria-hidden="true">
+                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                        <path d="M2.5 7.5L5.5 10.5L11.5 4" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </span>
+                    <span>{b}</span>
+                  </li>
+                ))}
+              </ul>
+              {offer.guarantee && <p className="fp-offer-guarantee">{offer.guarantee}</p>}
+            </div>
+          )}
+        </div>
+      </section>
+    );
+  }
+  if (variant === 'plans' && plans && plans.length > 0) {
+    return (
+      <section className="fp-section fp-section-plans">
+        {(title || desc || price) && (
+          <div className="fp-plans-head">
+            {title && <h2 className="fp-plans-title">{title}</h2>}
+            {desc && <p className="fp-plans-desc text-body">{desc}</p>}
+            {price && (
+              <div className="fp-plans-price-row">
+                <span className="fp-plans-price">{price}</span>
+                {priceMeta && <span className="fp-plans-price-meta">{priceMeta}</span>}
+              </div>
+            )}
+          </div>
+        )}
+        <div className="fp-plans-grid">
+          {plans.map((p, i) => (
+            <div key={i} className="fp-plan-card">
+              <div className="fp-plan-head">
+                {p.badge && <div className="fp-plan-badge">{p.badge}</div>}
+                <h3 className="fp-plan-name">{p.name}</h3>
+                <p className="fp-plan-sub">{p.sub}</p>
+              </div>
+              {p.bullets && (
+                <ul className="fp-plan-bullets">
+                  {p.bullets.map((b, j) => (
+                    <li key={j} className="fp-plan-bullet">
+                      <span className="fp-plan-check" aria-hidden="true">
+                        <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+                          <path d="M2.5 7.5L5.5 10.5L11.5 4" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </span>
+                      <span>{b}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {p.cta && (
+                <div className="fp-plan-cta-row">
+                  <button className="sc-promo-btn">{p.cta}</button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </section>
+    );
+  }
+  if (variant === 'faq' && items && items.length > 0) {
+    return (
+      <section className="fp-section fp-section-faq">
+        <div className="fp-faq-head">
+          {title && <h2 className="fp-faq-title">{title}</h2>}
+          {desc && <p className="fp-faq-desc text-body">{desc}</p>}
+        </div>
+        <div className="fp-faq-list">
+          {items.map((it, i) => (
+            <details key={i} className="fp-faq-item">
+              <summary className="fp-faq-q">
+                <span>{it.q}</span>
+                <span className="fp-faq-toggle" aria-hidden="true">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <path d="M3 5.5l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </span>
+              </summary>
+              <div className="fp-faq-a text-body">{it.a}</div>
+            </details>
+          ))}
+        </div>
+      </section>
+    );
+  }
+  if (variant === 'trust-strip' && trust && trust.length > 0) {
+    return (
+      <section className="fp-section fp-section-trust">
+        <ul className="fp-trust-list">
+          {trust.map((t, i) => (
+            <React.Fragment key={i}>
+              {i > 0 && <li className="fp-trust-dot" aria-hidden="true" />}
+              <li className="fp-trust-item">{t}</li>
+            </React.Fragment>
+          ))}
+        </ul>
       </section>
     );
   }
@@ -8343,6 +8686,18 @@ function FeatureSection({ eyebrow, title, subtitle, titleImage, desc, visual, ic
             ))}
           </div>
         )}
+        {ctas && ctas.length > 0 && (
+          <div className="fp-cta-row">
+            {ctas.map((c, i) => (
+              <button
+                key={i}
+                className={`sc-promo-btn ${c.kind === 'secondary' ? 'sc-promo-btn-secondary' : ''}`}
+              >
+                {c.label}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
       {visual && (
         <div className="fp-section-visual" data-map-align={mapAlign || undefined} data-interactive={interactive ? 'true' : undefined}>
@@ -8369,6 +8724,73 @@ function FeatureQuote({ quote, author, role }) {
         <blockquote className="fp-quote-text">{quote}</blockquote>
       </div>
     </section>
+  );
+}
+
+// Sticky bottom CTA for pricing v2 — fades in after the user scrolls
+// past the hero, fades out once the in-page FooterCTA banner is visible
+// so the two CTAs never compete for attention. Mirrors FloatingCTA's
+// visible + leaving pattern: a separate `leaving` state keeps the exit
+// animation class mounted for its full duration.
+function PricingStickyCTA() {
+  const [visible, setVisible] = useState(false);
+  const [leaving, setLeaving] = useState(false);
+  const prevVisibleRef = useRef(false);
+  const leaveTimerRef = useRef(null);
+
+  useEffect(() => {
+    if (prevVisibleRef.current && !visible) {
+      setLeaving(true);
+      clearTimeout(leaveTimerRef.current);
+      leaveTimerRef.current = setTimeout(() => setLeaving(false), 320);
+    } else if (visible) {
+      setLeaving(false);
+      clearTimeout(leaveTimerRef.current);
+    }
+    prevVisibleRef.current = visible;
+    return () => clearTimeout(leaveTimerRef.current);
+  }, [visible]);
+
+  useEffect(() => {
+    const onScroll = () => {
+      const scrolled = window.scrollY > 600;
+      const footerBanner = document.querySelector('.fp-footer-cta');
+      let footerVisible = false;
+      if (footerBanner) {
+        const r = footerBanner.getBoundingClientRect();
+        footerVisible = r.top < window.innerHeight - 80;
+      }
+      setVisible(scrolled && !footerVisible);
+    };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+    };
+  }, []);
+
+  return (
+    <div
+      className={`fp-sticky-cta ${visible ? 'is-visible' : ''} ${leaving ? 'is-leaving' : ''}`}
+      aria-hidden={!visible}
+    >
+      <div className="fp-sticky-cta-inner">
+        <div className="fp-sticky-cta-lead">
+          <div className="fp-sticky-cta-text">
+            <div className="fp-sticky-cta-title">
+              <span className="fp-sticky-cta-price">$19.50</span> per active member · all 9 products included · save 93%
+            </div>
+            <div className="fp-sticky-cta-sub">14-day free trial · no credit card · cancel anytime</div>
+          </div>
+        </div>
+        <div className="fp-sticky-cta-ctas">
+          <button className="sc-promo-btn">Book Demo</button>
+          <button className="sc-promo-btn">Free Trial</button>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -8474,7 +8896,9 @@ function FeaturePageInner({ slug }) {
 
       <Footer />
 
-      <FloatingCTA />
+      {slug !== 'pricing-v2' && <FloatingCTA />}
+
+      {slug === 'pricing-v2' && <PricingStickyCTA />}
     </div>
     </OnAirEventContext.Provider>
   );

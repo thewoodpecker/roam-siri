@@ -809,8 +809,34 @@ function FilesView() {
 }
 
 function PersonalAgentsPopup({ onClose, rooms, currentRoomId, initialAgentId, onRoomChange, pinnedAgentIds, onTogglePin }) {
-  const [pos, setPos] = useState({ x: 80, y: 60 });
+  // Hydrate position + size from localStorage so the window remembers
+  // where the user last left it (across both close/reopen and page
+  // reload). Lazily-initialized state + a follow-up useEffect writes
+  // any change back.
+  const [pos, setPos] = useState(() => {
+    try {
+      const raw = localStorage.getItem('ag-popup-pos');
+      const parsed = raw ? JSON.parse(raw) : null;
+      if (parsed && typeof parsed.x === 'number' && typeof parsed.y === 'number') return parsed;
+    } catch {}
+    return { x: 80, y: 60 };
+  });
+  const [size, setSize] = useState(() => {
+    try {
+      const raw = localStorage.getItem('ag-popup-size');
+      const parsed = raw ? JSON.parse(raw) : null;
+      if (parsed && typeof parsed.w === 'number' && typeof parsed.h === 'number') return parsed;
+    } catch {}
+    return { w: 880, h: 700 };
+  });
+  useEffect(() => {
+    try { localStorage.setItem('ag-popup-pos', JSON.stringify(pos)); } catch {}
+  }, [pos]);
+  useEffect(() => {
+    try { localStorage.setItem('ag-popup-size', JSON.stringify(size)); } catch {}
+  }, [size]);
   const draggingRef = useRef(false);
+  const resizingRef = useRef(null); // 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw'
 
   const onTitlebarMouseDown = (e) => {
     if (e.button !== 0) return;
@@ -835,10 +861,48 @@ function PersonalAgentsPopup({ onClose, rooms, currentRoomId, initialAgentId, on
     window.addEventListener('mouseup', onUp);
   };
 
+  const onResizeMouseDown = (dir) => (e) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    e.stopPropagation();
+    resizingRef.current = dir;
+    const startX = e.clientX, startY = e.clientY;
+    const startSize = { ...size };
+    const startPos = { ...pos };
+    const MIN_W = 560, MIN_H = 400;
+    const onMove = (ev) => {
+      if (!resizingRef.current) return;
+      const dx = ev.clientX - startX;
+      const dy = ev.clientY - startY;
+      let w = startSize.w, h = startSize.h, x = startPos.x, y = startPos.y;
+      if (dir.includes('e')) w = Math.max(MIN_W, startSize.w + dx);
+      if (dir.includes('s')) h = Math.max(MIN_H, startSize.h + dy);
+      if (dir.includes('w')) {
+        const nw = Math.max(MIN_W, startSize.w - dx);
+        x = startPos.x + (startSize.w - nw);
+        w = nw;
+      }
+      if (dir.includes('n')) {
+        const nh = Math.max(MIN_H, startSize.h - dy);
+        y = startPos.y + (startSize.h - nh);
+        h = nh;
+      }
+      setSize({ w, h });
+      setPos({ x, y });
+    };
+    const onUp = () => {
+      resizingRef.current = null;
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+  };
+
   return (
     <div
       className="pa-popup"
-      style={{ left: pos.x, top: pos.y }}
+      style={{ left: pos.x, top: pos.y, width: size.w, height: size.h }}
       onMouseDown={(e) => e.stopPropagation()}
     >
       <PersonalAgentsWindow
@@ -851,6 +915,14 @@ function PersonalAgentsPopup({ onClose, rooms, currentRoomId, initialAgentId, on
         pinnedAgentIds={pinnedAgentIds}
         onTogglePin={onTogglePin}
       />
+      <div className="pa-resize pa-resize-n"  onMouseDown={onResizeMouseDown('n')}  aria-hidden="true" />
+      <div className="pa-resize pa-resize-s"  onMouseDown={onResizeMouseDown('s')}  aria-hidden="true" />
+      <div className="pa-resize pa-resize-e"  onMouseDown={onResizeMouseDown('e')}  aria-hidden="true" />
+      <div className="pa-resize pa-resize-w"  onMouseDown={onResizeMouseDown('w')}  aria-hidden="true" />
+      <div className="pa-resize pa-resize-ne" onMouseDown={onResizeMouseDown('ne')} aria-hidden="true" />
+      <div className="pa-resize pa-resize-nw" onMouseDown={onResizeMouseDown('nw')} aria-hidden="true" />
+      <div className="pa-resize pa-resize-se" onMouseDown={onResizeMouseDown('se')} aria-hidden="true" />
+      <div className="pa-resize pa-resize-sw" onMouseDown={onResizeMouseDown('sw')} aria-hidden="true" />
     </div>
   );
 }
