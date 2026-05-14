@@ -3475,7 +3475,6 @@ function useFeatureRoute() {
     const hash = window.location.hash;
     const m = hash.match(/^#\/feature\/([a-z0-9-]+)/i);
     if (m) return m[1];
-    if (/^#\/pricing-v2(?:\/|$)/i.test(hash)) return 'pricing-v2';
     if (/^#\/pricing(?:\/|$)/i.test(hash)) return 'pricing';
     return null;
   };

@@ -125,27 +125,6 @@
   padding-bottom: 96px;
 }
 
-/* Pricing — no hero stage; the price cards section is the lead
-   visual. Same left-aligned hero as other feature pages, just with
-   a bulleted intro instead of a single paragraph. */
-.fp-page[data-slug="pricing"] .fp-hero-visual {
-  display: none;
-}
-
-.fp-page[data-slug="pricing"] .fp-hero {
-  padding-bottom: 32px;
-  margin-bottom: 0;
-}
-
-.fp-page[data-slug="pricing"] .fp-section-compare {
-  padding-top: 32px;
-}
-
-.fp-page[data-slug="pricing"] .fp-section-cards {
-  padding-top: 0;
-  padding-bottom: 0;
-}
-
 /* On-Air hero — single frame: hero-stage IS the frame, image fills it */
 .fp-page[data-slug="on-air"] .fp-hero-stage {
   padding: 0;
@@ -6675,9 +6654,9 @@
   background: var(--graphite-50);
 }
 
-/* pricing-v2 — highlight the featured (Roam) column with an animated
+/* pricing — highlight the featured (Roam) column with an animated
    SiriGlow perimeter instead of a different surface color. */
-.fp-page[data-slug="pricing-v2"] .fp-compare-col-featured {
+.fp-page[data-slug="pricing"] .fp-compare-col-featured {
   position: relative;
   overflow: hidden;
 }
@@ -9688,62 +9667,6 @@ button.fp-lbk-day {
     row-gap: 16px !important;
   }
 
-  /* Pricing page mobile — compact the hero so the price cards are
-     visible above the fold; section padding tightened throughout
-     so the stacked panels don't have huge dead space between them. */
-  .fp-page[data-slug="pricing"] .fp-hero {
-    padding-top: 120px !important;
-    padding-bottom: 16px !important;
-  }
-  .fp-page[data-slug="pricing"] .fp-section-price-cards {
-    row-gap: 16px !important;
-    padding-top: 0 !important;
-    padding-bottom: 0 !important;
-  }
-  .fp-page[data-slug="pricing"] .fp-price-card {
-    grid-column: 1 / -1 !important;
-  }
-  /* Match the compare-head/compare-row mobile padding (24px h) so
-     the two cards align with the comparison cards beneath them. */
-  .fp-page[data-slug="pricing"] .fp-price-card-year,
-  .fp-page[data-slug="pricing"] .fp-price-card-body {
-    padding-left: 24px !important;
-    padding-right: 24px !important;
-  }
-  /* Tighter type ramp on mobile so the price cards read like the
-     compare-col cards below (title ~16px, body ~13px). */
-  .fp-page[data-slug="pricing"] .fp-price-card-year {
-    font-size: 14px !important;
-    letter-spacing: -0.2px !important;
-    padding-top: 16px !important;
-    padding-bottom: 16px !important;
-  }
-  .fp-page[data-slug="pricing"] .fp-price-card-body {
-    padding-top: 20px !important;
-    padding-bottom: 20px !important;
-    gap: 12px !important;
-  }
-  .fp-page[data-slug="pricing"] .fp-price-card-value {
-    font-size: 22px !important;
-    letter-spacing: -0.4px !important;
-  }
-  .fp-page[data-slug="pricing"] .fp-price-card-meta-line {
-    font-size: 11px !important;
-    line-height: 12px !important;
-  }
-  .fp-page[data-slug="pricing"] .fp-section-compare {
-    padding-top: 16px !important;
-    padding-bottom: 16px !important;
-  }
-  .fp-page[data-slug="pricing"] .fp-section {
-    padding-top: 32px !important;
-    padding-bottom: 32px !important;
-  }
-  .fp-page[data-slug="pricing"] .fp-pricing-hero-list {
-    font-size: 13px !important;
-    line-height: 18px !important;
-  }
-
   /* Footer CTA banner (playbook §7) — desktop `.fp-footer-cta-*`
      rules at ~5680 in this file beat the early mobile block by
      source order, so the polished mobile layout (icon stacked above
@@ -10804,14 +10727,14 @@ button.fp-lbk-day {
 
 
 /* ============================================================
-   Pricing v2 — #/pricing-v2
+   Pricing — #/pricing
    ============================================================ */
 
-/* Dev-settings toolbar — on pricing-v2 it floats bottom-left and
-   collides with the full-width sticky CTA. Dock it into the
+/* Dev-settings toolbar — on the pricing page it floats bottom-left
+   and collides with the full-width sticky CTA. Dock it into the
    right-side control stack instead, just below the theme + grid
    capsules (each 60px tall, 8px gap → stack half-height is 64px). */
-body:has(.fp-page[data-slug="pricing-v2"]) .toolbar {
+body:has(.fp-page[data-slug="pricing"]) .toolbar {
   bottom: auto;
   left: auto;
   right: 16px;
@@ -10819,7 +10742,7 @@ body:has(.fp-page[data-slug="pricing-v2"]) .toolbar {
   transform: none;
   height: auto;
 }
-body:has(.fp-page[data-slug="pricing-v2"]) .dev-settings-btn {
+body:has(.fp-page[data-slug="pricing"]) .dev-settings-btn {
   width: 32px;
   height: 32px;
   background: var(--background-primary);
@@ -10828,7 +10751,7 @@ body:has(.fp-page[data-slug="pricing-v2"]) .dev-settings-btn {
 }
 /* Menu opens from the button's left edge by default — off-screen now
    that the button sits at the right edge. Flip it to right-aligned. */
-body:has(.fp-page[data-slug="pricing-v2"]) .dev-settings-menu {
+body:has(.fp-page[data-slug="pricing"]) .dev-settings-menu {
   left: auto;
   right: 0;
 }
@@ -10836,13 +10759,13 @@ body:has(.fp-page[data-slug="pricing-v2"]) .dev-settings-menu {
 /* Hero — hide the empty hero stage and tighten the hero spacing,
    same as the original pricing page. The hero CTAs are hidden too:
    the offer card and sticky bar carry the conversion actions. */
-.fp-page[data-slug="pricing-v2"] .fp-hero-visual { display: none; }
-.fp-page[data-slug="pricing-v2"] .fp-hero .fp-cta-row { display: none; }
-.fp-page[data-slug="pricing-v2"] .fp-hero {
+.fp-page[data-slug="pricing"] .fp-hero-visual { display: none; }
+.fp-page[data-slug="pricing"] .fp-hero .fp-cta-row { display: none; }
+.fp-page[data-slug="pricing"] .fp-hero {
   padding-bottom: 24px;
   margin-bottom: 0;
 }
-.fp-page[data-slug="pricing-v2"] .fp-hero-sub-strong {
+.fp-page[data-slug="pricing"] .fp-hero-sub-strong {
   color: var(--text-primary);
   font-weight: 500;
 }
@@ -11383,9 +11306,9 @@ body:has(.fp-page[data-slug="pricing-v2"]) .dev-settings-menu {
   flex-shrink: 0;
 }
 
-/* ---- Pricing v2 mobile ---- */
+/* ---- Pricing mobile ---- */
 @media (max-width: 768px) {
-  .fp-page[data-slug="pricing-v2"] .fp-hero {
+  .fp-page[data-slug="pricing"] .fp-hero {
     padding-bottom: 16px;
   }
   .fp-section-trust { padding: 12px var(--grid-margin); }

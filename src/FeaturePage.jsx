@@ -6231,7 +6231,7 @@ function BootChatPreview() {
 /* Pricing comparison shared across feature pages — Legacy stack vs. the
    bundled Virtual Office. Page-agnostic so it can sit at the bottom of
    every feature page below the social-post reviews. */
-// Cleaned-up compare table for pricing v2 — Cubicle removed, more
+// Cleaned-up compare table for the pricing page — Cubicle removed, more
 // credible (non-round) competitor prices, all list prices footnoted
 // with a date for procurement credibility.
 const STANDARD_PRICING_COMPARE_V2 = {
@@ -7946,7 +7946,7 @@ export const FEATURES = {
       STANDARD_PRICING_COMPARE,
     ],
   },
-  'pricing-v2': {
+  'pricing': {
     eyebrow: 'Pricing',
     title: 'One office. One price.',
     hero: (
@@ -8083,59 +8083,6 @@ export const FEATURES = {
             q: 'How do you compare to negotiating Zoom + Slack + everything else?',
             a: 'You don’t need to negotiate. Roam is $19.50/active member, full stop — typically 90%+ less than the SaaS stack it replaces. If you want a side-by-side ROI calculation for your team size, our team can build one in under a day.',
           },
-        ],
-      },
-      { variant: 'reviews' },
-    ],
-  },
-
-  'pricing': {
-    eyebrow: 'Virtual Office',
-    title: 'Save 93% With Our 9 for 1 Bundle',
-    hero: (
-      <>
-        <span className="fp-pricing-hero-lead">Customer-Friendly Everyday Low Prices:</span>
-        <ul className="fp-pricing-hero-list">
-          <li>Pay Only for Active Members.</li>
-          <li>No Annual Commitments. Monthly Billing.</li>
-          <li>No Discounts.</li>
-          <li>No Upsells or Service Charges.</li>
-          <li>One Super Bundle with All Features.</li>
-        </ul>
-      </>
-    ),
-    visual: null,
-    sections: [
-      {
-        variant: 'price-cards',
-        cards: [
-          { year: '2026 Price', value: '$19.50', metaTop: 'USD / month', metaBottom: 'per active member' },
-          { year: '2027 Price', value: '$20.88', metaTop: 'USD / month', metaBottom: 'per active member' },
-        ],
-      },
-      STANDARD_PRICING_COMPARE,
-      {
-        variant: 'explore',
-        title: 'Why Bundle?',
-        desc: 'Nine products in one Virtual Office Super Bundle, designed to work together from day one.',
-        itemMarker: 'bullet',
-        items: [
-          'One bill, one vendor, one identity, one office — instead of nine SaaS subscriptions to chase.',
-          'Every product is integrated by default. Magic Minutes shows up in AInbox, your On-It assistant knows your office, Drop-In Meetings live on the same map as your Theater.',
-          'Procurement, security review, and onboarding happen once — not nine times.',
-          'AI is built into every surface from day one. No “AI add-on” SKU at $50/month.',
-          'Bring guests in for free — your customers, prospects, and partners can join you in Roam without a paid seat.',
-        ],
-      },
-      {
-        variant: 'cards',
-        cards: [
-          { title: 'Pay Only for Active Members', desc: 'You’re only charged for members who actually use Roam each month. Inactive seats don’t count.' },
-          { title: '14-Day Free Trial', desc: 'Every new team member gets a 14-day free trial before they show up on your bill.' },
-          { title: 'No Annual Contracts', desc: 'Pay monthly. Cancel anytime. We earn your business every month.' },
-          { title: 'Guests Are Free', desc: 'External collaborators with guest badges don’t count toward your active member count.' },
-          { title: 'Same Price for Everyone', desc: 'No discounts, no negotiations, no enterprise-tier surprises. The price you see is the price everyone pays.' },
-          { title: 'Predictable Rates', desc: 'Annual rate adjustments are published in December for two years forward — so you can plan ahead with confidence.' },
         ],
       },
       { variant: 'reviews' },
@@ -8727,7 +8674,7 @@ function FeatureQuote({ quote, author, role }) {
   );
 }
 
-// Sticky bottom CTA for pricing v2 — fades in after the user scrolls
+// Sticky bottom CTA for the pricing page — fades in after the user scrolls
 // past the hero, fades out once the in-page FooterCTA banner is visible
 // so the two CTAs never compete for attention. Mirrors FloatingCTA's
 // visible + leaving pattern: a separate `leaving` state keeps the exit
@@ -8896,9 +8843,9 @@ function FeaturePageInner({ slug }) {
 
       <Footer />
 
-      {slug !== 'pricing-v2' && <FloatingCTA />}
+      {slug !== 'pricing' && <FloatingCTA />}
 
-      {slug === 'pricing-v2' && <PricingStickyCTA />}
+      {slug === 'pricing' && <PricingStickyCTA />}
     </div>
     </OnAirEventContext.Provider>
   );
