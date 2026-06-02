@@ -2141,7 +2141,7 @@ function RecordingsPreview({ initialTab, onAirRecording } = {}) {
    in a stage so the iPhone/Pixel mock can drive each section's visual.
    `initialTab` and `initialView` let us point at the overworld, the map,
    the AInbox, or the camera roll without keeping per-section markup. */
-function MobilePreview({ initialTab = 'roam', initialView = 'overworld', initialPlatform = 'ios', lockscreen = false, theater = false, richMap = false, autoKnock = false, elevator = false, magicMinutesChat = false, guestBadge = false, onItChat = false } = {}) {
+function MobilePreview({ initialTab = 'roam', initialView = 'overworld', initialPlatform = 'ios', lockscreen = false, theater = false, richMap = false, autoKnock = false, elevator = false, magicMinutesChat = false, guestBadge = false, onItChat = false, agents = false } = {}) {
   // When `richMap` is set we hand the desktop ShowcaseMap into MobileWindow via
   // the `mapContent` prop so the phone's map view shows the same rich room
   // treatment (badges, theater seats, game-room leaderboard, etc) as the
@@ -2168,6 +2168,7 @@ function MobilePreview({ initialTab = 'roam', initialView = 'overworld', initial
         magicMinutesChat={magicMinutesChat}
         guestBadge={guestBadge}
         onItChat={onItChat}
+        agents={agents}
       />
     </div>
   );
@@ -6230,47 +6231,6 @@ function BootChatPreview() {
 /* Pricing comparison shared across feature pages — Legacy stack vs. the
    bundled Virtual Office. Page-agnostic so it can sit at the bottom of
    every feature page below the social-post reviews. */
-// Compare table for the pricing page: the legacy SaaS stack vs. the
-// Roam bundle. Figures match the canonical values in wonder's
-// data/pricing.ts and marketing/redesign/FeaturePage.tsx.
-const STANDARD_PRICING_COMPARE_V2 = {
-  variant: 'compare',
-  left: {
-    title: 'Your current stack',
-    subtitle: 'Manual, not integrated. $282/month per person.',
-    rows: [
-      { name: 'Zoom',                    value: '$27/month',    note: 'Endless 30-minute meetings' },
-      { name: 'Hopin',                   value: '$25/month',    note: 'Outside your office' },
-      { name: 'Calendly',                value: '$16/month',    note: 'Can’t meet now' },
-      { name: 'Slack',                   value: '$32/month',    note: 'No meetings' },
-      { name: 'Otter',                   value: '$29/month',    note: 'Annoying bot' },
-      { name: 'Loom',                    value: '$20/month',    note: 'Annoying extension' },
-      { name: 'Standalone AI Assistant', value: '$50/month',    note: 'No office awareness' },
-      { name: 'Zoom Webinars',           value: '$83/month',    note: 'Yahoo-era webinars' },
-      { name: 'Cubicle',                 value: '$1,000/month', note: 'Commute, manual' },
-    ],
-    total: { label: 'Total per person, per month', value: '$282/month', tone: 'negative' },
-  },
-  right: {
-    featured: true,
-    badge: 'Save 93%',
-    title: 'Virtual Office Platform',
-    subtitle: '9 products. One bill. AI in every surface. $19.50/month per active member.',
-    rows: [
-      { name: 'Drop-In Meetings',  href: '#/feature/drop-in-meetings', value: 'Included', note: '8-minute average' },
-      { name: 'Theater',           href: '#/feature/theater',          value: 'Included', note: 'In your office' },
-      { name: 'Lobby',             href: '#/feature/lobby',            value: 'Included', note: 'Meet now or later' },
-      { name: 'AInbox',            href: '#/feature/ainbox',           value: 'Included', note: 'Prompt your meetings' },
-      { name: 'Magic Minutes',     href: '#/feature/magic-minutes',    value: 'Included', note: 'No annoying bot' },
-      { name: 'Magicast',          href: '#/feature/magicast',         value: 'Included', note: 'No download' },
-      { name: 'On-It',             href: '#/feature/on-it',            value: 'Included', note: 'Office-aware AI' },
-      { name: 'On-Air',            href: '#/feature/on-air',           value: 'Included', note: 'Creator-era events' },
-      { name: 'Virtual Office',    href: '#/feature/virtual-office',   value: 'Included', note: 'Whole company, no commute' },
-    ],
-    total: { label: 'All 9, per active member', value: '$19.50/month', tone: 'positive' },
-  },
-};
-
 const STANDARD_PRICING_COMPARE = {
   variant: 'compare',
   left: {
@@ -7883,6 +7843,11 @@ export const FEATURES = {
         visual: <MobilePreview onItChat />,
       },
       {
+        title: 'Personal Agents',
+        desc: 'Every one of your agents — and the groups they work in — in your pocket. Kick off work, check in on a run, or spin up a new agent from anywhere.',
+        visual: <MobilePreview agents />,
+      },
+      {
         title: 'Apple Watch',
         desc: 'Watch from your Watch. The live view of your office appears right on your watch.',
         visual: (
@@ -7946,121 +7911,82 @@ export const FEATURES = {
   },
   'pricing': {
     eyebrow: 'Pricing',
-    title: 'One office. One price.',
-    seo: {
-      title: 'Pricing — Roam Virtual Office Platform',
-      description: 'Roam is $19.50 per active member, per month — nine integrated products, one bill, no contracts. Pay only for active members; guests are free.',
-    },
+    title: 'Save 93% With Our 9 for 1 Bundle',
     hero: (
       <>
-        <strong className="fp-hero-sub-strong">$19.50 per active member, per month.</strong>
-        {' '}
-        9 integrated products. No contracts. Pay only for the people who actually use it. Guests are free.
+        <span className="fp-pricing-hero-lead">Customer-Friendly Everyday Low Prices:</span>
+        <ul className="fp-pricing-hero-list">
+          <li>Pay Only for Active Members.</li>
+          <li>No Annual Commitments. Monthly Billing.</li>
+          <li>No Discounts.</li>
+          <li>No Upsells or Service Charges.</li>
+          <li>One Super Bundle with All Features.</li>
+        </ul>
       </>
     ),
     visual: null,
     sections: [
       {
-        variant: 'trust-strip',
-        trust: [
-          '4.9 ★ on G2',
-          'SOC 2 Type II',
-          'GDPR-ready',
-          '8-minute average meeting',
-          'From the team behind Yext',
-          'Used by distributed teams in 40+ countries',
+        variant: 'price-cards',
+        cards: [
+          {
+            year: '2026 Price',
+            value: '$19.50',
+            metaTop: 'USD / month',
+            metaBottom: 'per active member',
+          },
+          {
+            year: '2027 Price',
+            value: '$20.88',
+            metaTop: 'USD / month',
+            metaBottom: 'per active member',
+          },
         ],
       },
+      STANDARD_PRICING_COMPARE,
       {
-        variant: 'price-offer',
-        offer: {
-          badge: 'Everything included',
-          name: 'Virtual Office Platform',
-          priceYear: '2026 rate',
-          price: '$19.50',
-          priceMetaTop: 'USD / month',
-          priceMetaBottom: 'per active member',
-          summary: (
-            <>
-              Everything your distributed team needs to work together, in one place. No credit card to start, set up in 5 minutes. Today’s rate is $19.50; it rises to <strong>$20.88</strong> in 2027 — published two years ahead so you can plan.
-            </>
-          ),
-          bullets: [
-            'All 9 products — Drop-In, Theater, AInbox, Magic Minutes, Magicast, On-It, On-Air, Lobby, Virtual Office.',
-            'Pay only for active members. Inactive seats are free.',
-            'Guests are free — bring in customers, prospects, and partners.',
-            'AI built into every surface. No “AI add-on” SKU.',
-            'Monthly billing. Cancel anytime.',
-          ],
-          ctas: [
-            { label: 'Book Demo', kind: 'secondary' },
-            { label: 'Free Trial', kind: 'secondary' },
-          ],
-          guarantee: '9 out of 10 users feel more connected within 3 days — guaranteed.',
-        },
-      },
-      { ...STANDARD_PRICING_COMPARE_V2 },
-      {
-        variant: 'faq',
-        title: 'Pricing FAQ',
+        variant: 'explore',
+        title: 'Why Bundle?',
+        desc: 'Nine products in one Virtual Office Super Bundle, designed to work together from day one.',
+        itemMarker: 'bullet',
         items: [
-          {
-            q: 'What counts as an “active” member?',
-            a: 'You’re only charged for members who actually use Roam during a given billing cycle. Members who don’t sign in that month aren’t counted, and your admin can see active-member counts in Roam Administration.',
-          },
-          {
-            q: 'Is there a free trial?',
-            a: 'Yes — every new member gets 14 days of full Roam, free, before they show up on your bill. No credit card needed to start.',
-          },
-          {
-            q: 'Do you offer annual pricing?',
-            a: 'No — Roam is monthly billing only, with no annual commitments or contracts. You pay month to month and can cancel anytime. Rate changes are published two years in advance (2027: $20.88), so you can always plan ahead.',
-          },
-          {
-            q: 'Is there really no enterprise tier?',
-            a: 'No — there’s no enterprise tier and no enterprise pricing. Every customer pays the same per-member rate, whether you’re 5 people or 5,000. Enterprise capabilities like SSO and SCIM provisioning are included for everyone, not gated behind a separate plan.',
-          },
-          {
-            q: 'How are guests charged?',
-            a: 'They aren’t. Anyone with a guest badge — customers, prospects, partners, candidates — can join your Roam without taking a paid seat. There’s no cap on guests.',
-          },
-          {
-            q: 'Can I cancel anytime?',
-            a: 'Yes. Roam is monthly with no commitment — cancel anytime and you won’t be billed for the next cycle.',
-          },
-          {
-            q: 'How do you compare to negotiating Zoom + Slack + everything else?',
-            a: 'You don’t need to negotiate. Roam is $19.50/active member, full stop — typically 90%+ less than the SaaS stack it replaces. If you want a side-by-side ROI calculation for your team size, our team can build one in under a day.',
-          },
+          'One bill, one vendor, one identity, one office — instead of nine SaaS subscriptions to chase.',
+          'Every product is integrated by default. Magic Minutes shows up in AInbox, your On-It assistant knows your office, Drop-In Meetings live on the same map as your Theater.',
+          'Procurement, security review, and onboarding happen once — not nine times.',
+          'AI is built into every surface from day one. No “AI add-on” SKU at $50/month.',
+          'Bring guests in for free — your customers, prospects, and partners can join you in Roam without a paid seat.',
         ],
       },
       {
-        variant: 'review-cards',
-        title: 'What teams say after they switch',
-        reviews: [
+        variant: 'cards',
+        cards: [
           {
-            quote: 'We started using Roam and replaced Slack, Zoom, Calendly and Read.ai for a 10th of the price.',
-            author: 'Agus Echague',
-            role: 'Co-Founder, Archie',
-            avatar: '/headshots/agus-echague.jpeg',
-            url: 'https://www.linkedin.com/feed/update/urn:li:activity:7308487541131751424',
+            title: 'Pay Only for Active Members',
+            desc: 'You’re only charged for members who actually use Roam each month. Inactive seats don’t count.',
           },
           {
-            quote: 'If you are a small or medium-sized startup and you aren’t using Roam, think again. Dirt cheap for what it does.',
-            author: 'Michael Arrington',
-            role: 'Founder, TechCrunch & Arrington Capital',
-            avatar: '/headshots/michael-arrington.jpg',
-            url: 'https://x.com/arrington/status/1857098914891006341',
+            title: '14-Day Free Trial',
+            desc: 'Every new team member gets a 14-day free trial before they show up on your bill.',
           },
           {
-            quote: 'Roam has replaced my entire meeting stack — transcription, video meetings, calendar booking, screen recording. It bundles everyday tools at a fraction of the cost.',
-            author: 'Scott Murtaugh',
-            role: 'Founder, Growth Process Automation',
-            avatar: '/headshots/scott-murtaugh.jpg',
-            url: 'https://www.linkedin.com/posts/scottmurtaugh_ive-been-using-roam-and-n8n-months-so-activity-7407081968930013184-KYnV',
+            title: 'No Annual Contracts',
+            desc: 'Pay monthly. Cancel anytime. We earn your business every month.',
+          },
+          {
+            title: 'Guests Are Free',
+            desc: 'External collaborators with guest badges don’t count toward your active member count.',
+          },
+          {
+            title: 'Same Price for Everyone',
+            desc: 'No discounts, no negotiations, no enterprise-tier surprises. The price you see is the price everyone pays.',
+          },
+          {
+            title: 'Predictable Rates',
+            desc: 'Annual rate adjustments are published in December for two years forward — so you can plan ahead with confidence.',
           },
         ],
       },
+      { variant: 'reviews' },
     ],
   },
 };
@@ -8203,6 +8129,148 @@ function LazyVisualMount({ children, minHeight = 499, rootMargin = '600px 0px' }
   // IntersectionObserver treats a 0-area rect as never intersecting.
   // Result: visuals stay stuck on the placeholder forever on mobile.
   return <div ref={ref} style={{ minHeight, width: '100%' }} aria-hidden="true" />;
+}
+
+// Currencies offered by the pricing-page selector. Howard's list: USD +
+// the two regions called out in the LatAm/India thread (Brazil, India).
+// `prices` is [2026 rate, 2027 rate] and maps 1:1 onto the two price
+// cards by index. USD figures are canonical (match wonder's
+// data/pricing.ts). BRL/INR are PLACEHOLDERS — replace with the
+// Howard-approved regional pricing before this ships.
+const PRICING_CURRENCIES = [
+  { code: 'USD', flag: '🇺🇸', prices: ['$19.50', '$20.88'] },
+  { code: 'BRL', flag: '🇧🇷', prices: ['R$ 00,00', 'R$ 00,00'] }, // PLACEHOLDER — replace with Howard-approved BRL pricing
+  { code: 'INR', flag: '🇮🇳', prices: ['₹ 0,000', '₹ 0,000'] },   // PLACEHOLDER — replace with Howard-approved INR pricing
+];
+
+// Shared selected-currency state for the pricing page. The selector lives
+// in the hero (top-right, level with the CTA row) while the price cards
+// live further down the page, so the two communicate through context
+// rather than local state. Provided by FeaturePageInner.
+const CurrencyContext = React.createContext(null);
+const useCurrency = () => React.useContext(CurrencyContext);
+
+// Currency dropdown for the pricing hero. Reads/writes the selected code
+// from CurrencyContext; owns only its own open/close UI state. Split
+// mounted vs. open so the exit transition can finish before unmount
+// (see CLAUDE.md feedback on exit animations).
+function CurrencySelector() {
+  const ctx = useCurrency();
+  const code = ctx?.code ?? 'USD';
+  const setCode = ctx?.setCode ?? (() => {});
+  const [mounted, setMounted] = useState(false);
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef(null);
+  const closeTimer = useRef(0);
+
+  const selected = PRICING_CURRENCIES.find((c) => c.code === code) || PRICING_CURRENCIES[0];
+
+  const openMenu = () => {
+    clearTimeout(closeTimer.current);
+    setMounted(true);
+    // Next frame: flip `open` so the entry transition runs from the
+    // closed state rather than being skipped on first paint.
+    requestAnimationFrame(() => setOpen(true));
+  };
+  const closeMenu = () => {
+    setOpen(false);
+    clearTimeout(closeTimer.current);
+    closeTimer.current = setTimeout(() => setMounted(false), 200);
+  };
+  const toggleMenu = () => (open ? closeMenu() : openMenu());
+
+  useEffect(() => () => clearTimeout(closeTimer.current), []);
+
+  useEffect(() => {
+    if (!mounted) return;
+    const onDocClick = (e) => {
+      if (rootRef.current && rootRef.current.contains(e.target)) return;
+      closeMenu();
+    };
+    const onKey = (e) => { if (e.key === 'Escape') closeMenu(); };
+    document.addEventListener('mousedown', onDocClick);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDocClick);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [mounted]);
+
+  const pick = (c) => { setCode(c.code); closeMenu(); };
+
+  return (
+    <div className="fp-currency-selector" ref={rootRef}>
+      <button
+        type="button"
+        className="fp-currency-btn"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        onClick={toggleMenu}
+      >
+        <span className="fp-currency-flag" aria-hidden="true">{selected.flag}</span>
+        <span className="fp-currency-code">{selected.code}</span>
+        <svg className={`fp-currency-chevron ${open ? 'fp-currency-chevron-open' : ''}`} width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+      {mounted && (
+        <ul className={`fp-currency-menu ${open ? 'fp-currency-menu-open' : ''}`} role="listbox" aria-label="Currency">
+          {PRICING_CURRENCIES.map((c) => (
+            <li key={c.code}>
+              <button
+                type="button"
+                role="option"
+                aria-selected={c.code === code}
+                className={`fp-currency-option ${c.code === code ? 'fp-currency-option-selected' : ''}`}
+                onClick={() => pick(c)}
+              >
+                <span className="fp-currency-flag" aria-hidden="true">{c.flag}</span>
+                <span className="fp-currency-code">{c.code}</span>
+                {c.code === code && (
+                  <svg className="fp-currency-check" width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                    <path d="M3.5 8.5l3 3 6-7" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                )}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+// Pricing-page price cards. Reads the selected currency from context and
+// swaps each card's headline value by index (prices[0] → first card /
+// 2026, prices[1] → second card / 2027). The year label and meta lines
+// come from the section data; only the value changes. The Legacy-vs-Bundle
+// compare table stays in USD for now — its competitor figures are
+// inherently USD market prices.
+function CurrencyPriceCards({ cards }) {
+  const ctx = useCurrency();
+  const code = ctx?.code ?? 'USD';
+  const selected = PRICING_CURRENCIES.find((c) => c.code === code) || PRICING_CURRENCIES[0];
+
+  return (
+    <section className="fp-section fp-section-price-cards">
+      <div className="fp-price-cards-grid">
+        {cards.map((c, i) => (
+          <div key={i} className="fp-price-card">
+            <div className="fp-price-card-year text-body-emphasis">{c.year}</div>
+            <div className="fp-price-card-body">
+              <span className="fp-price-card-value">{selected.prices[i] ?? c.value}</span>
+              <span className="fp-price-card-meta">
+                {/* Meta top carries the currency word (e.g. "USD / month"),
+                    so swap it to the selected code to stay consistent. */}
+                <span className="fp-price-card-meta-line">{(c.metaTop || '').replace('USD', selected.code)}</span>
+                <span className="fp-price-card-meta-line">{c.metaBottom}</span>
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
 }
 
 function FeatureSection({ eyebrow, title, subtitle, titleImage, desc, visual, icons, variant, cards, bullets, left, right, columns, columnsStyle, leadContent, items, itemMarker, flashcards, featureSlug, rows, body, subBullets, footer, mapAlign, interactive, offer, plans, footnote, ctas, trust, price, priceMeta, reviews }) {
@@ -8506,22 +8574,7 @@ function FeatureSection({ eyebrow, title, subtitle, titleImage, desc, visual, ic
     );
   }
   if (variant === 'price-cards' && cards && cards.length > 0) {
-    return (
-      <section className="fp-section fp-section-price-cards">
-        {cards.map((c, i) => (
-          <div key={i} className="fp-price-card">
-            <div className="fp-price-card-year text-body-emphasis">{c.year}</div>
-            <div className="fp-price-card-body">
-              <span className="fp-price-card-value">{c.value}</span>
-              <span className="fp-price-card-meta">
-                <span className="fp-price-card-meta-line">{c.metaTop}</span>
-                <span className="fp-price-card-meta-line">{c.metaBottom}</span>
-              </span>
-            </div>
-          </div>
-        ))}
-      </section>
-    );
+    return <CurrencyPriceCards cards={cards} />;
   }
   if (variant === 'compare-table' && columns && rows) {
     const renderCell = (cell) => {
@@ -8756,6 +8809,10 @@ function FeaturePageInner({ slug }) {
     [slug]
   );
   const [theme, setTheme] = useState('dark');
+  // Selected currency for the pricing page; shared between the hero
+  // selector and the price cards via CurrencyContext.
+  const [currency, setCurrency] = useState('USD');
+  const currencyValue = useMemo(() => ({ code: currency, setCode: setCurrency }), [currency]);
   const [showGrid, setShowGrid] = useState(() => {
     try { return localStorage.getItem('showGrid') === 'true'; } catch { return false; }
   });
@@ -8822,6 +8879,7 @@ function FeaturePageInner({ slug }) {
 
   return (
     <OnAirEventContext.Provider value={onAirEvent}>
+    <CurrencyContext.Provider value={currencyValue}>
     <div className="sc-viewport fp-page" data-theme={theme} data-slug={slug}>
       {showGrid && (
         <div className="sc-grid-debug">
@@ -8848,6 +8906,11 @@ function FeaturePageInner({ slug }) {
             <button className="sc-promo-btn">Free Trial</button>
           </div>
         </div>
+        {slug === 'pricing' && (
+          <div className="fp-hero-currency">
+            <CurrencySelector />
+          </div>
+        )}
       </div>
 
       <div className="fp-hero-visual">
@@ -8870,6 +8933,7 @@ function FeaturePageInner({ slug }) {
 
       {slug === 'pricing' && <PricingStickyCTA />}
     </div>
+    </CurrencyContext.Provider>
     </OnAirEventContext.Provider>
   );
 }

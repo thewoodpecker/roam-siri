@@ -97,6 +97,14 @@
   margin-top: 8px;
 }
 
+/* Currency selector lives in the right columns of the hero grid,
+   bottom-aligned so it sits level with the hero CTA row. */
+.fp-hero-currency {
+  grid-column: 7 / -1;
+  justify-self: end;
+  align-self: end;
+}
+
 /* ---- Hero visual (aligned to 12-col grid, same container as other sections) ---- */
 .fp-hero-visual {
   width: 100%;
@@ -5087,6 +5095,21 @@
     padding: 9px 18px;
     font-size: 14px;
   }
+  /* Single-column hero on mobile — drop the currency selector below the
+     CTAs, left-aligned under the Book Demo button. The desktop
+     `grid-column: 7 / -1` is invalid in the 1-col grid. */
+  .fp-hero-currency {
+    grid-column: 1 / -1;
+    justify-self: start;
+    align-self: start;
+    margin-top: 12px;
+  }
+  /* Menu opens from the button's left edge to match the left alignment. */
+  .fp-hero-currency .fp-currency-menu {
+    left: 0;
+    right: auto;
+    transform-origin: top left;
+  }
 
   /* Hero visual — same height-hugs-content recipe as section visual. */
   .fp-hero-visual {
@@ -6720,14 +6743,23 @@
    compare table. Each card spans 6 of the 12-column grid to match
    the compare columns below. */
 .fp-section-price-cards {
-  row-gap: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
   padding-top: 16px;
   padding-bottom: 16px;
-  align-items: stretch;
+}
+
+/* Two price cards side by side, below the currency selector. */
+.fp-price-cards-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--grid-gutter);
+  width: 100%;
 }
 
 .fp-price-card {
-  grid-column: span 6;
   width: 100%;
   box-sizing: border-box;
   display: flex;
@@ -6779,6 +6811,113 @@
   line-height: 13px;
   letter-spacing: -0.1px;
   color: var(--text-secondary);
+}
+
+/* ── Currency selector (pricing page) ──────────────────────────
+   Sits right-aligned above the two price cards. Styled with our
+   own tokens (graphite surfaces + --border + superellipse radii),
+   not the reference screenshot's blue treatment. */
+.fp-currency-selector {
+  position: relative;
+}
+
+.fp-currency-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--graphite-800);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-md);
+  corner-shape: superellipse(1.6);
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.1px;
+  cursor: pointer;
+}
+
+[data-theme="light"] .fp-currency-btn {
+  background: var(--graphite-50);
+}
+
+.fp-currency-flag {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.fp-currency-code {
+  font-variant-numeric: tabular-nums;
+}
+
+.fp-currency-chevron {
+  margin-left: 2px;
+  color: var(--text-secondary);
+  transition: transform 0.18s ease;
+}
+
+.fp-currency-chevron-open {
+  transform: rotate(180deg);
+}
+
+.fp-currency-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 20;
+  min-width: 100%;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  background: var(--bg-surface-elevated-primary);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  corner-shape: superellipse(1.6);
+  box-shadow: var(--shadow-5);
+  /* Closed → open transition; mounted-through-exit handled in JS. */
+  opacity: 0;
+  transform: translateY(-4px) scale(0.98);
+  transform-origin: top right;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  pointer-events: none;
+}
+
+.fp-currency-menu-open {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.fp-currency-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-sm);
+  corner-shape: superellipse(1.6);
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.fp-currency-option:hover {
+  background: var(--background-primary);
+}
+
+.fp-currency-option-selected {
+  font-weight: 600;
+  background: var(--background-primary);
+}
+
+.fp-currency-check {
+  margin-left: auto;
+  color: var(--text-primary);
 }
 
 /* Pricing hero — centered, single column with a bulleted intro. */
@@ -10738,32 +10877,6 @@ button.fp-lbk-day {
    Pricing — #/pricing
    ============================================================ */
 
-/* Dev-settings toolbar — on the pricing page it floats bottom-left
-   and collides with the full-width sticky CTA. Dock it into the
-   right-side control stack instead, just below the theme + grid
-   capsules (each 60px tall, 8px gap → stack half-height is 64px). */
-body:has(.fp-page[data-slug="pricing"]) .toolbar {
-  bottom: auto;
-  left: auto;
-  right: 16px;
-  top: calc(50% + 72px);
-  transform: none;
-  height: auto;
-}
-body:has(.fp-page[data-slug="pricing"]) .dev-settings-btn {
-  width: 32px;
-  height: 32px;
-  background: var(--background-primary);
-  border: 0.5px solid var(--border);
-  border-radius: 50%;
-}
-/* Menu opens from the button's left edge by default — off-screen now
-   that the button sits at the right edge. Flip it to right-aligned. */
-body:has(.fp-page[data-slug="pricing"]) .dev-settings-menu {
-  left: auto;
-  right: 0;
-}
-
 /* Hero — hide the empty hero stage and tighten the hero spacing,
    same as the original pricing page. Hero keeps its primary CTAs;
    the offer card's CTAs are secondary-styled reinforcement. */
@@ -11418,4 +11531,7 @@ body:has(.fp-page[data-slug="pricing"]) .dev-settings-menu {
   .fp-sticky-cta-ctas .sc-promo-btn { flex: 1; }
   /* Mobile sticky bar — single CTA only (Book Demo). */
   .fp-sticky-cta-ctas .sc-promo-btn:last-child { display: none; }
+
+  /* Currency price cards stack on mobile. */
+  .fp-price-cards-grid { grid-template-columns: 1fr !important; }
 }
