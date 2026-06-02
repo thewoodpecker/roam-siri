@@ -10,12 +10,12 @@
 
 .toolbar {
   position: fixed;
-  bottom: 24px;
-  left: var(--grid-margin, 40px);
+  right: 16px;
+  top: calc(50% + 72px);
   z-index: 999999;
   display: flex;
   align-items: center;
-  height: 20px;
+  height: auto;
   pointer-events: none;
 }
 
@@ -29,10 +29,12 @@
 }
 
 .dev-settings-btn {
-  background: none;
-  border: none;
-  border-radius: var(--radius-md);
-  corner-shape: superellipse(1.6);
+  width: 32px;
+  height: 32px;
+  background: var(--background-primary);
+  border: 0.5px solid var(--border);
+  border-radius: 50%;
+  corner-shape: round;
   padding: 0;
   cursor: pointer;
   color: var(--text-secondary);
@@ -62,7 +64,8 @@
 .dev-settings-menu {
   position: absolute;
   bottom: calc(100% + 6px);
-  left: 0;
+  left: auto;
+  right: 0;
   background: #1D1E20;
   border: 0.5px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;

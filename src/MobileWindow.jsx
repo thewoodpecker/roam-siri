@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FLOORS } from './ShowcaseMap';
+import AgentGlyph from './AgentGlyph';
 import './MobileWindow.css';
 
 const ROAMS = [
@@ -333,7 +334,7 @@ function formatClock(d) {
   return `${h}:${String(m).padStart(2, '0')}`;
 }
 
-export default function MobileWindow({ win, onDrag, onOpenStories, initialTab = 'roam', initialView = 'overworld', initialPlatform = 'ios', lockscreen = false, theater = false, mapContent = null, autoKnock = false, elevator = false, magicMinutesChat = false, guestBadge = false, onItChat = false }) {
+export default function MobileWindow({ win, onDrag, onOpenStories, initialTab = 'roam', initialView = 'overworld', initialPlatform = 'ios', lockscreen = false, theater = false, mapContent = null, autoKnock = false, elevator = false, magicMinutesChat = false, guestBadge = false, onItChat = false, agents = false }) {
   const [closing, setClosing] = useState(false);
   const [activeTab, setActiveTab] = useState(initialTab);
   const [viewStack, setViewStack] = useState(initialTab === 'roam' && initialView === 'map' ? ['overworld', 'map'] : ['overworld']);
@@ -424,7 +425,7 @@ export default function MobileWindow({ win, onDrag, onOpenStories, initialTab = 
         <div className={`mw-phone-frame ${lockscreen ? 'mw-phone-frame-lock' : ''}`}>
           <div className="mw-notch" />
           <div className="mw-screen">
-            {!lockscreen && !theaterOpen && (activeTab === 'roam' || activeTab === 'ainbox') && <div className="mw-topbar-bg" aria-hidden="true" />}
+            {!lockscreen && !theaterOpen && !agents && (activeTab === 'roam' || activeTab === 'ainbox') && <div className="mw-topbar-bg" aria-hidden="true" />}
             <div className={`mw-status ${lockscreen ? 'mw-status-lock' : ''}`}>
               <span className="mw-time">{clock}</span>
               <img className="mw-status-icons" src={platform === 'ios' ? '/icons/mobile-tabs/status.svg' : '/icons/mobile-tabs/android-status.svg'} alt="" />
@@ -435,8 +436,9 @@ export default function MobileWindow({ win, onDrag, onOpenStories, initialTab = 
             {magicMinutesChat && <MagicMinutesChatView platform={platform} />}
             {onItChat && <OnItChatView platform={platform} />}
             {guestBadge && <MobileGuestBadgeSheet />}
+            {agents && <MobileAgentsView platform={platform} />}
 
-            {!lockscreen && !theaterOpen && !magicMinutesChat && !onItChat && activeTab === 'roam' && currentView === 'overworld' && (
+            {!lockscreen && !theaterOpen && !magicMinutesChat && !onItChat && !agents && activeTab === 'roam' && currentView === 'overworld' && (
               <div className="mw-content mw-overworld">
                 <div className="mw-top-nav">
                   <img className="mw-top-avatar" src="/headshots/joe-woodward.jpg" alt="" />
@@ -456,7 +458,7 @@ export default function MobileWindow({ win, onDrag, onOpenStories, initialTab = 
               </div>
             )}
 
-            {!lockscreen && !theaterOpen && !magicMinutesChat && !onItChat && activeTab === 'roam' && currentView === 'map' && (
+            {!lockscreen && !theaterOpen && !magicMinutesChat && !onItChat && !agents && activeTab === 'roam' && currentView === 'map' && (
               <div className="mw-content mw-map">
                 <div className="mw-top-nav">
                   <button className="mw-top-avatar mw-top-back" onClick={goBack} aria-label="Back">
@@ -470,7 +472,7 @@ export default function MobileWindow({ win, onDrag, onOpenStories, initialTab = 
               </div>
             )}
 
-            {!lockscreen && !theaterOpen && !magicMinutesChat && !onItChat && activeTab === 'ainbox' && (
+            {!lockscreen && !theaterOpen && !magicMinutesChat && !onItChat && !agents && activeTab === 'ainbox' && (
               <div className="mw-content mw-ainbox">
                 <div className="mw-ainbox-header">
                   <button className="mw-ainbox-profile" type="button" aria-label="Profile" tabIndex={-1}>
@@ -540,7 +542,7 @@ export default function MobileWindow({ win, onDrag, onOpenStories, initialTab = 
               </div>
             )}
 
-            {!lockscreen && !theaterOpen && !magicMinutesChat && !onItChat && activeTab === 'camera' && (
+            {!lockscreen && !theaterOpen && !magicMinutesChat && !onItChat && !agents && activeTab === 'camera' && (
               <div className="mw-content mw-camera">
                 <div className="mw-camera-viewfinder">
                   <video
@@ -1111,6 +1113,71 @@ function MagicMinutesChatView({ platform }) {
           <span className="mw-mm-composer-placeholder">Write a Message...</span>
           <img className="mw-mm-composer-send" src="/icons/composer/Send.svg" alt="" aria-hidden="true" />
         </div>
+      </div>
+    </div>
+  );
+}
+
+// Personal Agents screen — native mobile view (Figma 77989:10609).
+// Header (profile · title · new-agent button), a "Personal Agents"
+// section of agent rows, and a "My Groups" section. Renders with the
+// standard tabbar visible underneath.
+const MW_AGENTS = [
+  { name: 'Pricing Agent', glyph: 1, color: '#E8843C' },
+  { name: 'Support Manager', glyph: 0, color: '#E8843C' },
+  { name: 'Research Agent', glyph: 13, color: '#E8843C' },
+];
+const MW_AGENT_GROUPS = [
+  { name: 'Design', kind: 'design', dim: false },
+  { name: 'Apple', kind: 'apple', dim: false },
+  { name: 'Android', kind: 'android', dim: true },
+];
+
+function MobileAgentsView({ platform }) {
+  return (
+    <div className="mw-agents" aria-hidden="true">
+      <div className="mw-agents-header">
+        <img className="mw-agents-profile" src="/headshots/joe-woodward.jpg" alt="" />
+        <div className="mw-agents-title">Personal Agents</div>
+        <button type="button" className="mw-agents-add" aria-label="New agent" tabIndex={-1}>
+          <PlusIcon />
+        </button>
+      </div>
+      <div className="mw-agents-list">
+        <section className="mw-agents-section">
+          <div className="mw-agents-sep" aria-hidden="true" />
+          <div className="mw-agents-section-head">
+            <span className="mw-agents-section-chevron"><ChevronIcon size={12} /></span>
+            <span className="mw-agents-section-label">Personal Agents</span>
+            <span className="mw-agents-section-arrow"><ArrowIcon /></span>
+          </div>
+          {MW_AGENTS.map((a) => (
+            <div key={a.name} className="mw-agents-row">
+              <span className="mw-agent-glyph" style={{ color: a.color }}>
+                <AgentGlyph index={a.glyph} size={15} />
+              </span>
+              <span className="mw-agents-row-label">{a.name}</span>
+            </div>
+          ))}
+        </section>
+        <section className="mw-agents-section">
+          <div className="mw-agents-sep" aria-hidden="true" />
+          <div className="mw-agents-section-head">
+            <span className="mw-agents-section-chevron"><ChevronIcon size={12} /></span>
+            <span className="mw-agents-section-label">My Groups</span>
+            <span className="mw-agents-section-arrow"><ArrowIcon /></span>
+          </div>
+          <div className="mw-agents-row">
+            <span className="mw-agents-create"><PlusIcon /></span>
+            <span className="mw-agents-row-label mw-agents-row-label-dim">Create New Group</span>
+          </div>
+          {MW_AGENT_GROUPS.map((g) => (
+            <div key={g.name} className="mw-agents-row">
+              <GroupAvatar kind={g.kind} size={24} />
+              <span className={`mw-agents-row-label ${g.dim ? 'mw-agents-row-label-dim' : ''}`}>{g.name}</span>
+            </div>
+          ))}
+        </section>
       </div>
     </div>
   );
