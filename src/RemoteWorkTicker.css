@@ -62,7 +62,7 @@
 
 .rw-ticker-logo {
   display: block;
-  height: 24px;
+  height: 13px;
   width: auto;
   filter: var(--rw-logo-filter);
   opacity: 0.92;
@@ -169,7 +169,7 @@
 @media (max-width: 767px) {
   :root { --rw-ticker-height: 34px; }
   .rw-ticker-brand { padding: 0 12px; }
-  .rw-ticker-logo { height: 20px; }
+  .rw-ticker-logo { height: 11px; }
   .rw-ticker-item { font-size: 11px; gap: 10px; }
   .rw-ticker-sep { font-size: 11px; padding: 0 14px; }
 }
