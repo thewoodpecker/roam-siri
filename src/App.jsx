@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef, useMemo, useCallback, lazy, Suspens
 import SiriGlow from './SiriGlow';
 import { offices as officeData, meetingRooms } from './data';
 import ShowcaseMap from './ShowcaseMap';
+import RemoteWorkTicker from './RemoteWorkTicker';
 import AgentMapView from './AgentMap';
 import AgentGarageView from './AgentGarage';
 import { SpinnerComets } from './SpinnerComets';
@@ -3491,34 +3492,37 @@ export default function App() {
   const [activeTab, setActiveTab] = useHashTab();
   const featureSlug = useFeatureRoute();
 
-  if (featureSlug) {
-    return (
-      <>
-        <Suspense fallback={null}>
-          <FeaturePage slug={featureSlug} />
-        </Suspense>
-        <div className="toolbar" style={HIDE_CHROME ? { display: 'none' } : undefined}>
-          <TabSwitcher activeTab={activeTab} onTabChange={setActiveTab} />
-        </div>
-      </>
-    );
-  }
-
   return (
-    <div className="layout">
-      <div className="toolbar" style={HIDE_CHROME ? { display: 'none' } : undefined}>
-        <TabSwitcher activeTab={activeTab} onTabChange={setActiveTab} />
-      </div>
-      {activeTab === 'map-v3' && <EditMapView />}
-      {activeTab === 'design-studio' && <EditMapView studioMode />}
-      {activeTab === 'agent-garage' && <AgentGarageView />}
-      {activeTab === 'claude-max' && <ClaudeMaxView />}
-      {activeTab === 'big-vibe' && <BigVibeView />}
-      {activeTab === 'war-room' && <WarRoomView />}
-      {activeTab === 'big-meetings' && <BigMeetingsView />}
-      {activeTab === 'experimental' && <ExperimentalView />}
-      {activeTab === 'spinner' && <SpinnerView />}
-      {activeTab === 'showcase' && <ShowcaseMap />}
-    </div>
+    <>
+      {featureSlug ? (
+        <>
+          <Suspense fallback={null}>
+            <FeaturePage slug={featureSlug} />
+          </Suspense>
+          <div className="toolbar" style={HIDE_CHROME ? { display: 'none' } : undefined}>
+            <TabSwitcher activeTab={activeTab} onTabChange={setActiveTab} />
+          </div>
+        </>
+      ) : (
+        <div className="layout">
+          <div className="toolbar" style={HIDE_CHROME ? { display: 'none' } : undefined}>
+            <TabSwitcher activeTab={activeTab} onTabChange={setActiveTab} />
+          </div>
+          {activeTab === 'map-v3' && <EditMapView />}
+          {activeTab === 'design-studio' && <EditMapView studioMode />}
+          {activeTab === 'agent-garage' && <AgentGarageView />}
+          {activeTab === 'claude-max' && <ClaudeMaxView />}
+          {activeTab === 'big-vibe' && <BigVibeView />}
+          {activeTab === 'war-room' && <WarRoomView />}
+          {activeTab === 'big-meetings' && <BigMeetingsView />}
+          {activeTab === 'experimental' && <ExperimentalView />}
+          {activeTab === 'spinner' && <SpinnerView />}
+          {activeTab === 'showcase' && <ShowcaseMap />}
+        </div>
+      )}
+      {/* Pinned to the bottom of every page; stays mounted across route
+          changes so it animates seamlessly through transitions. */}
+      <RemoteWorkTicker />
+    </>
   );
 }

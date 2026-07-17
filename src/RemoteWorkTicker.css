@@ -1,0 +1,176 @@
+/* ============================================
+   Remote Work News — scrolling news ticker
+   Pinned to the bottom of every page, above all chrome.
+   ============================================ */
+@import './woodward-tokens.css';
+
+/* 'Michroma' is loaded via the Google Fonts <link> in index.html. */
+
+/* Published as a global so bottom-pinned UI (e.g. the floating CTA) can offset
+   itself to sit above the ticker rather than overlap it. */
+:root {
+  --rw-ticker-height: 40px;
+}
+
+.rw-ticker {
+  /* Dark board is the default (the site is dark-first). */
+  --rw-board: #0a0a0b;
+  --rw-brand-bg: #060607;
+  --rw-label: var(--green-300);
+  --rw-text: rgba(255, 255, 255, 0.88);
+  --rw-sep: rgba(255, 255, 255, 0.22);
+  --rw-line: rgba(255, 255, 255, 0.08);
+  --rw-logo-filter: none;
+
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--rw-ticker-height);
+  z-index: 2000000;
+  display: flex;
+  align-items: stretch;
+  background: var(--rw-board);
+  border-top: 1px solid var(--rw-line);
+  font-family: 'Michroma', 'Inter', sans-serif;
+  overflow: hidden;
+  contain: content;
+}
+
+/* Light-mode board — html carries data-theme, so this flips globally. */
+:root[data-theme="light"] .rw-ticker,
+[data-theme="light"] .rw-ticker {
+  --rw-board: #faf9fa;
+  --rw-brand-bg: #ffffff;
+  --rw-label: #17915b;
+  --rw-text: rgba(12, 12, 14, 0.86);
+  --rw-sep: rgba(12, 12, 14, 0.22);
+  --rw-line: rgba(12, 12, 14, 0.1);
+  --rw-logo-filter: invert(1);
+}
+
+/* ——— Left-pinned RWN brand cell ——— */
+.rw-ticker-brand {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  background: var(--rw-brand-bg);
+  border-right: 1px solid var(--rw-line);
+  z-index: 2;
+}
+
+.rw-ticker-logo {
+  display: block;
+  height: 24px;
+  width: auto;
+  filter: var(--rw-logo-filter);
+  opacity: 0.92;
+  transition: opacity 0.2s ease;
+}
+
+.rw-ticker-brand:hover .rw-ticker-logo {
+  opacity: 1;
+}
+
+/* ——— Scrolling viewport ——— */
+.rw-ticker-viewport {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+
+/* Soft fade at both edges of the scroll region. */
+.rw-ticker-viewport::before,
+.rw-ticker-viewport::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 32px;
+  z-index: 1;
+  pointer-events: none;
+}
+.rw-ticker-viewport::before {
+  left: 0;
+  background: linear-gradient(90deg, var(--rw-board), transparent);
+}
+.rw-ticker-viewport::after {
+  right: 0;
+  background: linear-gradient(270deg, var(--rw-board), transparent);
+}
+
+/* Two identical strips sit end-to-end; the JS rAF loop shifts the track left by
+   one strip width and wraps, so the scroll is seamless. Hovering eases the
+   speed down (handled in JS) rather than stopping. */
+.rw-ticker-track {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+}
+
+.rw-ticker-strip {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.rw-ticker-cell {
+  display: inline-flex;
+  align-items: center;
+}
+
+.rw-ticker-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  line-height: 1;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+
+.rw-ticker-item-link {
+  cursor: pointer;
+}
+.rw-ticker-item-link:hover .rw-ticker-text {
+  color: var(--rw-label);
+}
+
+.rw-ticker-label {
+  color: var(--rw-label);
+}
+
+.rw-ticker-text {
+  color: var(--rw-text);
+  transition: color 0.15s ease;
+}
+
+.rw-ticker-sep {
+  color: var(--rw-sep);
+  font-size: 13px;
+  padding: 0 20px;
+}
+
+/* Hidden width probe — laid out but not visible. */
+.rw-ticker-measure {
+  position: absolute;
+  visibility: hidden;
+  pointer-events: none;
+  white-space: nowrap;
+  left: 0;
+  top: 0;
+}
+
+@media (max-width: 767px) {
+  :root { --rw-ticker-height: 34px; }
+  .rw-ticker-brand { padding: 0 12px; }
+  .rw-ticker-logo { height: 20px; }
+  .rw-ticker-item { font-size: 11px; gap: 10px; }
+  .rw-ticker-sep { font-size: 11px; padding: 0 14px; }
+}
+
