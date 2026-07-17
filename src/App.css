@@ -11,7 +11,7 @@
 .toolbar {
   position: fixed;
   right: 16px;
-  top: calc(50% + 72px);
+  top: calc(50% + 106px);
   z-index: 999999;
   display: flex;
   align-items: center;
