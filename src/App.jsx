@@ -12,6 +12,9 @@ import './App.css';
 // out of the homepage bundle so most visitors don't pay for it.
 const FeaturePage = lazy(() => import('./FeaturePage'));
 
+// RWN (Remote Work News) hub — only renders for #/rwn, keep it lazy too.
+const RWNPage = lazy(() => import('./RWNPage'));
+
 // Flip to `false` to show the dev settings icon in the top-left
 const HIDE_CHROME = false;
 
@@ -3488,13 +3491,29 @@ function useFeatureRoute() {
   return slug;
 }
 
+function useRwnRoute() {
+  const getIsRwn = () => /^#\/rwn(?:\/|$)/i.test(window.location.hash);
+  const [isRwn, setIsRwn] = useState(getIsRwn);
+  useEffect(() => {
+    const onHash = () => setIsRwn(getIsRwn());
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, []);
+  return isRwn;
+}
+
 export default function App() {
   const [activeTab, setActiveTab] = useHashTab();
   const featureSlug = useFeatureRoute();
+  const isRwn = useRwnRoute();
 
   return (
     <>
-      {featureSlug ? (
+      {isRwn ? (
+        <Suspense fallback={null}>
+          <RWNPage />
+        </Suspense>
+      ) : featureSlug ? (
         <>
           <Suspense fallback={null}>
             <FeaturePage slug={featureSlug} />

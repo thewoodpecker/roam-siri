@@ -87,6 +87,7 @@ const navItems = [
   { label: "Resources", href: "#", menu: resourcesMenu },
   { label: "Company", href: "#", menu: companyMenu },
   { label: "Pricing", href: "#/pricing" },
+  { label: "RWN", href: "#/rwn" },
 ];
 
 const existingMembersMenu = [
