@@ -137,6 +137,9 @@ a.rw-ticker-item:hover .rw-ticker-text {
 
 .rw-ticker-label {
   color: var(--rw-label);
+  /* Michroma only ships 400 — 700 synthesizes the heavier stroke, same
+     treatment as the RWN page kickers. */
+  font-weight: 700;
 }
 
 .rw-ticker-text {

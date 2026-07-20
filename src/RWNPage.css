@@ -8,9 +8,11 @@
 @import './woodward-tokens.css';
 
 .rwn-page {
-  /* The one RWN-specific token — the accent. Matches the ticker label
-     green. Everything else is Woodward. */
-  --rwn-accent: var(--green-300);
+  /* The RWN accent — Sunset. `--rwn-accent` is the solid (strokes/text);
+     `--rwn-accent-bg` is the gradient used where the accent paints a
+     background (logo marks, chips). The dev swatches override both. */
+  --rwn-accent: #F0645F;
+  --rwn-accent-bg: linear-gradient(135deg, #FF8A5C, #EC407A);
   --rwn-brand-font: 'Michroma', 'Inter', sans-serif;
 
   min-height: 100vh;
@@ -86,7 +88,7 @@
   align-items: center;
   justify-content: flex-start;
   gap: 24px;
-  padding: 28px 0;
+  padding: 56px 0;
 }
 
 .rwn-brand {
@@ -267,7 +269,7 @@
   corner-shape: superellipse(1.6);
   box-shadow: var(--shadow-3);
   padding: 10px 12px;
-  min-width: 156px;
+  min-width: 196px;
 }
 
 .rwn-ch-tooltip-q {
@@ -292,7 +294,11 @@
 }
 .rwn-ch-tooltip-swatch-accent { background: var(--rwn-accent-bg, var(--rwn-accent)); }
 
-.rwn-ch-tooltip-name { flex: 1; }
+.rwn-ch-tooltip-name {
+  flex: 1;
+  white-space: nowrap;
+  padding-right: 16px;
+}
 
 .rwn-ch-tooltip-val {
   font-family: var(--font-family-mono);
@@ -747,6 +753,17 @@ a.rwn-section-item:hover .rwn-section-headline { color: var(--rwn-accent); }
   .rwn-lead-story { grid-column: 1 / -1; padding-right: 0; }
   .rwn-rail { grid-column: 1 / -1; }
   .rwn-reel { flex-basis: calc((100% - var(--grid-gutter)) / 2); }
+
+  /* Once the rail goes full-width, a full-bleed 9:16 card would be
+     taller than the viewport — cap and center it. */
+  .rwn-rail-videos {
+    max-width: 360px;
+    width: 100%;
+    margin: 0 auto;
+  }
+
+  /* Top Stories: 3-up is too cramped below 900. */
+  .rwn-lead-topstories .rwn-rail-list { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (max-width: 768px) {
@@ -761,13 +778,21 @@ a.rwn-section-item:hover .rwn-section-headline { color: var(--rwn-accent); }
   .rwn-accent-swatches { display: none; }
 
   .rwn-masthead { padding-top: 64px; }
-  .rwn-masthead-inner { padding: 20px 0; }
+  .rwn-masthead-inner { padding: 32px 0; }
   .rwn-brand { gap: 12px; }
   .rwn-brand-logo { width: 126px; height: 18px; }
   .rwn-brand-words { padding-left: 12px; }
 
   .rwn-lead-band .rwn-grid { padding-top: 32px; padding-bottom: 40px; }
+  .rwn-lead-topstories { margin-top: 48px; }
   .rwn-lead-topstories .rwn-rail-list { grid-template-columns: 1fr; }
+
+  /* Chart: tighter panel padding, and let vertical swipes over the SVG
+     scroll the page (touch-action: none would trap the scroll). */
+  .rwn-lead-chartwrap { padding: 16px; }
+  .rwn-lead-chartsvg { touch-action: pan-y; }
+  .rwn-lead-chart-source { left: 16px; bottom: 12px; }
+  .rwn-ch-tooltip { min-width: 172px; }
 
   .rwn-section-col { grid-column: 1 / -1; }
   .rwn-sections-band .rwn-grid { padding-top: 32px; padding-bottom: 40px; row-gap: 36px; }

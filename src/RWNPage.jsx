@@ -55,19 +55,19 @@ const BROADCAST_VIDEOS = [
 // `bg` is an optional gradient used wherever the accent paints a background
 // (logo marks, chips). Gradient entries use a midpoint solid as `value`.
 const ACCENT_SWATCHES = [
-  { name: 'Green (default)', value: 'var(--green-300)', swatch: '#46D08F' },
+  {
+    name: 'Sunset (default)',
+    value: '#F0645F',
+    bg: 'linear-gradient(135deg, #FF8A5C, #EC407A)',
+    swatch: 'linear-gradient(135deg, #FF8A5C, #EC407A)',
+  },
+  { name: 'Green', value: 'var(--green-300)', swatch: '#46D08F' },
   { name: 'Orange', value: '#EB6139', swatch: '#EB6139' },
   { name: 'Red', value: 'var(--red-400)', swatch: '#EF5350' },
   { name: 'Amber', value: 'var(--amber-500)', swatch: '#FFC107' },
   { name: 'Blue', value: 'var(--blue-500)', swatch: '#2C80FF' },
   { name: 'Indigo', value: 'var(--indigo-500)', swatch: '#835CE9' },
   { name: 'Pink', value: 'var(--pink-400)', swatch: '#EC407A' },
-  {
-    name: 'Sunset (gradient)',
-    value: '#F0645F',
-    bg: 'linear-gradient(135deg, #FF8A5C, #EC407A)',
-    swatch: 'linear-gradient(135deg, #FF8A5C, #EC407A)',
-  },
   {
     name: 'Aurora (gradient)',
     value: '#3FA8C4',
