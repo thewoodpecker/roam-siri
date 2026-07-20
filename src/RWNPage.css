@@ -8,11 +8,12 @@
 @import './woodward-tokens.css';
 
 .rwn-page {
-  /* The RWN accent — Sunset. `--rwn-accent` is the solid (strokes/text);
-     `--rwn-accent-bg` is the gradient used where the accent paints a
-     background (logo marks, chips). The dev swatches override both. */
-  --rwn-accent: #F0645F;
-  --rwn-accent-bg: linear-gradient(135deg, #FF8A5C, #EC407A);
+  /* The RWN accent — the homepage orange (CLAUDE in App.jsx).
+     `--rwn-accent` is the solid (strokes/text); `--rwn-accent-bg` is the
+     background paint (logo marks, chips) so gradient swatches can
+     override it independently. The dev swatches set both. */
+  --rwn-accent: #EB6139;
+  --rwn-accent-bg: #EB6139;
   --rwn-brand-font: 'Michroma', 'Inter', sans-serif;
 
   min-height: 100vh;
@@ -30,8 +31,7 @@
 .rwn-newsletter-btn,
 .rwn-reels-arrow,
 .rwn-reel-cover,
-.rwn-rail-video-dot,
-.rwn-accent-swatch {
+.rwn-rail-video-dot {
   font-family: inherit;
   background: none;
   border: 0;
@@ -49,31 +49,6 @@
   display: grid;
   grid-template-columns: repeat(var(--grid-columns), 1fr);
   gap: var(--grid-gutter);
-}
-
-/* ——— Dev setting: accent override swatches, pinned right ——— */
-.rwn-accent-swatches {
-  position: fixed;
-  right: 16px;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 100000;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.rwn-accent-swatch {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  opacity: 0.8;
-  transition: transform 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease;
-}
-.rwn-accent-swatch:hover { opacity: 1; transform: scale(1.15); }
-.rwn-accent-swatch-active {
-  opacity: 1;
-  box-shadow: 0 0 0 2px var(--bg-primary), 0 0 0 3.5px var(--text-primary);
 }
 
 /* ——— Masthead ——— */
@@ -126,6 +101,103 @@
 .rwn-brand-owner { color: var(--text-secondary); }
 .rwn-brand-owner strong { color: var(--text-primary); font-weight: 600; }
 
+/* ——— Article page (#/rwn/article/:slug) ——— */
+.rwn-article-main .rwn-grid {
+  padding-top: 48px;
+  padding-bottom: 72px;
+}
+
+/* Narrow reading column, centered on the grid. */
+.rwn-article {
+  grid-column: 3 / span 8;
+  min-width: 0;
+}
+
+.rwn-article-headline {
+  margin: 0 0 8px;
+  font-family: var(--font-family-primary);
+  font-weight: 600;
+  font-size: clamp(28px, 3.4vw, 42px);
+  line-height: 1.15;
+  letter-spacing: -0.8px;
+  text-wrap: balance;
+}
+
+/* BBC-style caption under the media — hairline bar on the left. */
+.rwn-article-caption {
+  margin-top: 12px;
+  padding-left: 10px;
+  border-left: 2px solid var(--border-tertiary);
+  color: var(--text-secondary);
+}
+
+.rwn-article-byline {
+  margin-top: 24px;
+  color: var(--text-secondary);
+}
+.rwn-article-byline strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.rwn-article-date {
+  margin-top: 8px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-disabled);
+}
+
+.rwn-article-body {
+  margin-top: 32px;
+  max-width: 680px;
+}
+
+.rwn-article-lede {
+  margin: 0 0 20px;
+  color: var(--text-primary);
+}
+
+.rwn-article-p {
+  margin: 0 0 20px;
+  color: var(--white-opacity-800);
+}
+
+.rwn-article-h2 {
+  margin: 36px 0 16px;
+  font-family: var(--font-family-primary);
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 24px;
+}
+
+.rwn-article-quote {
+  margin: 28px 0;
+  padding-left: 16px;
+  border-left: 2px solid var(--rwn-accent);
+}
+.rwn-article-quote p {
+  margin: 0 0 8px;
+  color: var(--text-primary);
+}
+.rwn-article-quote cite {
+  font-style: normal;
+  color: var(--text-secondary);
+}
+
+.rwn-article-source {
+  display: inline-block;
+  margin-top: 16px;
+  color: var(--text-primary);
+  text-decoration: none;
+  border-bottom: 1px solid var(--border-tertiary);
+  padding-bottom: 3px;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+.rwn-article-source:hover {
+  color: var(--rwn-accent);
+  border-color: var(--rwn-accent);
+}
+
 /* ——— Lead story + rail ——— */
 .rwn-lead-band .rwn-grid {
   padding-top: 48px;
@@ -164,6 +236,38 @@
   mask: url('/rwn-logo.svg') no-repeat center / contain;
 }
 
+/* BREAKING tag above the lead headline — painted with the RWN accent. */
+.rwn-breaking {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--rwn-accent-bg, var(--rwn-accent));
+  color: #fff;
+  font-family: var(--rwn-brand-font);
+  font-weight: 700;
+  font-size: 11px;
+  line-height: 1;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  corner-shape: superellipse(1.6);
+  margin-bottom: 16px;
+}
+
+.rwn-breaking-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #fff;
+  animation: rwn-breaking-blink 1.4s ease-in-out infinite;
+}
+
+@keyframes rwn-breaking-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
 /* BBC-style story block: visual on top, headline + dek below (linked). */
 .rwn-lead-link {
   display: block;
@@ -171,8 +275,15 @@
   color: inherit;
 }
 
+.rwn-lead-dek {
+  margin: 24px 0 0;
+  color: var(--text-secondary);
+  max-width: 620px;
+}
+
 /* ——— Interactive lead chart (square panel) ——— */
 .rwn-lead-visual {
+  margin-top: 28px;
   aspect-ratio: 1 / 1;
   background: var(--bg-surface-primary);
   border: 1px solid var(--border);
@@ -235,7 +346,8 @@
   stroke-linejoin: round;
 }
 .rwn-ch-line-dim { stroke: var(--white-opacity-300); }
-.rwn-ch-line-accent { stroke: var(--rwn-accent); stroke-width: 2.5; }
+/* The productivity series stays green regardless of the accent. */
+.rwn-ch-line-accent { stroke: var(--green-300); stroke-width: 2.5; }
 
 .rwn-ch-label {
   fill: var(--text-secondary);
@@ -244,7 +356,7 @@
   font-weight: 500;
 }
 .rwn-ch-label-accent {
-  fill: var(--rwn-accent);
+  fill: var(--green-300);
   font-weight: 600;
 }
 
@@ -254,8 +366,8 @@
   stroke-width: 1.5;
 }
 .rwn-ch-dot-accent {
-  fill: var(--rwn-accent);
-  stroke: var(--rwn-accent);
+  fill: var(--green-300);
+  stroke: var(--green-300);
 }
 
 .rwn-ch-tooltip {
@@ -292,7 +404,7 @@
   background: var(--white-opacity-300);
   flex-shrink: 0;
 }
-.rwn-ch-tooltip-swatch-accent { background: var(--rwn-accent-bg, var(--rwn-accent)); }
+.rwn-ch-tooltip-swatch-accent { background: var(--green-300); }
 
 .rwn-ch-tooltip-name {
   flex: 1;
@@ -306,40 +418,16 @@
 }
 
 .rwn-lead-headline {
-  margin: 24px 0 0;
-  font-family: var(--rwn-brand-font);
-  font-weight: 400;
-  font-size: clamp(24px, 3.2vw, 38px);
-  line-height: 1.25;
-  letter-spacing: 0.2px;
+  margin: 0;
+  font-family: var(--font-family-primary);
+  font-weight: 600;
+  font-size: clamp(24px, 2.6vw, 32px);
+  line-height: 1.2;
+  letter-spacing: -0.5px;
   text-wrap: balance;
   transition: color 0.15s ease;
 }
 .rwn-lead-link:hover .rwn-lead-headline { color: var(--rwn-accent); }
-
-.rwn-lead-dek {
-  margin: 18px 0 0;
-  color: var(--text-secondary);
-  max-width: 620px;
-}
-
-.rwn-byline {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 20px;
-  color: var(--text-secondary);
-}
-
-.rwn-byline-avatar {
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-.rwn-byline-name { color: var(--text-primary); }
-.rwn-byline-sep { color: var(--text-disabled); }
 
 /* ——— Shared section header (Michroma, small) ——— */
 .rwn-section-header {
@@ -378,9 +466,14 @@
   column-gap: var(--grid-gutter);
 }
 
-/* ——— Rail "Today's Videos" card ——— */
+/* ——— Rail "Today's Video" card ——— */
 .rwn-rail-videos {
   margin-bottom: 0;
+}
+
+.rwn-rail-videos-kicker {
+  display: flex;
+  margin: 0 0 14px;
 }
 
 .rwn-rail-video-card {
@@ -410,6 +503,37 @@
 .rwn-rail-video-media .rwn-reel-shade,
 .rwn-rail-video-media .rwn-reel-bottom {
   pointer-events: none;
+}
+
+/* Mute toggle, top-right — mirrors the story player's .sv-mute. */
+.rwn-reel-mute {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 2;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s ease, opacity 0.15s ease;
+  padding: 0;
+  /* Only revealed while hovering the video. */
+  opacity: 0;
+}
+.rwn-rail-video-media:hover .rwn-reel-mute,
+.rwn-reel-mute:focus-visible {
+  opacity: 1;
+}
+.rwn-reel-mute:hover { background: rgba(255, 255, 255, 0.2); }
+
+/* No hover on touch devices — keep the control reachable. */
+@media (hover: none) {
+  .rwn-reel-mute { opacity: 1; }
 }
 
 .rwn-rail-videos-foot {
@@ -750,6 +874,7 @@ a.rwn-section-item:hover .rwn-section-headline { color: var(--rwn-accent); }
    Mobile
    ============================================ */
 @media (max-width: 900px) {
+  .rwn-article { grid-column: 1 / -1; }
   .rwn-lead-story { grid-column: 1 / -1; padding-right: 0; }
   .rwn-rail { grid-column: 1 / -1; }
   .rwn-reel { flex-basis: calc((100% - var(--grid-gutter)) / 2); }
@@ -773,9 +898,6 @@ a.rwn-section-item:hover .rwn-section-headline { color: var(--rwn-accent); }
     --grid-margin: 16px;
     --grid-gutter: 16px;
   }
-
-  /* Dev-only control — keep it off small screens. */
-  .rwn-accent-swatches { display: none; }
 
   .rwn-masthead { padding-top: 64px; }
   .rwn-masthead-inner { padding: 32px 0; }
