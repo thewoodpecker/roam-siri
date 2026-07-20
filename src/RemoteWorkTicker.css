@@ -16,8 +16,9 @@
   /* Dark board is the default (the site is dark-first). */
   --rw-board: #0a0a0b;
   --rw-brand-bg: #060607;
-  /* Homepage orange (the Claude glow color, see CLAUDE in App.jsx). */
-  --rw-label: #EB6139;
+  /* --rw-label-override is a dev hook (set on <html> by the RWN page's
+     accent swatches) that recolors the ticker labels too. */
+  --rw-label: var(--rw-label-override, var(--green-300));
   --rw-text: rgba(255, 255, 255, 0.88);
   --rw-sep: rgba(255, 255, 255, 0.22);
   --rw-line: rgba(255, 255, 255, 0.08);
@@ -39,13 +40,12 @@
 }
 
 /* Light-mode board — html carries data-theme, so this flips globally.
-   The label orange is the homepage orange darkened for contrast on the
-   light board. */
+   The label green is --green-300 darkened for contrast on the light board. */
 :root[data-theme="light"] .rw-ticker,
 [data-theme="light"] .rw-ticker {
   --rw-board: #faf9fa;
   --rw-brand-bg: #ffffff;
-  --rw-label: #c8441c;
+  --rw-label: var(--rw-label-override, #17915b);
   --rw-text: rgba(12, 12, 14, 0.86);
   --rw-sep: rgba(12, 12, 14, 0.22);
   --rw-line: rgba(12, 12, 14, 0.1);

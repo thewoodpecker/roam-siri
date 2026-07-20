@@ -3,14 +3,14 @@
    Sits on the site's 12-column grid and Woodward
    tokens. The branded Michroma face (same as the
    ticker) is reserved for headlines and section
-   headers; orange is a small accent only.
+   headers; the green accent is used sparingly.
    ============================================ */
 @import './woodward-tokens.css';
 
 .rwn-page {
-  /* The one RWN-specific token — the accent. Matches the ticker label /
-     homepage orange (CLAUDE in App.jsx). Everything else is Woodward. */
-  --rwn-accent: #EB6139;
+  /* The one RWN-specific token — the accent. Matches the ticker label
+     green. Everything else is Woodward. */
+  --rwn-accent: var(--green-300);
   --rwn-brand-font: 'Michroma', 'Inter', sans-serif;
 
   min-height: 100vh;
@@ -26,7 +26,10 @@
    author CSS beats Tailwind's layered utilities regardless of
    specificity, which strips the nav buttons' padding/background. */
 .rwn-newsletter-btn,
-.rwn-broadcast-cta {
+.rwn-reels-arrow,
+.rwn-reel-cover,
+.rwn-rail-video-dot,
+.rwn-accent-swatch {
   font-family: inherit;
   background: none;
   border: 0;
@@ -46,6 +49,31 @@
   gap: var(--grid-gutter);
 }
 
+/* ——— Dev setting: accent override swatches, pinned right ——— */
+.rwn-accent-swatches {
+  position: fixed;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 100000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.rwn-accent-swatch {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  opacity: 0.8;
+  transition: transform 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease;
+}
+.rwn-accent-swatch:hover { opacity: 1; transform: scale(1.15); }
+.rwn-accent-swatch-active {
+  opacity: 1;
+  box-shadow: 0 0 0 2px var(--bg-primary), 0 0 0 3.5px var(--text-primary);
+}
+
 /* ——— Masthead ——— */
 .rwn-masthead {
   /* Clear the fixed site navbar (60px bar + 16px inset + breathing room). */
@@ -56,7 +84,7 @@
   grid-column: 1 / -1;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 24px;
   padding: 28px 0;
 }
@@ -67,10 +95,15 @@
   gap: 16px;
 }
 
+/* Accent-tinted logo — the white SVG via the mask pattern (same as the
+   kicker mark). 168×24 keeps the SVG's 7:1 aspect. */
 .rwn-brand-logo {
   display: block;
+  width: 168px;
   height: 24px;
-  width: auto;
+  background: var(--rwn-accent-bg, var(--rwn-accent));
+  -webkit-mask: url('/rwn-logo.svg') no-repeat center / contain;
+  mask: url('/rwn-logo.svg') no-repeat center / contain;
 }
 
 .rwn-brand-words {
@@ -119,31 +152,151 @@
   color: var(--text-secondary);
 }
 
-/* Small orange RWN mark — the white SVG tinted via the mask pattern. */
+/* Small accent-tinted RWN mark — the white SVG via the mask pattern. */
 .rwn-kicker-logo {
   display: inline-block;
   width: 77px;
   height: 11px;
-  background: var(--rwn-accent);
+  background: var(--rwn-accent-bg, var(--rwn-accent));
   -webkit-mask: url('/rwn-logo.svg') no-repeat center / contain;
   mask: url('/rwn-logo.svg') no-repeat center / contain;
 }
 
-/* BBC-style story block: image on top, headline + dek below, all one link. */
+/* BBC-style story block: visual on top, headline + dek below (linked). */
 .rwn-lead-link {
   display: block;
   text-decoration: none;
   color: inherit;
 }
 
-.rwn-lead-image {
-  display: block;
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  object-fit: cover;
+/* ——— Interactive lead chart (square panel) ——— */
+.rwn-lead-visual {
+  aspect-ratio: 1 / 1;
+  background: var(--bg-surface-primary);
+  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   corner-shape: superellipse(1.6);
-  background: var(--bg-surface-primary);
+  overflow: hidden;
+}
+
+.rwn-lead-chartwrap {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+.rwn-lead-chart-title {
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-secondary);
+}
+
+.rwn-lead-chartsvg {
+  display: block;
+  width: 100%;
+  height: calc(100% - 40px);
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.rwn-lead-chart-source {
+  position: absolute;
+  left: 24px;
+  bottom: 16px;
+  color: var(--text-disabled);
+}
+
+.rwn-ch-grid {
+  stroke: var(--white-opacity-100);
+  stroke-width: 1;
+}
+
+.rwn-ch-guide {
+  stroke: var(--white-opacity-300);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+}
+
+.rwn-ch-tick {
+  fill: var(--text-disabled);
+  font-family: var(--font-family-mono);
+  font-size: 11px;
+  letter-spacing: 0.5px;
+}
+
+.rwn-ch-line {
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.rwn-ch-line-dim { stroke: var(--white-opacity-300); }
+.rwn-ch-line-accent { stroke: var(--rwn-accent); stroke-width: 2.5; }
+
+.rwn-ch-label {
+  fill: var(--text-secondary);
+  font-family: var(--font-family-primary);
+  font-size: 12px;
+  font-weight: 500;
+}
+.rwn-ch-label-accent {
+  fill: var(--rwn-accent);
+  font-weight: 600;
+}
+
+.rwn-ch-dot {
+  fill: var(--bg-surface-primary);
+  stroke: var(--white-opacity-500);
+  stroke-width: 1.5;
+}
+.rwn-ch-dot-accent {
+  fill: var(--rwn-accent);
+  stroke: var(--rwn-accent);
+}
+
+.rwn-ch-tooltip {
+  position: absolute;
+  top: 64px;
+  z-index: 2;
+  pointer-events: none;
+  background: var(--bg-surface-elevated-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  corner-shape: superellipse(1.6);
+  box-shadow: var(--shadow-3);
+  padding: 10px 12px;
+  min-width: 156px;
+}
+
+.rwn-ch-tooltip-q {
+  margin-bottom: 6px;
+  color: var(--text-primary);
+}
+
+.rwn-ch-tooltip-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 0;
+  color: var(--text-secondary);
+}
+
+.rwn-ch-tooltip-swatch {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--white-opacity-300);
+  flex-shrink: 0;
+}
+.rwn-ch-tooltip-swatch-accent { background: var(--rwn-accent-bg, var(--rwn-accent)); }
+
+.rwn-ch-tooltip-name { flex: 1; }
+
+.rwn-ch-tooltip-val {
+  font-family: var(--font-family-mono);
+  color: var(--text-primary);
 }
 
 .rwn-lead-headline {
@@ -199,6 +352,82 @@
   grid-column: 9 / -1;
   min-width: 0;
 }
+
+/* Top Stories below the lead + rail — full-width band, 3×2 grid.
+   88px + the grid's 24px row-gap = 112px above, matching the gap below
+   (56px band bottom + 56px broadcast top). */
+.rwn-lead-topstories {
+  grid-column: 1 / -1;
+  margin-top: 88px;
+}
+
+.rwn-topstories-kicker {
+  display: flex;
+  margin: 0 0 14px;
+}
+
+.rwn-lead-topstories .rwn-rail-list {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  column-gap: var(--grid-gutter);
+}
+
+/* ——— Rail "Today's Videos" card ——— */
+.rwn-rail-videos {
+  margin-bottom: 0;
+}
+
+.rwn-rail-video-card {
+  background: var(--bg-surface-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  corner-shape: superellipse(1.6);
+  overflow: hidden;
+}
+
+.rwn-rail-video-media {
+  position: relative;
+  aspect-ratio: 9 / 16;
+}
+
+.rwn-rail-video-meta {
+  position: absolute;
+  left: 16px;
+  bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Title overlays the playing video (same treatment as the reel cards);
+   overlays must not intercept the iframe. */
+.rwn-rail-video-media .rwn-reel-shade,
+.rwn-rail-video-media .rwn-reel-bottom {
+  pointer-events: none;
+}
+
+.rwn-rail-videos-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 16px;
+}
+
+.rwn-rail-video-dots {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rwn-rail-video-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--white-opacity-200);
+  transition: background 0.15s ease;
+}
+.rwn-rail-video-dot:hover { background: var(--white-opacity-400); }
+.rwn-rail-video-dot-active { background: var(--text-primary); }
 
 .rwn-rail-list {
   list-style: none;
@@ -371,97 +600,145 @@ a.rwn-section-item:hover .rwn-section-headline { color: var(--rwn-accent); }
 
 .rwn-section-meta { color: var(--text-disabled); }
 
-/* ——— Broadcast module ——— */
+/* ——— Broadcast — portrait reels row ——— */
 .rwn-broadcast-band .rwn-grid {
   padding-top: 56px;
   padding-bottom: 56px;
-  row-gap: 32px;
+  row-gap: 24px;
   scroll-margin-top: 24px;
 }
 
-.rwn-broadcast-stage {
+.rwn-broadcast-head {
   grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
-.rwn-broadcast-screen {
-  position: relative;
-  aspect-ratio: 16 / 9;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  corner-shape: superellipse(1.6);
-  overflow: hidden;
-  background:
-    radial-gradient(ellipse at 50% 130%, rgba(235, 97, 57, 0.14), transparent 60%),
-    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.02) 0 1px, transparent 1px 4px),
-    var(--graphite-800);
+.rwn-reels-nav {
+  display: flex;
+  gap: 8px;
+}
+
+.rwn-reels-arrow {
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  transition: background 0.15s ease;
+}
+.rwn-reels-arrow:hover { background: var(--white-opacity-150); }
+
+/* Scroll-snap row: 4 portrait cards per view on desktop. */
+.rwn-reels {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: var(--grid-gutter);
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+.rwn-reels::-webkit-scrollbar { display: none; }
+
+.rwn-reel {
+  position: relative;
+  flex: 0 0 calc((100% - 3 * var(--grid-gutter)) / 4);
+  aspect-ratio: 9 / 16;
+  border-radius: var(--radius-lg);
+  corner-shape: superellipse(1.6);
+  overflow: hidden;
+  background: var(--bg-surface-primary);
+  border: 1px solid var(--border);
+  scroll-snap-align: start;
 }
 
-.rwn-broadcast-video {
+.rwn-reel-cover {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  text-align: left;
+  cursor: pointer;
+}
+
+.rwn-reel-thumb {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  border: 0;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+.rwn-reel-cover:hover .rwn-reel-thumb { transform: scale(1.04); }
+
+.rwn-reel-shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.25) 0%, transparent 30%, transparent 45%, rgba(0, 0, 0, 0.85) 100%);
 }
 
-.rwn-broadcast-lowerthird {
+.rwn-reel-bottom {
   position: absolute;
-  left: 14px;
-  bottom: 14px;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Secondary-style control: translucent fill + hairline, white glyph. */
+.rwn-reel-play {
   display: flex;
   align-items: center;
-  gap: 10px;
-  background: var(--bg-overlay-primary);
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--bg-secondary);
   border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  corner-shape: superellipse(1.6);
-  padding: 6px 12px;
+  color: #fff;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
 }
+.rwn-reel-play svg { margin-left: 2px; }
 
-.rwn-broadcast-lt-logo {
-  height: 10px;
-  width: auto;
+.rwn-reel-play-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
-.rwn-broadcast-copy {
-  grid-column: 1 / -1;
-  min-width: 0;
+.rwn-reel-title {
+  color: #fff;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-.rwn-broadcast-sub { max-width: 620px; }
+.rwn-reel-channel { color: rgba(255, 255, 255, 0.6); }
 
-.rwn-broadcast-title {
-  margin: 18px 0 0;
-  font-family: var(--rwn-brand-font);
-  font-weight: 400;
-  font-size: clamp(18px, 2vw, 24px);
-  line-height: 1.35;
-  letter-spacing: 0.2px;
-  text-wrap: balance;
+/* Inline playback: center-crop the player to fill the portrait card.
+   Oversized vertically by 60px on each side so YouTube's overlay chrome
+   (title bar at the top, controls at the bottom) is cropped out by the
+   card's overflow: hidden. */
+.rwn-reel-player {
+  position: absolute;
+  top: -60px;
+  left: 50%;
+  transform: translateX(-50%);
+  height: calc(100% + 120px);
+  aspect-ratio: 16 / 9;
+  border: 0;
 }
-
-.rwn-broadcast-sub {
-  margin: 14px 0 0;
-  color: var(--text-secondary);
-}
-
-.rwn-broadcast-cta {
-  margin-top: 20px;
-  color: var(--text-primary);
-  padding-bottom: 8px;
-  /* Squiggly orange underline — repeating wave, stroke = --rwn-accent. */
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='4' viewBox='0 0 12 4'%3E%3Cpath d='M0 2 Q3 0 6 2 T12 2' fill='none' stroke='%23EB6139' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
-  background-repeat: repeat-x;
-  background-position: left bottom;
-  background-size: 12px 4px;
-  transition: color 0.15s ease;
-}
-.rwn-broadcast-cta:hover { color: var(--rwn-accent); }
 
 /* ============================================
    Mobile
@@ -469,6 +746,7 @@ a.rwn-section-item:hover .rwn-section-headline { color: var(--rwn-accent); }
 @media (max-width: 900px) {
   .rwn-lead-story { grid-column: 1 / -1; padding-right: 0; }
   .rwn-rail { grid-column: 1 / -1; }
+  .rwn-reel { flex-basis: calc((100% - var(--grid-gutter)) / 2); }
 }
 
 @media (max-width: 768px) {
@@ -479,13 +757,17 @@ a.rwn-section-item:hover .rwn-section-headline { color: var(--rwn-accent); }
     --grid-gutter: 16px;
   }
 
+  /* Dev-only control — keep it off small screens. */
+  .rwn-accent-swatches { display: none; }
+
   .rwn-masthead { padding-top: 64px; }
   .rwn-masthead-inner { padding: 20px 0; }
   .rwn-brand { gap: 12px; }
-  .rwn-brand-logo { height: 18px; }
+  .rwn-brand-logo { width: 126px; height: 18px; }
   .rwn-brand-words { padding-left: 12px; }
 
   .rwn-lead-band .rwn-grid { padding-top: 32px; padding-bottom: 40px; }
+  .rwn-lead-topstories .rwn-rail-list { grid-template-columns: 1fr; }
 
   .rwn-section-col { grid-column: 1 / -1; }
   .rwn-sections-band .rwn-grid { padding-top: 32px; padding-bottom: 40px; row-gap: 36px; }
@@ -500,6 +782,7 @@ a.rwn-section-item:hover .rwn-section-headline { color: var(--rwn-accent); }
   .rwn-newsletter-form { flex-direction: column; }
   .rwn-newsletter-input { width: 100%; box-sizing: border-box; }
 
-  .rwn-broadcast-band .rwn-grid { padding-top: 40px; padding-bottom: 40px; row-gap: 28px; }
+  .rwn-broadcast-band .rwn-grid { padding-top: 40px; padding-bottom: 40px; row-gap: 20px; }
+  .rwn-reel { flex-basis: 72%; }
 
 }
