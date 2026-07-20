@@ -484,7 +484,8 @@
 .rwn-section-header {
   margin: 0;
   font-family: var(--rwn-brand-font);
-  font-weight: 400;
+  /* Match the kicker labels' synthesized bold. */
+  font-weight: 700;
   font-size: 13px;
   letter-spacing: 1px;
   text-transform: uppercase;
