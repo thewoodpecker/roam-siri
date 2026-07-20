@@ -692,6 +692,7 @@ a.rwn-rail-item:hover .rwn-rail-headline {
   /* The skew leans the glyphs right of the left edge — pull the block
      back so it optically aligns with the copy below. */
   margin: 14px 0 0 -0.15em;
+  text-transform: uppercase;
   font-family: var(--rwn-brand-font);
   font-weight: 400;
   font-size: clamp(20px, 2.4vw, 28px);
