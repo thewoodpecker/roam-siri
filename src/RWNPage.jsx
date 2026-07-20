@@ -64,7 +64,7 @@ const CHART_N = CHART_PROD.length;
 // thumbnails come straight from YouTube, durations verified per video.
 const BROADCAST_VIDEOS = [
   { id: 'i-xUS4Lfw3o', title: 'The Market of One', channel: 'Kleiner Perkins', duration: '0:32' },
-  { id: 'TbZoqGkq_Ao', title: 'Is hybrid work the most profitable? Stanford’s Nick Bloom explains', channel: 'Live+Work More Human', duration: '0:45' },
+  { id: 'TbZoqGkq_Ao', title: 'Is hybrid work the most profitable? Stanford’s Nick Bloom explains', channel: 'RWN', duration: '0:45' },
   { id: 'Piloy5ngQ94', title: 'How Fast Work Has Changed', channel: 'Kleiner Perkins', duration: '0:55' },
   { id: 'w0Xl_PVPyj4', title: 'Remote Work Secrets: How Nick Bloom Sees the Future of Work', channel: 'HerMoney', duration: '0:59' },
   { id: 'o3TrlHGRbFo', title: 'Remote employees are happier, according to a Gallup study', channel: 'Gallup study', duration: '0:41' },
@@ -405,7 +405,9 @@ function RailVideos() {
           </button>
           <span className="rwn-reel-bottom">
             <span className="rwn-reel-title text-headline">{v.title}</span>
-            <span className="rwn-reel-channel text-caption">{v.channel}</span>
+            <span className="rwn-rail-video-bug" aria-label="RWN">
+              <span className="rwn-rail-video-bug-logo" />
+            </span>
           </span>
         </div>
       </div>

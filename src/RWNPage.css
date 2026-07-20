@@ -565,6 +565,30 @@
   pointer-events: none;
 }
 
+/* RWN channel bug — sits in the bottom overlay under the title. */
+.rwn-rail-video-bug {
+  display: flex;
+  align-items: center;
+  width: fit-content;
+  margin-top: 2px;
+  padding: 6px 9px;
+  border-radius: var(--radius-sm);
+  corner-shape: superellipse(1.6);
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  pointer-events: none;
+}
+
+.rwn-rail-video-bug-logo {
+  display: block;
+  width: 35px;
+  height: 10px;
+  background: var(--icon-secondary);
+  -webkit-mask: url('/rwn-logo.svg') no-repeat center / contain;
+  mask: url('/rwn-logo.svg') no-repeat center / contain;
+}
+
 /* Mute toggle, top-right — mirrors the story player's .sv-mute. */
 .rwn-reel-mute {
   position: absolute;
@@ -949,6 +973,7 @@ a.rwn-section-item:hover .rwn-section-headline {
 }
 
 .rwn-reel-channel { color: rgba(255, 255, 255, 0.6); }
+
 
 /* Inline playback: center-crop the player to fill the portrait card.
    Oversized vertically by 60px on each side so YouTube's overlay chrome

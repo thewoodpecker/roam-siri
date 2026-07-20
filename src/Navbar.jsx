@@ -87,8 +87,21 @@ const navItems = [
   { label: "Resources", href: "#", menu: resourcesMenu },
   { label: "Company", href: "#", menu: companyMenu },
   { label: "Pricing", href: "#/pricing" },
-  { label: "RWN", href: "#/rwn" },
+  { label: "RWN", href: "#/rwn", brand: true },
 ];
+
+// RWN nav label: branded Michroma with the faux-italic skew (the font
+// has no italic cut).
+const brandLabelStyle = {
+  fontFamily: "'Michroma', sans-serif",
+  fontSize: '12px',
+  fontWeight: 700,
+  letterSpacing: '0.2px',
+  display: 'inline-block',
+  transform: 'skewX(-20deg)',
+};
+const navLabel = (item) =>
+  item.brand ? <span style={brandLabelStyle}>{item.label}</span> : item.label;
 
 const existingMembersMenu = [
   {
@@ -489,7 +502,7 @@ export default function Navbar() {
                     </button>
                   ) : (
                     <a key={item.label} href={item.href} onMouseEnter={() => handleMouseEnter(item.label, false)} onClick={() => setActiveMenu(null)} className="flex items-center gap-1.5 px-5 text-sm font-normal leading-5 tracking-[-0.15px] transition-colors duration-200 text-white/50 hover:text-white">
-                      {item.label}
+                      {navLabel(item)}
                     </a>
                   )
                 ))}
@@ -554,7 +567,7 @@ export default function Navbar() {
           <div className="flex items-stretch overflow-hidden">
             {navItems.map((item) => (
               <button key={item.label} onMouseEnter={() => handleMouseEnter(item.label, !!item.menu)} onClick={() => item.menu ? setActiveMenu(activeMenu === item.label ? null : item.label) : setActiveMenu(null)} className={`flex items-center gap-1.5 px-5 text-sm font-normal leading-5 tracking-[-0.15px] transition-colors duration-200 ${activeMenu === item.label ? "text-white" : "text-white/50 hover:text-white"}`}>
-                {item.label}
+                {navLabel(item)}
                 {item.menu && (<svg width="10" height="6" viewBox="0 0 10 6" fill="none" className={`transition-transform duration-250 ${activeMenu === item.label ? "rotate-180" : ""}`}><path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>)}
               </button>
             ))}
@@ -889,7 +902,7 @@ export default function Navbar() {
                         onClick={toggleMobileMenu}
                         className="block text-[16px] font-medium leading-6 tracking-[-0.32px] text-white no-underline active:opacity-70"
                       >
-                        {item.label}
+                        {navLabel(item)}
                       </a>
                     )
                   )}
