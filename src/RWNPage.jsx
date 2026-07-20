@@ -70,6 +70,10 @@ const BROADCAST_VIDEOS = [
   { id: 'o3TrlHGRbFo', title: 'Remote employees are happier, according to a Gallup study', channel: 'Gallup study', duration: '0:41' },
 ];
 
+// Smooth scrolling honors the user's reduced-motion preference.
+const scrollBehavior = () =>
+  window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+
 // Portrait thumb for Shorts; some don't have one — fall back to hqdefault.
 const reelThumb = (id) => `https://i.ytimg.com/vi/${id}/oardefault.jpg`;
 const reelThumbFallback = (e, id) => {
@@ -290,13 +294,27 @@ const SECTIONS = [
 function RailVideos() {
   const [idx, setIdx] = useState(0);
   const [muted, setMuted] = useState(true);
+  const [fading, setFading] = useState(false);
   const mutedRef = useRef(true);
   mutedRef.current = muted;
   const frameRef = useRef(null);
   const endedRef = useRef(false);
+  const fadeTimerRef = useRef(0);
   const v = BROADCAST_VIDEOS[idx];
 
-  const go = (i) => setIdx((i + BROADCAST_VIDEOS.length) % BROADCAST_VIDEOS.length);
+  // Fade out (150ms transition retargets under rapid paging), then swap
+  // the video and fade back in — no hard cut.
+  const paginate = (update) => {
+    setFading(true);
+    clearTimeout(fadeTimerRef.current);
+    fadeTimerRef.current = setTimeout(() => {
+      setIdx(update);
+      setFading(false);
+    }, 150);
+  };
+  useEffect(() => () => clearTimeout(fadeTimerRef.current), []);
+
+  const go = (i) => paginate((i + BROADCAST_VIDEOS.length) % BROADCAST_VIDEOS.length);
 
   // YouTube force-enables captions on muted autoplay — keep unloading the
   // captions module (it re-arms on video changes). The same tick sends the
@@ -335,7 +353,7 @@ function RailVideos() {
         : null;
       if (state === 0 && !endedRef.current) {
         endedRef.current = true;
-        setIdx((prev) => (prev + 1) % BROADCAST_VIDEOS.length);
+        paginate((prev) => (prev + 1) % BROADCAST_VIDEOS.length);
       }
     };
     window.addEventListener('message', onMessage);
@@ -346,10 +364,10 @@ function RailVideos() {
     <div className="rwn-rail-videos">
       <h2 className="rwn-kicker rwn-rail-videos-kicker text-caption-strong">
         <span className="rwn-kicker-logo" aria-hidden="true" />
-        Today’s Video
+        <span className="rwn-kicker-text">Today’s Video</span>
       </h2>
       <div className="rwn-rail-video-card">
-        <div className="rwn-rail-video-media">
+        <div className="rwn-rail-video-media" data-fading={fading || undefined}>
           <iframe
             ref={frameRef}
             key={v.id}
@@ -425,10 +443,18 @@ function ArticleView({ article }) {
     <main className="rwn-article-main">
       <div className="rwn-grid">
         <article className="rwn-article">
+          <a className="rwn-article-back text-subheadline-emphasis" href="#/rwn">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+              <path d="M7.5 2.5 L4 6 L7.5 9.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            Back
+          </a>
           {article.breaking && (
-            <div className="rwn-breaking" aria-label="Breaking news">
-              <span className="rwn-breaking-dot" aria-hidden="true" />
-              Breaking
+            <div className="rwn-kicker rwn-breaking-kicker text-caption-strong" aria-label="Breaking news">
+              <span className="rwn-breaking-tag">
+                <span className="rwn-breaking-dot" aria-hidden="true" />
+                <span className="rwn-kicker-text">Breaking</span>
+              </span>
             </div>
           )}
           <h1 className="rwn-article-headline">{article.headline}</h1>
@@ -506,7 +532,7 @@ export default function RWNPage() {
 
   const scrollReels = (dir) => {
     const el = reelsRef.current;
-    if (el) el.scrollBy({ left: dir * el.clientWidth, behavior: 'smooth' });
+    if (el) el.scrollBy({ left: dir * el.clientWidth, behavior: scrollBehavior() });
   };
 
   useEffect(() => {
@@ -515,7 +541,7 @@ export default function RWNPage() {
 
 
   // Hash anchors would clobber the app's hash routing — scroll imperatively.
-  const scrollTo = (ref) => ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const scrollTo = (ref) => ref.current?.scrollIntoView({ behavior: scrollBehavior(), block: 'start' });
 
   const subscribe = (e) => {
     e.preventDefault();
@@ -530,7 +556,8 @@ export default function RWNPage() {
         <Navbar />
       </div>
 
-      {/* ——— Masthead ——— */}
+      {/* ——— Masthead (hub only — article pages go straight to content) ——— */}
+      {!article && (
       <header className="rwn-masthead">
         <div className="rwn-grid">
           <div className="rwn-masthead-inner">
@@ -544,6 +571,7 @@ export default function RWNPage() {
           </div>
         </div>
       </header>
+      )}
 
       {article ? (
         <ArticleView article={article} />
@@ -553,9 +581,11 @@ export default function RWNPage() {
         <section className="rwn-lead-band">
           <div className="rwn-grid">
             <article className="rwn-lead-story">
-              <div className="rwn-breaking" aria-label="Breaking news">
-                <span className="rwn-breaking-dot" aria-hidden="true" />
-                Breaking
+              <div className="rwn-kicker rwn-breaking-kicker text-caption-strong" aria-label="Breaking news">
+                <span className="rwn-breaking-tag">
+                  <span className="rwn-breaking-dot" aria-hidden="true" />
+                  <span className="rwn-kicker-text">Breaking</span>
+                </span>
               </div>
               <a className="rwn-lead-link" href={`#/rwn/article/${LEAD_STORY.slug}`}>
                 <h1 className="rwn-lead-headline">{LEAD_STORY.headline}</h1>
@@ -573,7 +603,7 @@ export default function RWNPage() {
             <div className="rwn-lead-topstories">
               <h2 className="rwn-kicker rwn-topstories-kicker text-caption-strong">
                 <span className="rwn-kicker-logo" aria-hidden="true" />
-                Top Stories
+                <span className="rwn-kicker-text">Top Stories</span>
               </h2>
               <ol className="rwn-rail-list">
                 {TOP_STORIES.map((s, i) => {
@@ -605,7 +635,7 @@ export default function RWNPage() {
             <div className="rwn-broadcast-head">
               <div className="rwn-kicker text-caption-strong">
                 <span className="rwn-kicker-logo" aria-hidden="true" />
-                Video
+                <span className="rwn-kicker-text">Video</span>
               </div>
               <div className="rwn-reels-nav">
                 <button className="rwn-reels-arrow" aria-label="Previous videos" onClick={() => scrollReels(-1)}>
@@ -623,7 +653,7 @@ export default function RWNPage() {
             <div className="rwn-reels" ref={reelsRef}>
               {BROADCAST_VIDEOS.map((v) => (
                 <div className="rwn-reel" key={v.id}>
-                  {playingReel === v.id ? (
+                  {playingReel === v.id && (
                     <iframe
                       className="rwn-reel-player"
                       src={`https://www.youtube-nocookie.com/embed/${v.id}?autoplay=1&playsinline=1&rel=0&cc_load_policy=3&iv_load_policy=3`}
@@ -631,8 +661,15 @@ export default function RWNPage() {
                       allow="autoplay; encrypted-media; picture-in-picture"
                       allowFullScreen
                     />
-                  ) : (
-                    <button className="rwn-reel-cover" onClick={() => setPlayingReel(v.id)} aria-label={`Play: ${v.title}`}>
+                  )}
+                  {(
+                    <button
+                      className={`rwn-reel-cover ${playingReel === v.id ? 'rwn-reel-cover-hidden' : ''}`}
+                      onClick={() => setPlayingReel(v.id)}
+                      aria-label={`Play: ${v.title}`}
+                      aria-hidden={playingReel === v.id || undefined}
+                      tabIndex={playingReel === v.id ? -1 : undefined}
+                    >
                       <img
                         className="rwn-reel-thumb"
                         src={reelThumb(v.id)}
@@ -665,7 +702,7 @@ export default function RWNPage() {
               <div className="rwn-newsletter-text">
                 <div className="rwn-kicker text-caption-strong">
                   <span className="rwn-kicker-logo" aria-hidden="true" />
-                  Newsletter
+                  <span className="rwn-kicker-text">Newsletter</span>
                 </div>
                 <h2 className="rwn-newsletter-title">The Friday Brief</h2>
                 <p className="rwn-newsletter-sub text-body">
