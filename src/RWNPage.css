@@ -10,10 +10,12 @@
 .rwn-page {
   /* The RWN accent — the homepage orange (CLAUDE in App.jsx).
      `--rwn-accent` is the solid (strokes/text); `--rwn-accent-bg` is the
-     background paint (logo marks, chips) so gradient swatches can
-     override it independently. The dev swatches set both. */
+     background paint for accent chips. */
   --rwn-accent: #EB6139;
   --rwn-accent-bg: #EB6139;
+  /* Shared paint for every RWN logo mark: the grain-texture image fills
+     the SVG letterforms via the mask at the use site. */
+  --rwn-logo-paint: url('/orange-grain.png');
   --rwn-brand-font: 'Michroma', 'Inter', sans-serif;
 
   min-height: 100vh;
@@ -51,6 +53,13 @@
   gap: var(--grid-gutter);
 }
 
+/* The homepage hides the nav's Roam logo until scrolled
+   (data-logo-visible="false") — on RWN keep it visible at all times;
+   only the nav background stays scroll-dependent. */
+.rwn-page .sc-navbar-wrap[data-logo-visible="false"] nav img[alt="Roam"] {
+  opacity: 1;
+}
+
 /* ——— Masthead ——— */
 .rwn-masthead {
   /* Clear the fixed site navbar (60px bar + 16px inset + breathing room). */
@@ -78,7 +87,9 @@
   display: block;
   width: 168px;
   height: 24px;
-  background: var(--rwn-accent-bg, var(--rwn-accent));
+  background-image: var(--rwn-logo-paint);
+  background-size: cover;
+  background-position: center 80%;
   -webkit-mask: url('/rwn-logo.svg') no-repeat center / contain;
   mask: url('/rwn-logo.svg') no-repeat center / contain;
 }
@@ -226,22 +237,27 @@
   color: var(--text-secondary);
 }
 
-/* Small accent-tinted RWN mark — the white SVG via the mask pattern. */
+/* Small RWN mark — same texture fill as the masthead logo. */
 .rwn-kicker-logo {
   display: inline-block;
   width: 77px;
   height: 11px;
-  background: var(--rwn-accent-bg, var(--rwn-accent));
+  background-image: var(--rwn-logo-paint);
+  background-size: cover;
+  background-position: center 80%;
   -webkit-mask: url('/rwn-logo.svg') no-repeat center / contain;
   mask: url('/rwn-logo.svg') no-repeat center / contain;
 }
 
-/* BREAKING tag above the lead headline — painted with the RWN accent. */
+/* BREAKING tag above the lead headline — same grain texture as the
+   logos, anchored to the orange band. */
 .rwn-breaking {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: var(--rwn-accent-bg, var(--rwn-accent));
+  background-image: var(--rwn-logo-paint);
+  background-size: cover;
+  background-position: center 80%;
   color: #fff;
   font-family: var(--rwn-brand-font);
   font-weight: 700;
@@ -437,7 +453,7 @@
   font-size: 13px;
   letter-spacing: 1px;
   text-transform: uppercase;
-  color: var(--text-primary);
+  color: var(--text-secondary);
   padding-bottom: 14px;
 }
 

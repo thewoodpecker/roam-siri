@@ -494,6 +494,16 @@ export default function RWNPage() {
     window.scrollTo(0, 0);
   }, [articleSlug]);
 
+  // Homepage-style nav: transparent at the top, solid bg once scrolled.
+  // The sc-navbar-wrap CSS keys off data-logo-visible.
+  const [navSolid, setNavSolid] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setNavSolid(window.scrollY >= 200);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
   const scrollReels = (dir) => {
     const el = reelsRef.current;
     if (el) el.scrollBy({ left: dir * el.clientWidth, behavior: 'smooth' });
@@ -516,7 +526,7 @@ export default function RWNPage() {
   return (
     <div className="rwn-page">
       {/* ——— Site nav (same fixed navbar as the rest of the site) ——— */}
-      <div className="sc-navbar-wrap">
+      <div className="sc-navbar-wrap" data-logo-visible={navSolid}>
         <Navbar />
       </div>
 
