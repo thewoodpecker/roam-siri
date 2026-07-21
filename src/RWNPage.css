@@ -20,6 +20,8 @@
   /* Strong ease-out for deliberate UI motion (press, zooms, entrances). */
   --rwn-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 
+  /* .sc-viewport centers flex children — our bands are full-width. */
+  align-items: stretch;
   min-height: 100vh;
   background: var(--bg-primary);
   color: var(--text-primary);
@@ -167,7 +169,7 @@
 .rwn-article-caption {
   margin-top: 12px;
   padding-left: 10px;
-  border-left: 2px solid var(--border-tertiary);
+  border-left: 2px solid var(--border-secondary);
   color: var(--text-secondary);
 }
 
@@ -199,7 +201,7 @@
 
 .rwn-article-p {
   margin: 0 0 20px;
-  color: var(--white-opacity-800);
+  color: var(--text-primary);
 }
 
 .rwn-article-h2 {
@@ -369,12 +371,12 @@
 }
 
 .rwn-ch-grid {
-  stroke: var(--white-opacity-100);
+  stroke: var(--border);
   stroke-width: 1;
 }
 
 .rwn-ch-guide {
-  stroke: var(--white-opacity-300);
+  stroke: var(--text-disabled);
   stroke-width: 1;
   stroke-dasharray: 3 4;
 }
@@ -392,7 +394,7 @@
   stroke-linecap: round;
   stroke-linejoin: round;
 }
-.rwn-ch-line-dim { stroke: var(--white-opacity-300); }
+.rwn-ch-line-dim { stroke: var(--text-disabled); }
 /* The productivity series stays green regardless of the accent. */
 .rwn-ch-line-accent { stroke: var(--green-300); stroke-width: 2.5; }
 
@@ -409,7 +411,7 @@
 
 .rwn-ch-dot {
   fill: var(--bg-surface-primary);
-  stroke: var(--white-opacity-500);
+  stroke: var(--text-secondary);
   stroke-width: 1.5;
 }
 .rwn-ch-dot-accent {
@@ -448,7 +450,7 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--white-opacity-300);
+  background: var(--text-disabled);
   flex-shrink: 0;
 }
 .rwn-ch-tooltip-swatch-accent { background: var(--green-300); }
@@ -475,7 +477,7 @@
   transition: color 0.15s ease;
 }
 .rwn-lead-link:hover .rwn-lead-headline {
-  text-decoration: underline solid var(--solid-white);
+  text-decoration: underline solid currentColor;
   text-decoration-thickness: 2px;
   text-underline-offset: 8px;
 }
@@ -637,10 +639,10 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--white-opacity-200);
+  background: var(--text-disabled);
   transition: background 0.15s ease;
 }
-.rwn-rail-video-dot:hover { background: var(--white-opacity-400); }
+.rwn-rail-video-dot:hover { background: var(--text-secondary); }
 .rwn-rail-video-dot-active { background: var(--text-primary); }
 
 .rwn-rail-list {
@@ -684,7 +686,7 @@
   transition: color 0.15s ease;
 }
 a.rwn-rail-item:hover .rwn-rail-headline {
-  text-decoration: underline solid var(--solid-white);
+  text-decoration: underline solid currentColor;
   text-decoration-thickness: 1.5px;
   text-underline-offset: 5px;
 }
@@ -753,7 +755,7 @@ a.rwn-rail-item:hover .rwn-rail-headline {
   transition: border-color 0.15s ease;
 }
 .rwn-newsletter-input::placeholder { color: var(--text-disabled); }
-.rwn-newsletter-input:focus { border-color: var(--border-focus); }
+.rwn-newsletter-input:focus { border-color: var(--text-primary); }
 
 .rwn-newsletter-btn {
   font-family: var(--font-family-primary);
@@ -829,7 +831,7 @@ a.rwn-rail-item:hover .rwn-rail-headline {
   transition: color 0.15s ease;
 }
 a.rwn-section-item:hover .rwn-section-headline {
-  text-decoration: underline solid var(--solid-white);
+  text-decoration: underline solid currentColor;
   text-decoration-thickness: 1.5px;
   text-underline-offset: 5px;
 }
@@ -868,7 +870,7 @@ a.rwn-section-item:hover .rwn-section-headline {
   color: var(--text-primary);
   transition: background 0.15s ease;
 }
-.rwn-reels-arrow:hover { background: var(--white-opacity-150); }
+.rwn-reels-arrow:hover { background: var(--border-secondary); }
 
 /* Scroll-snap row: 4 portrait cards per view on desktop. */
 .rwn-reels {

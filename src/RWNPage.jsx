@@ -439,6 +439,45 @@ function RailVideos() {
   );
 }
 
+// Right-edge dev controls — same capsules as the feature pages.
+function RightControls({ theme, onToggleTheme, showGrid, onToggleGrid }) {
+  return (
+    <div className="sc-right-controls">
+      <button
+        type="button"
+        className="unbutton sc-theme-capsule"
+        onClick={onToggleTheme}
+        aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
+        aria-pressed={theme === 'light'}
+      >
+        <span className={`sc-theme-capsule-knob ${theme === 'light' ? 'bottom' : ''}`} aria-hidden="true" />
+        <span className={`sc-theme-capsule-icon ${theme === 'dark' ? 'active' : ''}`} aria-hidden="true">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M14 8.5C13.3 12.1 10 14.5 6.5 13.5C3 12.5 1 9.5 2 6C2.8 3.2 5.5 1.5 8.5 2C7 3.5 6.5 6 8 8.5C9 10 11 11 14 8.5Z" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" /></svg>
+        </span>
+        <span className={`sc-theme-capsule-icon ${theme === 'light' ? 'active' : ''}`} aria-hidden="true">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="3" stroke="currentColor" strokeWidth="1.3" /><path d="M8 2V3.5M8 12.5V14M2 8H3.5M12.5 8H14M3.8 3.8L4.8 4.8M11.2 11.2L12.2 12.2M3.8 12.2L4.8 11.2M11.2 4.8L12.2 3.8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" /></svg>
+        </span>
+      </button>
+      <button
+        type="button"
+        className="unbutton sc-grid-capsule"
+        onClick={onToggleGrid}
+        title="Toggle 12-column grid"
+        aria-label="Toggle 12-column grid"
+        aria-pressed={showGrid}
+      >
+        <span className={`sc-grid-capsule-knob ${showGrid ? 'on' : ''}`} aria-hidden="true" />
+        <span className={`sc-grid-capsule-icon ${!showGrid ? 'active' : ''}`} aria-hidden="true">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="2.5" y="2.5" width="11" height="11" stroke="currentColor" strokeWidth="1.3" rx="1.5" /></svg>
+        </span>
+        <span className={`sc-grid-capsule-icon ${showGrid ? 'active' : ''}`} aria-hidden="true">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="2.5" y="2.5" width="11" height="11" stroke="currentColor" strokeWidth="1.3" rx="1.5" /><path d="M6 2.5V13.5M10 2.5V13.5M2.5 6H13.5M2.5 10H13.5" stroke="currentColor" strokeWidth="1" /></svg>
+        </span>
+      </button>
+    </div>
+  );
+}
+
 // BBC-style article layout: headline, media + caption, byline, dated body.
 function ArticleView({ article }) {
   return (
@@ -509,6 +548,46 @@ export default function RWNPage() {
   const reelsRef = useRef(null);
   const [playingReel, setPlayingReel] = useState(null);
 
+  // RWN owns the theme while mounted (same pattern as FeaturePage):
+  // publish it on <html> so the ticker and global rules flip too, and
+  // seed from whatever theme the previous page left behind.
+  const [theme, setTheme] = useState(
+    () => document.documentElement.getAttribute('data-theme') || 'dark',
+  );
+  const rootRef = useRef(null);
+  useEffect(() => {
+    const html = document.documentElement;
+    html.classList.add('theme-switching');
+    html.setAttribute('data-theme', theme);
+    const raf = requestAnimationFrame(() => {
+      requestAnimationFrame(() => html.classList.remove('theme-switching'));
+    });
+    return () => {
+      cancelAnimationFrame(raf);
+      html.classList.remove('theme-switching');
+      html.removeAttribute('data-theme');
+    };
+  }, [theme]);
+
+  // 12-column debug grid, shared with the rest of the site via
+  // localStorage + the toggle-grid event.
+  const [showGrid, setShowGrid] = useState(() => {
+    try { return localStorage.getItem('showGrid') === 'true'; } catch { return false; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem('showGrid', showGrid); } catch {}
+  }, [showGrid]);
+  useEffect(() => {
+    const handler = () => setShowGrid(g => !g);
+    const syncHandler = (e) => { if (e.key === 'showGrid') setShowGrid(e.newValue === 'true'); };
+    window.addEventListener('toggle-grid', handler);
+    window.addEventListener('storage', syncHandler);
+    return () => {
+      window.removeEventListener('toggle-grid', handler);
+      window.removeEventListener('storage', syncHandler);
+    };
+  }, []);
+
   // Article sub-route (#/rwn/article/:slug) — falls back to the hub for
   // unknown slugs.
   const [articleSlug, setArticleSlug] = useState(getArticleSlug);
@@ -519,17 +598,21 @@ export default function RWNPage() {
   }, []);
   const article = articleSlug ? ARTICLES[articleSlug] : null;
   useEffect(() => {
+    rootRef.current?.scrollTo(0, 0);
     window.scrollTo(0, 0);
   }, [articleSlug]);
 
   // Homepage-style nav: transparent at the top, solid bg once scrolled.
-  // The sc-navbar-wrap CSS keys off data-logo-visible.
+  // The sc-navbar-wrap CSS keys off data-logo-visible. The page scrolls
+  // inside .sc-viewport, so listen there.
   const [navSolid, setNavSolid] = useState(false);
   useEffect(() => {
-    const onScroll = () => setNavSolid(window.scrollY >= 200);
+    const el = rootRef.current;
+    if (!el) return;
+    const onScroll = () => setNavSolid(el.scrollTop >= 200);
     onScroll();
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
+    el.addEventListener('scroll', onScroll, { passive: true });
+    return () => el.removeEventListener('scroll', onScroll);
   }, []);
 
   const scrollReels = (dir) => {
@@ -537,9 +620,6 @@ export default function RWNPage() {
     if (el) el.scrollBy({ left: dir * el.clientWidth, behavior: scrollBehavior() });
   };
 
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
 
 
   // Hash anchors would clobber the app's hash routing — scroll imperatively.
@@ -552,11 +632,22 @@ export default function RWNPage() {
   };
 
   return (
-    <div className="rwn-page">
+    <div ref={rootRef} className="sc-viewport rwn-page" data-theme={theme}>
+      {showGrid && (
+        <div className="sc-grid-debug">
+          {Array.from({ length: 12 }).map((_, i) => <div key={i} className="sc-grid-debug-col" />)}
+        </div>
+      )}
       {/* ——— Site nav (same fixed navbar as the rest of the site) ——— */}
       <div className="sc-navbar-wrap" data-logo-visible={navSolid}>
         <Navbar />
       </div>
+      <RightControls
+        theme={theme}
+        onToggleTheme={() => setTheme(t => t === 'dark' ? 'light' : 'dark')}
+        showGrid={showGrid}
+        onToggleGrid={() => setShowGrid(g => !g)}
+      />
 
       {/* ——— Masthead (hub only — article pages go straight to content) ——— */}
       {!article && (
