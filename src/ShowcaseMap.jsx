@@ -3018,10 +3018,12 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
 
   const theaterSpeakers = useMemo(() => {
     if (activeFloor === 'TheaterOnAir') {
-      const names = onAirOverride?.stageNames || ['Joe W.', 'Will H.'];
-      return names.map(n => p(n));
+      const names = onAirOverride?.stageNames || ['Ashley B.', 'Daniel R.'];
+      return names.map(n => p(n)).filter(person => person?.video);
     }
-    return [p('Howard L.'), p('Tom D.')];
+    // Stage needs people with video clips — headshot-only roster
+    // entries get filtered out inside TheaterWindow.
+    return [p('Ashley B.'), p('Daniel R.'), p('Olivia S.')].filter(person => person?.video);
   }, [activeFloor, onAirOverride]);
 
   // Only one private office and one agent room render a SiriGlow at a

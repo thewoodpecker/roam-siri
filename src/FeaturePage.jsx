@@ -6845,6 +6845,7 @@ export const FEATURES = {
           '/icons/integrations/microsoft.svg',
           '/icons/integrations/claude.svg',
           '/icons/integrations/codex.svg',
+          '/icons/integrations/cursor.svg',
         ],
         title: 'Integrations',
         desc: 'Integrates with your favorite apps via Zapier or the Roam developer API. Native integrations with GitHub & Spotify.',

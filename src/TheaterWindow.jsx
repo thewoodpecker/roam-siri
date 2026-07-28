@@ -74,6 +74,13 @@ export default function TheaterWindow({ win, onDrag, speakers: rawSpeakers = [],
   const speakers = rawSpeakers.filter(p => p?.video);
   const audience = rawAudience.filter(p => p?.video);
   const backstage = rawBackstage.filter(p => p?.video);
+  // If callers pass headshot-only people, fall back to STAGE_VIDEOS so
+  // the stage never renders empty when clips exist.
+  const resolvedSpeakers = speakers.length > 0
+    ? speakers
+    : rawSpeakers.slice(0, 3).map((person, i) => (
+      person ? { ...person, video: person.video || STAGE_VIDEOS[i % STAGE_VIDEOS.length] } : null
+    )).filter(Boolean);
   const [closing, setClosing] = useState(false);
   const [roamojiOpen, setRoamojiOpen] = useState(true);
   const [roamojiClosing, setRoamojiClosing] = useState(false);
@@ -239,7 +246,7 @@ export default function TheaterWindow({ win, onDrag, speakers: rawSpeakers = [],
   }, [win.closeRequestId]);
 
   // Stage speakers only — no padding from audience
-  const stageTiles = speakers.slice(0, 3);
+  const stageTiles = resolvedSpeakers.slice(0, 3);
   const videoFor = (person) => person?.video || null;
 
   const pos = win.position || { x: 70, y: 220 };
