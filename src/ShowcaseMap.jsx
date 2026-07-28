@@ -30,6 +30,8 @@ const HIDE_CHROME = false;
 
 const CLAUDE = '#EB6139';
 const CODEX = '#0000FF';
+const CURSOR_DARK = '#FFFFFF';
+const CURSOR_LIGHT = '#000000';
 
 // Real names from headshot filenames
 const SHOWCASE_PEOPLE = [
@@ -231,17 +233,17 @@ export const FLOORS = {
     { id: 'hp2', type: 'private', name: 'Klas L.', people: [p('Klas L.'), p('Chelsea T.')], pos: { col: 3, row: 0 }, span: 1 },
     { id: 'hp3', type: 'private', name: 'Tom D.', people: [], pos: { col: 4, row: 0 }, span: 1 },
     { id: 'hp4', type: 'private', name: 'Thomas G.', people: [p('Thomas G.')], pos: { col: 5, row: 0 }, span: 1 },
-    { id: 'hp5', type: 'private', name: 'Peter L.', people: [p('Peter L.')], pos: { col: 0, row: 1 }, span: 1, story: '/stories/lobby.mp4' },
+    { id: 'hp5', type: 'private', name: 'Peter L.', people: [p('Peter L.')], pos: { col: 0, row: 1 }, span: 1 },
     { id: 'hp6', type: 'private', name: 'John H.', people: [p('John H.')], pos: { col: 1, row: 1 }, span: 1, spotify: { song: 'Redbone', artist: 'Childish Gambino', art: '/spotify/childish-gambino-redbone.png' } },
     { id: 'hp-pods', type: 'meeting', name: 'Engineering Pods', people: [p('Emily C.'), p('Daniel R.'), p('Ethan B.'), p('Michael S.'), p('Sophia R.')], pos: { col: 2, row: 1 }, colSpan: 2, rowSpan: 2 },
     { id: 'hp7', type: 'private', name: 'Howard L.', people: [p('Howard L.')], pos: { col: 4, row: 1 }, span: 1 },
     { id: 'hp8', type: 'private', name: 'John B.', people: [p('John B.')], pos: { col: 5, row: 1 }, span: 1, story: '/stories/soundboard.mp4' },
-    { id: 'hp9', type: 'private', name: 'Lauren H.', people: [p('Lauren H.')], pos: { col: 0, row: 2 }, span: 1, story: '/stories/ad.mp4' },
+    { id: 'hp9', type: 'private', name: 'Lauren H.', people: [p('Lauren H.')], pos: { col: 0, row: 2 }, span: 1 },
     { id: 'hp10', type: 'private', name: 'Jessica H.', people: [p('Jessica H.'), p('Grace T.')], pos: { col: 1, row: 2 }, span: 1 },
     { id: 'hp11', type: 'private', name: 'Ava L.', people: [p('Ava L.')], pos: { col: 4, row: 2 }, span: 1, story: '/stories/game-room.mp4' },
     { id: 'hp12', type: 'private', name: 'Garima K.', people: [p('Garima K.'), p('Chloe P.')], pos: { col: 5, row: 2 }, span: 1 },
     { id: 'hp-theater', type: 'theater', name: 'Theater', people: [], pos: { col: 0, row: 3 }, colSpan: 2, rowSpan: 2 },
-    { id: 'hp13', type: 'private', name: 'Arnav B.', people: [p('Arnav B.'), p('Grace S.')], pos: { col: 2, row: 3 }, span: 1 },
+    { id: 'hp13', type: 'private', name: 'Arnav B.', people: [p('Arnav B.'), p('Grace S.')], pos: { col: 2, row: 3 }, span: 1, story: '/stories/lobby.mp4' },
     { id: 'hp14', type: 'private', name: 'Sean M.', people: [p('Sean M.')], pos: { col: 3, row: 3 }, span: 1, story: '/stories/roamvision.mp4' },
     { id: 'hp-demo', type: 'meeting', name: 'Demo Day', people: [p('Joe W.'), p('Lexi B.'), p('Ashley B.'), p('Brooke F.'), p('Olivia S.'), p('Sarah M.')], pos: { col: 4, row: 3 }, colSpan: 2, rowSpan: 2 },
     { id: 'hp15', type: 'private', name: 'Aaron W.', people: [p('Aaron W.'), p('Madison R.')], pos: { col: 2, row: 4 }, span: 1 },
@@ -671,7 +673,7 @@ function FigmaBadge({ figma, alwaysOpen = false, visible = true }) {
   );
 }
 
-// AI vibe icon with a hover tooltip ("Clauding" / "Codex" / "Vibing").
+// AI vibe icon with a hover tooltip ("Clauding" / "Codex" / "Cursor" / "Vibing").
 function AiVibeIcon({ src, label, combo = false, bg }) {
   const [hovered, setHovered] = useState(false);
   const [tipPhase, setTipPhase] = useState(null);
@@ -708,9 +710,10 @@ function AiVibeIcon({ src, label, combo = false, bg }) {
 }
 
 // Private office room card — uses the same markup as mapv3
-function PrivateRoomCard({ room, storyBubble, onPersonClick, onRoomClick, spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, showPhysicalTags = false, vibeOverride = false, glowOfficeId = null, glowOfficeVibe = null }) {
+function PrivateRoomCard({ room, storyBubble, onPersonClick, onRoomClick, spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, showPhysicalTags = false, vibeOverride = false, glowOfficeId = null, glowOfficeVibe = null, theme = 'dark' }) {
   const [talking, setTalking] = useState({});
   const hasTalk = room.people.length > 1;
+  const cursorGlow = theme === 'light' ? CURSOR_LIGHT : CURSOR_DARK;
 
   useEffect(() => {
     if (!hasTalk) return;
@@ -737,13 +740,13 @@ function PrivateRoomCard({ room, storyBubble, onPersonClick, onRoomClick, spotif
   }, [hasTalk]);
 
   const isEmpty = room.people.length === 0 && (room.agentDock?.length || 0) === 0;
-  // Only one office at a time shows the SiriGlow — the parent cycles
-  // glowOfficeId on a timer. When this room is the chosen one, prefer
-  // the parent's explicit glowOfficeVibe (which also seeds a vibe for
-  // offices that don't carry one in activeVibes — e.g. Agent Garage
-  // offices that have an agentDock but no people).
-  const allowVibe = !isEmpty && !vibeOverride && room.id === glowOfficeId;
-  const activeVibe = allowVibe ? (glowOfficeVibe || room.vibe) : null; // 'claude' | 'codex' | 'both' | null
+  // Glow + badge travel together with the office's vibe. The parent still
+  // rotates glowOfficeId as a spotlight for offices that don't already
+  // carry a vibe in activeVibes (e.g. agent-dock offices).
+  const allowSpotlight = !isEmpty && !vibeOverride && room.id === glowOfficeId;
+  const activeVibe = !isEmpty && !vibeOverride
+    ? (room.vibe || (allowSpotlight ? glowOfficeVibe : null))
+    : null; // 'claude' | 'codex' | 'cursor' | 'both' | null
   const prevVibeRef = useRef(null);
   const [showGlow, setShowGlow] = useState(false);
   const [renderedVibe, setRenderedVibe] = useState(null);
@@ -772,6 +775,7 @@ function PrivateRoomCard({ room, storyBubble, onPersonClick, onRoomClick, spotif
       <div className={`sc-glow-fade ${showGlow ? 'sc-glow-visible' : ''}`}>
         {renderedVibe === 'claude' && <SiriGlow active={true} color={CLAUDE} intensity={3} borderRadius={12} />}
         {renderedVibe === 'codex' && <SiriGlow active={true} color={CODEX} intensity={3} borderRadius={12} />}
+        {renderedVibe === 'cursor' && <SiriGlow active={true} color={cursorGlow} intensity={3} borderRadius={12} />}
         {renderedVibe === 'both' && (
           <>
             <SiriGlow active={true} color={CLAUDE} intensity={3} borderRadius={12} />
@@ -785,6 +789,7 @@ function PrivateRoomCard({ room, storyBubble, onPersonClick, onRoomClick, spotif
             <h3 className={`office-name ${isEmpty ? 'sc-office-empty' : ''}`}>{room.name}</h3>
             {(activeVibe === 'claude' || activeVibe === 'both') && <AiVibeIcon src="/icons/claude-symbol.svg" bg="#DD6B4A" label="Clauding" />}
             {(activeVibe === 'codex'  || activeVibe === 'both') && <AiVibeIcon src="/icons/codex-symbol.svg"  bg="#FFFFFF" label="Codex" />}
+            {activeVibe === 'cursor' && <AiVibeIcon src="/icons/cursor-symbol.svg" label="Cursor" />}
             {room.agentDock?.length > 0 && room.agentDock.map((agent) => (
               <span key={agent.id || agent.name} className="sc-private-agent-badge-wrap">
                 <AgentSquircle
@@ -2750,7 +2755,8 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
     if (autoKnock) return;
     if (showPhysicalTags) return;
     const floor = FLOORS[activeFloor];
-    const privateRooms = floor.filter(r => r.type === 'private' && r.people.length === 1 && !r.story);
+    // Mattias stays put — never pulled into meeting-room wander
+    const privateRooms = floor.filter(r => r.type === 'private' && r.people.length === 1 && !r.story && r.name !== 'Mattias L.');
     const meetingRooms = floor.filter(r => r.type === 'meeting' && r.people.length > 0);
     if (privateRooms.length === 0 || meetingRooms.length === 0) return;
     const timers = [];
@@ -2867,6 +2873,35 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
 
     const groupInterval = setInterval(groupTick, 10000 + Math.random() * 4000);
     t(groupTick, 2500);
+    // Drop any leftover removal of Mattias from a prior wander cycle
+    setMovements(prev => {
+      const floorRooms = FLOORS[activeFloor] || [];
+      const mattiasIds = new Set(floorRooms.filter(r => r.name === 'Mattias L.' && r.type === 'private').map(r => r.id));
+      if (mattiasIds.size === 0) return prev;
+      let changed = false;
+      const removed = { ...prev.removed };
+      const added = { ...prev.added };
+      const anim = { ...prev.anim };
+      mattiasIds.forEach(id => {
+        if (removed[id]) { delete removed[id]; changed = true; }
+        if (anim[id]) { delete anim[id]; changed = true; }
+      });
+      Object.keys(added).forEach(id => {
+        const val = added[id];
+        if (Array.isArray(val)) {
+          const next = val.filter(person => person.name !== 'Mattias L.');
+          if (next.length !== val.length) {
+            if (next.length) added[id] = next;
+            else delete added[id];
+            changed = true;
+          }
+        } else if (val?.name === 'Mattias L.') {
+          delete added[id];
+          changed = true;
+        }
+      });
+      return changed ? { anim, removed, added } : prev;
+    });
     return () => { clearInterval(interval); clearInterval(groupInterval); timers.forEach(clearTimeout); };
   }, [activeFloor, autoKnock]);
 
@@ -2912,10 +2947,18 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
     const all = extraRooms?.length ? [...base, ...extraRooms] : base;
     return all.filter(room => !hiddenSet.has(room.id)).map(room => {
       let people = room.people;
-      if (movements.removed[room.id]) people = [];
+      // Mattias is pinned — never leave / empty his private office
+      const mattiasPinned = room.type === 'private' && room.name === 'Mattias L.';
+      if (!mattiasPinned && movements.removed[room.id]) people = [];
       if (movements.added[room.id]) {
         const incoming = Array.isArray(movements.added[room.id]) ? movements.added[room.id] : [movements.added[room.id]];
-        people = [...people, ...incoming.map(p => ({ ...p, _new: true }))];
+        // Don't let Mattias appear as a visitor elsewhere
+        const filtered = incoming.filter(p => p.name !== 'Mattias L.');
+        people = mattiasPinned
+          ? room.people
+          : [...people, ...filtered.map(p => ({ ...p, _new: true }))];
+      } else if (mattiasPinned) {
+        people = room.people;
       }
       // Per-room people override — used by the Garage view to thin
       // existing humans out of offices/meetings without forking FLOORS.
@@ -3004,7 +3047,7 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
   const [glowAgentRoomId, setGlowAgentRoomId] = useState(null);
   const [glowAgentColor, setGlowAgentColor] = useState(null);
   useEffect(() => {
-    const VIBES = ['claude', 'codex', 'both'];
+    const VIBES = ['claude', 'codex', 'cursor', 'both'];
     const pickAgentColor = (room) => {
       if (room.departments) {
         const all = room.departments.flatMap(d =>
@@ -3056,12 +3099,6 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
         }
       });
     });
-    // Pin Lauren's `ad.mp4` to the second slot, right after Howard's story
-    const idx = rooms.findIndex(r => r.story === '/stories/ad.mp4');
-    if (idx > 1) {
-      const [lauren] = rooms.splice(idx, 1);
-      rooms.splice(1, 0, lauren);
-    }
     return rooms;
   }, []);
 
@@ -3343,18 +3380,37 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
     const MIN_VIBES = Math.min(3, Math.max(2, Math.round(privateRooms.length * 0.12)));
     const SEED_COUNT = MAX_VIBES;
 
+    // Clear so a fresh seed always includes Cursor (and every other type).
+    // Mattias stays permanently on Cursor whenever he's on this floor —
+    // look him up on the static floor data so an empty/moved seat can't
+    // drop the pin.
+    const floorStatic = FLOORS[activeFloor] || [];
+    const joeRoom = privateRooms.find(r => r.name === 'Joe W.');
+    const mattiasRoom = floorStatic.find(r => r.type === 'private' && r.name === 'Mattias L.' && (r.people?.length || 0) > 0);
+    setActiveVibes(mattiasRoom ? { [mattiasRoom.id]: 'cursor' } : {});
+
+    // Re-assert Mattias Cursor pin periodically in case other vibe
+    // updates race him out of the map.
+    let mattiasPinId = null;
+    if (mattiasRoom) {
+      mattiasPinId = setInterval(() => {
+        setActiveVibes(prev => (prev[mattiasRoom.id] === 'cursor' ? prev : { ...prev, [mattiasRoom.id]: 'cursor' }));
+      }, 2000);
+    }
+
     // Start a vibe on a random room, then stop it after a random duration
     const startVibe = () => {
       setActiveVibes(prev => {
         const activeIds = Object.keys(prev);
         if (activeIds.length >= MAX_VIBES) return prev;
-        const available = privateRooms.filter(r => !prev[r.id]);
+        // Joe + Mattias Cursor sessions own their offices — don't overwrite
+        const available = privateRooms.filter(r => !prev[r.id] && r.name !== 'Joe W.' && r.name !== 'Mattias L.');
         if (available.length === 0) return prev;
         const room = available[Math.floor(Math.random() * available.length)];
-        // Always have all 3 vibe types visible — pick whichever is currently least represented
-        const counts = { claude: 0, codex: 0, both: 0 };
+        // Always have all vibe types visible — pick whichever is currently least represented
+        const counts = { claude: 0, codex: 0, cursor: 0, both: 0 };
         Object.values(prev).forEach(v => { if (counts[v] != null) counts[v]++; });
-        const minCount = Math.min(counts.claude, counts.codex, counts.both);
+        const minCount = Math.min(counts.claude, counts.codex, counts.cursor, counts.both);
         const candidates = Object.keys(counts).filter(k => counts[k] === minCount);
         const type = candidates[Math.floor(Math.random() * candidates.length)];
         return { ...prev, [room.id]: type };
@@ -3363,7 +3419,12 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
 
     const stopRandomVibe = () => {
       setActiveVibes(prev => {
-        const activeIds = Object.keys(prev);
+        // Don't clear dedicated Cursor sessions (Joe / Mattias)
+        const activeIds = Object.keys(prev).filter(id => {
+          if (joeRoom && id === joeRoom.id && prev[id] === 'cursor') return false;
+          if (mattiasRoom && id === mattiasRoom.id && prev[id] === 'cursor') return false;
+          return true;
+        });
         if (activeIds.length <= MIN_VIBES) return prev;
         const removeId = activeIds[Math.floor(Math.random() * activeIds.length)];
         const next = { ...prev };
@@ -3393,7 +3454,43 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
     scheduleStart();
     scheduleStop();
 
-    return () => timers.forEach(t => clearTimeout(t));
+    // Joe W. vibes with Cursor on a dedicated on/off cycle
+    if (joeRoom) {
+      const scheduleJoeCursor = () => {
+        const offFor = 5000 + Math.random() * 9000;
+        timers.push(setTimeout(() => {
+          setActiveVibes(prev => ({ ...prev, [joeRoom.id]: 'cursor' }));
+          const onFor = 7000 + Math.random() * 10000;
+          timers.push(setTimeout(() => {
+            setActiveVibes(prev => {
+              if (prev[joeRoom.id] !== 'cursor') return prev;
+              const next = { ...prev };
+              delete next[joeRoom.id];
+              return next;
+            });
+            scheduleJoeCursor();
+          }, onFor));
+        }, offFor));
+      };
+      // First Cursor session after a short beat so the floor seeds first
+      timers.push(setTimeout(() => {
+        setActiveVibes(prev => ({ ...prev, [joeRoom.id]: 'cursor' }));
+        timers.push(setTimeout(() => {
+          setActiveVibes(prev => {
+            if (prev[joeRoom.id] !== 'cursor') return prev;
+            const next = { ...prev };
+            delete next[joeRoom.id];
+            return next;
+          });
+          scheduleJoeCursor();
+        }, 8000 + Math.random() * 6000));
+      }, 2500));
+    }
+
+    return () => {
+      timers.forEach(t => clearTimeout(t));
+      if (mattiasPinId) clearInterval(mattiasPinId);
+    };
   }, [activeFloor]);
   const windowRef = useRef(null);
   const viewportRef = useRef(null);
@@ -3629,6 +3726,7 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
                         glowOfficeId={glowOfficeId}
                         glowOfficeVibe={glowOfficeVibe}
                         vibeOverride={vibeOverride}
+                        theme={theme}
                         showPhysicalTags={showPhysicalTags}
                         spotifyAlwaysOpen={spotifyAlwaysOpen}
                         githubAlwaysOpen={githubAlwaysOpen}

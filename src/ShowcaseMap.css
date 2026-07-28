@@ -2025,8 +2025,8 @@
   flex-shrink: 0;
   border-radius: 3px;
 }
-/* Symbol-on-colored-square variant — matches the agent-badge shape so all
-   three (Claude, Codex, agents) read as one stacked group. */
+/* Symbol-on-colored-square variant — matches the agent-badge shape so
+   Claude, Codex, Cursor, and agents read as one stacked group. */
 .sc-ai-icon-badge {
   width: 15px;
   height: 15px;
@@ -5649,7 +5649,7 @@
 }
 
 /* Inline agent badge inside the office card-header — matches the size +
-   shape of the Claude/Codex vibe icon (.sc-ai-icon: 16×16, 3px radius,
+   shape of the Claude/Codex/Cursor vibe icon (.sc-ai-icon: 16×16, 3px radius,
    regular rounded corners — no superellipse, no outer ring). */
 .sc-private-agent-badge {
   position: relative;

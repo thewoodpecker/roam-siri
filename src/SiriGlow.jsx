@@ -26,6 +26,14 @@ function hsbToCSS(h, s, b, a) {
 
 function getGlowShades(hex) {
   const { h, s, b } = hsbFromHex(hex);
+  // Achromatic extremes (Cursor white/black vibes): preserve brightness so
+  // the aura stays truly white or black instead of being forced mid-gray.
+  if (s < 0.05) {
+    if (b > 0.5) {
+      return { core: { h, s: 0, b: 1.0 }, mid: { h, s: 0, b: 0.92 } };
+    }
+    return { core: { h, s: 0, b: 0.18 }, mid: { h, s: 0, b: 0.08 } };
+  }
   const sat = Math.min(s * 1.2, 1.0);
   return {
     core: { h, s: sat * 0.55, b: 1.0 },
