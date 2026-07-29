@@ -8,7 +8,50 @@
   font-family: 'Possibility';
   src: url('/fonts/Possibility-Bold.otf') format('opentype');
   font-weight: 700;
-  font-display: swap;
+  /* block = brief FOIT instead of FOUT (no fallback flash) */
+  font-display: block;
+}
+
+@keyframes sc-soft-blur-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--sc-y, 16px));
+    filter: blur(var(--sc-blur, 12px));
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0px);
+  }
+}
+
+@keyframes sc-soft-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.sc-soft-blur-word {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.sc-soft-blur-char {
+  display: inline-block;
+  opacity: 0;
+  animation-fill-mode: both;
+  will-change: opacity, transform, filter;
+}
+
+.sc-load-reveal {
+  opacity: 0;
+  animation-fill-mode: both;
+  will-change: opacity, transform, filter;
+}
+
+.sc-v2-hero[data-hero-ready="false"] .sc-soft-blur-char,
+.sc-v2-hero[data-hero-ready="false"] .sc-load-reveal {
+  animation: none !important;
+  opacity: 0 !important;
 }
 
 :root {
@@ -911,6 +954,18 @@
   flex-shrink: 0 !important;
   overflow: hidden !important;
   margin: 0 !important;
+  /* Feature-section maps stay static — no soft-blur / window-in enter */
+  animation: none !important;
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+.sc-map-feature-window-host .sc-v2-map-reveal,
+.sc-map-feature-window-host .sc-load-reveal {
+  animation: none !important;
+  opacity: 1 !important;
+  filter: none !important;
+  transform: none !important;
 }
 
 .sc-map-feature-window-host .sc-content,
@@ -1560,8 +1615,27 @@
   gap: 0;
 }
 
+.sc-viewport[data-layout="v2"] .miniRoamOS .sc-v2-map-reveal {
+  width: 100%;
+  max-width: calc(var(--grid-max-width) - var(--grid-margin) * 2);
+  margin-top: 48px;
+  position: relative;
+  z-index: 2;
+}
+
+.sc-viewport[data-layout="v2"] .miniRoamOS .sc-v2-map-reveal .sc-window {
+  margin-top: 0;
+  width: 100%;
+  max-width: none;
+}
+
 .sc-viewport[data-layout="v2"] .miniRoamOS .sc-window {
   margin-top: 48px;
+}
+
+.sc-viewport[data-layout="v2"] .sc-window.sc-window-v2-reveal {
+  /* Soft-blur lives on the wrapper so drag/scale transforms stay intact */
+  animation: none;
 }
 
 .sc-v2-hero {
@@ -1590,7 +1664,7 @@
 }
 
 .sc-v2-hero-title {
-  font-family: 'Possibility', serif;
+  font-family: 'Possibility', sans-serif;
   font-size: clamp(28px, 3.5vw, 48px);
   font-weight: 700;
   color: var(--text-primary);
@@ -1599,6 +1673,12 @@
   line-height: 1;
   margin: 0;
   white-space: nowrap;
+}
+
+.sc-v2-hero-icon-wrap {
+  display: flex;
+  justify-content: center;
+  line-height: 0;
 }
 
 .sc-v2-hero-subtitle {
@@ -5143,18 +5223,25 @@
      shrink with `transform: scale(0.6)` anchored at top-left. The
      unscaled layout remainder is collapsed via negative margin so
      the next section sits beneath the visible bottom edge. */
+  .sc-viewport[data-layout="v2"] .miniRoamOS .sc-v2-map-reveal {
+    width: 1120px;
+    max-width: none;
+    margin-top: 64px;
+    margin-bottom: -158px;
+  }
+
   .sc-viewport[data-layout="v2"] .miniRoamOS .sc-window {
     width: 1120px;
     max-width: none;
     aspect-ratio: 16 / 9;
     max-height: none;
-    margin-top: 64px;
+    margin-top: 0;
+    margin-bottom: 0;
     /* !important so we beat the inline `transform: translate(...)` set
        in JSX for drag positioning. The map's initial position is (0,0)
        so dropping the translate is a non-issue here. */
     transform: scale(0.75) !important;
     transform-origin: top left;
-    margin-bottom: -158px;
     border-radius: var(--radius-xl);
     pointer-events: none;
   }

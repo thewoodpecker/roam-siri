@@ -23,6 +23,8 @@ import FloatingCTA from './FloatingCTA';
 import FooterCTA from './FooterCTA';
 import AgentSquircle from './AgentSquircle';
 import AgentGlyph from './AgentGlyph';
+import SoftBlurText from './SoftBlurText';
+import LoadReveal from './LoadReveal';
 import './ShowcaseMap.css';
 
 // Flip to `false` to show the nav, bottom bar, and theme toggle
@@ -3177,9 +3179,34 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
   const [mapMounted, setMapMounted] = useState(false);
   const [wallpaperDarkLoaded, setWallpaperDarkLoaded] = useState(false);
   const [wallpaperLightLoaded, setWallpaperLightLoaded] = useState(false);
+  const [heroFontsReady, setHeroFontsReady] = useState(false);
   useEffect(() => {
     const t = setTimeout(() => setMapMounted(true), 500);
     return () => clearTimeout(t);
+  }, []);
+  useEffect(() => {
+    let cancelled = false;
+    const markReady = () => {
+      if (!cancelled) setHeroFontsReady(true);
+    };
+    // Wait for Possibility so hero never paints the fallback face
+    if (document.fonts?.load) {
+      document.fonts
+        .load('700 48px Possibility')
+        .then(() => document.fonts.ready)
+        .then(markReady)
+        .catch(markReady);
+    } else if (document.fonts?.ready) {
+      document.fonts.ready.then(markReady).catch(markReady);
+    } else {
+      markReady();
+    }
+    // Failsafe so hero isn't stuck hidden if font load hangs
+    const failsafe = setTimeout(markReady, 2500);
+    return () => {
+      cancelled = true;
+      clearTimeout(failsafe);
+    };
   }, []);
   useEffect(() => {
     const dark = new Image();
@@ -3583,10 +3610,26 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
         <div className="sc-wallpaper sc-wallpaper-dark" style={{ opacity: theme === 'dark' && wallpaperDarkLoaded ? 1 : 0 }} />
         <div className="sc-wallpaper sc-wallpaper-light" style={{ opacity: theme === 'light' && wallpaperLightLoaded ? 1 : 0 }} />
         {layout === 'v2' && (
-          <div className="sc-v2-hero">
-            <img className="sc-v2-hero-icon" src="/icons/roam-gold-icon.png" alt="Roam" />
-            <h1 className="sc-v2-hero-title">The Office That Thinks</h1>
-            <div className="sc-v2-hero-rating" aria-label="G2 rating 4.8 out of 5">
+          <div className="sc-v2-hero" data-hero-ready={heroFontsReady ? 'true' : 'false'}>
+            <LoadReveal play={heroFontsReady} index={0} baseDelay={0} stagger={0} className="sc-v2-hero-icon-wrap">
+              <img className="sc-v2-hero-icon" src="/icons/roam-gold-icon.png" alt="Roam" />
+            </LoadReveal>
+            <SoftBlurText
+              as="h1"
+              className="sc-v2-hero-title"
+              text="ROAM MAKES REMOTE WORK"
+              play={heroFontsReady}
+              delay={0.12}
+              stagger={0.025}
+            />
+            <LoadReveal
+              play={heroFontsReady}
+              index={0}
+              baseDelay={0.48}
+              stagger={0.08}
+              className="sc-v2-hero-rating"
+              aria-label="G2 rating 4.8 out of 5"
+            >
               <span
                 className="sc-v2-hero-rating-g2"
                 aria-hidden="true"
@@ -3602,18 +3645,39 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
                 ))}
               </span>
               <span className="sc-v2-hero-rating-score">4.8/5</span>
-            </div>
-            <p className="sc-v2-hero-subtitle">Roam is a Virtual Office Platform Where People &amp; AI Agents Collaborate.</p>
-            <div className="sc-v2-hero-buttons">
-              <button className="sc-promo-btn">Book Demo</button>
-              <button className="sc-promo-btn">Free Trial</button>
-            </div>
+            </LoadReveal>
+            <LoadReveal play={heroFontsReady} index={1} baseDelay={0.48} stagger={0.08}>
+              <p className="sc-v2-hero-subtitle">Roam is a Virtual Office Platform Where People &amp; AI Agents Collaborate.</p>
+            </LoadReveal>
+            <LoadReveal play={heroFontsReady} index={2} baseDelay={0.48} stagger={0.08} className="sc-v2-hero-buttons">
+              <button type="button" className="sc-promo-btn">Book Demo</button>
+              <button type="button" className="sc-promo-btn">Free Trial</button>
+            </LoadReveal>
           </div>
         )}
         {layout === 'v2' && (
-          <div className="sc-v2-hero-marquee">{marqueeEl}</div>
+          <LoadReveal
+            play={heroFontsReady}
+            index={0}
+            baseDelay={0.78}
+            stagger={0}
+            blur={8}
+            className="sc-v2-hero-marquee"
+          >
+            {marqueeEl}
+          </LoadReveal>
         )}
-      <div className={`sc-window ${!mapWin.isFocused ? 'sc-window-unfocused' : ''} ${mapMounted ? 'sc-window-mounted' : ''} ${mapPulse ? 'sc-window-pulse' : ''}`} ref={windowRef} style={{ transform: `translate(${mapWin.position.x}px, ${mapWin.position.y}px)`, zIndex: mapWin.zIndex }} onMouseDown={() => mapWin.focus()}>
+      <LoadReveal
+        active={layout === 'v2' && !embedded}
+        play={heroFontsReady}
+        index={0}
+        baseDelay={0.92}
+        stagger={0}
+        blur={10}
+        y={24}
+        className={layout === 'v2' && !embedded ? 'sc-v2-map-reveal' : undefined}
+      >
+      <div className={`sc-window ${!mapWin.isFocused ? 'sc-window-unfocused' : ''} ${mapMounted ? 'sc-window-mounted' : ''} ${mapPulse ? 'sc-window-pulse' : ''}${layout === 'v2' && !embedded ? ' sc-window-v2-reveal' : ''}`} ref={windowRef} style={{ transform: `translate(${mapWin.position.x}px, ${mapWin.position.y}px)`, zIndex: mapWin.zIndex }} onMouseDown={() => mapWin.focus()}>
         {/* Mac window title bar */}
         <div className="sc-titlebar" onMouseDown={(e) => { setHintVisible(false); makeDragHandler(mapWin)(e); }}>
           <div className="sc-traffic-lights">
@@ -4021,6 +4085,7 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
         <ShareDialog open={shareOpen} onClose={() => setShareOpen(false)} />
         {knockingRoom && <KnockDialog room={knockingRoom} onCancel={() => { clearTimeout(knockTimerRef.current); setKnockingRoom(null); }} />}
       </div>
+      </LoadReveal>
       {!dmPortalTarget && miniChats.map(mc => (
         <MiniChat key={mc.chatId} {...mc} onClose={() => closeMiniChat(mc.chatId)} />
       ))}
@@ -4074,7 +4139,14 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
       }} />}
       {/* Product features bar — inside miniRoamOS, pinned to bottom */}
       {/* Handwritten annotation pointing to the product bar */}
-      <Hint portal={false} text="Product Tour" blob="peaks" arrow="swoop-right" visible={hintVisible} style={introHintStyle || { top: 190, left: 90 }} />
+      <Hint
+        portal={false}
+        text="Product Tour"
+        blob="peaks"
+        arrow="swoop-right"
+        visible={hintVisible && (layout !== 'v2' || heroFontsReady)}
+        style={introHintStyle || { top: 190, left: 90 }}
+      />
       <div className="sc-products-bar" ref={productsBarRef}>
         {PRODUCTS.map((item, i) => {
           const winByName = {
