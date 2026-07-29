@@ -1165,7 +1165,14 @@
   background-position: center;
   background-repeat: no-repeat;
   z-index: 0;
-  transition: opacity 800ms ease;
+  opacity: 0;
+  transition: opacity 1.1s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity;
+  pointer-events: none;
+}
+
+.sc-wallpaper.is-visible {
+  opacity: 1;
 }
 
 .sc-wallpaper-dark {

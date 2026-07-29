@@ -3209,9 +3209,18 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
     };
   }, []);
   useEffect(() => {
+    let cancelled = false;
+    const reveal = (setter) => {
+      // Paint at opacity 0 first, then fade — otherwise cached images pop in
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          if (!cancelled) setter(true);
+        });
+      });
+    };
     const dark = new Image();
     dark.decoding = 'async';
-    const onDarkReady = () => requestAnimationFrame(() => setWallpaperDarkLoaded(true));
+    const onDarkReady = () => reveal(setWallpaperDarkLoaded);
     if (typeof dark.decode === 'function') {
       dark.src = '/wallpapers/wallpaper-dark.png';
       dark.decode().then(onDarkReady).catch(onDarkReady);
@@ -3221,7 +3230,7 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
     }
     const light = new Image();
     light.decoding = 'async';
-    const onLightReady = () => requestAnimationFrame(() => setWallpaperLightLoaded(true));
+    const onLightReady = () => reveal(setWallpaperLightLoaded);
     if (typeof light.decode === 'function') {
       light.src = '/wallpapers/wallpaper-light.png';
       light.decode().then(onLightReady).catch(onLightReady);
@@ -3229,6 +3238,7 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
       light.onload = onLightReady;
       light.src = '/wallpapers/wallpaper-light.png';
     }
+    return () => { cancelled = true; };
   }, []);
   const pulseMapWindow = useCallback(() => {
     setMapPulse(false);
@@ -3607,8 +3617,8 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
       </div>
 
       <div className="miniRoamOS" ref={miniRoamRef} onClick={() => hintVisible && setHintVisible(false)}>
-        <div className="sc-wallpaper sc-wallpaper-dark" style={{ opacity: theme === 'dark' && wallpaperDarkLoaded ? 1 : 0 }} />
-        <div className="sc-wallpaper sc-wallpaper-light" style={{ opacity: theme === 'light' && wallpaperLightLoaded ? 1 : 0 }} />
+        <div className={`sc-wallpaper sc-wallpaper-dark${theme === 'dark' && wallpaperDarkLoaded ? ' is-visible' : ''}`} />
+        <div className={`sc-wallpaper sc-wallpaper-light${theme === 'light' && wallpaperLightLoaded ? ' is-visible' : ''}`} />
         {layout === 'v2' && (
           <div className="sc-v2-hero" data-hero-ready={heroFontsReady ? 'true' : 'false'}>
             <LoadReveal play={heroFontsReady} index={0} baseDelay={0} stagger={0} className="sc-v2-hero-icon-wrap">
@@ -3628,7 +3638,7 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
               baseDelay={0.48}
               stagger={0.08}
               className="sc-v2-hero-rating"
-              aria-label="G2 rating 4.8 out of 5"
+              aria-label="G2 rating 4.9 out of 5"
             >
               <span
                 className="sc-v2-hero-rating-g2"
@@ -3644,10 +3654,10 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
                   />
                 ))}
               </span>
-              <span className="sc-v2-hero-rating-score">4.8/5</span>
+              <span className="sc-v2-hero-rating-score">4.9</span>
             </LoadReveal>
             <LoadReveal play={heroFontsReady} index={1} baseDelay={0.48} stagger={0.08}>
-              <p className="sc-v2-hero-subtitle">Roam is a Virtual Office Platform Where People &amp; AI Agents Collaborate.</p>
+              <p className="sc-v2-hero-subtitle">Virtual Offices, Drop-Ins, AI Meetings, All-Hands, AI Agents &amp; More.</p>
             </LoadReveal>
             <LoadReveal play={heroFontsReady} index={2} baseDelay={0.48} stagger={0.08} className="sc-v2-hero-buttons">
               <button type="button" className="sc-promo-btn">Book Demo</button>

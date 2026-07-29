@@ -51,13 +51,19 @@ img[src*="/headshots/"] {
   background-color: var(--background-primary);
 }
 
-/* Suppress all transitions during theme toggles to avoid jank across the tree. */
+/* Suppress all transitions during theme toggles to avoid jank across the tree.
+   Wallpapers keep their opacity fade so the hero background can ease in. */
 html.theme-switching,
-html.theme-switching *,
+html.theme-switching *:not(.sc-wallpaper),
 html.theme-switching *::before,
 html.theme-switching *::after {
   transition: none !important;
   animation-duration: 0s !important;
+}
+
+html.theme-switching .sc-wallpaper {
+  transition: opacity 1.1s cubic-bezier(0.22, 1, 0.36, 1) !important;
+  animation-duration: unset !important;
 }
 
 /* Honor user motion preferences globally. Per-component animations remain
