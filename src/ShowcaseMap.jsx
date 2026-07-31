@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useMemo, useCallback } from 'react';
+import React, { useEffect, useState, useRef, useMemo, useCallback, lazy, Suspense } from 'react';
 import ReactDOM from 'react-dom';
 // data.js imports removed — floor data is self-contained
 import SiriGlow from './SiriGlow';
@@ -26,6 +26,8 @@ import AgentGlyph from './AgentGlyph';
 import SoftBlurText from './SoftBlurText';
 import LoadReveal from './LoadReveal';
 import './ShowcaseMap.css';
+
+const RoamIcon3D = lazy(() => import('./RoamIcon3D'));
 
 // Flip to `false` to show the nav, bottom bar, and theme toggle
 const HIDE_CHROME = false;
@@ -3622,7 +3624,9 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
         {layout === 'v2' && (
           <div className="sc-v2-hero" data-hero-ready={heroFontsReady ? 'true' : 'false'}>
             <LoadReveal play={heroFontsReady} index={0} baseDelay={0} stagger={0} className="sc-v2-hero-icon-wrap">
-              <img className="sc-v2-hero-icon" src="/icons/roam-gold-icon.png" alt="Roam" />
+              <Suspense fallback={<img className="sc-v2-hero-icon" src="/icons/roam-gold-icon.png" alt="Roam" />}>
+                <RoamIcon3D className="sc-v2-hero-icon sc-v2-hero-icon-3d" size={108} reveal={heroFontsReady} />
+              </Suspense>
             </LoadReveal>
             <SoftBlurText
               as="h1"

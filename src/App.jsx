@@ -5,6 +5,7 @@ import ShowcaseMap from './ShowcaseMap';
 import RemoteWorkTicker from './RemoteWorkTicker';
 import AgentMapView from './AgentMap';
 import AgentGarageView from './AgentGarage';
+import ActivityGlowPreview from './ActivityGlowPreview';
 import { SpinnerComets } from './SpinnerComets';
 import './App.css';
 
@@ -1347,6 +1348,7 @@ function TabSwitcher({ activeTab, onTabChange }) {
     { section: 'WIP' },
     { id: 'design-studio', label: 'Roam Design Studio' },
     { id: 'agent-garage', label: 'Agent Garage' },
+    { id: 'activity-glow', label: 'Activity Glow' },
     { id: 'map-v3', label: 'Map V3' },
     { id: 'claude-max', label: 'Vibe Code' },
     { id: 'big-vibe', label: 'Big Vibe' },
@@ -3444,7 +3446,7 @@ function useHashTab() {
     // Split the hash into segments so external tools (e.g. Figma's capture
     // script) can prepend their own params and the route still matches.
     const segments = window.location.hash.replace('#', '').split(/[&?]/);
-    const valid = ['map-v3', 'design-studio', 'agent-garage', 'claude-max', 'big-vibe', 'big-meetings', 'war-room', 'experimental', 'spinner', 'showcase'];
+    const valid = ['map-v3', 'design-studio', 'agent-garage', 'activity-glow', 'claude-max', 'big-vibe', 'big-meetings', 'war-room', 'experimental', 'spinner', 'showcase'];
     for (const seg of segments) {
       if (valid.includes(seg)) return seg;
       const [k, v] = seg.split('=');
@@ -3530,6 +3532,7 @@ export default function App() {
           {activeTab === 'map-v3' && <EditMapView />}
           {activeTab === 'design-studio' && <EditMapView studioMode />}
           {activeTab === 'agent-garage' && <AgentGarageView />}
+          {activeTab === 'activity-glow' && <ActivityGlowPreview />}
           {activeTab === 'claude-max' && <ClaudeMaxView />}
           {activeTab === 'big-vibe' && <BigVibeView />}
           {activeTab === 'war-room' && <WarRoomView />}

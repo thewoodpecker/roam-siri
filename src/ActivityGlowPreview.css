@@ -1,0 +1,148 @@
+.agp-viewport {
+  position: fixed;
+  inset: 0;
+  overflow: auto;
+  z-index: 1;
+}
+
+.agp-viewport[data-theme="light"] {
+  background: var(--bg-surface-primary-subdued, #faf9fa);
+}
+
+.agp-chrome {
+  position: relative;
+  z-index: 2;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 28px 24px 64px;
+}
+
+.agp-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.agp-title {
+  margin: 0 0 6px;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+
+.agp-subtitle {
+  margin: 0;
+  max-width: 42rem;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+.agp-floor {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.agp-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  /* Let SiriGlow bloom past the card edge (canvas inset -62px) */
+  overflow: visible;
+}
+
+.agp-grid-ref {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  max-width: 720px;
+}
+
+.agp-section-label {
+  margin-top: 8px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--text-secondary);
+}
+
+.agp-office {
+  min-height: 148px;
+  cursor: default !important;
+  overflow: visible !important;
+  background: var(--bg-surface-elevated-primary-subdued) !important;
+}
+
+.agp-office .meeting-room-card {
+  background-color: var(--bg-surface-elevated-primary-subdued) !important;
+}
+
+.agp-office:hover,
+.agp-office:hover .meeting-room-card {
+  background-color: var(--bg-surface-elevated-primary-subdued) !important;
+}
+
+.agp-office .private-office-seat {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px 4px;
+}
+
+.agp-swatch-meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 12px 10px;
+}
+
+.agp-swatch-name {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-transform: lowercase;
+}
+
+.agp-swatch-hex {
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-disabled, var(--text-secondary));
+  opacity: 0.85;
+}
+
+/* Emoji fills ~75% of the 16px badge — not nested Zoom/Teams-style chrome */
+.agp-emoji-badge {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  line-height: 0;
+  background: var(--bg-surface-elevated-secondary, rgba(255, 255, 255, 0.08));
+}
+
+.agp-emoji-glyph {
+  font-size: 12px;
+  line-height: 1;
+  display: block;
+  transform: translateY(0.5px);
+}
+
+@media (max-width: 900px) {
+  .agp-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .agp-grid,
+  .agp-grid-ref {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
