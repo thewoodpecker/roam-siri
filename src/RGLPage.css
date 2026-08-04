@@ -1,0 +1,881 @@
+.rgl-page {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  background: #0e0e10;
+  color: #f4f3f2;
+  font-family: var(--font-sans, Inter, system-ui, sans-serif);
+  z-index: 1;
+}
+
+.rgl-page[data-theme='light'] {
+  background: #e8e6ea;
+  color: #1e1d20;
+}
+
+.rgl-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 24px 20px;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.35);
+  overflow-y: auto;
+}
+
+.rgl-page[data-theme='light'] .rgl-sidebar {
+  background: rgba(255, 255, 255, 0.55);
+  border-right-color: rgba(0, 0, 0, 0.08);
+}
+
+.rgl-brand {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.rgl-brand-mark {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+}
+
+.rgl-brand-sub {
+  font-size: 12px;
+  opacity: 0.55;
+  letter-spacing: 0.02em;
+}
+
+.rgl-intro {
+  margin: 0 0 16px;
+  font-size: 12px;
+  line-height: 1.5;
+  opacity: 0.65;
+}
+
+.rgl-section-label {
+  margin: 12px 0 8px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.45;
+}
+
+.rgl-item-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rgl-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.rgl-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.rgl-page[data-theme='light'] .rgl-item:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.rgl-item.is-active {
+  background: rgba(255, 213, 106, 0.1);
+  border-color: rgba(255, 213, 106, 0.35);
+}
+
+.rgl-item-name {
+  font-size: 13px;
+  font-weight: 550;
+}
+
+.rgl-item-status {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 999px;
+  opacity: 0.8;
+}
+
+.rgl-item-status-wip {
+  background: rgba(255, 213, 106, 0.18);
+  color: #ffd56a;
+}
+
+.rgl-item-status-ref {
+  background: rgba(255, 255, 255, 0.08);
+  color: inherit;
+  opacity: 0.55;
+}
+
+.rgl-page[data-theme='light'] .rgl-item-status-ref {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.rgl-swatches {
+  margin-top: 8px;
+}
+
+.rgl-palette-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.rgl-palette-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin: 0;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background 140ms ease,
+    border-color 140ms ease;
+}
+
+.rgl-palette-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.rgl-palette-btn.is-active {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.rgl-page[data-theme='light'] .rgl-palette-btn:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.rgl-page[data-theme='light'] .rgl-palette-btn.is-active {
+  background: rgba(0, 0, 0, 0.06);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+.rgl-palette-chips {
+  position: relative;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+}
+
+.rgl-palette-chip {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-sizing: border-box;
+}
+
+.rgl-page[data-theme='light'] .rgl-palette-chip {
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+.rgl-palette-chip-body {
+  top: 0;
+  left: 0;
+}
+
+.rgl-palette-chip-accent {
+  right: 0;
+  bottom: 0;
+}
+
+.rgl-palette-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.rgl-palette-name {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.rgl-palette-blurb {
+  font-size: 11px;
+  opacity: 0.5;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rgl-swatch-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.rgl-swatch-row-active {
+  padding-top: 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.rgl-page[data-theme='light'] .rgl-swatch-row-active {
+  border-top-color: rgba(0, 0, 0, 0.08);
+}
+
+.rgl-swatch {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  flex-shrink: 0;
+}
+
+.rgl-page[data-theme='light'] .rgl-swatch {
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+.rgl-swatch-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.rgl-swatch-name {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.rgl-swatch-hex {
+  font-size: 11px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  opacity: 0.5;
+}
+
+.rgl-sidebar-foot {
+  margin-top: auto;
+  padding-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rgl-theme-toggle {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: transparent;
+  color: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.rgl-page[data-theme='light'] .rgl-theme-toggle {
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+.rgl-theme-toggle:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.rgl-stage-wrap {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.rgl-stage-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 28px 32px 0;
+}
+
+.rgl-stage-title {
+  margin: 0 0 4px;
+  font-size: 22px;
+  font-weight: 650;
+  letter-spacing: -0.03em;
+}
+
+.rgl-stage-blurb {
+  margin: 0;
+  font-size: 13px;
+  opacity: 0.55;
+}
+
+.rgl-hint {
+  margin: 0;
+  font-size: 11px;
+  opacity: 0.4;
+  white-space: nowrap;
+}
+
+.rgl-stage-floor {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  /* Soft radial stage so the object reads against the page */
+  background:
+    radial-gradient(ellipse 60% 45% at 50% 58%, rgba(255, 213, 106, 0.07), transparent 70%),
+    radial-gradient(ellipse 70% 55% at 50% 60%, rgba(255, 255, 255, 0.04), transparent 72%);
+}
+
+.rgl-page[data-theme='light'] .rgl-stage-floor {
+  background:
+    radial-gradient(ellipse 60% 45% at 50% 58%, rgba(255, 213, 106, 0.12), transparent 70%),
+    radial-gradient(ellipse 70% 55% at 50% 60%, rgba(255, 255, 255, 0.7), transparent 72%);
+}
+
+/* Map-backed stage — wallpaper + showcase window behind the gift. */
+.rgl-stage-floor-map {
+  background: #0a0a0c;
+}
+
+.rgl-page[data-theme='light'] .rgl-stage-floor-map {
+  background: #d8d6dc;
+}
+
+.rgl-map-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.rgl-map-wallpaper {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.rgl-map-window-host {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  overflow: hidden;
+  pointer-events: none;
+  box-sizing: border-box;
+}
+
+/* Matches the showcase map window — scrim is clipped to this frame. */
+.rgl-map-window-frame {
+  position: relative;
+  width: 1120px;
+  height: 630px;
+  flex-shrink: 0;
+  border-radius: var(--radius-2xl);
+  corner-shape: superellipse(1.6);
+  overflow: hidden;
+  pointer-events: auto;
+}
+
+/* Same intrinsic size as .sc-map-feature-window-host in ShowcaseMap.css */
+.rgl-map-window-host .sc-viewport,
+.rgl-map-window-host .miniRoamOS {
+  position: relative !important;
+  inset: auto !important;
+  width: auto !important;
+  height: auto !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  overflow: visible !important;
+  background: transparent !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transform: none !important;
+}
+
+.rgl-map-window-host .sc-window {
+  position: relative !important;
+  top: auto !important;
+  left: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  transform: none !important;
+  width: 1120px !important;
+  max-width: 1120px !important;
+  height: 630px !important;
+  max-height: 630px !important;
+  aspect-ratio: auto !important;
+  flex-shrink: 0 !important;
+  overflow: hidden !important;
+  margin: 0 !important;
+  animation: none !important;
+  opacity: 1 !important;
+  filter: none !important;
+  border-radius: var(--radius-2xl) !important;
+  corner-shape: superellipse(1.6) !important;
+}
+
+.rgl-map-window-host .sc-v2-map-reveal,
+.rgl-map-window-host .sc-load-reveal {
+  animation: none !important;
+  opacity: 1 !important;
+  filter: none !important;
+  transform: none !important;
+}
+
+.rgl-map-window-host .sc-content,
+.rgl-map-window-host .sc-map {
+  overflow: hidden !important;
+}
+
+.rgl-map-window-host .miniRoamOS::after,
+.rgl-map-window-host .sc-wallpaper,
+.rgl-map-window-host .sc-navbar-wrap,
+.rgl-map-window-host .sc-grid-debug,
+.rgl-map-window-host .sc-v2-hero,
+.rgl-map-window-host .sc-v2-hero-marquee,
+.rgl-map-window-host .sc-right-controls,
+.rgl-map-window-host .sc-platform-badge,
+.rgl-map-window-host .sc-bottom-bar,
+.rgl-map-window-host .sc-dock,
+.rgl-map-window-host .sc-hint,
+.rgl-map-window-host .sc-products-bar,
+.rgl-map-window-host .toolbar,
+.rgl-map-window-host .meeting-win,
+.rgl-map-window-host .theater-win,
+.rgl-map-window-host .ainbox-window,
+.rgl-map-window-host .mm-win,
+.rgl-map-window-host .lb-win,
+.rgl-map-window-host .mc-win,
+.rgl-map-window-host .mc-window,
+.rgl-map-window-host .onair-window,
+.rgl-map-window-host .story-viewer,
+.rgl-map-window-host .sc-feature-section,
+.rgl-map-window-host .sc-feature-section-reverse,
+.rgl-map-window-host .sc-promo-section,
+.rgl-map-window-host .sc-footer,
+.rgl-map-window-host .sc-cta-section,
+.rgl-map-window-host .sc-sidebar,
+.rgl-map-window-host .FloatingCTA,
+.rgl-map-window-host .fp-footer-cta {
+  display: none !important;
+}
+
+/* Dim only the app window — clipped by .rgl-map-window-frame.
+   Must sit above ShowcaseMap's .sc-window (z-index: 100000).
+   Radius matches .sc-window exactly (ShowcaseMap.css). */
+.rgl-gift-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 100001;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-2xl);
+  corner-shape: superellipse(1.6);
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background: var(--bg-overlay-primary);
+  opacity: 1;
+  transition: opacity 1.1s ease-out;
+}
+
+.rgl-gift-scrim.is-entering {
+  opacity: 0;
+  transition: none;
+}
+
+.rgl-gift-scrim.is-dismissing {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 420ms ease-out;
+}
+
+.rgl-map-window-live {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* Gift is clipped to the app window and slides up from below its bottom edge. */
+.rgl-gift-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 100002;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  overflow: hidden;
+  border-radius: var(--radius-2xl);
+  corner-shape: superellipse(1.6);
+}
+
+.rgl-stage-floor:not(.rgl-stage-floor-map) .rgl-gift-layer {
+  position: relative;
+  inset: auto;
+  overflow: visible;
+  border-radius: 0;
+  corner-shape: initial;
+}
+
+.rgl-gift-anchor {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Sits above the box without shifting the centered gift. */
+.rgl-gift-label {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  transform: translateX(-50%);
+  z-index: 2;
+  pointer-events: none;
+  white-space: nowrap;
+  text-align: center;
+  padding: 10px 14px;
+  background: transparent;
+  border: 0.5px solid transparent;
+  border-radius: var(--radius-lg);
+  corner-shape: superellipse(1.6);
+  box-sizing: border-box;
+  isolation: isolate;
+}
+
+/* Frosted chip — fades in with SoftBlurText (same duration + ease). */
+.rgl-gift-label::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  corner-shape: inherit;
+  background: color-mix(in srgb, var(--bg-surface-elevated-primary) 62%, transparent);
+  border: 0.5px solid var(--border);
+  box-sizing: border-box;
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  opacity: 0;
+}
+
+.rgl-gift-label.is-visible::before {
+  animation: rgl-label-bg-in 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes rgl-label-bg-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.rgl-birthday-label {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  font-family: var(--font-family-primary, Inter, system-ui, sans-serif);
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 24px;
+  letter-spacing: 0;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.rgl-page[data-theme='light'] .rgl-birthday-label {
+  color: var(--text-primary);
+}
+
+/* Soft-blur text (same as homepage SoftBlurText / ShowcaseMap). */
+@font-face {
+  font-family: 'Possibility';
+  src: url('/fonts/Possibility-Bold.otf') format('opentype');
+  font-weight: 700;
+  font-display: block;
+}
+
+@keyframes sc-soft-blur-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--sc-y, 16px));
+    filter: blur(var(--sc-blur, 12px));
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0px);
+  }
+}
+
+@keyframes sc-soft-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.rgl-gift-label .sc-soft-blur-word {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.rgl-gift-label .sc-soft-blur-char {
+  display: inline-block;
+  opacity: 0;
+  animation-fill-mode: both;
+  will-change: opacity, transform, filter;
+}
+
+.rgl-gift-slide {
+  position: relative;
+  z-index: 1;
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* 315px to window bottom + 70px half-gift + margin → fully outside */
+  --rgl-gift-enter-y: 400px;
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* Soft accent glow behind the gift; sparks burst in front. */
+.rgl-gift-arrive {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.rgl-gift-arrive-glow {
+  z-index: 0;
+}
+
+.rgl-gift-arrive-sparks {
+  z-index: 0;
+}
+
+.rgl-gift-glow {
+  position: absolute;
+  z-index: 0;
+  width: 360px;
+  height: 360px;
+  border-radius: 50%;
+  background:
+    radial-gradient(
+      circle,
+      color-mix(in srgb, var(--rgl-glow) 55%, white) 0%,
+      var(--rgl-glow-soft, var(--rgl-glow)) 28%,
+      transparent 74%
+    );
+  filter: blur(28px);
+  opacity: 0;
+  transform: scale(1);
+  animation: rgl-glow-in 380ms ease-out forwards;
+}
+
+.rgl-gift-sparks {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+
+.rgl-spark {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--s, 8px);
+  height: var(--s, 8px);
+  margin: calc(var(--s, 8px) / -2) 0 0 calc(var(--s, 8px) / -2);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--rgl-glow) 55%, white);
+  box-shadow:
+    0 0 8px var(--rgl-glow),
+    0 0 16px color-mix(in srgb, var(--rgl-glow) 70%, transparent),
+    0 0 2px #fff;
+  opacity: 0;
+  animation: rgl-spark-fly 1100ms cubic-bezier(0.12, 0.7, 0.2, 1) forwards;
+  animation-delay: var(--delay, 0ms);
+}
+
+.rgl-spark:nth-child(odd) {
+  border-radius: 1px;
+  width: calc(var(--s, 8px) * 0.5);
+  height: calc(var(--s, 8px) * 1.8);
+}
+
+.rgl-spark:nth-child(3n) {
+  background: #fff;
+  box-shadow:
+    0 0 6px #fff,
+    0 0 14px var(--rgl-glow);
+}
+
+@keyframes rgl-glow-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 0.5;
+  }
+}
+
+@keyframes rgl-spark-fly {
+  0% {
+    opacity: 0;
+    transform: rotate(var(--a)) translateY(0) scale(0.35);
+  }
+  10% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(var(--a)) translateY(calc(var(--d) * -1)) scale(0.2);
+  }
+}
+
+.rgl-gift-layer.is-dismissing .rgl-gift-glow {
+  animation: none;
+  opacity: 0;
+  transition: opacity 280ms ease-out;
+}
+
+.rgl-gift-layer.is-dismissing .rgl-gift-label {
+  opacity: 0;
+  transition: opacity 220ms ease-out;
+}
+
+/* CodePen bounce-in-right (nelledejones/gOOPWrK), remapped to +Y from below.
+   Same keyframe stops + 2s ease as the pen — fewer stops reads smoother than a multi-settle path. */
+@keyframes rgl-gift-bounce-in {
+  0% {
+    transform: translateY(var(--rgl-gift-enter-y));
+  }
+  60% {
+    transform: translateY(-12px);
+  }
+  80% {
+    transform: translateY(4px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+/* Slide back out the way it came — keyframes so exit still runs after the enter animation. */
+@keyframes rgl-gift-slide-out {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(var(--rgl-gift-enter-y));
+    opacity: 0;
+  }
+}
+
+.rgl-gift-layer.is-entering .rgl-gift-slide {
+  transform: translateY(var(--rgl-gift-enter-y));
+  animation: none;
+}
+
+.rgl-gift-layer:not(.is-entering):not(.is-dismissing) .rgl-gift-slide {
+  animation: rgl-gift-bounce-in 1.1s ease both;
+}
+
+.rgl-gift-layer.is-dismissing .rgl-gift-slide {
+  animation: rgl-gift-slide-out 420ms cubic-bezier(0.4, 0, 0.6, 1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rgl-gift-scrim,
+  .rgl-gift-slide {
+    transition: none !important;
+    animation: none !important;
+  }
+
+  .rgl-gift-glow {
+    animation: none;
+    opacity: 0.4;
+    transform: scale(1);
+  }
+
+  .rgl-spark {
+    display: none;
+  }
+}
+
+.rgl-gift-layer .rgl-canvas,
+.rgl-gift-layer .rgl-icon-ref {
+  pointer-events: auto;
+}
+
+/* Pack gifts a bit larger than the old 140 icon sandbox. */
+.rgl-canvas,
+.rgl-icon-ref {
+  width: 180px;
+  height: 180px;
+  flex-shrink: 0;
+}
+
+.rgl-icon-ref {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 768px) {
+  .rgl-page {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+  }
+
+  .rgl-sidebar {
+    border-right: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    max-height: 42vh;
+  }
+
+  .rgl-stage-header {
+    padding: 16px 16px 0;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

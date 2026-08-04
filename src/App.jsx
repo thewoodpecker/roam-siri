@@ -16,6 +16,9 @@ const FeaturePage = lazy(() => import('./FeaturePage'));
 // RWN (Remote Work News) hub — only renders for #/rwn, keep it lazy too.
 const RWNPage = lazy(() => import('./RWNPage'));
 
+// RGL — Roam GL sandbox for 3D map objects (#/rgl).
+const RGLPage = lazy(() => import('./RGLPage'));
+
 // Flip to `false` to show the dev settings icon in the top-left
 const HIDE_CHROME = false;
 
@@ -3504,14 +3507,30 @@ function useRwnRoute() {
   return isRwn;
 }
 
+function useRglRoute() {
+  const getIsRgl = () => /^#\/rgl(?:\/|$)/i.test(window.location.hash);
+  const [isRgl, setIsRgl] = useState(getIsRgl);
+  useEffect(() => {
+    const onHash = () => setIsRgl(getIsRgl());
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, []);
+  return isRgl;
+}
+
 export default function App() {
   const [activeTab, setActiveTab] = useHashTab();
   const featureSlug = useFeatureRoute();
   const isRwn = useRwnRoute();
+  const isRgl = useRglRoute();
 
   return (
     <>
-      {isRwn ? (
+      {isRgl ? (
+        <Suspense fallback={null}>
+          <RGLPage />
+        </Suspense>
+      ) : isRwn ? (
         <Suspense fallback={null}>
           <RWNPage />
         </Suspense>
@@ -3544,7 +3563,7 @@ export default function App() {
       )}
       {/* Pinned to the bottom of every page; stays mounted across route
           changes so it animates seamlessly through transitions. */}
-      <RemoteWorkTicker />
+      {!isRgl && <RemoteWorkTicker />}
     </>
   );
 }
