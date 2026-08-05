@@ -106,7 +106,13 @@ function OrbitingSubject({ children, drag, rotationY, spinBurst, angularVel }) {
  * Shared RGL stage — orthographic canvas, icon lighting,
  * and the same drag / fling / tap-spin physics as RoamIcon3D.
  */
-export default function RGLStage({ children, className }) {
+export default function RGLStage({
+  children,
+  className,
+  appearSpinKey = 0,
+  appearTurns = 0,
+  appearDuration = 1.1,
+}) {
   const reduceMotion = usePrefersReducedMotion();
   const drag = useRef({
     active: false,
@@ -119,6 +125,18 @@ export default function RGLStage({ children, className }) {
   const angularVel = useRef(SPIN_SPEED);
   const spinBurst = useRef(null);
   const [ready, setReady] = useState(false);
+
+  // Appear: N full Y turns over the bounce-in window, then resume idle spin.
+  useEffect(() => {
+    if (!appearSpinKey || !appearTurns || reduceMotion) return;
+    angularVel.current = 0;
+    spinBurst.current = {
+      start: rotationY.current,
+      delta: Math.PI * 2 * appearTurns,
+      elapsed: 0,
+      duration: appearDuration,
+    };
+  }, [appearSpinKey, appearTurns, appearDuration, reduceMotion]);
 
   const onPointerDown = useCallback((e) => {
     spinBurst.current = null;

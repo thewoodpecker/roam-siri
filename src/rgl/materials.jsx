@@ -147,11 +147,13 @@ export const RGL_VIEW_HALF = 1.22;
 
 export const bodyMaterialProps = {
   color: ROAM_BLACK,
-  roughness: 0.12,
-  metalness: 0.35,
-  clearcoat: 1,
-  clearcoatRoughness: 0.08,
-  reflectivity: 0.9,
+  // Soft paper/card finish — low metal so palette tints read in the diffuse,
+  // not only in specular hotspots (high metal + clearcoat crushed the color).
+  roughness: 0.42,
+  metalness: 0.08,
+  clearcoat: 0.35,
+  clearcoatRoughness: 0.35,
+  reflectivity: 0.45,
   flatShading: false,
 };
 

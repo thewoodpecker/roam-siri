@@ -37,6 +37,8 @@ const ITEMS = [
 const DISMISS_MS = 420;
 /** Must match `.rgl-gift-bounce-in` duration in RGLPage.css. */
 const ENTER_MS = 1100;
+/** Full Y turns during the appear bounce. */
+const APPEAR_TURNS = 2;
 /** Start glow/sparks while the gift is still rising into frame. */
 const ARRIVE_AT = 0.35;
 /** Birthday label — shortly after glow, while the gift is still settling. */
@@ -95,6 +97,21 @@ function pickPaletteId(exclude) {
   return next;
 }
 
+function dayOrdinal(n) {
+  const j = n % 10;
+  const k = n % 100;
+  if (j === 1 && k !== 11) return `${n}st`;
+  if (j === 2 && k !== 12) return `${n}nd`;
+  if (j === 3 && k !== 13) return `${n}rd`;
+  return `${n}th`;
+}
+
+function formatGiftDate(d = new Date()) {
+  const weekday = d.toLocaleDateString('en-US', { weekday: 'long' });
+  const month = d.toLocaleDateString('en-US', { month: 'long' });
+  return `${weekday} ${dayOrdinal(d.getDate())} ${month}`;
+}
+
 function prefersReducedMotion() {
   return (
     typeof window !== 'undefined' &&
@@ -105,7 +122,7 @@ function prefersReducedMotion() {
 function GiftArriveFX({ accent, burstKey }) {
   const sparks = Array.from({ length: SPARK_COUNT }, (_, i) => {
     const angle = (360 / SPARK_COUNT) * i + (i % 4) * 5;
-    const dist = 100 + (i % 6) * 22;
+    const dist = 160 + (i % 6) * 36;
     const size = 7 + (i % 5) * 2;
     const delay = (i % 7) * 18;
     return { angle, dist, size, delay, i };
@@ -157,6 +174,7 @@ export default function RGLPage() {
   const [dismissing, setDismissing] = useState(false);
   const [arriveFx, setArriveFx] = useState(false);
   const [arriveBurst, setArriveBurst] = useState(0);
+  const [appearSpinKey, setAppearSpinKey] = useState(0);
   const [labelPlay, setLabelPlay] = useState(false);
   const [birthdayName, setBirthdayName] = useState('Joe');
   const item = ITEMS.find((i) => i.id === itemId) ?? ITEMS[0];
@@ -179,6 +197,7 @@ export default function RGLPage() {
     setGiftOpen(true);
     setArriveFx(false);
     setLabelPlay(false);
+    setAppearSpinKey(0);
     setBirthdayName((prev) => pickBirthdayName(prev));
     if (prefersReducedMotion()) {
       setEntering(false);
@@ -193,6 +212,7 @@ export default function RGLPage() {
     const raf1 = requestAnimationFrame(() => {
       raf2 = requestAnimationFrame(() => {
         setEntering(false);
+        setAppearSpinKey((n) => n + 1);
         arriveTimer = window.setTimeout(() => {
           setArriveBurst((n) => n + 1);
           setArriveFx(true);
@@ -296,7 +316,13 @@ export default function RGLPage() {
   const giftContent = (
     <>
       {item.kind === 'pack' && (
-        <RGLStage className="rgl-canvas" key={`${item.id}-${theme}-${paletteId}`}>
+        <RGLStage
+          className="rgl-canvas"
+          key={`${item.id}-${theme}-${paletteId}`}
+          appearSpinKey={appearSpinKey}
+          appearTurns={APPEAR_TURNS}
+          appearDuration={ENTER_MS / 1000}
+        >
           <PackGift3D giftId={item.id} scale={1} theme={theme} paletteId={paletteId} />
         </RGLStage>
       )}
@@ -308,18 +334,52 @@ export default function RGLPage() {
     </>
   );
 
+  const giftDate = formatGiftDate();
+  const birthdayLead = 'Happy Birthday';
+  const nameDelay = 0.06 + birthdayLead.replace(/\s/g, '').length * 0.025;
+
   const birthdayLabel = (
-    <div className={`rgl-gift-label${labelPlay ? ' is-visible' : ''}`}>
-      <SoftBlurText
-        key={`${birthdayName}-${arriveBurst}-${labelPlay}`}
-        as="p"
-        className="rgl-birthday-label"
-        text={`Happy Birthday ${birthdayName}`}
-        play={labelPlay}
-        delay={0}
-        stagger={0.025}
-        duration={0.9}
-      />
+    <div
+      className={`rgl-gift-caption${labelPlay ? ' is-visible' : ''}`}
+      style={{ '--rgl-name-color': paletteColors.accent }}
+    >
+      <div className="rgl-gift-chip rgl-gift-date-tag">
+        <SoftBlurText
+          key={`date-${arriveBurst}-${labelPlay}`}
+          as="p"
+          className="rgl-date-label"
+          text={giftDate}
+          play={labelPlay}
+          delay={0}
+          stagger={0.02}
+          duration={0.9}
+        />
+      </div>
+      <div className="rgl-gift-chip rgl-gift-label">
+        <p className="rgl-birthday-label">
+          <SoftBlurText
+            key={`lead-${birthdayName}-${arriveBurst}-${labelPlay}`}
+            as="span"
+            className="rgl-birthday-lead"
+            text={birthdayLead}
+            play={labelPlay}
+            delay={0.06}
+            stagger={0.025}
+            duration={0.9}
+          />
+          {' '}
+          <SoftBlurText
+            key={`name-${birthdayName}-${arriveBurst}-${labelPlay}`}
+            as="span"
+            className="rgl-birthday-name"
+            text={birthdayName}
+            play={labelPlay}
+            delay={nameDelay}
+            stagger={0.025}
+            duration={0.9}
+          />
+        </p>
+      </div>
     </div>
   );
 
