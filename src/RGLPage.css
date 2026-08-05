@@ -394,11 +394,12 @@
   box-sizing: border-box;
 }
 
-/* Matches the showcase map window — scrim is clipped to this frame. */
+/* Matches the showcase map window — scrim is clipped to this frame.
+   674 = 630 (16:9 map) + 44 (company news ticker). */
 .rgl-map-window-frame {
   position: relative;
   width: 1120px;
-  height: 630px;
+  height: 674px;
   flex-shrink: 0;
   border-radius: var(--radius-2xl);
   corner-shape: superellipse(1.6);
@@ -433,8 +434,8 @@
   transform: none !important;
   width: 1120px !important;
   max-width: 1120px !important;
-  height: 630px !important;
-  max-height: 630px !important;
+  height: 674px !important;
+  max-height: 674px !important;
   aspect-ratio: auto !important;
   flex-shrink: 0 !important;
   overflow: hidden !important;

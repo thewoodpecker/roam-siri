@@ -960,6 +960,11 @@
   filter: none !important;
 }
 
+.sc-map-feature-window-host .sc-window:has(.map-ticker) {
+  height: 674px !important; /* 630 + 44 ticker */
+  max-height: 674px !important;
+}
+
 .sc-map-feature-window-host .sc-v2-map-reveal,
 .sc-map-feature-window-host .sc-load-reveal {
   animation: none !important;
@@ -1297,6 +1302,15 @@
   flex-direction: column;
   overflow: hidden !important;
   position: relative;
+}
+
+/* Ticker sits under the titlebar — grow the frame so the map body stays 16:9. */
+.sc-window:has(.map-ticker) {
+  --map-ticker-height: 44px;
+  aspect-ratio: 1120 / 674; /* 630 (16:9) + 44 ticker */
+  max-height: calc(
+    (var(--grid-max-width) - var(--grid-margin) * 2) * 674 / 1120
+  );
 }
 
 /* Title bar */
@@ -1853,6 +1867,12 @@
   border-radius: 20px 20px 0 0;
   border-top: 0.5px solid var(--border);
   position: relative;
+}
+
+/* Ticker sits between titlebar and content — drop the content's top card edge. */
+.sc-window:has(.map-ticker) .sc-content {
+  border-radius: 0;
+  border-top: none;
 }
 
 /* Map grid area */
@@ -5265,6 +5285,16 @@
     border-radius: var(--radius-xl);
     pointer-events: none;
   }
+
+  /* Ticker adds 44px — keep map body at 630 after scale, collapse overhang. */
+  .sc-viewport[data-layout="v2"] .miniRoamOS .sc-window:has(.map-ticker) {
+    aspect-ratio: 1120 / 674;
+    height: 674px;
+  }
+  .sc-viewport[data-layout="v2"] .miniRoamOS .sc-v2-map-reveal:has(.map-ticker) {
+    margin-bottom: -169px; /* 674 * 0.25 */
+  }
+
   .sc-viewport[data-layout="v2"] .miniRoamOS .sc-window * {
     pointer-events: none !important;
   }

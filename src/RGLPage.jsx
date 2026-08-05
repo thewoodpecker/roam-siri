@@ -507,7 +507,7 @@ export default function RGLPage() {
               <div className="rgl-map-window-host">
                 <div className="rgl-map-window-frame">
                   <div className="rgl-map-window-live" aria-hidden="true">
-                    <ShowcaseMap embedded theme={theme} initialFloor="Homepage" />
+                    <ShowcaseMap embedded theme={theme} initialFloor="Homepage" showTicker />
                   </div>
                   {giftVisible && (
                     <button

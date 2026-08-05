@@ -25,6 +25,7 @@ import AgentSquircle from './AgentSquircle';
 import AgentGlyph from './AgentGlyph';
 import SoftBlurText from './SoftBlurText';
 import LoadReveal from './LoadReveal';
+import MapTicker from './MapTicker';
 import './ShowcaseMap.css';
 
 const RoamIcon3D = lazy(() => import('./RoamIcon3D'));
@@ -2195,11 +2196,11 @@ function ShelfWindow({ win, onDrag, photoIdx, direction, onPrev, onNext }) {
 }
 
 // Main showcase component
-export default function ShowcaseMap({ initialFloor = 'R&D', embedded = false, autoKnock = false, spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, hideOnIt = false, onItAutoOpen = false, shelfAutoOpen = false, shareAutoOpen = false, theme, autoCycleFloors = false, autoCycleDms = false, showPhysicalTags = false, onAirOverride = null, agentsRoom = null, officeAgents = null, workrooms = null, peopleOverrides = null, peopleLimits = null, vibeOverride = false, hideElevator = false, hiddenRooms = null, extraRooms = null, editable = false, allowWindowOpens = false, defaultLayout = null, onPersonalAgentsClick = null } = {}) {
+export default function ShowcaseMap({ initialFloor = 'R&D', embedded = false, autoKnock = false, spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, hideOnIt = false, onItAutoOpen = false, shelfAutoOpen = false, shareAutoOpen = false, theme, autoCycleFloors = false, autoCycleDms = false, showPhysicalTags = false, onAirOverride = null, agentsRoom = null, officeAgents = null, workrooms = null, peopleOverrides = null, peopleLimits = null, vibeOverride = false, hideElevator = false, hiddenRooms = null, extraRooms = null, editable = false, allowWindowOpens = false, defaultLayout = null, onPersonalAgentsClick = null, showTicker = undefined } = {}) {
   return (
     <ChatProvider>
       <WindowManagerProvider initialWindows={INITIAL_WINDOWS}>
-        <ShowcaseMapInner initialFloor={initialFloor} embedded={embedded} autoKnock={autoKnock} spotifyAlwaysOpen={spotifyAlwaysOpen} githubAlwaysOpen={githubAlwaysOpen} figmaAlwaysOpen={figmaAlwaysOpen} hideOnIt={hideOnIt} onItAutoOpen={onItAutoOpen} shelfAutoOpen={shelfAutoOpen} shareAutoOpen={shareAutoOpen} themeOverride={theme} autoCycleFloors={autoCycleFloors} autoCycleDms={autoCycleDms} showPhysicalTags={showPhysicalTags} onAirOverride={onAirOverride} agentsRoom={agentsRoom} officeAgents={officeAgents} workrooms={workrooms} peopleOverrides={peopleOverrides} peopleLimits={peopleLimits} vibeOverride={vibeOverride} hideElevator={hideElevator} hiddenRooms={hiddenRooms} extraRooms={extraRooms} editable={editable} allowWindowOpens={allowWindowOpens} defaultLayout={defaultLayout} onPersonalAgentsClick={onPersonalAgentsClick} />
+        <ShowcaseMapInner initialFloor={initialFloor} embedded={embedded} autoKnock={autoKnock} spotifyAlwaysOpen={spotifyAlwaysOpen} githubAlwaysOpen={githubAlwaysOpen} figmaAlwaysOpen={figmaAlwaysOpen} hideOnIt={hideOnIt} onItAutoOpen={onItAutoOpen} shelfAutoOpen={shelfAutoOpen} shareAutoOpen={shareAutoOpen} themeOverride={theme} autoCycleFloors={autoCycleFloors} autoCycleDms={autoCycleDms} showPhysicalTags={showPhysicalTags} onAirOverride={onAirOverride} agentsRoom={agentsRoom} officeAgents={officeAgents} workrooms={workrooms} peopleOverrides={peopleOverrides} peopleLimits={peopleLimits} vibeOverride={vibeOverride} hideElevator={hideElevator} hiddenRooms={hiddenRooms} extraRooms={extraRooms} editable={editable} allowWindowOpens={allowWindowOpens} defaultLayout={defaultLayout} onPersonalAgentsClick={onPersonalAgentsClick} showTicker={showTicker} />
       </WindowManagerProvider>
     </ChatProvider>
   );
@@ -2363,10 +2364,12 @@ function useTargetHintStyle(targetRef, active, offset = { top: -30, left: 'cente
   return style;
 }
 
-function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = false, spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, hideOnIt = false, onItAutoOpen = false, shelfAutoOpen = false, shareAutoOpen = false, themeOverride = null, autoCycleFloors = false, autoCycleDms = false, showPhysicalTags = false, onAirOverride = null, agentsRoom = null, officeAgents = null, workrooms = null, peopleOverrides = null, peopleLimits = null, vibeOverride = false, hideElevator = false, hiddenRooms = null, extraRooms = null, editable = false, allowWindowOpens = false, defaultLayout = null, onPersonalAgentsClick = null }) {
+function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = false, spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, hideOnIt = false, onItAutoOpen = false, shelfAutoOpen = false, shareAutoOpen = false, themeOverride = null, autoCycleFloors = false, autoCycleDms = false, showPhysicalTags = false, onAirOverride = null, agentsRoom = null, officeAgents = null, workrooms = null, peopleOverrides = null, peopleLimits = null, vibeOverride = false, hideElevator = false, hiddenRooms = null, extraRooms = null, editable = false, allowWindowOpens = false, defaultLayout = null, onPersonalAgentsClick = null, showTicker: showTickerProp }) {
   const [themeState, setThemeState] = useState('dark');
   const theme = themeOverride || themeState;
   const setTheme = themeOverride ? () => {} : setThemeState;
+  // Company News ticker — on for the live homepage map; opt-in for embeds (e.g. RGL).
+  const showTicker = showTickerProp ?? !embedded;
   const [layout, setLayout] = useState('v2');
   const [activeFloor, setActiveFloor] = useState(initialFloor);
   const [floorTransition, setFloorTransition] = useState('visible'); // 'visible' | 'out' | 'in'
@@ -3715,6 +3718,8 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
             </button>
           )}
         </div>
+
+        {showTicker && <MapTicker />}
 
         {/* Main content area */}
         <div className="sc-content">

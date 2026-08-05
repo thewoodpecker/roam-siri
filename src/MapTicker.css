@@ -1,0 +1,206 @@
+/* Company News ticker inside the map window — wonder TickerBar look. */
+
+.map-ticker {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: var(--map-ticker-height, 44px);
+  flex-shrink: 0;
+  padding-left: 4px;
+  background: var(--bg-surface-primary, #0a0a0b);
+  border-bottom: 0.5px solid var(--border, rgba(255, 255, 255, 0.1));
+  z-index: 2;
+  overflow: hidden;
+  pointer-events: auto;
+}
+
+.sc-viewport[data-theme='light'] .map-ticker,
+[data-theme='light'] .map-ticker {
+  background: var(--bg-surface-primary, #fff);
+  border-bottom-color: var(--border, rgba(0, 0, 0, 0.1));
+}
+
+.map-ticker-viewport {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  overflow: hidden;
+  mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 1.5rem,
+    #000 calc(100% - 5.5rem),
+    transparent calc(100% - 2rem)
+  );
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 1.5rem,
+    #000 calc(100% - 5.5rem),
+    transparent calc(100% - 2rem)
+  );
+}
+
+.map-ticker-track {
+  display: flex;
+  align-items: center;
+  width: max-content;
+  height: 100%;
+  will-change: transform;
+}
+
+.map-ticker-strip {
+  display: flex;
+  align-items: center;
+  flex: none;
+  height: 100%;
+}
+
+/* Match wonder TickerBar: caption/captionEmphasis metrics + mono stack.
+   caption = 12/16 regular (400); captionEmphasis = 12/16 medium (500).
+   letter-spacing stays 0 (wonder caption tokens don't add tracking). */
+.map-ticker-entry {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 0 12px;
+  border: 0;
+  background: transparent;
+  white-space: nowrap;
+  font: inherit;
+  font-family: ui-monospace, monospace, sans-serif;
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  color: inherit;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  transform-origin: 50% 55%;
+}
+
+.map-ticker-entry:focus-visible {
+  outline: 1px solid var(--text-positive, var(--green-300, #46d08f));
+  outline-offset: 2px;
+}
+
+/* Three gentle pulses — scale down/up in sync with opacity 100% ↔ 50%. */
+.map-ticker-entry.is-pulsing {
+  animation: map-ticker-center-pulse 2.1s cubic-bezier(0.45, 0, 0.55, 1) both;
+  will-change: transform, opacity;
+}
+
+@keyframes map-ticker-center-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  16.666% {
+    transform: scale(0.96);
+    opacity: 0.5;
+  }
+  33.333% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(0.96);
+    opacity: 0.5;
+  }
+  66.666% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  83.333% {
+    transform: scale(0.96);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .map-ticker-entry.is-pulsing {
+    animation: none;
+  }
+}
+
+.map-ticker-cat {
+  flex-shrink: 0;
+  color: var(--text-positive, var(--green-300, #46d08f));
+  font-weight: 500; /* captionEmphasis */
+}
+
+.map-ticker-text {
+  color: var(--text-primary, rgba(255, 255, 255, 0.92));
+  font-weight: 400; /* caption */
+}
+
+.sc-viewport[data-theme='light'] .map-ticker-text,
+[data-theme='light'] .map-ticker-text {
+  color: var(--text-primary, rgba(12, 12, 14, 0.9));
+}
+
+/* Birthday — metallic gold shine sweep (wonder TickerCategoryTag). */
+.map-ticker-cat-birthday {
+  background-image: linear-gradient(
+    90deg,
+    #c48a3a 0%,
+    #e0b45a 28%,
+    #f5d78a 38%,
+    #fff6d6 46%,
+    #fff6d6 54%,
+    #f5d78a 62%,
+    #e0b45a 72%,
+    #c48a3a 100%
+  );
+  background-size: 200% auto;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  animation: map-ticker-gold-shine 4s linear infinite;
+}
+
+@keyframes map-ticker-gold-shine {
+  from { background-position: 0% center; }
+  to { background-position: -200% center; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .map-ticker-cat-birthday {
+    animation: none;
+    color: #e0b45a;
+    background: none;
+    -webkit-background-clip: unset;
+    background-clip: unset;
+  }
+}
+
+.map-ticker-settings {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.map-ticker-settings-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  color: var(--text-secondary, rgba(255, 255, 255, 0.45));
+}
