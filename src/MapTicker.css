@@ -62,6 +62,7 @@
    caption = 12/16 regular (400); captionEmphasis = 12/16 medium (500).
    letter-spacing stays 0 (wonder caption tokens don't add tracking). */
 .map-ticker-entry {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -80,7 +81,6 @@
   cursor: pointer;
   appearance: none;
   -webkit-appearance: none;
-  transform-origin: 50% 55%;
 }
 
 .map-ticker-entry:focus-visible {
@@ -88,46 +88,118 @@
   outline-offset: 2px;
 }
 
-/* Three gentle pulses — scale down/up in sync with opacity 100% ↔ 50%. */
-.map-ticker-entry.is-pulsing {
-  animation: map-ticker-center-pulse 2.1s cubic-bezier(0.45, 0, 0.55, 1) both;
+/* per-character-rise (animate-text): exit up, then enter from below.
+   No overflow:hidden here — it was clipping glyphs mid-travel / at rest. */
+.map-ticker-char {
+  display: inline-block;
+  white-space: pre;
+  transform-origin: 50% 55%;
+  backface-visibility: hidden;
+}
+
+.map-ticker-entry.is-exiting .map-ticker-char {
+  animation: map-ticker-char-exit 420ms cubic-bezier(0.7, 0, 0.84, 0) both;
+  animation-delay: calc(var(--i, 0) * 14ms);
   will-change: transform, opacity;
 }
 
-@keyframes map-ticker-center-pulse {
-  0% {
-    transform: scale(1);
+.map-ticker-entry.is-entering .map-ticker-char {
+  animation: map-ticker-char-enter 700ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation-delay: calc(var(--i, 0) * 24ms);
+  will-change: transform, opacity;
+}
+
+@keyframes map-ticker-char-exit {
+  from {
     opacity: 1;
+    transform: translate3d(0, 0, 0);
   }
-  16.666% {
-    transform: scale(0.96);
-    opacity: 0.5;
+  to {
+    opacity: 0;
+    transform: translate3d(0, -24px, 0);
   }
-  33.333% {
-    transform: scale(1);
+}
+
+@keyframes map-ticker-char-enter {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 32px, 0);
+  }
+  to {
     opacity: 1;
-  }
-  50% {
-    transform: scale(0.96);
-    opacity: 0.5;
-  }
-  66.666% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  83.333% {
-    transform: scale(0.96);
-    opacity: 0.5;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
+    transform: translate3d(0, 0, 0);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .map-ticker-entry.is-pulsing {
+  .map-ticker-entry.is-exiting .map-ticker-char,
+  .map-ticker-entry.is-entering .map-ticker-char {
     animation: none;
+  }
+
+  .map-ticker-spark {
+    display: none;
+  }
+}
+
+/* Gift-style sparks — radial firework burst from the trailing edge. */
+.map-ticker-sparks {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  z-index: 2;
+  overflow: visible;
+}
+
+.map-ticker-spark {
+  --map-ticker-spark: var(--text-positive, var(--green-300, #46d08f));
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--s, 4px);
+  height: var(--s, 4px);
+  margin: calc(var(--s, 4px) / -2) 0 0 calc(var(--s, 4px) / -2);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--map-ticker-spark) 55%, white);
+  box-shadow:
+    0 0 4px var(--map-ticker-spark),
+    0 0 8px color-mix(in srgb, var(--map-ticker-spark) 70%, transparent),
+    0 0 1px #fff;
+  opacity: 0;
+  animation: map-ticker-spark-fly 720ms cubic-bezier(0.12, 0.7, 0.2, 1) forwards;
+  animation-delay: var(--delay, 0ms);
+}
+
+.map-ticker-spark:nth-child(odd) {
+  border-radius: 1px;
+  width: calc(var(--s, 4px) * 0.5);
+  height: calc(var(--s, 4px) * 1.8);
+}
+
+.map-ticker-spark:nth-child(3n) {
+  background: #fff;
+  box-shadow:
+    0 0 3px #fff,
+    0 0 8px var(--map-ticker-spark);
+}
+
+@keyframes map-ticker-spark-fly {
+  0% {
+    opacity: 0;
+    transform: rotate(var(--a)) translateY(0) scale(0.35);
+  }
+  12% {
+    opacity: 1;
+  }
+  65% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(var(--a)) translateY(calc(var(--d) * -1)) scale(0.2);
   }
 }
 
@@ -147,8 +219,10 @@
   color: var(--text-primary, rgba(12, 12, 14, 0.9));
 }
 
-/* Birthday — metallic gold shine sweep (wonder TickerCategoryTag). */
-.map-ticker-cat-birthday {
+/* Birthday — metallic gold shine sweep (wonder TickerCategoryTag).
+   Applied per glyph so per-character-rise splits keep the clip. */
+.map-ticker-cat-birthday .map-ticker-char-birthday,
+.map-ticker-char-birthday {
   background-image: linear-gradient(
     90deg,
     #c48a3a 0%,
@@ -173,7 +247,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .map-ticker-cat-birthday {
+  .map-ticker-cat-birthday .map-ticker-char-birthday,
+  .map-ticker-char-birthday {
     animation: none;
     color: #e0b45a;
     background: none;
