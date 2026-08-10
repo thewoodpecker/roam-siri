@@ -7,7 +7,8 @@ import './MapTicker.css';
  * without the live messaging / settings modal.
  *
  * Click any entry to play per-character-rise (animate-text), then a small
- * spark burst at the trailing edge.
+ * spark burst at the trailing edge. Drag horizontally inside the bar to pan
+ * through messages; clicks under a ~5px move still rise / open birthday gift.
  */
 
 const SCROLL_PX_PER_SECOND = 18;
@@ -25,6 +26,10 @@ const SPARK_COUNT = 6;
 const SPARK_DURATION_MS = 720;
 /** Fire this many ms before enter settles. */
 const SPARK_LEAD_MS = 380;
+
+const DRAG_THRESHOLD_PX = 5;
+const MOMENTUM_FRICTION = 0.92;
+const MOMENTUM_MIN_VX = 0.05; // px / ms
 
 const MESSAGES = [
   { id: 'bday-klas', category: 'birthday', text: 'HAPPY BIRTHDAY KLAS!' },
@@ -102,7 +107,7 @@ function SliderIcon() {
         fill="currentColor"
         fillRule="evenodd"
         clipRule="evenodd"
-        d="m3.75 7c0-1.24264 1.00736-2.25 2.25-2.25s2.25 1.00736 2.25 2.25-1.00736 2.25-2.25 2.25-2.25-1.00736-2.25-2.25zm2.25-3.75c-2.07107 0-3.75 1.67893-3.75 3.75s1.67893 3.75 3.75 3.75c1.81422 0 3.32753-1.28832 3.67499-3h10.57501c.4142 0 .75-.33579.75-.75s-.3358-.75-.75-.75h-10.57501c-.34746-1.71168-1.86077-3-3.67499-3zm14.25 13.75c0 1.2426-1.0074 2.25-2.25 2.25s-2.25-1.0074-2.25-2.25 1.0074-2.25 2.25-2.25 2.25 1.0074 2.25 2.25zm-2.25 3.75c2.0711 0 3.75-1.6789 3.75-3.75s-1.6789-3.75-3.75-3.75c-1.8142 0-3.3275 1.2883-3.675 3h-10.575c-.41421 0-.75.3358-.75.75s.33579.75.75.75h10.575c.3475 1.7117 1.8608 3 3.675 3z"
+        d="m3.75 7c0-1.24264 1.00736-2.25 2.25-2.25s2.25 1.00736 2.25 2.25-1.00736 2.25-2.25 2.25-2.25-1.00736-2.25-2.25zm2.25-3.75c-2.07107 0-3.75 1.67893-3.75 3.75s1.67893 3.75 3.75 3.75c1.81422 0 3.32753-1.28832 3.67499-3h10.57501c.4142 0 .75-.33579.75-.75s-.3358-.75-.75-.75h-10.57501c-.34746-1.71168-1.86077-3-3.67499-3zm14.25 13.75c0 1.2426-1.0074 2.25-2.25 2.25s-2.25-1.0074-2.25-2.25 1.0074-2.25-2.25 2.25-2.25 2.25 1.0074 2.25 2.25zm-2.25 3.75c2.0711 0 3.75-1.6789 3.75-3.75s-1.6789-3.75-3.75-3.75c-1.8142 0-3.3275 1.2883-3.675 3h-10.575c-.41421 0-.75.3358-.75.75s.33579.75.75.75h10.575c.3475 1.7117 1.8608 3 3.675 3z"
       />
     </svg>
   );
@@ -196,20 +201,55 @@ function ItemStrip({ messages, stripRef, anim, sparkBurst, onRise }) {
   );
 }
 
-export default function MapTicker({ messages = MESSAGES }) {
+function wrapAnimTime(timeMs, periodMs) {
+  if (!periodMs) return 0;
+  return ((timeMs % periodMs) + periodMs) % periodMs;
+}
+
+export default function MapTicker({ messages = MESSAGES, onBirthdayClick } = {}) {
   const [anim, setAnim] = useState(null);
   const [sparkBurst, setSparkBurst] = useState(null);
   const [copies, setCopies] = useState(2);
   const [viewportEl, setViewportEl] = useState(null);
   const [trackEl, setTrackEl] = useState(null);
   const [stripEl, setStripEl] = useState(null);
+  const [dragging, setDragging] = useState(false);
   const animationRef = useRef(null);
   const builtDistanceRef = useRef(0);
   const riseTimersRef = useRef([]);
+  const dragRef = useRef(null);
+  const suppressRiseRef = useRef(false);
+  const momentumRafRef = useRef(0);
+  const scrubbingRef = useRef(false);
 
   const clearRiseTimers = useCallback(() => {
     riseTimersRef.current.forEach(clearTimeout);
     riseTimersRef.current = [];
+  }, []);
+
+  const cancelMomentum = useCallback(() => {
+    if (momentumRafRef.current) {
+      cancelAnimationFrame(momentumRafRef.current);
+      momentumRafRef.current = 0;
+    }
+  }, []);
+
+  const resumeAutoScroll = useCallback(() => {
+    scrubbingRef.current = false;
+    const animation = animationRef.current;
+    if (!animation) return;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!reduced && animation.playState === 'paused') animation.play();
+  }, []);
+
+  const scrubByPx = useCallback((deltaPx) => {
+    const animation = animationRef.current;
+    const distance = builtDistanceRef.current;
+    if (!animation || !distance) return;
+    const duration = scrollDurationMs(distance);
+    // Drag left → advance marquee (more negative translate); right → rewind.
+    const next = wrapAnimTime(animation.currentTime - (deltaPx / distance) * duration, duration);
+    animation.currentTime = next;
   }, []);
 
   const rebuild = useCallback(() => {
@@ -233,7 +273,7 @@ export default function MapTicker({ messages = MESSAGES }) {
       { duration, iterations: Infinity, easing: 'linear' },
     );
     animation.currentTime = progress * duration;
-    if (reduced) animation.pause();
+    if (reduced || scrubbingRef.current) animation.pause();
     animationRef.current = animation;
   }, [viewportEl, trackEl, stripEl]);
 
@@ -248,15 +288,24 @@ export default function MapTicker({ messages = MESSAGES }) {
     document.fonts?.ready.then(rebuild);
     return () => {
       ro?.disconnect();
+      cancelMomentum();
       animationRef.current?.cancel();
       animationRef.current = null;
       builtDistanceRef.current = 0;
     };
-  }, [viewportEl, trackEl, stripEl, rebuild, messages]);
+  }, [viewportEl, trackEl, stripEl, rebuild, messages, cancelMomentum]);
 
   useEffect(() => () => clearRiseTimers(), [clearRiseTimers]);
 
   const riseEntry = useCallback((message) => {
+    // Drag past threshold sets this so a drag-end click doesn't fire rise/gift.
+    if (suppressRiseRef.current) {
+      suppressRiseRef.current = false;
+      return;
+    }
+    if (message.category === 'birthday') {
+      onBirthdayClick?.(message);
+    }
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     clearRiseTimers();
     setSparkBurst(null);
@@ -283,29 +332,147 @@ export default function MapTicker({ messages = MESSAGES }) {
         riseTimersRef.current.push(enterTimer, sparkTimer);
       });
     });
-  }, [clearRiseTimers]);
+  }, [clearRiseTimers, onBirthdayClick]);
+
+  const runMomentum = useCallback((vxPxPerMs) => {
+    cancelMomentum();
+    let vx = vxPxPerMs;
+    let last = performance.now();
+
+    const tick = (now) => {
+      if (document.hidden) {
+        momentumRafRef.current = 0;
+        resumeAutoScroll();
+        return;
+      }
+      const dt = Math.min(32, now - last);
+      last = now;
+      scrubByPx(vx * dt);
+      vx *= MOMENTUM_FRICTION;
+      if (Math.abs(vx) < MOMENTUM_MIN_VX) {
+        momentumRafRef.current = 0;
+        resumeAutoScroll();
+        return;
+      }
+      momentumRafRef.current = requestAnimationFrame(tick);
+    };
+    momentumRafRef.current = requestAnimationFrame(tick);
+  }, [cancelMomentum, resumeAutoScroll, scrubByPx]);
+
+  const onPointerDown = useCallback((e) => {
+    if (e.button !== 0) return;
+    const viewport = viewportEl;
+    if (!viewport) return;
+
+    // Don't capture yet — a plain click on an entry should still rise.
+    e.stopPropagation();
+    cancelMomentum();
+
+    const drag = {
+      pointerId: e.pointerId,
+      startX: e.clientX,
+      startY: e.clientY,
+      lastX: e.clientX,
+      lastT: performance.now(),
+      vx: 0,
+      moved: false,
+    };
+    dragRef.current = drag;
+
+    const onMove = (ev) => {
+      if (ev.pointerId !== drag.pointerId) return;
+      const dx = ev.clientX - drag.startX;
+      const dy = ev.clientY - drag.startY;
+      if (!drag.moved && Math.hypot(dx, dy) < DRAG_THRESHOLD_PX) return;
+
+      const animation = animationRef.current;
+      if (!animation) return;
+
+      if (!drag.moved) {
+        drag.moved = true;
+        scrubbingRef.current = true;
+        setDragging(true);
+        suppressRiseRef.current = true;
+        animation.pause();
+        try { viewport.setPointerCapture(ev.pointerId); } catch { /* ignore */ }
+        drag.lastX = ev.clientX;
+        drag.lastT = performance.now();
+      }
+
+      const step = ev.clientX - drag.lastX;
+      const now = performance.now();
+      const dt = Math.max(1, now - drag.lastT);
+      // EMA of horizontal velocity for light momentum on release.
+      drag.vx = drag.vx * 0.7 + (step / dt) * 0.3;
+      drag.lastX = ev.clientX;
+      drag.lastT = now;
+      scrubByPx(step);
+    };
+
+    const onUp = (ev) => {
+      if (ev.pointerId !== drag.pointerId) return;
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointercancel', onUp);
+      if (viewport.hasPointerCapture?.(drag.pointerId)) {
+        try { viewport.releasePointerCapture(drag.pointerId); } catch { /* ignore */ }
+      }
+      if (drag.moved) {
+        suppressRiseRef.current = true;
+        window.setTimeout(() => { suppressRiseRef.current = false; }, 50);
+        setDragging(false);
+        if (Math.abs(drag.vx) >= MOMENTUM_MIN_VX) {
+          runMomentum(drag.vx);
+        } else {
+          resumeAutoScroll();
+        }
+      } else {
+        suppressRiseRef.current = false;
+        setDragging(false);
+        // Click interrupted momentum (or a no-op) — keep auto-marquee running.
+        resumeAutoScroll();
+      }
+      dragRef.current = null;
+    };
+
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onUp);
+  }, [viewportEl, cancelMomentum, scrubByPx, runMomentum, resumeAutoScroll]);
 
   return (
-    <div className="map-ticker" role="complementary" aria-label="Company News">
-      <div className="map-ticker-viewport" ref={setViewportEl}>
-        <div className="map-ticker-track" ref={setTrackEl}>
-          {Array.from({ length: copies }, (_, i) => (
-            <ItemStrip
-              key={i}
-              messages={messages}
-              stripRef={i === 0 ? setStripEl : undefined}
-              anim={anim}
-              sparkBurst={sparkBurst}
-              onRise={riseEntry}
-            />
-          ))}
+    <>
+      {/* Reserves the docked band so the map body stays 16:9. */}
+      <div className="map-ticker-spacer" aria-hidden="true" />
+      <div
+        className={`map-ticker${dragging ? ' is-dragging' : ''}`}
+        role="complementary"
+        aria-label="Company News"
+      >
+        <div
+          className="map-ticker-viewport"
+          ref={setViewportEl}
+          onPointerDown={onPointerDown}
+        >
+          <div className="map-ticker-track" ref={setTrackEl}>
+            {Array.from({ length: copies }, (_, i) => (
+              <ItemStrip
+                key={i}
+                messages={messages}
+                stripRef={i === 0 ? setStripEl : undefined}
+                anim={anim}
+                sparkBurst={sparkBurst}
+                onRise={riseEntry}
+              />
+            ))}
+          </div>
+        </div>
+        <div className="map-ticker-settings" aria-hidden="true">
+          <span className="map-ticker-settings-btn">
+            <SliderIcon />
+          </span>
         </div>
       </div>
-      <div className="map-ticker-settings" aria-hidden="true">
-        <span className="map-ticker-settings-btn">
-          <SliderIcon />
-        </span>
-      </div>
-    </div>
+    </>
   );
 }

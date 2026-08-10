@@ -31,6 +31,7 @@ import { birthdayCssVars, paletteColorsFor } from './rgl/materials';
 import './ShowcaseMap.css';
 
 const RoamIcon3D = lazy(() => import('./RoamIcon3D'));
+const BirthdayGiftOverlay = lazy(() => import('./BirthdayGiftOverlay'));
 
 // Flip to `false` to show the nav, bottom bar, and theme toggle
 const HIDE_CHROME = false;
@@ -2385,6 +2386,14 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
   const birthdayVars = birthdayCssVars(theme, birthdayPaletteId);
   // Company News ticker — on for the live homepage map; opt-in for embeds (e.g. RGL).
   const showTicker = showTickerProp ?? !embedded;
+  /** Birthday gift celebration from ticker click — Klas + active palette. */
+  const [birthdayGift, setBirthdayGift] = useState({ open: false, playKey: 0 });
+  const handleBirthdayTickerClick = useCallback(() => {
+    setBirthdayGift((prev) => ({ open: true, playKey: prev.playKey + 1 }));
+  }, []);
+  const handleBirthdayGiftDismissed = useCallback(() => {
+    setBirthdayGift((prev) => ({ ...prev, open: false }));
+  }, []);
   const [layout, setLayout] = useState('v2');
   const [activeFloor, setActiveFloor] = useState(initialFloor);
   const [floorTransition, setFloorTransition] = useState('visible'); // 'visible' | 'out' | 'in'
@@ -3734,7 +3743,7 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
           )}
         </div>
 
-        {showTicker && <MapTicker />}
+        {showTicker && <MapTicker onBirthdayClick={handleBirthdayTickerClick} />}
 
         {/* Main content area */}
         <div className="sc-content">
@@ -4119,6 +4128,18 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
         {storyViewer && <StoryViewer stories={storyViewer.stories} initialIndex={storyViewer.initialIndex} onClose={() => setStoryViewer(null)} />}
         <ShareDialog open={shareOpen} onClose={() => setShareOpen(false)} />
         {knockingRoom && <KnockDialog room={knockingRoom} onCancel={() => { clearTimeout(knockTimerRef.current); setKnockingRoom(null); }} />}
+        {birthdayGift.open && (
+          <Suspense fallback={null}>
+            <BirthdayGiftOverlay
+              open={birthdayGift.open}
+              playKey={birthdayGift.playKey}
+              theme={theme}
+              paletteId={birthdayPaletteId}
+              name="Klas"
+              onDismissed={handleBirthdayGiftDismissed}
+            />
+          </Suspense>
+        )}
       </div>
       </LoadReveal>
       {!dmPortalTarget && miniChats.map(mc => (

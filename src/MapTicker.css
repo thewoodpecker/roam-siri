@@ -1,7 +1,17 @@
 /* Company News ticker inside the map window — wonder TickerBar look. */
 
+/* In-flow band under the titlebar — keeps the 16:9 map body while the
+   ticker itself is absolutely positioned under the chrome. */
+.map-ticker-spacer {
+  height: var(--map-ticker-height, 44px);
+  flex-shrink: 0;
+  pointer-events: none;
+}
+
 .map-ticker {
-  position: relative;
+  position: absolute;
+  top: 42px; /* .sc-titlebar height — docks flush under the chrome */
+  left: 0;
   display: flex;
   align-items: center;
   width: 100%;
@@ -10,9 +20,11 @@
   padding-left: 4px;
   background: var(--bg-surface-primary, #0a0a0b);
   border-bottom: 0.5px solid var(--border, rgba(255, 255, 255, 0.1));
-  z-index: 2;
+  z-index: 6;
   overflow: hidden;
   pointer-events: auto;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .sc-viewport[data-theme='light'] .map-ticker,
@@ -27,6 +39,8 @@
   min-width: 0;
   height: 100%;
   overflow: hidden;
+  cursor: grab;
+  touch-action: none;
   mask-image: linear-gradient(
     to right,
     transparent 0,
@@ -41,6 +55,10 @@
     #000 calc(100% - 5.5rem),
     transparent calc(100% - 2rem)
   );
+}
+
+.map-ticker.is-dragging .map-ticker-viewport {
+  cursor: grabbing;
 }
 
 .map-ticker-track {
@@ -338,7 +356,7 @@
   justify-content: center;
   width: 48px;
   z-index: 2;
-  pointer-events: none;
+  pointer-events: none; /* decorative */
 }
 
 .map-ticker-settings-btn {
@@ -349,4 +367,13 @@
   height: 28px;
   border-radius: 8px;
   color: var(--text-secondary, rgba(255, 255, 255, 0.45));
+}
+
+/* Grab to pan the strip; short clicks still fire entry rise. */
+.map-ticker .map-ticker-entry {
+  cursor: grab;
+}
+
+.map-ticker.is-dragging .map-ticker-entry {
+  cursor: grabbing;
 }

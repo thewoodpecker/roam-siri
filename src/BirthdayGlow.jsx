@@ -131,24 +131,24 @@ void main() {
   for (int i = 0; i < 12; i++) {
     if (float(i) >= u_trail_len) break;
     float age = float(i) / max(u_trail_len - 1.0, 1.0);
-    float rad = mix(0.14, 0.055, age);
+    float rad = mix(0.28, 0.11, age);
     float td = length(p - u_trail[i]);
     float bead = exp(-(td * td) / (rad * rad * 2.0));
-    trail += bead * mix(1.0, 0.15, age);
+    trail += bead * mix(1.0, 0.18, age);
   }
-  trail = clamp(trail * u_mouse_on, 0.0, 1.8) * floorMask;
+  trail = clamp(trail * u_mouse_on, 0.0, 2.4) * floorMask;
 
   vec2 delta = p - u_mouse;
   float md = length(delta);
-  float head = u_mouse_on * exp(-md * md * 8.0) * floorMask;
+  float head = u_mouse_on * exp(-md * md * 3.2) * floorMask;
   vec2 toward = md > 0.001 ? -delta / md : vec2(0.0);
-  vec2 warpedFrag = frag + toward * head * 10.0 + toward * trail * 6.0;
+  vec2 warpedFrag = frag + toward * head * 18.0 + toward * trail * 12.0;
 
   float spark = birthdaySparkles(warpedFrag, u_time, 0.72);
-  spark += birthdaySparkles(frag * 1.15 + u_time * 2.0, u_time, 0.45) * trail * 1.2;
+  spark += birthdaySparkles(frag * 1.15 + u_time * 2.0, u_time, 0.45) * trail * 1.45;
   /* Sparkle band sits above the floor wash — nudged up into the card. */
   spark *= floorMask * smoothstep(0.72, 0.28, uv.y);
-  spark = clamp(spark * (1.0 + trail * 1.3 + head * 0.5), 0.0, 1.0);
+  spark = clamp(spark * (1.0 + trail * 1.7 + head * 0.85), 0.0, 1.0);
 
   float alpha = (wash * 0.4 + spark * 0.9) * inside;
   if (u_reduce > 0.5) {
@@ -199,26 +199,26 @@ void main() {
   for (int i = 0; i < 12; i++) {
     if (float(i) >= u_trail_len) break;
     float age = float(i) / max(u_trail_len - 1.0, 1.0);
-    float rad = mix(0.10, 0.04, age);
+    float rad = mix(0.22, 0.09, age);
     float d = length(p - u_trail[i]);
     float bead = exp(-(d * d) / (rad * rad * 2.0));
-    trail += bead * mix(1.0, 0.15, age);
+    trail += bead * mix(1.0, 0.18, age);
   }
-  trail = clamp(trail * u_mouse_on, 0.0, 1.8);
+  trail = clamp(trail * u_mouse_on, 0.0, 2.4);
 
   /* Slight pull of sparkles toward the newest trail head. */
   vec2 delta = p - u_mouse;
   float md = length(delta);
-  float head = u_mouse_on * exp(-md * md * 8.0);
+  float head = u_mouse_on * exp(-md * md * 3.2);
   vec2 toward = md > 0.001 ? -delta / md : vec2(0.0);
-  vec2 warpedFrag = frag + toward * head * 12.0 + toward * trail * 8.0;
+  vec2 warpedFrag = frag + toward * head * 22.0 + toward * trail * 14.0;
 
   float spark = birthdaySparkles(warpedFrag, u_time, 0.22);
   /* Flecks along the trail itself. */
-  spark += birthdaySparkles(frag * 1.15 + u_time * 2.0, u_time, 0.28) * trail * 1.1;
-  spark += birthdaySparkles(frag + 40.0, u_time, 0.18) * trail * 0.5;
+  spark += birthdaySparkles(frag * 1.15 + u_time * 2.0, u_time, 0.28) * trail * 1.35;
+  spark += birthdaySparkles(frag + 40.0, u_time, 0.18) * trail * 0.7;
   spark = clamp(spark, 0.0, 1.0) * field;
-  spark *= 1.0 + trail * 1.2 + head * 0.5;
+  spark *= 1.0 + trail * 1.55 + head * 0.85;
 
   float alpha = spark * 0.9;
   if (u_reduce > 0.5) {
