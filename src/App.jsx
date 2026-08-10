@@ -1359,6 +1359,7 @@ function TabSwitcher({ activeTab, onTabChange }) {
     { id: 'big-meetings', label: 'Big Meetings' },
     { id: 'experimental', label: 'EPCOT' },
     { id: 'spinner', label: 'Spinner' },
+    { id: 'rgl', label: 'Birthday Playground' },
   ];
 
   return (
@@ -3449,9 +3450,11 @@ function useHashTab() {
     // Split the hash into segments so external tools (e.g. Figma's capture
     // script) can prepend their own params and the route still matches.
     const segments = window.location.hash.replace('#', '').split(/[&?]/);
-    const valid = ['map-v3', 'design-studio', 'agent-garage', 'activity-glow', 'claude-max', 'big-vibe', 'big-meetings', 'war-room', 'experimental', 'spinner', 'showcase'];
+    const valid = ['map-v3', 'design-studio', 'agent-garage', 'activity-glow', 'claude-max', 'big-vibe', 'big-meetings', 'war-room', 'experimental', 'spinner', 'rgl', 'showcase'];
     for (const seg of segments) {
-      if (valid.includes(seg)) return seg;
+      // `#/rgl` arrives as `/rgl` after stripping `#` — normalize leading slash.
+      const normalized = seg.replace(/^\//, '');
+      if (valid.includes(normalized)) return normalized;
       const [k, v] = seg.split('=');
       if (k === 'tab' && valid.includes(v)) return v;
     }
@@ -3466,7 +3469,9 @@ function useHashTab() {
   }, []);
 
   const setActiveTab = (t) => {
-    window.location.hash = t;
+    // Birthday playground lives at the path-style `#/rgl` route (same as
+    // direct links / bookmarks), not the flat `#rgl` tab form.
+    window.location.hash = t === 'rgl' ? '/rgl' : t;
     setTab(t);
   };
 
@@ -3527,9 +3532,14 @@ export default function App() {
   return (
     <>
       {isRgl ? (
-        <Suspense fallback={null}>
-          <RGLPage />
-        </Suspense>
+        <>
+          <Suspense fallback={null}>
+            <RGLPage />
+          </Suspense>
+          <div className="toolbar" style={HIDE_CHROME ? { display: 'none' } : undefined}>
+            <TabSwitcher activeTab="rgl" onTabChange={setActiveTab} />
+          </div>
+        </>
       ) : isRwn ? (
         <Suspense fallback={null}>
           <RWNPage />

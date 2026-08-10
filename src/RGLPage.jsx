@@ -4,9 +4,11 @@ import RGLStage from './rgl/RGLStage';
 import SoftBlurText from './SoftBlurText';
 import RoamIcon3D from './RoamIcon3D';
 import ShowcaseMap from './ShowcaseMap';
+import BirthdayGlow from './BirthdayGlow';
 import { PACK_GIFTS } from './rgl/giftCatalog';
 import {
   GIFT_PALETTES,
+  birthdayCssVars,
   getGiftPalette,
   paletteColorsFor,
 } from './rgl/materials';
@@ -38,7 +40,7 @@ const DISMISS_MS = 420;
 /** Must match `.rgl-gift-bounce-in` duration in RGLPage.css. */
 const ENTER_MS = 1100;
 /** Full Y turns during the appear bounce. */
-const APPEAR_TURNS = 2;
+const APPEAR_TURNS = 1;
 /** Start glow/sparks while the gift is still rising into frame. */
 const ARRIVE_AT = 0.35;
 /** Birthday label — shortly after glow, while the gift is still settling. */
@@ -46,30 +48,7 @@ const LABEL_AT = 0.45;
 const SPARK_COUNT = 28;
 
 /** Placeholder birthday names — in product this is the celebrant's name. */
-const BIRTHDAY_NAMES = [
-  'Joe',
-  'Chelsea',
-  'Howard',
-  'Mattias',
-  'Ava',
-  'Garima',
-  'Sean',
-  'Rob',
-  'Lexi',
-  'Will',
-  'Derek',
-  'Grace',
-  'Klas',
-  'Arnav',
-  'Peter',
-  'Jeff',
-  'Thomas',
-];
-
-function pickBirthdayName(exclude) {
-  const pool = BIRTHDAY_NAMES.filter((n) => n !== exclude);
-  return pool[Math.floor(Math.random() * pool.length)] ?? 'Joe';
-}
+const BIRTHDAY_NAME = 'Klas';
 
 function pickPackGiftId(exclude) {
   const ids = PACK_GIFTS.map((g) => g.id);
@@ -86,7 +65,7 @@ function pickPackGiftId(exclude) {
 
 function pickPaletteId(exclude) {
   const ids = GIFT_PALETTES.map((p) => p.id);
-  if (ids.length === 0) return exclude ?? 'roam';
+  if (ids.length === 0) return exclude ?? 'gold';
   let next = ids[Math.floor(Math.random() * ids.length)];
   if (ids.length > 1 && exclude) {
     let guard = 0;
@@ -130,15 +109,20 @@ function GiftArriveFX({ accent, burstKey }) {
 
   return (
     <>
+      {/* Radial sparkles behind the gift — same FX as the office floor. */}
       <div
         className="rgl-gift-arrive rgl-gift-arrive-glow"
-        style={{
-          '--rgl-glow': accent,
-          '--rgl-glow-soft': `${accent}99`,
-        }}
+        style={{ '--rgl-glow': accent }}
         aria-hidden="true"
       >
-        <div className="rgl-gift-glow" />
+        <div className="rgl-gift-sparkle-field">
+          <BirthdayGlow
+            variant="radial"
+            color={accent}
+            className="rgl-gift-sparkle-canvas"
+            interactive
+          />
+        </div>
       </div>
       <div
         className="rgl-gift-arrive rgl-gift-arrive-sparks"
@@ -176,7 +160,7 @@ export default function RGLPage() {
   const [arriveBurst, setArriveBurst] = useState(0);
   const [appearSpinKey, setAppearSpinKey] = useState(0);
   const [labelPlay, setLabelPlay] = useState(false);
-  const [birthdayName, setBirthdayName] = useState('Joe');
+  const [birthdayName, setBirthdayName] = useState(BIRTHDAY_NAME);
   const item = ITEMS.find((i) => i.id === itemId) ?? ITEMS[0];
   const isGift = item.kind === 'pack';
   const showMapStage = isGift && showMap;
@@ -198,7 +182,6 @@ export default function RGLPage() {
     setArriveFx(false);
     setLabelPlay(false);
     setAppearSpinKey(0);
-    setBirthdayName((prev) => pickBirthdayName(prev));
     if (prefersReducedMotion()) {
       setEntering(false);
       setArriveFx(true);
@@ -252,13 +235,15 @@ export default function RGLPage() {
       return;
     }
     setEntering(false);
-    setArriveFx(false);
+    // Keep arriveFx so the radial sparkles can fade out with the layer.
     setLabelPlay(false);
     setDismissing(true);
   }, [giftOpen, dismissing]);
 
   const showGift = useCallback(() => {
     setPaletteId((prev) => pickPaletteId(prev));
+    // Keep Klas as the demo celebrant — only reshuffle gift + palette on replay.
+    setBirthdayName(BIRTHDAY_NAME);
     const next = pickPackGiftId(itemId);
     if (next === itemId) runEnter();
     else setItemId(next);
@@ -284,6 +269,7 @@ export default function RGLPage() {
       }
       setGiftOpen(false);
       setDismissing(false);
+      setArriveFx(false);
     },
     [dismissing],
   );
@@ -293,6 +279,7 @@ export default function RGLPage() {
     const t = window.setTimeout(() => {
       setGiftOpen(false);
       setDismissing(false);
+      setArriveFx(false);
     }, DISMISS_MS + 40);
     return () => window.clearTimeout(t);
   }, [dismissing]);
@@ -384,7 +371,14 @@ export default function RGLPage() {
   );
 
   return (
-    <div className="rgl-page" data-theme={theme}>
+    <div
+      className="rgl-page"
+      data-theme={theme}
+      style={{
+        ...birthdayCssVars(theme, paletteId),
+        '--rgl-name-color': paletteColors.accent,
+      }}
+    >
       <aside className="rgl-sidebar">
         <div className="rgl-brand">
           <span className="rgl-brand-mark">RGL</span>
@@ -507,7 +501,13 @@ export default function RGLPage() {
               <div className="rgl-map-window-host">
                 <div className="rgl-map-window-frame">
                   <div className="rgl-map-window-live" aria-hidden="true">
-                    <ShowcaseMap embedded theme={theme} initialFloor="Homepage" showTicker />
+                    <ShowcaseMap
+                      embedded
+                      theme={theme}
+                      initialFloor="Homepage"
+                      showTicker
+                      birthdayPaletteId={paletteId}
+                    />
                   </div>
                   {giftVisible && (
                     <button

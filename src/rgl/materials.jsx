@@ -17,14 +17,50 @@ export const ROAM_GOLD_LIGHT = '#FFE9A3';
 export const ROAM_GOLD_LIGHT_EMISSIVE = '#E8C56A';
 
 /**
- * Gift colorways — each has dark + light stage variants.
- * `body` = box, `accent` = ribbon/bow (metallic).
+ * Gift colorways — 12 evenly spaced hues (30° steps) around the wheel.
+ * Same body/accent relationship at every step so the set feels cohesive.
+ * `body` = box · `accent` = ribbon/bow (metallic).
+ * `gold` is the gold spoke (~60°) for brand continuity.
  */
 export const GIFT_PALETTES = [
   {
-    id: 'roam',
-    name: 'Roam',
-    blurb: 'Default — black / gold',
+    id: 'crimson',
+    name: 'Crimson',
+    blurb: '0° — red',
+    dark: {
+      body: '#3A2426',
+      accent: '#F07878',
+      accentEmissive: '#A83840',
+      emissiveIntensity: 0.07,
+    },
+    light: {
+      body: '#F2D0D0',
+      accent: '#FF9A9A',
+      accentEmissive: '#E06068',
+      emissiveIntensity: 0.13,
+    },
+  },
+  {
+    id: 'coral',
+    name: 'Coral',
+    blurb: '30° — orange',
+    dark: {
+      body: '#3A2C26',
+      accent: '#F0A070',
+      accentEmissive: '#B86030',
+      emissiveIntensity: 0.07,
+    },
+    light: {
+      body: '#F2D8C8',
+      accent: '#FFB890',
+      accentEmissive: '#E87848',
+      emissiveIntensity: 0.13,
+    },
+  },
+  {
+    id: 'gold',
+    name: 'Gold',
+    blurb: '60° — gold',
     dark: {
       body: '#2E2C28',
       accent: ROAM_GOLD,
@@ -33,106 +69,188 @@ export const GIFT_PALETTES = [
     },
     light: {
       body: '#FFF8EC',
-      accent: '#FFE9A3',
-      accentEmissive: '#E8C56A',
+      accent: ROAM_GOLD_LIGHT,
+      accentEmissive: ROAM_GOLD_LIGHT_EMISSIVE,
       emissiveIntensity: 0.14,
     },
   },
   {
-    id: 'navy',
-    name: 'Navy',
-    blurb: 'Blue / steel blue',
+    id: 'lime',
+    name: 'Lime',
+    blurb: '90° — chartreuse',
     dark: {
-      body: '#2A3548',
-      accent: '#8EB0D8',
-      accentEmissive: '#4A6A8C',
-      emissiveIntensity: 0.05,
+      body: '#2C3428',
+      accent: '#B8D86A',
+      accentEmissive: '#688828',
+      emissiveIntensity: 0.06,
     },
     light: {
-      body: '#B8CCE6',
-      accent: '#B8D4F0',
-      accentEmissive: '#7BA3D4',
+      body: '#E0F0C8',
+      accent: '#C8E878',
+      accentEmissive: '#90C040',
       emissiveIntensity: 0.12,
     },
   },
   {
     id: 'evergreen',
     name: 'Evergreen',
-    blurb: 'Forest / leaf',
+    blurb: '120° — green',
     dark: {
-      body: '#2A3830',
-      accent: '#8FBC9A',
-      accentEmissive: '#3D6B4A',
+      body: '#28342C',
+      accent: '#78C888',
+      accentEmissive: '#388048',
       emissiveIntensity: 0.06,
     },
     light: {
-      body: '#B8D4C0',
-      accent: '#B5E0C2',
-      accentEmissive: '#6BB882',
+      body: '#D0ECD8',
+      accent: '#98E0A8',
+      accentEmissive: '#58B870',
+      emissiveIntensity: 0.12,
+    },
+  },
+  {
+    id: 'mint',
+    name: 'Mint',
+    blurb: '150° — spring',
+    dark: {
+      body: '#263430',
+      accent: '#78D0B0',
+      accentEmissive: '#388068',
+      emissiveIntensity: 0.06,
+    },
+    light: {
+      body: '#C8ECE0',
+      accent: '#98E8C8',
+      accentEmissive: '#58C098',
+      emissiveIntensity: 0.12,
+    },
+  },
+  {
+    id: 'teal',
+    name: 'Teal',
+    blurb: '180° — cyan',
+    dark: {
+      body: '#263436',
+      accent: '#70C8D0',
+      accentEmissive: '#308088',
+      emissiveIntensity: 0.06,
+    },
+    light: {
+      body: '#C8E8EC',
+      accent: '#90DCE8',
+      accentEmissive: '#50B0C0',
+      emissiveIntensity: 0.12,
+    },
+  },
+  {
+    id: 'azure',
+    name: 'Azure',
+    blurb: '210° — sky',
+    dark: {
+      body: '#262E38',
+      accent: '#78B0E0',
+      accentEmissive: '#386898',
+      emissiveIntensity: 0.05,
+    },
+    light: {
+      body: '#C8DCEC',
+      accent: '#98C8F0',
+      accentEmissive: '#5890C8',
+      emissiveIntensity: 0.12,
+    },
+  },
+  {
+    id: 'navy',
+    name: 'Navy',
+    blurb: '240° — blue',
+    dark: {
+      body: '#282A3A',
+      accent: '#8898E8',
+      accentEmissive: '#4050A0',
+      emissiveIntensity: 0.05,
+    },
+    light: {
+      body: '#D0D4F0',
+      accent: '#A8B4F0',
+      accentEmissive: '#6878D0',
+      emissiveIntensity: 0.12,
+    },
+  },
+  {
+    id: 'violet',
+    name: 'Violet',
+    blurb: '270° — purple',
+    dark: {
+      body: '#302838',
+      accent: '#B090E8',
+      accentEmissive: '#6848A0',
+      emissiveIntensity: 0.06,
+    },
+    light: {
+      body: '#E0D0F0',
+      accent: '#C8B0F0',
+      accentEmissive: '#9870D0',
+      emissiveIntensity: 0.12,
+    },
+  },
+  {
+    id: 'magenta',
+    name: 'Magenta',
+    blurb: '300° — fuchsia',
+    dark: {
+      body: '#382830',
+      accent: '#E890C8',
+      accentEmissive: '#A04078',
+      emissiveIntensity: 0.06,
+    },
+    light: {
+      body: '#F0D0E4',
+      accent: '#F0A8D8',
+      accentEmissive: '#D068A8',
       emissiveIntensity: 0.12,
     },
   },
   {
     id: 'rose',
     name: 'Rose',
-    blurb: 'Burgundy / blush',
+    blurb: '330° — pink',
     dark: {
-      body: '#3A2A30',
-      accent: '#E8A8B4',
-      accentEmissive: '#9A5A62',
+      body: '#3A282C',
+      accent: '#F090A8',
+      accentEmissive: '#A84860',
       emissiveIntensity: 0.06,
     },
     light: {
-      body: '#E8C0C8',
-      accent: '#F5C8D0',
-      accentEmissive: '#E090A0',
+      body: '#F2D0D8',
+      accent: '#FFB0C0',
+      accentEmissive: '#E07088',
       emissiveIntensity: 0.12,
-    },
-  },
-  {
-    id: 'arctic',
-    name: 'Arctic',
-    blurb: 'Slate / ice',
-    dark: {
-      body: '#2C333C',
-      accent: '#A8BDD0',
-      accentEmissive: '#5A7290',
-      emissiveIntensity: 0.05,
-    },
-    light: {
-      body: '#C0CEDC',
-      accent: '#D0E0F0',
-      accentEmissive: '#9BB4CC',
-      emissiveIntensity: 0.12,
-    },
-  },
-  {
-    id: 'ember',
-    name: 'Ember',
-    blurb: 'Espresso / amber',
-    dark: {
-      body: '#3A2E26',
-      accent: '#E8A86A',
-      accentEmissive: '#B86A2A',
-      emissiveIntensity: 0.07,
-    },
-    light: {
-      body: '#E8D0B8',
-      accent: '#FFD09A',
-      accentEmissive: '#E8A050',
-      emissiveIntensity: 0.14,
     },
   },
 ];
 
-export function getGiftPalette(id = 'roam') {
-  return GIFT_PALETTES.find((p) => p.id === id) ?? GIFT_PALETTES[0];
+export function getGiftPalette(id = 'gold') {
+  const key = id === 'roam' ? 'gold' : id;
+  return GIFT_PALETTES.find((p) => p.id === key) ?? GIFT_PALETTES.find((p) => p.id === 'gold') ?? GIFT_PALETTES[0];
 }
 
 /** Resolved body/accent hexes for the active stage theme. */
-export function paletteColorsFor(theme = 'dark', paletteId = 'roam') {
+export function paletteColorsFor(theme = 'dark', paletteId = 'gold') {
   const pal = getGiftPalette(paletteId);
   return theme === 'light' ? pal.light : pal.dark;
+}
+
+/**
+ * CSS custom properties shared by gift FX, birthday ticker shine,
+ * and the office BirthdayGlow — keep all three on the same palette.
+ */
+export function birthdayCssVars(theme = 'dark', paletteId = 'gold') {
+  const { accent, accentEmissive, body } = paletteColorsFor(theme, paletteId);
+  return {
+    '--birthday-accent': accent,
+    '--birthday-accent-emissive': accentEmissive,
+    '--birthday-body': body,
+  };
 }
 
 /**
@@ -158,7 +276,7 @@ export const bodyMaterialProps = {
 };
 
 /** Body props for the current stage theme + gift palette. */
-export function bodyMaterialPropsFor(theme = 'dark', paletteId = 'roam') {
+export function bodyMaterialPropsFor(theme = 'dark', paletteId = 'gold') {
   const { body } = paletteColorsFor(theme, paletteId);
   return {
     ...bodyMaterialProps,
@@ -181,7 +299,7 @@ export const goldMaterialProps = {
 };
 
 /** Accent (ribbon) props for the current stage theme + gift palette. */
-export function accentMaterialPropsFor(theme = 'dark', paletteId = 'roam') {
+export function accentMaterialPropsFor(theme = 'dark', paletteId = 'gold') {
   const { accent, accentEmissive, emissiveIntensity } = paletteColorsFor(
     theme,
     paletteId,
@@ -195,7 +313,7 @@ export function accentMaterialPropsFor(theme = 'dark', paletteId = 'roam') {
 }
 
 /** @deprecated Prefer accentMaterialPropsFor — kept for call-site clarity. */
-export function goldMaterialPropsFor(theme = 'dark', paletteId = 'roam') {
+export function goldMaterialPropsFor(theme = 'dark', paletteId = 'gold') {
   return accentMaterialPropsFor(theme, paletteId);
 }
 

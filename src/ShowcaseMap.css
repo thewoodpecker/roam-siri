@@ -2032,6 +2032,45 @@
   opacity: 1;
 }
 
+/* Birthday floor wash — clipped inside the office, behind name/avatars. */
+.sc-room-card .meeting-room-card.sc-room-birthday-inner {
+  position: relative;
+  overflow: hidden !important;
+  isolation: isolate;
+}
+
+.sc-birthday-glow-wrap {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.sc-birthday-glow {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+}
+
+.sc-room-birthday-inner .card-header,
+.sc-room-birthday-inner .private-office-seat {
+  position: relative;
+  z-index: 1;
+}
+
+/* Lift birthday cell above neighbors (tooltips / overflow). */
+.sc-grid-cell:has(.sc-room-birthday) {
+  z-index: 6;
+}
+
+.sc-room-birthday {
+  z-index: 2;
+}
+
 /* Story bubble — above avatar, matches Figma */
 .sc-story-cell {
   position: relative;

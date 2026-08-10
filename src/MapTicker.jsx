@@ -27,6 +27,7 @@ const SPARK_DURATION_MS = 720;
 const SPARK_LEAD_MS = 380;
 
 const MESSAGES = [
+  { id: 'bday-klas', category: 'birthday', text: 'HAPPY BIRTHDAY KLAS!' },
   { id: 'ats', category: 'ATS', text: '+9.1%, 5,818,620' },
   { id: 'meetings', category: 'JULY MEETINGS', text: '+5.7%, 1,234,302' },
   { id: 'goal', category: 'AUGUST GOAL', text: '1000 LEADS' },
@@ -51,11 +52,11 @@ function phaseTotalMs(phase, count) {
   return ENTER_DURATION_MS + Math.max(0, count - 1) * ENTER_STAGGER_MS;
 }
 
-function CharUnits({ text, baseIndex, birthday }) {
+function CharUnits({ text, baseIndex }) {
   return Array.from(text).map((ch, i) => (
     <span
       key={`${baseIndex + i}-${ch}`}
-      className={`map-ticker-char${birthday ? ' map-ticker-char-birthday' : ''}`}
+      className="map-ticker-char"
       style={{ '--i': baseIndex + i }}
     >
       {ch}
@@ -107,6 +108,41 @@ function SliderIcon() {
   );
 }
 
+/** Subtle ambient sparkles around the birthday category label. */
+const BIRTHDAY_LABEL_SPARKS = [
+  { x: '6%', y: '18%', s: 2, delay: '0s', dur: '2.8s' },
+  { x: '18%', y: '78%', s: 1.5, delay: '0.4s', dur: '3.2s' },
+  { x: '32%', y: '12%', s: 2, delay: '1.0s', dur: '2.6s' },
+  { x: '45%', y: '88%', s: 1.5, delay: '0.7s', dur: '3.4s' },
+  { x: '58%', y: '22%', s: 2, delay: '1.5s', dur: '2.9s' },
+  { x: '70%', y: '72%', s: 1.5, delay: '0.2s', dur: '3.1s' },
+  { x: '82%', y: '40%', s: 2, delay: '1.9s', dur: '2.7s' },
+  { x: '94%', y: '65%', s: 1.5, delay: '1.2s', dur: '3.5s' },
+  { x: '38%', y: '48%', s: 1.5, delay: '2.2s', dur: '3.0s' },
+  { x: '25%', y: '35%', s: 2, delay: '2.6s', dur: '2.5s' },
+];
+
+function BirthdayLabelSparks() {
+  return (
+    <span className="map-ticker-birthday-sparks" aria-hidden="true">
+      {BIRTHDAY_LABEL_SPARKS.map((s, i) => (
+        <span
+          key={i}
+          className="map-ticker-birthday-spark"
+          style={{
+            left: s.x,
+            top: s.y,
+            width: s.s,
+            height: s.s,
+            animationDelay: s.delay,
+            animationDuration: s.dur,
+          }}
+        />
+      ))}
+    </span>
+  );
+}
+
 function TickerEntry({ message, phase, sparkling, sparkKey, onRise }) {
   const isBirthday = message.category === 'birthday';
   const category = message.category.toUpperCase();
@@ -124,7 +160,16 @@ function TickerEntry({ message, phase, sparkling, sparkKey, onRise }) {
       }}
     >
       <span className={`map-ticker-cat${isBirthday ? ' map-ticker-cat-birthday' : ''}`}>
-        <CharUnits text={category} baseIndex={0} birthday={isBirthday} />
+        {isBirthday ? (
+          <span className="map-ticker-birthday-wrap">
+            <span className="map-ticker-char map-ticker-birthday-label" style={{ '--i': 0 }}>
+              {category}
+            </span>
+            {phase !== 'exit' && <BirthdayLabelSparks />}
+          </span>
+        ) : (
+          <CharUnits text={category} baseIndex={0} />
+        )}
       </span>
       <span className="map-ticker-text">
         <CharUnits text={text} baseIndex={category.length} />

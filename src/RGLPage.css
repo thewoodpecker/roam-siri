@@ -721,7 +721,8 @@
   opacity: 1;
 }
 
-/* Soft accent glow behind the gift; sparks burst in front. */
+/* Radial sparkle field behind the gift (replaces soft blur glow).
+   Sparks burst still sits in front via .rgl-gift-arrive-sparks. */
 .rgl-gift-arrive {
   position: absolute;
   inset: 0;
@@ -739,23 +740,20 @@
   z-index: 0;
 }
 
-.rgl-gift-glow {
+.rgl-gift-sparkle-field {
   position: absolute;
+  inset: 0;
   z-index: 0;
-  width: 520px;
-  height: 520px;
-  border-radius: 50%;
-  background:
-    radial-gradient(
-      circle,
-      color-mix(in srgb, var(--rgl-glow) 55%, white) 0%,
-      var(--rgl-glow-soft, var(--rgl-glow)) 28%,
-      transparent 74%
-    );
-  filter: blur(28px);
-  opacity: 0;
-  transform: scale(1);
-  animation: rgl-glow-in 380ms ease-out forwards;
+  width: 100%;
+  height: 100%;
+  opacity: 1;
+}
+
+.rgl-gift-sparkle-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
 }
 
 .rgl-gift-sparks {
@@ -795,15 +793,6 @@
     0 0 14px var(--rgl-glow);
 }
 
-@keyframes rgl-glow-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 0.28;
-  }
-}
-
 @keyframes rgl-spark-fly {
   0% {
     opacity: 0;
@@ -821,7 +810,7 @@
   }
 }
 
-.rgl-gift-layer.is-dismissing .rgl-gift-glow {
+.rgl-gift-layer.is-dismissing .rgl-gift-sparkle-field {
   animation: none;
   opacity: 0;
   transition: opacity 280ms ease-out;
@@ -881,10 +870,8 @@
     animation: none !important;
   }
 
-  .rgl-gift-glow {
-    animation: none;
-    opacity: 0.22;
-    transform: scale(1);
+  .rgl-gift-sparkle-field {
+    opacity: 1;
   }
 
   .rgl-spark {

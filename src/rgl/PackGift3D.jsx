@@ -107,7 +107,7 @@ function preparePackGift(source, def, theme, paletteId) {
  * One gift from the holiday pack (split OBJ),
  * recolored with the active RGL palette.
  */
-export default function PackGift3D({ giftId, scale = 1, theme = 'dark', paletteId = 'roam' }) {
+export default function PackGift3D({ giftId, scale = 1, theme = 'dark', paletteId = 'gold' }) {
   const def = getPackGift(giftId);
   const [source, setSource] = useState(null);
 

@@ -31,6 +31,29 @@ const FLING_MIN = 1.1;
 const COAST_RATIO = 1.35;
 /** Blend rate back into idle spin after a fling (1/s). */
 const IDLE_BLEND = 3.2;
+/** Look back this far for fling velocity — ignore the decelerating release tip. */
+const FLING_SAMPLE_WINDOW_MS = 100;
+/** No motion samples within this of pointer-up → soft release to idle. */
+const FLING_STALE_MS = 80;
+const FLING_SAMPLE_MAX = 24;
+
+/** Peak |ω| from recent pointer samples (rad/s). Survives a slow release at the edge. */
+function flingVelocityFromSamples(samples, now) {
+  if (!samples.length) return 0;
+  if (now - samples[samples.length - 1].t > FLING_STALE_MS) return 0;
+  const cutoff = now - FLING_SAMPLE_WINDOW_MS;
+  let best = 0;
+  for (let i = 1; i < samples.length; i++) {
+    const a = samples[i - 1];
+    const b = samples[i];
+    if (b.t < cutoff) continue;
+    const dt = (b.t - a.t) / 1000;
+    if (dt <= 0 || dt > 0.064) continue;
+    const v = ((b.x - a.x) * DRAG_SENSITIVITY) / dt;
+    if (Math.abs(v) > Math.abs(best)) best = v;
+  }
+  return best;
+}
 
 function usePrefersReducedMotion() {
   const [reduce, setReduce] = useState(false);
@@ -253,8 +276,7 @@ export default function RoamIcon3D({
     lastX: 0,
     lastT: 0,
     moved: false,
-    /** Instantaneous angular velocity sample during drag (rad/s). */
-    sampleV: 0,
+    samples: [],
   });
   const rotationY = useRef(0);
   const angularVel = useRef(SPIN_SPEED);
@@ -266,12 +288,13 @@ export default function RoamIcon3D({
     if (!draggable) return;
     // Grab mid-flight — kill tap burst / coast, take over from current speed
     spinBurst.current = null;
+    const now = performance.now();
     drag.current = {
       active: true,
       lastX: e.clientX,
-      lastT: performance.now(),
+      lastT: now,
       moved: false,
-      sampleV: angularVel.current,
+      samples: [{ t: now, x: e.clientX }],
     };
     angularVel.current = 0;
     e.currentTarget.setPointerCapture(e.pointerId);
@@ -282,23 +305,20 @@ export default function RoamIcon3D({
     if (!draggable || !drag.current.active) return;
     const now = performance.now();
     const dx = e.clientX - drag.current.lastX;
-    const dtMs = now - drag.current.lastT;
     drag.current.lastX = e.clientX;
     drag.current.lastT = now;
     if (Math.abs(dx) > 0.5) drag.current.moved = true;
     rotationY.current += dx * DRAG_SENSITIVITY;
-    // Track velocity from recent samples (ignore huge gaps / stalls)
-    if (dtMs > 0 && dtMs < 64) {
-      const instant = (dx * DRAG_SENSITIVITY) / (dtMs / 1000);
-      drag.current.sampleV = drag.current.sampleV * 0.65 + instant * 0.35;
-    }
+    const samples = drag.current.samples;
+    samples.push({ t: now, x: e.clientX });
+    if (samples.length > FLING_SAMPLE_MAX) samples.shift();
   }, [draggable]);
 
   const endDrag = useCallback((e) => {
     if (!draggable || !drag.current.active) return;
     drag.current.active = false;
-    // Fling: hand the tracked velocity to the physics loop
-    let v = drag.current.sampleV;
+    // Fling: peak recent velocity — survives decelerating at the release edge
+    let v = flingVelocityFromSamples(drag.current.samples, performance.now());
     if (!Number.isFinite(v)) v = 0;
     v = Math.max(-MAX_FLING_SPEED, Math.min(MAX_FLING_SPEED, v));
     // Soft release → resume idle; a real fling coasts with friction

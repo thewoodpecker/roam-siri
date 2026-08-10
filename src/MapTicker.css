@@ -219,26 +219,93 @@
   color: var(--text-primary, rgba(12, 12, 14, 0.9));
 }
 
-/* Birthday — metallic gold shine sweep (wonder TickerCategoryTag).
-   Applied per glyph so per-character-rise splits keep the clip. */
-.map-ticker-cat-birthday .map-ticker-char-birthday,
-.map-ticker-char-birthday {
+/* Birthday — gift palette accent (--birthday-accent).
+   Need -webkit-text-fill-color or WebKit keeps painting the parent green. */
+.map-ticker-cat-birthday {
+  color: var(--birthday-accent, #ffd56a);
+}
+
+.map-ticker-birthday-wrap {
+  position: relative;
+  display: inline-block;
+}
+
+.map-ticker-birthday-label {
   background-image: linear-gradient(
     90deg,
-    #c48a3a 0%,
-    #e0b45a 28%,
-    #f5d78a 38%,
-    #fff6d6 46%,
-    #fff6d6 54%,
-    #f5d78a 62%,
-    #e0b45a 72%,
-    #c48a3a 100%
+    var(--birthday-accent, #ffd56a) 0%,
+    var(--birthday-accent, #ffd56a) 32%,
+    color-mix(in srgb, var(--birthday-accent, #ffd56a) 55%, white) 45%,
+    color-mix(in srgb, var(--birthday-accent, #ffd56a) 22%, white) 50%,
+    color-mix(in srgb, var(--birthday-accent, #ffd56a) 55%, white) 55%,
+    var(--birthday-accent, #ffd56a) 68%,
+    var(--birthday-accent, #ffd56a) 100%
   );
   background-size: 200% auto;
   background-clip: text;
   -webkit-background-clip: text;
-  color: transparent;
+  color: var(--birthday-accent, #ffd56a);
+  -webkit-text-fill-color: transparent;
   animation: map-ticker-gold-shine 4s linear infinite;
+}
+
+/* Subtle ambient sparkles on the birthday label. */
+.map-ticker-birthday-sparks {
+  position: absolute;
+  inset: -4px -6px;
+  pointer-events: none;
+  z-index: 1;
+  overflow: visible;
+}
+
+.map-ticker-birthday-spark {
+  position: absolute;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--birthday-accent, #ffd56a) 70%, white);
+  box-shadow:
+    0 0 4px color-mix(in srgb, var(--birthday-accent, #ffd56a) 85%, transparent),
+    0 0 1px #fff;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.4);
+  animation-name: map-ticker-birthday-twinkle;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+.map-ticker-birthday-spark:nth-child(odd) {
+  border-radius: 1px;
+  width: 1px !important;
+  height: 3px !important;
+}
+
+@keyframes map-ticker-birthday-twinkle {
+  0%, 68%, 100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.35);
+  }
+  76% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+  84% {
+    opacity: 0.4;
+    transform: translate(-50%, -50%) scale(0.7);
+  }
+}
+
+/* Rise/exit replace `animation` — keep solid accent during those beats. */
+.map-ticker-entry.is-entering .map-ticker-birthday-label,
+.map-ticker-entry.is-exiting .map-ticker-birthday-label {
+  background: none;
+  background-clip: unset;
+  -webkit-background-clip: unset;
+  color: var(--birthday-accent, #ffd56a);
+  -webkit-text-fill-color: var(--birthday-accent, #ffd56a);
+}
+
+.map-ticker-entry.is-entering .map-ticker-birthday-sparks,
+.map-ticker-entry.is-exiting .map-ticker-birthday-sparks {
+  opacity: 0;
 }
 
 @keyframes map-ticker-gold-shine {
@@ -247,13 +314,17 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .map-ticker-cat-birthday .map-ticker-char-birthday,
-  .map-ticker-char-birthday {
+  .map-ticker-birthday-label {
     animation: none;
-    color: #e0b45a;
+    color: var(--birthday-accent, #ffd56a);
+    -webkit-text-fill-color: var(--birthday-accent, #ffd56a);
     background: none;
     -webkit-background-clip: unset;
     background-clip: unset;
+  }
+
+  .map-ticker-birthday-sparks {
+    display: none;
   }
 }
 

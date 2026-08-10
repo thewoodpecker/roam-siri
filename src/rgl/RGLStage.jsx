@@ -12,6 +12,29 @@ const MAX_FLING_SPEED = 28;
 const FLING_MIN = 1.1;
 const COAST_RATIO = 1.35;
 const IDLE_BLEND = 3.2;
+/** Look back this far for fling velocity — ignore the decelerating release tip. */
+const FLING_SAMPLE_WINDOW_MS = 100;
+/** No motion samples within this of pointer-up → soft release to idle. */
+const FLING_STALE_MS = 80;
+const FLING_SAMPLE_MAX = 24;
+
+/** Peak |ω| from recent pointer samples (rad/s). Survives a slow release at the edge. */
+function flingVelocityFromSamples(samples, now) {
+  if (!samples.length) return 0;
+  if (now - samples[samples.length - 1].t > FLING_STALE_MS) return 0;
+  const cutoff = now - FLING_SAMPLE_WINDOW_MS;
+  let best = 0;
+  for (let i = 1; i < samples.length; i++) {
+    const a = samples[i - 1];
+    const b = samples[i];
+    if (b.t < cutoff) continue;
+    const dt = (b.t - a.t) / 1000;
+    if (dt <= 0 || dt > 0.064) continue;
+    const v = ((b.x - a.x) * DRAG_SENSITIVITY) / dt;
+    if (Math.abs(v) > Math.abs(best)) best = v;
+  }
+  return best;
+}
 
 /** Slight look-down — softer than before, closer to the app-icon tip. */
 const CAMERA_POS = [0, 0.85, 4.5];
@@ -105,6 +128,8 @@ function OrbitingSubject({ children, drag, rotationY, spinBurst, angularVel }) {
 /**
  * Shared RGL stage — orthographic canvas, icon lighting,
  * and the same drag / fling / tap-spin physics as RoamIcon3D.
+ *
+ * Pass interactive={false} for map decorations (idle spin only, no grab).
  */
 export default function RGLStage({
   children,
@@ -112,6 +137,7 @@ export default function RGLStage({
   appearSpinKey = 0,
   appearTurns = 0,
   appearDuration = 1.1,
+  interactive = true,
 }) {
   const reduceMotion = usePrefersReducedMotion();
   const drag = useRef({
@@ -119,7 +145,7 @@ export default function RGLStage({
     lastX: 0,
     lastT: 0,
     moved: false,
-    sampleV: 0,
+    samples: [],
   });
   const rotationY = useRef(0.35);
   const angularVel = useRef(SPIN_SPEED);
@@ -139,38 +165,38 @@ export default function RGLStage({
   }, [appearSpinKey, appearTurns, appearDuration, reduceMotion]);
 
   const onPointerDown = useCallback((e) => {
+    if (!interactive) return;
     spinBurst.current = null;
+    const now = performance.now();
     drag.current = {
       active: true,
       lastX: e.clientX,
-      lastT: performance.now(),
+      lastT: now,
       moved: false,
-      sampleV: angularVel.current,
+      samples: [{ t: now, x: e.clientX }],
     };
     angularVel.current = 0;
     e.currentTarget.setPointerCapture(e.pointerId);
     e.currentTarget.style.cursor = 'grabbing';
-  }, []);
+  }, [interactive]);
 
   const onPointerMove = useCallback((e) => {
-    if (!drag.current.active) return;
+    if (!interactive || !drag.current.active) return;
     const now = performance.now();
     const dx = e.clientX - drag.current.lastX;
-    const dtMs = now - drag.current.lastT;
     drag.current.lastX = e.clientX;
     drag.current.lastT = now;
     if (Math.abs(dx) > 0.5) drag.current.moved = true;
     rotationY.current += dx * DRAG_SENSITIVITY;
-    if (dtMs > 0 && dtMs < 64) {
-      const instant = (dx * DRAG_SENSITIVITY) / (dtMs / 1000);
-      drag.current.sampleV = drag.current.sampleV * 0.65 + instant * 0.35;
-    }
-  }, []);
+    const samples = drag.current.samples;
+    samples.push({ t: now, x: e.clientX });
+    if (samples.length > FLING_SAMPLE_MAX) samples.shift();
+  }, [interactive]);
 
   const endDrag = useCallback((e) => {
-    if (!drag.current.active) return;
+    if (!interactive || !drag.current.active) return;
     drag.current.active = false;
-    let v = drag.current.sampleV;
+    let v = flingVelocityFromSamples(drag.current.samples, performance.now());
     if (!Number.isFinite(v)) v = 0;
     v = Math.max(-MAX_FLING_SPEED, Math.min(MAX_FLING_SPEED, v));
     angularVel.current = Math.abs(v) < FLING_MIN ? SPIN_SPEED : v;
@@ -178,10 +204,11 @@ export default function RGLStage({
     if (e.currentTarget.hasPointerCapture(e.pointerId)) {
       e.currentTarget.releasePointerCapture(e.pointerId);
     }
-  }, []);
+  }, [interactive]);
 
   const onClick = useCallback(
     (e) => {
+      if (!interactive) return;
       if (drag.current.moved) {
         e.preventDefault();
         e.stopPropagation();
@@ -196,24 +223,25 @@ export default function RGLStage({
         duration: TAP_SPIN_DURATION,
       };
     },
-    [reduceMotion],
+    [interactive, reduceMotion],
   );
 
   return (
     <div
       className={className}
       style={{
-        cursor: 'grab',
+        cursor: interactive ? 'grab' : 'default',
         touchAction: 'none',
         userSelect: 'none',
+        pointerEvents: interactive ? 'auto' : 'none',
         opacity: ready ? 1 : 0,
         transition: 'opacity 0.45s ease-out',
       }}
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={endDrag}
-      onPointerCancel={endDrag}
-      onClick={onClick}
+      onPointerDown={interactive ? onPointerDown : undefined}
+      onPointerMove={interactive ? onPointerMove : undefined}
+      onPointerUp={interactive ? endDrag : undefined}
+      onPointerCancel={interactive ? endDrag : undefined}
+      onClick={interactive ? onClick : undefined}
     >
       <Canvas
         dpr={[1, 2]}

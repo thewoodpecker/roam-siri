@@ -30,18 +30,6 @@ export const PACK_GIFTS = [
     ],
   },
   {
-    id: 'pack-tube',
-    name: 'Gift · Tube',
-    blurb: 'Cylindrical gift from the holiday pack — roam black body, gold bow.',
-    status: 'wip',
-    url: '/rgl/gift-pack/gift-tube.obj',
-    bodyParts: ['Cylinder.016', 'Cylinder.018'],
-    ribbonParts: [
-      'Plane.024', 'Plane.025', 'Plane.026', 'Plane.030',
-      'Plane.031', 'Plane.032', 'Plane.033', 'Plane.034',
-    ],
-  },
-  {
     id: 'pack-square',
     name: 'Gift · Square',
     blurb: 'Upright square box from the holiday pack — roam black body, gold bow.',
