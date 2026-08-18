@@ -271,6 +271,8 @@ export default function RoamIcon3D({
   draggable = true,
 }) {
   const reduceMotion = usePrefersReducedMotion();
+  const hostRef = useRef(null);
+  const unbindDragRef = useRef(null);
   const drag = useRef({
     active: false,
     lastX: 0,
@@ -283,6 +285,32 @@ export default function RoamIcon3D({
   const spinBurst = useRef(null);
   const [canvasReady, setCanvasReady] = useState(false);
   const visible = canvasReady && reveal;
+
+  useEffect(() => () => {
+    unbindDragRef.current?.();
+    unbindDragRef.current = null;
+  }, []);
+
+  const endDrag = useCallback((e) => {
+    if (!draggable || !drag.current.active) return;
+    drag.current.active = false;
+    unbindDragRef.current?.();
+    unbindDragRef.current = null;
+
+    // Fling: peak recent velocity — survives decelerating at the release edge
+    let v = flingVelocityFromSamples(drag.current.samples, performance.now());
+    if (!Number.isFinite(v)) v = 0;
+    v = Math.max(-MAX_FLING_SPEED, Math.min(MAX_FLING_SPEED, v));
+    // Soft release → resume idle; a real fling coasts with friction
+    angularVel.current = Math.abs(v) < FLING_MIN ? SPIN_SPEED : v;
+
+    const host = hostRef.current;
+    if (host) host.style.cursor = 'grab';
+    const pid = e?.pointerId;
+    if (pid != null && host?.hasPointerCapture?.(pid)) {
+      host.releasePointerCapture(pid);
+    }
+  }, [draggable]);
 
   const onPointerDown = useCallback((e) => {
     if (!draggable) return;
@@ -297,37 +325,39 @@ export default function RoamIcon3D({
       samples: [{ t: now, x: e.clientX }],
     };
     angularVel.current = 0;
-    e.currentTarget.setPointerCapture(e.pointerId);
-    e.currentTarget.style.cursor = 'grabbing';
-  }, [draggable]);
 
-  const onPointerMove = useCallback((e) => {
-    if (!draggable || !drag.current.active) return;
-    const now = performance.now();
-    const dx = e.clientX - drag.current.lastX;
-    drag.current.lastX = e.clientX;
-    drag.current.lastT = now;
-    if (Math.abs(dx) > 0.5) drag.current.moved = true;
-    rotationY.current += dx * DRAG_SENSITIVITY;
-    const samples = drag.current.samples;
-    samples.push({ t: now, x: e.clientX });
-    if (samples.length > FLING_SAMPLE_MAX) samples.shift();
-  }, [draggable]);
-
-  const endDrag = useCallback((e) => {
-    if (!draggable || !drag.current.active) return;
-    drag.current.active = false;
-    // Fling: peak recent velocity — survives decelerating at the release edge
-    let v = flingVelocityFromSamples(drag.current.samples, performance.now());
-    if (!Number.isFinite(v)) v = 0;
-    v = Math.max(-MAX_FLING_SPEED, Math.min(MAX_FLING_SPEED, v));
-    // Soft release → resume idle; a real fling coasts with friction
-    angularVel.current = Math.abs(v) < FLING_MIN ? SPIN_SPEED : v;
-    e.currentTarget.style.cursor = 'grab';
-    if (e.currentTarget.hasPointerCapture(e.pointerId)) {
-      e.currentTarget.releasePointerCapture(e.pointerId);
+    const host = e.currentTarget;
+    hostRef.current = host;
+    try {
+      host.setPointerCapture(e.pointerId);
+    } catch {
+      /* ignore */
     }
-  }, [draggable]);
+    host.style.cursor = 'grabbing';
+
+    unbindDragRef.current?.();
+    const onMove = (ev) => {
+      if (!drag.current.active) return;
+      const t = performance.now();
+      const dx = ev.clientX - drag.current.lastX;
+      drag.current.lastX = ev.clientX;
+      drag.current.lastT = t;
+      if (Math.abs(dx) > 0.5) drag.current.moved = true;
+      rotationY.current += dx * DRAG_SENSITIVITY;
+      const samples = drag.current.samples;
+      samples.push({ t, x: ev.clientX });
+      if (samples.length > FLING_SAMPLE_MAX) samples.shift();
+    };
+    const onUp = (ev) => endDrag(ev);
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onUp);
+    unbindDragRef.current = () => {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointercancel', onUp);
+    };
+  }, [draggable, endDrag]);
 
   const onClick = useCallback((e) => {
     if (drag.current.moved) {
@@ -347,6 +377,7 @@ export default function RoamIcon3D({
 
   return (
     <div
+      ref={hostRef}
       role="img"
       aria-label="Roam logo"
       className={className}
@@ -360,9 +391,7 @@ export default function RoamIcon3D({
         transition: `opacity 0.6s ease-out ${fadeDelay}ms`,
       }}
       onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={endDrag}
-      onPointerCancel={endDrag}
+      onLostPointerCapture={endDrag}
       onClick={onClick}
     >
       <Canvas

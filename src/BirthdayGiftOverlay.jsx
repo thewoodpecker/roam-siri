@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import PackGift3D from './rgl/PackGift3D';
+import BirthdayCard3D, { CARD_SEED_NOTES, CardOpenButton, CardSignPop } from './rgl/BirthdayCard3D';
 import RGLStage from './rgl/RGLStage';
 import SoftBlurText from './SoftBlurText';
 import BirthdayGlow from './BirthdayGlow';
-import { PACK_GIFTS } from './rgl/giftCatalog';
 import { paletteColorsFor } from './rgl/materials';
+import { CARD_OPEN_SETTLE_MS } from './rgl/cardMotion';
 import './BirthdayGiftOverlay.css';
 
 /** Must match `.rgl-gift-bounce-in` duration. */
@@ -14,19 +14,6 @@ const APPEAR_TURNS = 1;
 const ARRIVE_AT = 0.35;
 const LABEL_AT = 0.45;
 const SPARK_COUNT = 28;
-
-function pickPackGiftId(exclude) {
-  const ids = PACK_GIFTS.map((g) => g.id);
-  if (ids.length === 0) return exclude ?? 'pack-flat';
-  let next = ids[Math.floor(Math.random() * ids.length)];
-  if (ids.length > 1 && exclude) {
-    let guard = 0;
-    while (next === exclude && guard++ < 12) {
-      next = ids[Math.floor(Math.random() * ids.length)];
-    }
-  }
-  return next;
-}
 
 function dayOrdinal(n) {
   const j = n % 10;
@@ -112,17 +99,34 @@ export default function BirthdayGiftOverlay({
   theme = 'dark',
   paletteId = 'gold',
   name = 'Klas',
+  signerName = 'Joe',
   showScrim = true,
 }) {
-  const [giftId, setGiftId] = useState(() => pickPackGiftId());
+  const hostRef = useRef(null);
   const [entering, setEntering] = useState(true);
   const [dismissing, setDismissing] = useState(false);
   const [arriveFx, setArriveFx] = useState(false);
   const [arriveBurst, setArriveBurst] = useState(0);
   const [appearSpinKey, setAppearSpinKey] = useState(0);
   const [labelPlay, setLabelPlay] = useState(false);
+  const [cardOpen, setCardOpen] = useState(false);
+  const [cardReady, setCardReady] = useState(false);
+  const [facing, setFacing] = useState(false);
+  const [notes, setNotes] = useState(CARD_SEED_NOTES);
+  const [draft, setDraft] = useState(null);
+  const [draftText, setDraftText] = useState('');
   const dismissedRef = useRef(false);
+  const skipTapRef = useRef(false);
   const paletteColors = paletteColorsFor(theme, paletteId);
+
+  useEffect(() => {
+    if (cardOpen) {
+      setFacing(true);
+      return undefined;
+    }
+    const id = window.setTimeout(() => setFacing(false), CARD_OPEN_SETTLE_MS);
+    return () => window.clearTimeout(id);
+  }, [cardOpen]);
 
   const finishDismiss = useCallback(() => {
     if (dismissedRef.current) return;
@@ -138,17 +142,24 @@ export default function BirthdayGiftOverlay({
     setArriveFx(false);
     setLabelPlay(false);
     setAppearSpinKey(0);
-    setGiftId((prev) => pickPackGiftId(prev));
+    setCardOpen(false);
+    setCardReady(false);
+    setFacing(false);
+    setNotes(CARD_SEED_NOTES);
+    setDraft(null);
+    setDraftText('');
     if (prefersReducedMotion()) {
       setEntering(false);
       setArriveFx(true);
       setLabelPlay(true);
+      setCardReady(true);
       return undefined;
     }
     setEntering(true);
     let raf2 = 0;
     let arriveTimer = 0;
     let labelTimer = 0;
+    let readyTimer = 0;
     const raf1 = requestAnimationFrame(() => {
       raf2 = requestAnimationFrame(() => {
         setEntering(false);
@@ -160,6 +171,9 @@ export default function BirthdayGiftOverlay({
         labelTimer = window.setTimeout(() => {
           setLabelPlay(true);
         }, ENTER_MS * LABEL_AT);
+        readyTimer = window.setTimeout(() => {
+          setCardReady(true);
+        }, ENTER_MS);
       });
     });
     return () => {
@@ -167,6 +181,7 @@ export default function BirthdayGiftOverlay({
       cancelAnimationFrame(raf2);
       window.clearTimeout(arriveTimer);
       window.clearTimeout(labelTimer);
+      window.clearTimeout(readyTimer);
     };
   }, []);
 
@@ -212,12 +227,83 @@ export default function BirthdayGiftOverlay({
     return () => window.clearTimeout(t);
   }, [dismissing, finishDismiss]);
 
+  const pickInside = useCallback((hit) => {
+    if (!cardOpen) return;
+    skipTapRef.current = true;
+    const host = hostRef.current;
+    if (!host) return;
+    const rect = host.getBoundingClientRect();
+    setDraft({
+      page: hit.page,
+      u: hit.u,
+      v: hit.v,
+      x: hit.clientX - rect.left,
+      y: hit.clientY - rect.top,
+    });
+    setDraftText('');
+  }, [cardOpen]);
+
+  const cancelDraft = useCallback(() => {
+    setDraft(null);
+    setDraftText('');
+  }, []);
+
+  const toggleCard = useCallback(() => {
+    if (!cardReady || dismissing) return;
+    if (skipTapRef.current) {
+      skipTapRef.current = false;
+      return;
+    }
+    setDraft(null);
+    setDraftText('');
+    setCardOpen((open) => !open);
+  }, [cardReady, dismissing]);
+
+  const commitSign = useCallback(() => {
+    const text = draftText.trim();
+    if (!draft || !text) return;
+    setNotes((prev) => [
+      ...prev,
+      {
+        id: `me-${Date.now()}`,
+        page: draft.page,
+        u: draft.u,
+        v: draft.v,
+        rotate: (Math.random() * 14) - 7,
+        name: signerName,
+        text,
+        ink: 4,
+      },
+    ]);
+    setDraft(null);
+    setDraftText('');
+  }, [draft, draftText, signerName]);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const onKey = (e) => {
+      if (e.key !== 'Escape') return;
+      if (draft) {
+        cancelDraft();
+        return;
+      }
+      if (cardOpen) {
+        setCardOpen(false);
+        return;
+      }
+      dismiss();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open, draft, cardOpen, cancelDraft, dismiss]);
+
   if (!open && !dismissing) return null;
 
   const giftClass = [
     'rgl-gift-layer',
     entering && 'is-entering',
     dismissing && 'is-dismissing',
+    cardOpen && 'is-card-open',
   ]
     .filter(Boolean)
     .join(' ');
@@ -236,6 +322,7 @@ export default function BirthdayGiftOverlay({
 
   return (
     <div
+      ref={hostRef}
       className="birthday-gift-host"
       data-theme={theme}
       style={{ '--rgl-name-color': paletteColors.accent }}
@@ -244,7 +331,7 @@ export default function BirthdayGiftOverlay({
         <button
           type="button"
           className={scrimClass}
-          aria-label="Dismiss gift"
+          aria-label="Dismiss card"
           onClick={dismiss}
         />
       )}
@@ -303,18 +390,46 @@ export default function BirthdayGiftOverlay({
             </div>
           </div>
           <div className="rgl-gift-slide">
-            <RGLStage
-              className="rgl-canvas"
-              key={`${giftId}-${theme}-${paletteId}-${playKey}`}
-              appearSpinKey={appearSpinKey}
-              appearTurns={APPEAR_TURNS}
-              appearDuration={ENTER_MS / 1000}
-            >
-              <PackGift3D giftId={giftId} scale={1} theme={theme} paletteId={paletteId} />
-            </RGLStage>
+            <div className={`rgl-gift-zoom${cardOpen ? ' is-open' : ''}`}>
+              <RGLStage
+                className="rgl-canvas rgl-canvas-card"
+                key={`${theme}-${paletteId}-${playKey}`}
+                appearSpinKey={appearSpinKey}
+                appearTurns={APPEAR_TURNS}
+                appearDuration={ENTER_MS / 1000}
+                idleSpin={!facing}
+                holdYaw={facing ? 0 : null}
+                tapSpin={!facing}
+                allowDrag={!facing}
+                onTap={cardReady && !dismissing ? toggleCard : undefined}
+              >
+                <BirthdayCard3D
+                  open={cardOpen}
+                  followPointer={cardOpen && !draft}
+                  name={name}
+                  notes={notes}
+                  theme={theme}
+                  paletteId={paletteId}
+                  onInsidePick={pickInside}
+                />
+              </RGLStage>
+            </div>
           </div>
+          <CardOpenButton
+            open={cardOpen}
+            visible={labelPlay}
+            disabled={!cardReady || dismissing}
+            onClick={toggleCard}
+          />
         </div>
       </div>
+      <CardSignPop
+        draft={draft}
+        value={draftText}
+        onChange={setDraftText}
+        onSign={commitSign}
+        onCancel={cancelDraft}
+      />
     </div>
   );
 }

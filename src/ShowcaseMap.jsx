@@ -718,7 +718,7 @@ function AiVibeIcon({ src, label, combo = false, bg }) {
 }
 
 // Private office room card — uses the same markup as mapv3
-function PrivateRoomCard({ room, storyBubble, onPersonClick, onRoomClick, spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, showPhysicalTags = false, vibeOverride = false, glowOfficeId = null, glowOfficeVibe = null, theme = 'dark', birthdayAccent = BIRTHDAY_GOLD }) {
+function PrivateRoomCard({ room, storyBubble, onPersonClick, onRoomClick, spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, showPhysicalTags = false, vibeOverride = false, glowOfficeId = null, glowOfficeVibe = null, theme = 'dark', birthdayAccent = BIRTHDAY_GOLD, birthdayEnabled = true }) {
   const [talking, setTalking] = useState({});
   const hasTalk = room.people.length > 1;
   const cursorGlow = theme === 'light' ? CURSOR_LIGHT : CURSOR_DARK;
@@ -748,7 +748,7 @@ function PrivateRoomCard({ room, storyBubble, onPersonClick, onRoomClick, spotif
   }, [hasTalk]);
 
   const isEmpty = room.people.length === 0 && (room.agentDock?.length || 0) === 0;
-  const isBirthday = !!room.birthday;
+  const isBirthday = birthdayEnabled && !!room.birthday;
   // Glow + badge travel together with the office's vibe. The parent still
   // rotates glowOfficeId as a spotlight for offices that don't already
   // carry a vibe in activeVibes (e.g. agent-dock offices).
@@ -2210,11 +2210,11 @@ function ShelfWindow({ win, onDrag, photoIdx, direction, onPrev, onNext }) {
 }
 
 // Main showcase component
-export default function ShowcaseMap({ initialFloor = 'R&D', embedded = false, autoKnock = false, spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, hideOnIt = false, onItAutoOpen = false, shelfAutoOpen = false, shareAutoOpen = false, theme, autoCycleFloors = false, autoCycleDms = false, showPhysicalTags = false, onAirOverride = null, agentsRoom = null, officeAgents = null, workrooms = null, peopleOverrides = null, peopleLimits = null, vibeOverride = false, hideElevator = false, hiddenRooms = null, extraRooms = null, editable = false, allowWindowOpens = false, defaultLayout = null, onPersonalAgentsClick = null, showTicker = undefined, birthdayPaletteId = 'gold' } = {}) {
+export default function ShowcaseMap({ initialFloor = 'R&D', embedded = false, autoKnock = false, spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, hideOnIt = false, onItAutoOpen = false, shelfAutoOpen = false, shareAutoOpen = false, theme, autoCycleFloors = false, autoCycleDms = false, showPhysicalTags = false, onAirOverride = null, agentsRoom = null, officeAgents = null, workrooms = null, peopleOverrides = null, peopleLimits = null, vibeOverride = false, hideElevator = false, hiddenRooms = null, extraRooms = null, editable = false, allowWindowOpens = false, defaultLayout = null, onPersonalAgentsClick = null, showTicker = undefined, birthdayPaletteId = 'gold', birthdayEnabled = true, tickerEmpty = false } = {}) {
   return (
     <ChatProvider>
       <WindowManagerProvider initialWindows={INITIAL_WINDOWS}>
-        <ShowcaseMapInner initialFloor={initialFloor} embedded={embedded} autoKnock={autoKnock} spotifyAlwaysOpen={spotifyAlwaysOpen} githubAlwaysOpen={githubAlwaysOpen} figmaAlwaysOpen={figmaAlwaysOpen} hideOnIt={hideOnIt} onItAutoOpen={onItAutoOpen} shelfAutoOpen={shelfAutoOpen} shareAutoOpen={shareAutoOpen} themeOverride={theme} autoCycleFloors={autoCycleFloors} autoCycleDms={autoCycleDms} showPhysicalTags={showPhysicalTags} onAirOverride={onAirOverride} agentsRoom={agentsRoom} officeAgents={officeAgents} workrooms={workrooms} peopleOverrides={peopleOverrides} peopleLimits={peopleLimits} vibeOverride={vibeOverride} hideElevator={hideElevator} hiddenRooms={hiddenRooms} extraRooms={extraRooms} editable={editable} allowWindowOpens={allowWindowOpens} defaultLayout={defaultLayout} onPersonalAgentsClick={onPersonalAgentsClick} showTicker={showTicker} birthdayPaletteId={birthdayPaletteId} />
+        <ShowcaseMapInner initialFloor={initialFloor} embedded={embedded} autoKnock={autoKnock} spotifyAlwaysOpen={spotifyAlwaysOpen} githubAlwaysOpen={githubAlwaysOpen} figmaAlwaysOpen={figmaAlwaysOpen} hideOnIt={hideOnIt} onItAutoOpen={onItAutoOpen} shelfAutoOpen={shelfAutoOpen} shareAutoOpen={shareAutoOpen} themeOverride={theme} autoCycleFloors={autoCycleFloors} autoCycleDms={autoCycleDms} showPhysicalTags={showPhysicalTags} onAirOverride={onAirOverride} agentsRoom={agentsRoom} officeAgents={officeAgents} workrooms={workrooms} peopleOverrides={peopleOverrides} peopleLimits={peopleLimits} vibeOverride={vibeOverride} hideElevator={hideElevator} hiddenRooms={hiddenRooms} extraRooms={extraRooms} editable={editable} allowWindowOpens={allowWindowOpens} defaultLayout={defaultLayout} onPersonalAgentsClick={onPersonalAgentsClick} showTicker={showTicker} birthdayPaletteId={birthdayPaletteId} birthdayEnabled={birthdayEnabled} tickerEmpty={tickerEmpty} />
       </WindowManagerProvider>
     </ChatProvider>
   );
@@ -2378,7 +2378,7 @@ function useTargetHintStyle(targetRef, active, offset = { top: -30, left: 'cente
   return style;
 }
 
-function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = false, spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, hideOnIt = false, onItAutoOpen = false, shelfAutoOpen = false, shareAutoOpen = false, themeOverride = null, autoCycleFloors = false, autoCycleDms = false, showPhysicalTags = false, onAirOverride = null, agentsRoom = null, officeAgents = null, workrooms = null, peopleOverrides = null, peopleLimits = null, vibeOverride = false, hideElevator = false, hiddenRooms = null, extraRooms = null, editable = false, allowWindowOpens = false, defaultLayout = null, onPersonalAgentsClick = null, showTicker: showTickerProp, birthdayPaletteId = 'gold' }) {
+function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = false, spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, hideOnIt = false, onItAutoOpen = false, shelfAutoOpen = false, shareAutoOpen = false, themeOverride = null, autoCycleFloors = false, autoCycleDms = false, showPhysicalTags = false, onAirOverride = null, agentsRoom = null, officeAgents = null, workrooms = null, peopleOverrides = null, peopleLimits = null, vibeOverride = false, hideElevator = false, hiddenRooms = null, extraRooms = null, editable = false, allowWindowOpens = false, defaultLayout = null, onPersonalAgentsClick = null, showTicker: showTickerProp, birthdayPaletteId = 'gold', birthdayEnabled = true, tickerEmpty = false }) {
   const [themeState, setThemeState] = useState('dark');
   const theme = themeOverride || themeState;
   const setTheme = themeOverride ? () => {} : setThemeState;
@@ -2386,14 +2386,18 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
   const birthdayVars = birthdayCssVars(theme, birthdayPaletteId);
   // Company News ticker — on for the live homepage map; opt-in for embeds (e.g. RGL).
   const showTicker = showTickerProp ?? !embedded;
-  /** Birthday gift celebration from ticker click — Klas + active palette. */
+  /** Birthday card celebration from ticker click — Klas + active palette. */
   const [birthdayGift, setBirthdayGift] = useState({ open: false, playKey: 0 });
   const handleBirthdayTickerClick = useCallback(() => {
+    if (!birthdayEnabled) return;
     setBirthdayGift((prev) => ({ open: true, playKey: prev.playKey + 1 }));
-  }, []);
+  }, [birthdayEnabled]);
   const handleBirthdayGiftDismissed = useCallback(() => {
     setBirthdayGift((prev) => ({ ...prev, open: false }));
   }, []);
+  useEffect(() => {
+    if (!birthdayEnabled) setBirthdayGift((prev) => ({ ...prev, open: false }));
+  }, [birthdayEnabled]);
   const [layout, setLayout] = useState('v2');
   const [activeFloor, setActiveFloor] = useState(initialFloor);
   const [floorTransition, setFloorTransition] = useState('visible'); // 'visible' | 'out' | 'in'
@@ -3648,7 +3652,7 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
       <div className="miniRoamOS" ref={miniRoamRef} onClick={() => hintVisible && setHintVisible(false)}>
         <div className={`sc-wallpaper sc-wallpaper-dark${theme === 'dark' && wallpaperDarkLoaded ? ' is-visible' : ''}`} />
         <div className={`sc-wallpaper sc-wallpaper-light${theme === 'light' && wallpaperLightLoaded ? ' is-visible' : ''}`} />
-        {layout === 'v2' && (
+        {layout === 'v2' && !embedded && (
           <div className="sc-v2-hero" data-hero-ready={heroFontsReady ? 'true' : 'false'}>
             <LoadReveal play={heroFontsReady} index={0} baseDelay={0} stagger={0} className="sc-v2-hero-icon-wrap">
               <Suspense fallback={<img className="sc-v2-hero-icon" src="/icons/roam-gold-icon.png" alt="Roam" />}>
@@ -3696,7 +3700,7 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
             </LoadReveal>
           </div>
         )}
-        {layout === 'v2' && (
+        {layout === 'v2' && !embedded && (
           <LoadReveal
             play={heroFontsReady}
             index={0}
@@ -3743,7 +3747,13 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
           )}
         </div>
 
-        {showTicker && <MapTicker onBirthdayClick={handleBirthdayTickerClick} />}
+        {showTicker && (
+          <MapTicker
+            onBirthdayClick={handleBirthdayTickerClick}
+            birthdayEnabled={birthdayEnabled}
+            empty={tickerEmpty}
+          />
+        )}
 
         {/* Main content area */}
         <div className="sc-content">
@@ -3837,6 +3847,7 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
                         vibeOverride={vibeOverride}
                         theme={theme}
                         birthdayAccent={birthdayAccent}
+                        birthdayEnabled={birthdayEnabled}
                         showPhysicalTags={showPhysicalTags}
                         spotifyAlwaysOpen={spotifyAlwaysOpen}
                         githubAlwaysOpen={githubAlwaysOpen}
@@ -4128,7 +4139,7 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
         {storyViewer && <StoryViewer stories={storyViewer.stories} initialIndex={storyViewer.initialIndex} onClose={() => setStoryViewer(null)} />}
         <ShareDialog open={shareOpen} onClose={() => setShareOpen(false)} />
         {knockingRoom && <KnockDialog room={knockingRoom} onCancel={() => { clearTimeout(knockTimerRef.current); setKnockingRoom(null); }} />}
-        {birthdayGift.open && (
+        {birthdayEnabled && birthdayGift.open && (
           <Suspense fallback={null}>
             <BirthdayGiftOverlay
               open={birthdayGift.open}

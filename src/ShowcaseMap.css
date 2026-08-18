@@ -1110,7 +1110,8 @@
 }
 
 .sc-viewport[data-theme="light"] .sc-window {
-  background: rgba(255, 255, 255, 0.6);
+  --sc-window-fill: rgba(255, 255, 255, 0.6);
+  background: transparent;
 }
 
 .sc-viewport[data-theme="light"] .ainbox-window,
@@ -1282,16 +1283,19 @@
 
 /* Mac window frame */
 .sc-window {
+  --sc-window-fill: rgba(0, 0, 0, 0.3);
   width: 100%;
   max-width: calc(var(--grid-max-width) - var(--grid-margin) * 2);
   aspect-ratio: 16 / 9;
   flex-shrink: 0;
   min-height: 0;
   max-height: calc((var(--grid-max-width) - var(--grid-margin) * 2) * 9 / 16);
-  background: rgba(0, 0, 0, 0.3);
-  overflow: hidden;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  /* Fill + blur live on ::before — backdrop-filter on this node can stop
+     overflow:hidden from following border-radius / corner-shape, which
+     leaves square ticker/chrome corners inside the squircle frame. */
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   border-radius: var(--radius-2xl);
   corner-shape: superellipse(1.6);
   border: 0.5px solid var(--border);
@@ -1302,6 +1306,20 @@
   flex-direction: column;
   overflow: hidden !important;
   position: relative;
+  isolation: isolate;
+}
+
+.sc-window::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: inherit;
+  corner-shape: inherit;
+  background: var(--sc-window-fill);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
 
 /* Ticker sits under the titlebar — grow the frame so the map body stays 16:9. */

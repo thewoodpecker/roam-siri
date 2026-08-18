@@ -18,7 +18,10 @@
   height: var(--map-ticker-height, 44px);
   flex-shrink: 0;
   padding-left: 4px;
+  padding-right: 0;
   background: var(--bg-surface-primary, #0a0a0b);
+  /* Same top card radius .sc-content used before the ticker took its place. */
+  border-radius: 20px 20px 0 0;
   border-bottom: 0.5px solid var(--border, rgba(255, 255, 255, 0.1));
   z-index: 6;
   overflow: hidden;
@@ -33,32 +36,36 @@
   border-bottom-color: var(--border, rgba(0, 0, 0, 0.1));
 }
 
+.sc-viewport[data-theme='light'] .map-ticker-settings::before,
+[data-theme='light'] .map-ticker-settings::before {
+  background: linear-gradient(
+    to right,
+    transparent,
+    var(--bg-surface-primary, #fff) 36%,
+    var(--bg-surface-primary, #fff)
+  );
+}
+
 .map-ticker-viewport {
   position: relative;
   flex: 1;
   min-width: 0;
   height: 100%;
   overflow: hidden;
-  cursor: grab;
-  touch-action: none;
+  /* Left edge fade only — right fade lives on the settings overlay so
+     marquee text runs under the icon instead of stopping early. */
   mask-image: linear-gradient(
     to right,
     transparent 0,
     #000 1.5rem,
-    #000 calc(100% - 5.5rem),
-    transparent calc(100% - 2rem)
+    #000 100%
   );
   -webkit-mask-image: linear-gradient(
     to right,
     transparent 0,
     #000 1.5rem,
-    #000 calc(100% - 5.5rem),
-    transparent calc(100% - 2rem)
+    #000 100%
   );
-}
-
-.map-ticker.is-dragging .map-ticker-viewport {
-  cursor: grabbing;
 }
 
 .map-ticker-track {
@@ -232,6 +239,43 @@
   font-weight: 400; /* caption */
 }
 
+/* Quiet static empty — same chrome language, no marquee / no CTA. */
+.map-ticker-empty {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0 12px;
+  font-family: ui-monospace, monospace, sans-serif;
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+}
+
+.map-ticker-empty .map-ticker-cat {
+  opacity: 0.55;
+}
+
+.map-ticker-empty .map-ticker-text {
+  color: var(--text-secondary, rgba(255, 255, 255, 0.45));
+  font-weight: 400;
+  opacity: 0.9;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sc-viewport[data-theme='light'] .map-ticker-empty .map-ticker-text,
+[data-theme='light'] .map-ticker-empty .map-ticker-text {
+  color: var(--text-secondary, rgba(12, 12, 14, 0.45));
+}
+
 .sc-viewport[data-theme='light'] .map-ticker-text,
 [data-theme='light'] .map-ticker-text {
   color: var(--text-primary, rgba(12, 12, 14, 0.9));
@@ -246,6 +290,7 @@
 .map-ticker-birthday-wrap {
   position: relative;
   display: inline-block;
+  transition: filter 180ms ease-out;
 }
 
 .map-ticker-birthday-label {
@@ -265,6 +310,7 @@
   color: var(--birthday-accent, #ffd56a);
   -webkit-text-fill-color: transparent;
   animation: map-ticker-gold-shine 4s linear infinite;
+  transition: filter 180ms ease-out;
 }
 
 /* Subtle ambient sparkles on the birthday label. */
@@ -296,6 +342,16 @@
   height: 3px !important;
 }
 
+/* Hover-only extras — dormant until the birthday entry is hovered. */
+.map-ticker-birthday-spark-hover {
+  opacity: 0;
+  animation: none;
+  box-shadow:
+    0 0 6px color-mix(in srgb, var(--birthday-accent, #ffd56a) 90%, transparent),
+    0 0 12px color-mix(in srgb, var(--birthday-accent, #ffd56a) 45%, transparent),
+    0 0 1px #fff;
+}
+
 @keyframes map-ticker-birthday-twinkle {
   0%, 68%, 100% {
     opacity: 0;
@@ -311,6 +367,58 @@
   }
 }
 
+@keyframes map-ticker-birthday-twinkle-hot {
+  0%, 35%, 100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.3);
+  }
+  48% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.35);
+  }
+  62% {
+    opacity: 0.55;
+    transform: translate(-50%, -50%) scale(0.85);
+  }
+}
+
+/* Hover — brighter glow + denser, faster sparkles. */
+.map-ticker-entry.is-birthday:hover .map-ticker-birthday-wrap,
+.map-ticker-entry.is-birthday:focus-visible .map-ticker-birthday-wrap {
+  filter:
+    drop-shadow(0 0 3px color-mix(in srgb, var(--birthday-accent, #ffd56a) 95%, transparent))
+    drop-shadow(0 0 8px color-mix(in srgb, var(--birthday-accent, #ffd56a) 60%, transparent))
+    drop-shadow(0 0 16px color-mix(in srgb, var(--birthday-accent, #ffd56a) 30%, transparent));
+}
+
+.map-ticker-entry.is-birthday:hover .map-ticker-birthday-label,
+.map-ticker-entry.is-birthday:focus-visible .map-ticker-birthday-label {
+  animation-duration: 1.5s;
+  filter: brightness(1.2);
+}
+
+.map-ticker-entry.is-birthday:hover .map-ticker-birthday-sparks,
+.map-ticker-entry.is-birthday:focus-visible .map-ticker-birthday-sparks {
+  inset: -10px -14px;
+}
+
+.map-ticker-entry.is-birthday:hover .map-ticker-birthday-spark:not(.map-ticker-birthday-spark-hover),
+.map-ticker-entry.is-birthday:focus-visible .map-ticker-birthday-spark:not(.map-ticker-birthday-spark-hover) {
+  animation-name: map-ticker-birthday-twinkle-hot;
+  animation-duration: 1.35s !important;
+  box-shadow:
+    0 0 6px color-mix(in srgb, var(--birthday-accent, #ffd56a) 95%, transparent),
+    0 0 12px color-mix(in srgb, var(--birthday-accent, #ffd56a) 50%, transparent),
+    0 0 1px #fff;
+}
+
+.map-ticker-entry.is-birthday:hover .map-ticker-birthday-spark-hover,
+.map-ticker-entry.is-birthday:focus-visible .map-ticker-birthday-spark-hover {
+  animation-name: map-ticker-birthday-twinkle-hot;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
 /* Rise/exit replace `animation` — keep solid accent during those beats. */
 .map-ticker-entry.is-entering .map-ticker-birthday-label,
 .map-ticker-entry.is-exiting .map-ticker-birthday-label {
@@ -319,6 +427,7 @@
   -webkit-background-clip: unset;
   color: var(--birthday-accent, #ffd56a);
   -webkit-text-fill-color: var(--birthday-accent, #ffd56a);
+  filter: none;
 }
 
 .map-ticker-entry.is-entering .map-ticker-birthday-sparks,
@@ -344,6 +453,18 @@
   .map-ticker-birthday-sparks {
     display: none;
   }
+
+  .map-ticker-entry.is-birthday:hover .map-ticker-birthday-wrap,
+  .map-ticker-entry.is-birthday:focus-visible .map-ticker-birthday-wrap {
+    filter:
+      drop-shadow(0 0 4px color-mix(in srgb, var(--birthday-accent, #ffd56a) 70%, transparent));
+  }
+
+  .map-ticker-entry.is-birthday:hover .map-ticker-birthday-label,
+  .map-ticker-entry.is-birthday:focus-visible .map-ticker-birthday-label {
+    animation: none;
+    filter: brightness(1.1);
+  }
 }
 
 .map-ticker-settings {
@@ -351,15 +472,38 @@
   top: 0;
   right: 0;
   bottom: 0;
+  /* Covers icon + the strip to the ticker edge so text can't peek past. */
+  width: 42px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  width: 48px;
+  justify-content: flex-end;
+  padding-right: 10px;
+  box-sizing: border-box;
   z-index: 2;
   pointer-events: none; /* decorative */
+  overflow: visible;
+}
+
+/* Opaque from the ticker edge through the icon; fade only to the left. */
+.map-ticker-settings::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  left: -24px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    var(--bg-surface-primary, #0a0a0b) 36%,
+    var(--bg-surface-primary, #0a0a0b)
+  );
+  pointer-events: none;
 }
 
 .map-ticker-settings-btn {
+  position: relative;
+  z-index: 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -367,13 +511,16 @@
   height: 28px;
   border-radius: 8px;
   color: var(--text-secondary, rgba(255, 255, 255, 0.45));
+  flex-shrink: 0;
+  overflow: visible;
 }
 
-/* Grab to pan the strip; short clicks still fire entry rise. */
+.map-ticker-settings-btn svg {
+  display: block;
+  overflow: visible;
+}
+
+/* Entries are clickable (rise / birthday gift) — not draggable. */
 .map-ticker .map-ticker-entry {
-  cursor: grab;
-}
-
-.map-ticker.is-dragging .map-ticker-entry {
-  cursor: grabbing;
+  cursor: pointer;
 }

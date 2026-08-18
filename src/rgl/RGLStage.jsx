@@ -1,7 +1,9 @@
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
-import { RGLLights, RGL_VIEW_HALF } from './materials';
+import { CARD_OPEN_STIFFNESS } from './cardMotion';
+import { RGL_VIEW_HALF } from './materials';
+import { BadgeStudioEnvironment, BadgeStudioLights } from './StudioEnvironment';
 
 /** Match RoamIcon3D interaction constants so gifts feel identical. */
 const SPIN_SPEED = 0.7;
@@ -36,11 +38,11 @@ function flingVelocityFromSamples(samples, now) {
   return best;
 }
 
-/** Slight look-down — softer than before, closer to the app-icon tip. */
-const CAMERA_POS = [0, 0.85, 4.5];
+/** Slight look-down — keep it shallow so a tall card doesn't clip. */
+const CAMERA_POS = [0, 0.22, 4.5];
 const CAMERA_TARGET = [0, 0, 0];
 /** Gentler tip than the icon's 0.14 so gifts read more front-facing. */
-const SUBJECT_TIP = 0.06;
+const SUBJECT_TIP = 0.04;
 
 function usePrefersReducedMotion() {
   const [reduce, setReduce] = useState(false);
@@ -82,7 +84,7 @@ function FitOrthoCamera() {
  * Y-axis turntable with the same physics as RoamIcon3D:
  * idle spin, 1:1 drag, fling with friction, tap-to-spin burst.
  */
-function OrbitingSubject({ children, drag, rotationY, spinBurst, angularVel }) {
+function OrbitingSubject({ children, drag, rotationY, spinBurst, angularVel, idleSpinRef, holdYawRef }) {
   const group = useRef(null);
   const reduceMotion = usePrefersReducedMotion();
 
@@ -98,11 +100,18 @@ function OrbitingSubject({ children, drag, rotationY, spinBurst, angularVel }) {
       rotationY.current = burst.start + burst.delta * ease;
       if (t >= 1) {
         spinBurst.current = null;
-        angularVel.current = SPIN_SPEED;
+        angularVel.current = idleSpinRef.current ? SPIN_SPEED : 0;
       }
     } else if (drag.current.active) {
       // Rotation is 1:1 with the pointer in the drag handlers
-    } else if (!reduceMotion) {
+    } else if (holdYawRef.current != null) {
+      spinBurst.current = null;
+      angularVel.current = 0;
+      let diff = holdYawRef.current - rotationY.current;
+      diff = Math.atan2(Math.sin(diff), Math.cos(diff));
+      rotationY.current += diff * (1 - Math.exp(-CARD_OPEN_STIFFNESS * clampedDt));
+      if (Math.abs(diff) < 0.0008) rotationY.current = holdYawRef.current;
+    } else if (!reduceMotion && idleSpinRef.current) {
       let v = angularVel.current;
       rotationY.current += v * clampedDt;
 
@@ -113,6 +122,16 @@ function OrbitingSubject({ children, drag, rotationY, spinBurst, angularVel }) {
         if (Math.abs(v - SPIN_SPEED) < 0.02) v = SPIN_SPEED;
       }
       angularVel.current = v;
+    } else {
+      let v = angularVel.current;
+      if (Math.abs(v) > 0.02) {
+        v *= Math.exp(-FLING_FRICTION * clampedDt);
+        if (Math.abs(v) < 0.05) v = 0;
+        angularVel.current = v;
+        rotationY.current += v * clampedDt;
+      } else {
+        angularVel.current = 0;
+      }
     }
 
     group.current.rotation.y = rotationY.current;
@@ -138,8 +157,15 @@ export default function RGLStage({
   appearTurns = 0,
   appearDuration = 1.1,
   interactive = true,
+  idleSpin = true,
+  holdYaw = null,
+  tapSpin = true,
+  allowDrag = true,
+  onTap = null,
 }) {
   const reduceMotion = usePrefersReducedMotion();
+  const hostRef = useRef(null);
+  const unbindDragRef = useRef(null);
   const drag = useRef({
     active: false,
     lastX: 0,
@@ -150,7 +176,20 @@ export default function RGLStage({
   const rotationY = useRef(0.35);
   const angularVel = useRef(SPIN_SPEED);
   const spinBurst = useRef(null);
-  const [ready, setReady] = useState(false);
+  const idleSpinRef = useRef(idleSpin);
+  const holdYawRef = useRef(holdYaw);
+  idleSpinRef.current = idleSpin;
+  holdYawRef.current = holdYaw;
+  const onTapRef = useRef(onTap);
+  onTapRef.current = onTap;
+  const tapSpinRef = useRef(tapSpin);
+  tapSpinRef.current = tapSpin;
+  const dragEnabled = interactive && allowDrag;
+
+  useEffect(() => () => {
+    unbindDragRef.current?.();
+    unbindDragRef.current = null;
+  }, []);
 
   // Appear: N full Y turns over the bounce-in window, then resume idle spin.
   useEffect(() => {
@@ -164,8 +203,31 @@ export default function RGLStage({
     };
   }, [appearSpinKey, appearTurns, appearDuration, reduceMotion]);
 
+  const endDrag = useCallback((e) => {
+    if (!dragEnabled || !drag.current.active) return;
+    drag.current.active = false;
+    unbindDragRef.current?.();
+    unbindDragRef.current = null;
+
+    let v = flingVelocityFromSamples(drag.current.samples, performance.now());
+    if (!Number.isFinite(v)) v = 0;
+    v = Math.max(-MAX_FLING_SPEED, Math.min(MAX_FLING_SPEED, v));
+    if (!idleSpinRef.current) {
+      angularVel.current = Math.abs(v) < FLING_MIN ? 0 : v;
+    } else {
+      angularVel.current = Math.abs(v) < FLING_MIN ? SPIN_SPEED : v;
+    }
+
+    const host = hostRef.current;
+    if (host) host.style.cursor = dragEnabled ? 'grab' : 'pointer';
+    const pid = e?.pointerId;
+    if (pid != null && host?.hasPointerCapture?.(pid)) {
+      host.releasePointerCapture(pid);
+    }
+  }, [dragEnabled]);
+
   const onPointerDown = useCallback((e) => {
-    if (!interactive) return;
+    if (!dragEnabled) return;
     spinBurst.current = null;
     const now = performance.now();
     drag.current = {
@@ -176,35 +238,41 @@ export default function RGLStage({
       samples: [{ t: now, x: e.clientX }],
     };
     angularVel.current = 0;
-    e.currentTarget.setPointerCapture(e.pointerId);
-    e.currentTarget.style.cursor = 'grabbing';
-  }, [interactive]);
 
-  const onPointerMove = useCallback((e) => {
-    if (!interactive || !drag.current.active) return;
-    const now = performance.now();
-    const dx = e.clientX - drag.current.lastX;
-    drag.current.lastX = e.clientX;
-    drag.current.lastT = now;
-    if (Math.abs(dx) > 0.5) drag.current.moved = true;
-    rotationY.current += dx * DRAG_SENSITIVITY;
-    const samples = drag.current.samples;
-    samples.push({ t: now, x: e.clientX });
-    if (samples.length > FLING_SAMPLE_MAX) samples.shift();
-  }, [interactive]);
-
-  const endDrag = useCallback((e) => {
-    if (!interactive || !drag.current.active) return;
-    drag.current.active = false;
-    let v = flingVelocityFromSamples(drag.current.samples, performance.now());
-    if (!Number.isFinite(v)) v = 0;
-    v = Math.max(-MAX_FLING_SPEED, Math.min(MAX_FLING_SPEED, v));
-    angularVel.current = Math.abs(v) < FLING_MIN ? SPIN_SPEED : v;
-    e.currentTarget.style.cursor = 'grab';
-    if (e.currentTarget.hasPointerCapture(e.pointerId)) {
-      e.currentTarget.releasePointerCapture(e.pointerId);
+    const host = e.currentTarget;
+    hostRef.current = host;
+    try {
+      host.setPointerCapture(e.pointerId);
+    } catch {
+      /* capture can throw if the pointer is already released */
     }
-  }, [interactive]);
+    host.style.cursor = 'grabbing';
+
+    // Track on window so a fast fling past the 180px canvas still gets
+    // move samples + pointerup (setPointerCapture alone is flaky here).
+    unbindDragRef.current?.();
+    const onMove = (ev) => {
+      if (!drag.current.active) return;
+      const t = performance.now();
+      const dx = ev.clientX - drag.current.lastX;
+      drag.current.lastX = ev.clientX;
+      drag.current.lastT = t;
+      if (Math.abs(dx) > 0.5) drag.current.moved = true;
+      rotationY.current += dx * DRAG_SENSITIVITY;
+      const samples = drag.current.samples;
+      samples.push({ t, x: ev.clientX });
+      if (samples.length > FLING_SAMPLE_MAX) samples.shift();
+    };
+    const onUp = (ev) => endDrag(ev);
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onUp);
+    unbindDragRef.current = () => {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointercancel', onUp);
+    };
+  }, [dragEnabled, endDrag]);
 
   const onClick = useCallback(
     (e) => {
@@ -214,7 +282,11 @@ export default function RGLStage({
         e.stopPropagation();
         return;
       }
-      if (reduceMotion) return;
+      if (onTapRef.current) {
+        onTapRef.current();
+        return;
+      }
+      if (!tapSpinRef.current || reduceMotion) return;
       angularVel.current = 0;
       spinBurst.current = {
         start: rotationY.current,
@@ -223,24 +295,23 @@ export default function RGLStage({
         duration: TAP_SPIN_DURATION,
       };
     },
-    [interactive, reduceMotion],
+    [interactive, dragEnabled, reduceMotion],
   );
 
   return (
     <div
+      ref={hostRef}
       className={className}
       style={{
-        cursor: interactive ? 'grab' : 'default',
+        cursor: dragEnabled ? 'grab' : interactive ? 'pointer' : 'default',
         touchAction: 'none',
         userSelect: 'none',
         pointerEvents: interactive ? 'auto' : 'none',
-        opacity: ready ? 1 : 0,
+        opacity: 1,
         transition: 'opacity 0.45s ease-out',
       }}
-      onPointerDown={interactive ? onPointerDown : undefined}
-      onPointerMove={interactive ? onPointerMove : undefined}
-      onPointerUp={interactive ? endDrag : undefined}
-      onPointerCancel={interactive ? endDrag : undefined}
+      onPointerDown={dragEnabled ? onPointerDown : undefined}
+      onLostPointerCapture={dragEnabled ? endDrag : undefined}
       onClick={interactive ? onClick : undefined}
     >
       <Canvas
@@ -252,16 +323,20 @@ export default function RGLStage({
         frameloop="always"
         onCreated={({ gl }) => {
           gl.setClearColor(0x000000, 0);
-          requestAnimationFrame(() => setReady(true));
         }}
       >
         <FitOrthoCamera />
-        <RGLLights />
+        <BadgeStudioLights />
+        <Suspense fallback={null}>
+          <BadgeStudioEnvironment />
+        </Suspense>
         <OrbitingSubject
           drag={drag}
           rotationY={rotationY}
           spinBurst={spinBurst}
           angularVel={angularVel}
+          idleSpinRef={idleSpinRef}
+          holdYawRef={holdYawRef}
         >
           {children}
         </OrbitingSubject>

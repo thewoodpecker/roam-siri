@@ -3512,30 +3512,68 @@ function useRwnRoute() {
   return isRwn;
 }
 
-function useRglRoute() {
-  const getIsRgl = () => /^#\/rgl(?:\/|$)/i.test(window.location.hash);
-  const [isRgl, setIsRgl] = useState(getIsRgl);
-  useEffect(() => {
-    const onHash = () => setIsRgl(getIsRgl());
-    window.addEventListener('hashchange', onHash);
-    return () => window.removeEventListener('hashchange', onHash);
-  }, []);
-  return isRgl;
+function RglSuspenseFallback() {
+  return (
+    <div className="rgl-boot" aria-busy="true">
+      <aside className="rgl-boot-side">
+        <div className="rgl-boot-mark">RGL</div>
+        <p className="rgl-boot-copy">Loading birthday playground…</p>
+      </aside>
+      <div className="rgl-boot-stage" />
+    </div>
+  );
+}
+
+class RglErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { error };
+  }
+  componentDidCatch(error, info) {
+    console.error('[RGL]', error, info?.componentStack);
+  }
+  render() {
+    if (this.state.error) {
+      const err = this.state.error;
+      return (
+        <div className="rgl-boot">
+          <aside className="rgl-boot-side">
+            <div className="rgl-boot-mark">RGL</div>
+            <p className="rgl-boot-copy">
+              {err?.message || String(err)}
+            </p>
+            {err?.stack && (
+              <pre className="rgl-boot-stack">{String(err.stack).split('\n').slice(0, 8).join('\n')}</pre>
+            )}
+          </aside>
+          <div className="rgl-boot-stage" />
+        </div>
+      );
+    }
+    return this.props.children;
+  }
 }
 
 export default function App() {
   const [activeTab, setActiveTab] = useHashTab();
   const featureSlug = useFeatureRoute();
   const isRwn = useRwnRoute();
-  const isRgl = useRglRoute();
+  // Drive this off the tab parser — a separate `#/rgl` regex missed query
+  // extras and left the layout empty (settings gear only).
+  const isRgl = activeTab === 'rgl';
 
   return (
     <>
       {isRgl ? (
         <>
-          <Suspense fallback={null}>
-            <RGLPage />
-          </Suspense>
+          <RglErrorBoundary>
+            <Suspense fallback={<RglSuspenseFallback />}>
+              <RGLPage />
+            </Suspense>
+          </RglErrorBoundary>
           <div className="toolbar" style={HIDE_CHROME ? { display: 'none' } : undefined}>
             <TabSwitcher activeTab="rgl" onTabChange={setActiveTab} />
           </div>

@@ -17,6 +17,23 @@ export const ROAM_GOLD_LIGHT = '#FFE9A3';
 export const ROAM_GOLD_LIGHT_EMISSIVE = '#E8C56A';
 
 /**
+ * Burn Gold from the 3d-badge playground — the foil that actually reads as gold
+ * once a studio environment is on the scene.
+ */
+export const BADGE_GOLD_PROPS = {
+  color: '#E8B84A',
+  metalness: 1,
+  roughness: 0.18,
+  clearcoat: 1,
+  clearcoatRoughness: 0.08,
+  reflectivity: 1,
+  emissive: '#8B6914',
+  emissiveIntensity: 0.08,
+  envMapIntensity: 1,
+  flatShading: false,
+};
+
+/**
  * Gift colorways — 12 evenly spaced hues (30° steps) around the wheel.
  * Same body/accent relationship at every step so the set feels cohesive.
  * `body` = box · `accent` = ribbon/bow (metallic).

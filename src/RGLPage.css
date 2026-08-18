@@ -8,7 +8,7 @@
   background: #0e0e10;
   color: #f4f3f2;
   font-family: var(--font-sans, Inter, system-ui, sans-serif);
-  z-index: 1;
+  z-index: 20;
 }
 
 .rgl-page[data-theme='light'] {
@@ -407,6 +407,10 @@
   corner-shape: superellipse(1.6);
   overflow: hidden;
   pointer-events: auto;
+  /* Containing block so a leaked `position: fixed` .sc-viewport
+     cannot cover the RGL sidebar / stage. */
+  transform: translateZ(0);
+  isolation: isolate;
 }
 
 /* Same intrinsic size as .sc-map-feature-window-host in ShowcaseMap.css */
@@ -504,11 +508,11 @@
   pointer-events: none;
 }
 
-/* Sandbox floor without map — gift sits in normal flow, not clipped. */
+/* Sandbox floor without map — same full-stage canvas as the map window. */
 .rgl-stage-floor:not(.rgl-stage-floor-map) .rgl-gift-layer {
-  position: relative;
-  inset: auto;
-  overflow: visible;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
   border-radius: 0;
   corner-shape: initial;
 }
@@ -545,6 +549,11 @@
   width: 180px;
   height: 180px;
   flex-shrink: 0;
+}
+
+.rgl-canvas-card {
+  width: 100%;
+  height: 100%;
 }
 
 .rgl-icon-ref {

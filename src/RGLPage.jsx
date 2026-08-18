@@ -1,18 +1,19 @@
-import { useCallback, useEffect, useState } from 'react';
-import PackGift3D from './rgl/PackGift3D';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
+import BirthdayCard3D, { CARD_SEED_NOTES, CardOpenButton, CardSignPop } from './rgl/BirthdayCard3D';
 import RGLStage from './rgl/RGLStage';
 import SoftBlurText from './SoftBlurText';
 import RoamIcon3D from './RoamIcon3D';
-import ShowcaseMap from './ShowcaseMap';
 import BirthdayGlow from './BirthdayGlow';
-import { PACK_GIFTS } from './rgl/giftCatalog';
 import {
   GIFT_PALETTES,
   birthdayCssVars,
   getGiftPalette,
   paletteColorsFor,
 } from './rgl/materials';
+import { CARD_OPEN_SETTLE_MS } from './rgl/cardMotion';
 import './RGLPage.css';
+
+const ShowcaseMap = lazy(() => import('./ShowcaseMap'));
 /**
  * RGL — Roam GL sandbox.
  * Design page for iterating on WebGL map overlays / celebration objects
@@ -20,13 +21,13 @@ import './RGLPage.css';
  */
 
 const ITEMS = [
-  ...PACK_GIFTS.map((g) => ({
-    id: g.id,
-    name: g.name,
-    blurb: g.blurb,
-    status: g.status,
-    kind: 'pack',
-  })),
+  {
+    id: 'birthday-card',
+    name: 'Birthday Card',
+    blurb: 'Greeting card — same lighting & materials as the gifts. Click to open.',
+    status: 'wip',
+    kind: 'card',
+  },
   {
     id: 'app-icon',
     name: 'App Icon',
@@ -49,19 +50,6 @@ const SPARK_COUNT = 28;
 
 /** Placeholder birthday names — in product this is the celebrant's name. */
 const BIRTHDAY_NAME = 'Klas';
-
-function pickPackGiftId(exclude) {
-  const ids = PACK_GIFTS.map((g) => g.id);
-  if (ids.length === 0) return exclude ?? 'pack-flat';
-  let next = ids[Math.floor(Math.random() * ids.length)];
-  if (ids.length > 1 && exclude) {
-    let guard = 0;
-    while (next === exclude && guard++ < 12) {
-      next = ids[Math.floor(Math.random() * ids.length)];
-    }
-  }
-  return next;
-}
 
 function pickPaletteId(exclude) {
   const ids = GIFT_PALETTES.map((p) => p.id);
@@ -149,10 +137,12 @@ function GiftArriveFX({ accent, burstKey }) {
 }
 
 export default function RGLPage() {
-  const [itemId, setItemId] = useState(() => pickPackGiftId());
+  const [itemId, setItemId] = useState('birthday-card');
   const [theme, setTheme] = useState('dark');
   const [paletteId, setPaletteId] = useState(() => pickPaletteId());
   const [showMap, setShowMap] = useState(true);
+  const [mapBirthday, setMapBirthday] = useState(true);
+  const [tickerEmpty, setTickerEmpty] = useState(false);
   const [giftOpen, setGiftOpen] = useState(true);
   const [entering, setEntering] = useState(true);
   const [dismissing, setDismissing] = useState(false);
@@ -160,13 +150,30 @@ export default function RGLPage() {
   const [arriveBurst, setArriveBurst] = useState(0);
   const [appearSpinKey, setAppearSpinKey] = useState(0);
   const [labelPlay, setLabelPlay] = useState(false);
+  const [cardOpen, setCardOpen] = useState(false);
+  const [cardReady, setCardReady] = useState(false);
+  const [facing, setFacing] = useState(false);
+  const [notes, setNotes] = useState(CARD_SEED_NOTES);
+  const [draft, setDraft] = useState(null);
+  const [draftText, setDraftText] = useState('');
+  const hostRef = useRef(null);
+  const skipTapRef = useRef(false);
   const [birthdayName, setBirthdayName] = useState(BIRTHDAY_NAME);
   const item = ITEMS.find((i) => i.id === itemId) ?? ITEMS[0];
-  const isGift = item.kind === 'pack';
-  const showMapStage = isGift && showMap;
+  const isCard = item.kind === 'card';
+  const showMapStage = isCard && showMap;
   const giftVisible = giftOpen || dismissing;
   const palette = getGiftPalette(paletteId);
   const paletteColors = paletteColorsFor(theme, paletteId);
+
+  useEffect(() => {
+    if (cardOpen) {
+      setFacing(true);
+      return undefined;
+    }
+    const id = window.setTimeout(() => setFacing(false), CARD_OPEN_SETTLE_MS);
+    return () => window.clearTimeout(id);
+  }, [cardOpen]);
 
   useEffect(() => {
     const html = document.documentElement;
@@ -182,16 +189,24 @@ export default function RGLPage() {
     setArriveFx(false);
     setLabelPlay(false);
     setAppearSpinKey(0);
+    setCardOpen(false);
+    setCardReady(false);
+    setFacing(false);
+    setNotes(CARD_SEED_NOTES);
+    setDraft(null);
+    setDraftText('');
     if (prefersReducedMotion()) {
       setEntering(false);
       setArriveFx(true);
       setLabelPlay(true);
+      setCardReady(true);
       return undefined;
     }
     setEntering(true);
     let raf2 = 0;
     let arriveTimer = 0;
     let labelTimer = 0;
+    let readyTimer = 0;
     const raf1 = requestAnimationFrame(() => {
       raf2 = requestAnimationFrame(() => {
         setEntering(false);
@@ -200,10 +215,12 @@ export default function RGLPage() {
           setArriveBurst((n) => n + 1);
           setArriveFx(true);
         }, ENTER_MS * ARRIVE_AT);
-        // Soft-blur label while the gift is arriving / settling.
         labelTimer = window.setTimeout(() => {
           setLabelPlay(true);
         }, ENTER_MS * LABEL_AT);
+        readyTimer = window.setTimeout(() => {
+          setCardReady(true);
+        }, ENTER_MS);
       });
     });
     return () => {
@@ -211,6 +228,7 @@ export default function RGLPage() {
       cancelAnimationFrame(raf2);
       window.clearTimeout(arriveTimer);
       window.clearTimeout(labelTimer);
+      window.clearTimeout(readyTimer);
     };
   }, []);
 
@@ -242,12 +260,9 @@ export default function RGLPage() {
 
   const showGift = useCallback(() => {
     setPaletteId((prev) => pickPaletteId(prev));
-    // Keep Klas as the demo celebrant — only reshuffle gift + palette on replay.
     setBirthdayName(BIRTHDAY_NAME);
-    const next = pickPackGiftId(itemId);
-    if (next === itemId) runEnter();
-    else setItemId(next);
-  }, [itemId, runEnter]);
+    runEnter();
+  }, [runEnter]);
 
   const toggleGift = useCallback(() => {
     if (giftOpen || dismissing) dismissGift();
@@ -288,6 +303,7 @@ export default function RGLPage() {
     'rgl-gift-layer',
     entering && 'is-entering',
     dismissing && 'is-dismissing',
+    cardOpen && 'is-card-open',
   ]
     .filter(Boolean)
     .join(' ');
@@ -300,17 +316,96 @@ export default function RGLPage() {
     .filter(Boolean)
     .join(' ');
 
+  const pickInside = useCallback((hit) => {
+    if (!cardOpen) return;
+    skipTapRef.current = true;
+    const host = hostRef.current;
+    if (!host) return;
+    const rect = host.getBoundingClientRect();
+    setDraft({
+      page: hit.page,
+      u: hit.u,
+      v: hit.v,
+      x: hit.clientX - rect.left,
+      y: hit.clientY - rect.top,
+    });
+    setDraftText('');
+  }, [cardOpen]);
+
+  const cancelDraft = useCallback(() => {
+    setDraft(null);
+    setDraftText('');
+  }, []);
+
+  const toggleCard = useCallback(() => {
+    if (!cardReady || dismissing) return;
+    if (skipTapRef.current) {
+      skipTapRef.current = false;
+      return;
+    }
+    setDraft(null);
+    setDraftText('');
+    setCardOpen((open) => !open);
+  }, [cardReady, dismissing]);
+
+  const commitSign = useCallback(() => {
+    const text = draftText.trim();
+    if (!draft || !text) return;
+    setNotes((prev) => [
+      ...prev,
+      {
+        id: `me-${Date.now()}`,
+        page: draft.page,
+        u: draft.u,
+        v: draft.v,
+        rotate: (Math.random() * 14) - 7,
+        name: 'Joe',
+        text,
+        ink: 4,
+      },
+    ]);
+    setDraft(null);
+    setDraftText('');
+  }, [draft, draftText]);
+
+  useEffect(() => {
+    if (!giftVisible) return undefined;
+    const onKey = (e) => {
+      if (e.key !== 'Escape') return;
+      if (draft) {
+        cancelDraft();
+        return;
+      }
+      if (cardOpen) setCardOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [giftVisible, draft, cardOpen, cancelDraft]);
+
   const giftContent = (
     <>
-      {item.kind === 'pack' && (
+      {item.kind === 'card' && (
         <RGLStage
-          className="rgl-canvas"
+          className="rgl-canvas rgl-canvas-card"
           key={`${item.id}-${theme}-${paletteId}`}
           appearSpinKey={appearSpinKey}
           appearTurns={APPEAR_TURNS}
           appearDuration={ENTER_MS / 1000}
+          idleSpin={!facing}
+          holdYaw={facing ? 0 : null}
+          tapSpin={!facing}
+          allowDrag={!facing}
+          onTap={cardReady && !dismissing ? toggleCard : undefined}
         >
-          <PackGift3D giftId={item.id} scale={1} theme={theme} paletteId={paletteId} />
+          <BirthdayCard3D
+            open={cardOpen}
+            followPointer={cardOpen && !draft}
+            name={birthdayName}
+            notes={notes}
+            theme={theme}
+            paletteId={paletteId}
+            onInsidePick={pickInside}
+          />
         </RGLStage>
       )}
       {item.kind === 'icon' && (
@@ -322,6 +417,14 @@ export default function RGLPage() {
   );
 
   const giftDate = formatGiftDate();
+  const cardToggle = isCard && (
+    <CardOpenButton
+      open={cardOpen}
+      visible={labelPlay}
+      disabled={!cardReady || dismissing}
+      onClick={toggleCard}
+    />
+  );
   const birthdayLead = 'Happy Birthday';
   const nameDelay = 0.06 + birthdayLead.replace(/\s/g, '').length * 0.025;
 
@@ -461,22 +564,40 @@ export default function RGLPage() {
         </div>
 
         <div className="rgl-sidebar-foot">
-          {(isGift || item.kind === 'icon') && (
+          {(isCard || item.kind === 'icon') && (
             <button
               type="button"
               className="rgl-theme-toggle"
               onClick={toggleGift}
             >
-              {giftOpen || dismissing ? 'Hide gift' : 'Show gift'}
+              {giftOpen || dismissing ? 'Hide card' : 'Show card'}
             </button>
           )}
-          {isGift && (
+          {isCard && (
             <button
               type="button"
               className="rgl-theme-toggle"
               onClick={() => setShowMap((v) => !v)}
             >
               {showMap ? 'Hide map backdrop' : 'Show map backdrop'}
+            </button>
+          )}
+          {isCard && showMap && (
+            <button
+              type="button"
+              className="rgl-theme-toggle"
+              onClick={() => setMapBirthday((v) => !v)}
+            >
+              {mapBirthday ? 'Hide birthday on map' : 'Show birthday on map'}
+            </button>
+          )}
+          {isCard && showMap && (
+            <button
+              type="button"
+              className="rgl-theme-toggle"
+              onClick={() => setTickerEmpty((v) => !v)}
+            >
+              {tickerEmpty ? 'Show ticker items' : 'Ticker empty state'}
             </button>
           )}
           <button
@@ -501,24 +622,29 @@ export default function RGLPage() {
               <div className="rgl-map-window-host">
                 <div className="rgl-map-window-frame">
                   <div className="rgl-map-window-live" aria-hidden="true">
-                    <ShowcaseMap
-                      embedded
-                      theme={theme}
-                      initialFloor="Homepage"
-                      showTicker
-                      birthdayPaletteId={paletteId}
-                    />
+                    <Suspense fallback={null}>
+                      <ShowcaseMap
+                        embedded
+                        theme={theme}
+                        initialFloor="Homepage"
+                        showTicker
+                        birthdayPaletteId={paletteId}
+                        birthdayEnabled={mapBirthday}
+                        tickerEmpty={tickerEmpty}
+                      />
+                    </Suspense>
                   </div>
                   {giftVisible && (
                     <button
                       type="button"
                       className={scrimClass}
-                      aria-label="Dismiss gift"
+                      aria-label="Dismiss card"
                       onClick={dismissGift}
                     />
                   )}
                   {giftVisible && (
                     <div
+                      ref={hostRef}
                       className={giftClass}
                       onAnimationEnd={onGiftMotionEnd}
                       onTransitionEnd={onGiftMotionEnd}
@@ -531,8 +657,20 @@ export default function RGLPage() {
                       )}
                       <div className="rgl-gift-anchor">
                         {birthdayLabel}
-                        <div className="rgl-gift-slide">{giftContent}</div>
+                        {cardToggle}
+                        <div className="rgl-gift-slide">
+                          <div className={`rgl-gift-zoom${cardOpen ? ' is-open' : ''}`}>
+                            {giftContent}
+                          </div>
+                        </div>
                       </div>
+                      <CardSignPop
+                        draft={draft}
+                        value={draftText}
+                        onChange={setDraftText}
+                        onSign={commitSign}
+                        onCancel={cancelDraft}
+                      />
                     </div>
                   )}
                 </div>
@@ -541,6 +679,7 @@ export default function RGLPage() {
           ) : (
             giftVisible && (
               <div
+                ref={hostRef}
                 className={giftClass}
                 onAnimationEnd={onGiftMotionEnd}
                 onTransitionEnd={onGiftMotionEnd}
@@ -553,8 +692,20 @@ export default function RGLPage() {
                 )}
                 <div className="rgl-gift-anchor">
                   {birthdayLabel}
-                  <div className="rgl-gift-slide">{giftContent}</div>
+                  {cardToggle}
+                  <div className="rgl-gift-slide">
+                    <div className={`rgl-gift-zoom${cardOpen ? ' is-open' : ''}`}>
+                      {giftContent}
+                    </div>
+                  </div>
                 </div>
+                <CardSignPop
+                  draft={draft}
+                  value={draftText}
+                  onChange={setDraftText}
+                  onSign={commitSign}
+                  onCancel={cancelDraft}
+                />
               </div>
             )
           )}

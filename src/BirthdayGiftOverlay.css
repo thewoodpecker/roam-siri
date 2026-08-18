@@ -1,4 +1,4 @@
-/* Birthday gift celebration — shared by RGL playground + map ticker. */
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&display=swap');
 
 /* Match .sc-window chrome exactly (ShowcaseMap.css). corner-shape is NOT
    inherited with border-radius — without it, overflow:hidden clips as a
@@ -66,7 +66,8 @@
 }
 
 .rgl-gift-anchor {
-  position: relative;
+  position: absolute;
+  inset: 0;
   z-index: 1;
   display: flex;
   align-items: center;
@@ -76,7 +77,8 @@
 .rgl-gift-caption {
   position: absolute;
   left: 50%;
-  bottom: calc(100% + 28px);
+  top: 56px;
+  bottom: auto;
   transform: translateX(-50%);
   z-index: 2;
   display: flex;
@@ -84,6 +86,73 @@
   align-items: center;
   gap: 10px;
   pointer-events: none;
+  opacity: 1;
+  filter: blur(0);
+  transition:
+    opacity 560ms cubic-bezier(0.23, 1, 0.32, 1),
+    filter 560ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.rgl-gift-layer.is-card-open .rgl-gift-caption {
+  opacity: 0;
+  filter: blur(8px);
+}
+
+.rgl-card-toggle {
+  position: absolute;
+  left: 50%;
+  bottom: 56px;
+  z-index: 3;
+  margin: 0;
+  padding: 7px 16px;
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-full);
+  corner-shape: superellipse(1.6);
+  box-sizing: border-box;
+  background: var(--background-primary);
+  color: var(--text-primary);
+  font-family: var(--font-family-primary, Inter, system-ui, sans-serif);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: -0.15px;
+  line-height: 18px;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateX(-50%);
+  transition:
+    opacity 560ms cubic-bezier(0.23, 1, 0.32, 1),
+    transform 100ms ease-out,
+    background-color 160ms ease;
+}
+
+.rgl-card-toggle.is-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.rgl-card-toggle:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--background-primary) 88%, var(--text-primary));
+}
+
+.rgl-card-toggle:active:not(:disabled) {
+  transform: translateX(-50%) scale(0.97);
+}
+
+.rgl-card-toggle:disabled {
+  cursor: default;
+}
+
+.rgl-gift-layer.is-card-open .rgl-card-toggle {
+  bottom: max(16px, 5%);
+}
+
+.rgl-gift-layer.is-dismissing .rgl-card-toggle {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 220ms ease-out;
 }
 
 .rgl-gift-chip {
@@ -178,15 +247,40 @@
 }
 
 .rgl-gift-slide {
-  position: relative;
+  position: absolute;
+  inset: 0;
   z-index: 1;
   pointer-events: auto;
   display: flex;
   align-items: center;
   justify-content: center;
-  --rgl-gift-enter-y: 400px;
+  --rgl-gift-enter-y: 100%;
   transform: translateY(0);
   opacity: 1;
+}
+
+.rgl-gift-zoom {
+  position: absolute;
+  inset: 0;
+  transform-origin: center center;
+}
+
+.rgl-gift-layer .rgl-canvas,
+.birthday-gift-host .rgl-canvas,
+.rgl-gift-zoom .rgl-canvas-card,
+.birthday-gift-host .rgl-gift-zoom .rgl-canvas,
+.birthday-gift-host .rgl-icon-ref {
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none;
+  max-height: none;
+  flex-shrink: 0;
+}
+
+.rgl-gift-layer.is-card-open {
+  overflow: visible;
 }
 
 .rgl-gift-arrive {
@@ -328,7 +422,11 @@
 
 @media (prefers-reduced-motion: reduce) {
   .rgl-gift-scrim,
-  .rgl-gift-slide {
+  .rgl-gift-slide,
+  .rgl-gift-zoom,
+  .rgl-gift-caption,
+  .rgl-gift-zoom .rgl-canvas-card,
+  .birthday-gift-host .rgl-gift-zoom .rgl-canvas {
     transition: none !important;
     animation: none !important;
   }
@@ -347,9 +445,92 @@
   pointer-events: auto;
 }
 
-.birthday-gift-host .rgl-canvas,
-.birthday-gift-host .rgl-icon-ref {
-  width: 180px;
-  height: 180px;
-  flex-shrink: 0;
+.rgl-gift-layer.is-card-open .rgl-canvas {
+  cursor: pointer !important;
+}
+
+.bday-sign-pop {
+  position: absolute;
+  z-index: 100010;
+  width: 220px;
+  padding: 10px;
+  box-sizing: border-box;
+  pointer-events: auto;
+  transform: translate(-12px, 14px);
+  background: #f3ead8;
+  border: 1px solid rgba(44, 36, 22, 0.16);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-3);
+  color-scheme: light;
+}
+
+.bday-sign-pop-input {
+  width: 100%;
+  min-height: 64px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  resize: none;
+  background: transparent;
+  font-family: 'Caveat', cursive;
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 1.25;
+  color: #2c2416;
+  outline: none;
+}
+
+.bday-sign-pop-input::placeholder {
+  color: rgba(44, 36, 22, 0.28);
+}
+
+.bday-sign-pop-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.bday-sign-pop-count {
+  margin-right: auto;
+  font-family: var(--font-family-primary, Inter, system-ui, sans-serif);
+  font-size: 10px;
+  font-weight: 500;
+  color: rgba(44, 36, 22, 0.32);
+}
+
+.bday-sign-pop-cancel,
+.bday-sign-pop-sign {
+  margin: 0;
+  padding: 5px 10px;
+  border: 0;
+  border-radius: var(--radius-xs);
+  font-family: var(--font-family-primary, Inter, system-ui, sans-serif);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1), opacity 160ms ease;
+}
+
+.bday-sign-pop-cancel:active,
+.bday-sign-pop-sign:active {
+  transform: scale(0.97);
+}
+
+.bday-sign-pop-cancel {
+  background: transparent;
+  color: rgba(44, 36, 22, 0.55);
+}
+
+.bday-sign-pop-sign {
+  background: #2c2416;
+  color: #f3ead8;
+}
+
+.bday-sign-pop-sign:disabled {
+  opacity: 0.35;
+  cursor: default;
+  transform: none;
 }
