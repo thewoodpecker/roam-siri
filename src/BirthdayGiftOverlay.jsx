@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import BirthdayCard3D, { CARD_SEED_NOTES, CardOpenButton, CardSignPop, CardWindowClose } from './rgl/BirthdayCard3D';
 import RGLStage from './rgl/RGLStage';
-import SoftBlurText from './SoftBlurText';
 import BirthdayGlow from './BirthdayGlow';
 import { paletteColorsFor } from './rgl/materials';
 import { CARD_OPEN_SETTLE_MS } from './rgl/cardMotion';
@@ -14,21 +13,6 @@ const APPEAR_TURNS = 1;
 const ARRIVE_AT = 0.35;
 const LABEL_AT = 0.45;
 const SPARK_COUNT = 28;
-
-function dayOrdinal(n) {
-  const j = n % 10;
-  const k = n % 100;
-  if (j === 1 && k !== 11) return `${n}st`;
-  if (j === 2 && k !== 12) return `${n}nd`;
-  if (j === 3 && k !== 13) return `${n}rd`;
-  return `${n}th`;
-}
-
-function formatGiftDate(d = new Date()) {
-  const weekday = d.toLocaleDateString('en-US', { weekday: 'long' });
-  const month = d.toLocaleDateString('en-US', { month: 'long' });
-  return `${weekday} ${dayOrdinal(d.getDate())} ${month}`;
-}
 
 function prefersReducedMotion() {
   return (
@@ -249,7 +233,7 @@ export default function BirthdayGiftOverlay({
   }, []);
 
   const toggleCard = useCallback(() => {
-    if (!cardReady || dismissing) return;
+    if (!cardReady || dismissing || draft) return;
     if (skipTapRef.current) {
       skipTapRef.current = false;
       return;
@@ -257,11 +241,12 @@ export default function BirthdayGiftOverlay({
     setDraft(null);
     setDraftText('');
     setCardOpen((open) => !open);
-  }, [cardReady, dismissing]);
+  }, [cardReady, dismissing, draft]);
 
   const commitSign = useCallback(() => {
     const text = draftText.trim();
     if (!draft || !text) return;
+    skipTapRef.current = true;
     setNotes((prev) => [
       ...prev,
       {
@@ -316,8 +301,6 @@ export default function BirthdayGiftOverlay({
     .filter(Boolean)
     .join(' ');
 
-  const giftDate = formatGiftDate();
-
   return (
     <div
       ref={hostRef}
@@ -345,20 +328,6 @@ export default function BirthdayGiftOverlay({
           />
         )}
         <div className="rgl-gift-anchor">
-          <div className={`rgl-gift-caption${labelPlay ? ' is-visible' : ''}`}>
-            <div className="rgl-gift-chip rgl-gift-date-tag">
-              <SoftBlurText
-                key={`date-${arriveBurst}-${labelPlay}-${playKey}`}
-                as="p"
-                className="rgl-date-label"
-                text={giftDate}
-                play={labelPlay}
-                delay={0}
-                stagger={0.02}
-                duration={0.9}
-              />
-            </div>
-          </div>
           <div className="rgl-gift-slide">
             <div className={`rgl-gift-zoom${cardOpen ? ' is-open' : ''}`}>
               <RGLStage
@@ -371,13 +340,14 @@ export default function BirthdayGiftOverlay({
                 holdYaw={facing ? 0 : null}
                 tapSpin={!facing}
                 allowDrag={!facing}
-                onTap={cardReady && !dismissing ? toggleCard : undefined}
+                onTap={cardReady && !dismissing && !draft ? toggleCard : undefined}
               >
                 <BirthdayCard3D
                   open={cardOpen}
                   followPointer={cardOpen && !draft}
                   name={name}
                   notes={notes}
+                  draft={draft ? { ...draft, text: draftText, name: signerName } : null}
                   theme={theme}
                   paletteId={paletteId}
                   onInsidePick={pickInside}

@@ -1,5 +1,5 @@
 import { useFrame, useThree } from '@react-three/fiber';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import {
@@ -187,7 +187,10 @@ function wrapText(ctx, text, maxWidth) {
 }
 
 function drawNote(ctx, note, w, h) {
-  const x = note.u * w;
+  const maxW = w * 0.46;
+  const pad = w * 0.04;
+  let x = note.u * w;
+  if (x + maxW > w - pad) x = Math.max(pad, w - pad - maxW);
   const y = (1 - note.v) * h;
   ctx.save();
   ctx.translate(x, y);
@@ -201,7 +204,7 @@ function drawNote(ctx, note, w, h) {
   ctx.font = '700 78px Caveat, "Segoe Script", cursive';
   ctx.lineWidth = 3.2;
   const lineH = 84;
-  const lines = wrapText(ctx, note.text, w * 0.46);
+  const lines = wrapText(ctx, note.text, maxW);
   lines.forEach((line, i) => {
     ctx.strokeText(line, 0, i * lineH);
     ctx.fillText(line, 0, i * lineH);
@@ -334,12 +337,36 @@ function makeFoilDecalMaterial(alphaMap, displace = 0) {
   });
 }
 
+function paintInsideFoil(ctx, side, notes) {
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.fillStyle = '#000000';
+  ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+  notes
+    .filter((n) => n.page === side)
+    .forEach((note) => drawNote(ctx, note, ctx.canvas.width, ctx.canvas.height));
+}
+
 function drawInsideFoil(side, notes) {
-  return makeFoilTexture((ctx, w, h) => {
-    notes
-      .filter((n) => n.page === side)
-      .forEach((note) => drawNote(ctx, note, w, h));
-  }, TEX_W, TEX_H);
+  return makeFoilTexture(
+    (ctx) => paintInsideFoil(ctx, side, notes),
+    TEX_W,
+    TEX_H,
+  );
+}
+
+function useInsideNotesMat(side, notes, fontsReady) {
+  const mat = useMemo(() => {
+    const tex = drawInsideFoil(side, []);
+    return makeFoilDecalMaterial(tex, FOIL_DISPLACE);
+  }, [side]);
+  useLayoutEffect(() => {
+    const tex = mat.alphaMap;
+    if (!tex?.image) return;
+    const ctx = tex.image.getContext('2d');
+    paintInsideFoil(ctx, side, notes);
+    tex.needsUpdate = true;
+  }, [mat, side, notes, fontsReady]);
+  return mat;
 }
 
 function CardFace({
@@ -433,7 +460,7 @@ function InsidePage({
     e.nativeEvent?.stopImmediatePropagation?.();
     onPick?.({
       page,
-      u: page === 'left' ? 1 - e.uv.x : e.uv.x,
+      u: e.uv.x,
       v: e.uv.y,
       clientX: e.clientX,
       clientY: e.clientY,
@@ -617,6 +644,7 @@ export default function BirthdayCard3D({
   followPointer = false,
   name = 'Klas',
   notes = CARD_SEED_NOTES,
+  draft = null,
   theme = 'dark',
   paletteId = 'gold',
   scale = 1,
@@ -709,15 +737,6 @@ export default function BirthdayCard3D({
 
   const frontTex = useMemo(() => drawFrontTexture(name), [name, fontsReady]);
   const backTex = useMemo(() => drawBackTexture(), [fontsReady]);
-  const insideLeftTex = useMemo(
-    () => drawInsideFoil('left', notes),
-    [notes, fontsReady],
-  );
-  const insideRightTex = useMemo(
-    () => drawInsideFoil('right', notes),
-    [notes, fontsReady],
-  );
-
   const frontDecalMat = useMemo(
     () => makeFoilDecalMaterial(frontTex, FOIL_DISPLACE),
     [frontTex],
@@ -726,14 +745,26 @@ export default function BirthdayCard3D({
     () => makeFoilDecalMaterial(backTex, FOIL_DISPLACE),
     [backTex],
   );
-  const insideLeftMat = useMemo(
-    () => makeFoilDecalMaterial(insideLeftTex, FOIL_DISPLACE),
-    [insideLeftTex],
-  );
-  const insideRightMat = useMemo(
-    () => makeFoilDecalMaterial(insideRightTex, FOIL_DISPLACE),
-    [insideRightTex],
-  );
+
+  const paintedNotes = useMemo(() => {
+    const text = draft?.text?.trim();
+    if (!draft || !text) return notes;
+    return [
+      ...notes,
+      {
+        id: '__draft',
+        page: draft.page,
+        u: draft.u,
+        v: draft.v,
+        rotate: 0,
+        name: draft.name || 'Joe',
+        text,
+      },
+    ];
+  }, [notes, draft]);
+
+  const insideLeftMat = useInsideNotesMat('left', paintedNotes, fontsReady);
+  const insideRightMat = useInsideNotesMat('right', paintedNotes, fontsReady);
 
   useEffect(() => () => leafGeo.dispose(), [leafGeo]);
   useEffect(() => () => rimGeo.dispose(), [rimGeo]);
@@ -747,12 +778,8 @@ export default function BirthdayCard3D({
   useEffect(() => () => foilMat.dispose(), [foilMat]);
   useEffect(() => () => frontTex.dispose(), [frontTex]);
   useEffect(() => () => backTex.dispose(), [backTex]);
-  useEffect(() => () => insideLeftTex.dispose(), [insideLeftTex]);
-  useEffect(() => () => insideRightTex.dispose(), [insideRightTex]);
   useEffect(() => () => frontDecalMat.dispose(), [frontDecalMat]);
   useEffect(() => () => backDecalMat.dispose(), [backDecalMat]);
-  useEffect(() => () => insideLeftMat.dispose(), [insideLeftMat]);
-  useEffect(() => () => insideRightMat.dispose(), [insideRightMat]);
 
   useFrame((_, dt) => {
     const target = open ? 1 : REST_OPEN;
@@ -870,7 +897,7 @@ export function CardOpenButton({ open, visible, disabled, onClick }) {
   );
 }
 
-/** Traffic-light close, pinned to the app-window titlebar. */
+/** Product dismiss chip — Figma Dismiss, top-left of the app window. */
 export function CardWindowClose({ disabled, dismissing, onClick }) {
   return (
     <button
@@ -885,7 +912,7 @@ export function CardWindowClose({ disabled, dismissing, onClick }) {
         onClick?.();
       }}
     >
-      <span className="rgl-window-close-x" aria-hidden="true" />
+      <span className="rgl-window-close-icon" aria-hidden="true" />
     </button>
   );
 }

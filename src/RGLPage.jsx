@@ -1,7 +1,6 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import BirthdayCard3D, { CARD_SEED_NOTES, CardOpenButton, CardSignPop, CardWindowClose } from './rgl/BirthdayCard3D';
 import RGLStage from './rgl/RGLStage';
-import SoftBlurText from './SoftBlurText';
 import RoamIcon3D from './RoamIcon3D';
 import BirthdayGlow from './BirthdayGlow';
 import {
@@ -62,21 +61,6 @@ function pickPaletteId(exclude) {
     }
   }
   return next;
-}
-
-function dayOrdinal(n) {
-  const j = n % 10;
-  const k = n % 100;
-  if (j === 1 && k !== 11) return `${n}st`;
-  if (j === 2 && k !== 12) return `${n}nd`;
-  if (j === 3 && k !== 13) return `${n}rd`;
-  return `${n}th`;
-}
-
-function formatGiftDate(d = new Date()) {
-  const weekday = d.toLocaleDateString('en-US', { weekday: 'long' });
-  const month = d.toLocaleDateString('en-US', { month: 'long' });
-  return `${weekday} ${dayOrdinal(d.getDate())} ${month}`;
 }
 
 function prefersReducedMotion() {
@@ -338,7 +322,7 @@ export default function RGLPage() {
   }, []);
 
   const toggleCard = useCallback(() => {
-    if (!cardReady || dismissing) return;
+    if (!cardReady || dismissing || draft) return;
     if (skipTapRef.current) {
       skipTapRef.current = false;
       return;
@@ -346,11 +330,12 @@ export default function RGLPage() {
     setDraft(null);
     setDraftText('');
     setCardOpen((open) => !open);
-  }, [cardReady, dismissing]);
+  }, [cardReady, dismissing, draft]);
 
   const commitSign = useCallback(() => {
     const text = draftText.trim();
     if (!draft || !text) return;
+    skipTapRef.current = true;
     setNotes((prev) => [
       ...prev,
       {
@@ -395,13 +380,14 @@ export default function RGLPage() {
           holdYaw={facing ? 0 : null}
           tapSpin={!facing}
           allowDrag={!facing}
-          onTap={cardReady && !dismissing ? toggleCard : undefined}
+          onTap={cardReady && !dismissing && !draft ? toggleCard : undefined}
         >
           <BirthdayCard3D
             open={cardOpen}
             followPointer={cardOpen && !draft}
             name={birthdayName}
             notes={notes}
+            draft={draft ? { ...draft, text: draftText, name: 'Joe' } : null}
             theme={theme}
             paletteId={paletteId}
             onInsidePick={pickInside}
@@ -416,7 +402,6 @@ export default function RGLPage() {
     </>
   );
 
-  const giftDate = formatGiftDate();
   const cardToggle = isCard && (
     <CardOpenButton
       open={cardOpen}
@@ -424,22 +409,6 @@ export default function RGLPage() {
       disabled={!cardReady || dismissing}
       onClick={toggleCard}
     />
-  );
-  const birthdayLabel = (
-    <div className={`rgl-gift-caption${labelPlay ? ' is-visible' : ''}`}>
-      <div className="rgl-gift-chip rgl-gift-date-tag">
-        <SoftBlurText
-          key={`date-${arriveBurst}-${labelPlay}`}
-          as="p"
-          className="rgl-date-label"
-          text={giftDate}
-          play={labelPlay}
-          delay={0}
-          stagger={0.02}
-          duration={0.9}
-        />
-      </div>
-    </div>
   );
 
   return (
@@ -629,7 +598,6 @@ export default function RGLPage() {
                         />
                       )}
                       <div className="rgl-gift-anchor">
-                        {birthdayLabel}
                         {cardToggle}
                         <div className="rgl-gift-slide">
                           <div className={`rgl-gift-zoom${cardOpen ? ' is-open' : ''}`}>
@@ -669,7 +637,6 @@ export default function RGLPage() {
                   />
                 )}
                 <div className="rgl-gift-anchor">
-                  {birthdayLabel}
                   {cardToggle}
                   <div className="rgl-gift-slide">
                     <div className={`rgl-gift-zoom${cardOpen ? ' is-open' : ''}`}>
