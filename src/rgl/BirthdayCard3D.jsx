@@ -12,16 +12,16 @@ import { CARD_OPEN_STIFFNESS, HINGE_FOLLOW_ANGLE, HINGE_FOLLOW_STIFFNESS, HINGE_
 
 const LEAF_W = 0.96;
 const LEAF_H = 1.34;
-const LEAF_T = 0.032;
+const LEAF_T = 0.016;
 const CORNER = 0.078;
-const OPEN_ANGLE = Math.PI * 0.96;
+const OPEN_ANGLE = Math.PI;
 /** Outer metal rim sitting proud of the tray — Figma-pendant well. */
-const RIM_OUTER_INSET = 0.012;
-const RIM_WIDTH = 0.058;
-const RIM_DEPTH = 0.014;
-const WELL_DEPTH = 0.007;
-const WELL_LIFT = 0.002;
-const WELL_RECESS = 0.011;
+const RIM_OUTER_INSET = 0.006;
+const RIM_WIDTH = 0.018;
+const RIM_DEPTH = 0.005;
+const WELL_DEPTH = 0.004;
+const WELL_LIFT = 0.001;
+const WELL_RECESS = 0.006;
 const FOIL_DISPLACE = 0.0008;
 /** Resting pose — cracked open so it reads as a card, not a slab. */
 const REST_OPEN = 0.15;
@@ -275,7 +275,7 @@ function drawCoverFoil(ctx, name) {
 
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.font = '700 42px Possibility, "Times New Roman", serif';
+  ctx.font = '700 42px "Possibility"';
   ctx.fillText('Happy Birthday', 256, 268);
   ctx.font = '700 92px Caveat, "Segoe Script", cursive';
   ctx.fillText(name, 256, 372);
@@ -316,8 +316,8 @@ function drawFrontTexture(name) {
 function drawBackTexture() {
   return makeFoilTexture((ctx, w, h) => {
     ctx.fillStyle = '#ffffff';
-    ctx.font = '700 36px Possibility, "Times New Roman", serif';
-    fillTrackedText(ctx, 'THE OFFICE OF THE FUTURE', w / 2, h * 0.9, 3.2);
+    ctx.font = '700 18px "Possibility"';
+    fillTrackedText(ctx, 'THE OFFICE OF THE FUTURE', w / 2, h * 0.9, 1.8);
   });
 }
 
@@ -583,6 +583,31 @@ function FrontFireworks({ active, accent }) {
   );
 }
 
+function loadCardFonts() {
+  const fonts = document.fonts;
+  if (!fonts) return Promise.resolve();
+  const possibility = new FontFace(
+    'Possibility',
+    'url(/fonts/Possibility-Bold.otf)',
+    { weight: '700', style: 'normal' },
+  );
+  return possibility
+    .load()
+    .then((face) => {
+      fonts.add(face);
+      return Promise.all([
+        fonts.load('700 18px "Possibility"'),
+        fonts.load('700 28px "Possibility"'),
+        fonts.load('700 42px "Possibility"'),
+        fonts.load('700 78px Caveat'),
+        fonts.load('700 88px Caveat'),
+        fonts.load('700 92px Caveat'),
+        fonts.ready,
+      ]);
+    })
+    .catch(() => fonts.ready);
+}
+
 /**
  * Birthday greeting card — same studio materials as the pack gifts,
  * two thin leaves hinged at the spine. `open` drives the fold.
@@ -609,14 +634,7 @@ export default function BirthdayCard3D({
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all([
-      document.fonts.load('700 42px Possibility'),
-      document.fonts.load('700 36px Possibility'),
-      document.fonts.load('700 28px Possibility'),
-      document.fonts.load('700 92px Caveat'),
-      document.fonts.load('700 88px Caveat'),
-      document.fonts.load('700 78px Caveat'),
-    ]).then(() => {
+    loadCardFonts().then(() => {
       if (!cancelled) setFontsReady(true);
     });
     return () => {
@@ -793,7 +811,7 @@ export default function BirthdayCard3D({
             onPick={onInsidePick}
           />
         </group>
-        <group position={[0, 0, insideZ]} rotation={[0, Math.PI, 0]} scale={[-1, 1, 1]}>
+        <group position={[0, 0, insideZ]} rotation={[0, Math.PI, 0]}>
           <CardFace
             {...faceProps}
             raised
@@ -803,10 +821,10 @@ export default function BirthdayCard3D({
         </group>
       </group>
 
-      <mesh geometry={spineGeo} material={foilMat} position={[0.006, 0, 0]} />
+      <mesh geometry={spineGeo} material={foilMat} position={[0, 0, 0]} />
 
-      <group ref={hinge} position={[0, 0, LEAF_T + 0.001]} rotation={[0, -OPEN_ANGLE * REST_OPEN, 0]}>
-        <group position={[LEAF_W / 2, 0, 0]}>
+      <group ref={hinge} position={[0, 0, LEAF_T / 2]} rotation={[0, -OPEN_ANGLE * REST_OPEN, 0]}>
+        <group position={[LEAF_W / 2, 0, LEAF_T / 2]}>
           <mesh geometry={leafGeo} material={outsideMat} />
           <group position={[0, 0, faceZ]}>
             <CardFace {...faceProps} raised greetingMat={frontDecalMat}>
@@ -848,6 +866,26 @@ export function CardOpenButton({ open, visible, disabled, onClick }) {
       }}
     >
       {open ? 'Close' : 'Open'}
+    </button>
+  );
+}
+
+/** Traffic-light close, pinned to the app-window titlebar. */
+export function CardWindowClose({ disabled, dismissing, onClick }) {
+  return (
+    <button
+      type="button"
+      className={`rgl-window-close${dismissing ? ' is-dismissing' : ''}`}
+      disabled={disabled}
+      aria-label="Dismiss card"
+      onPointerDown={(e) => e.stopPropagation()}
+      onClick={(e) => {
+        e.stopPropagation();
+        if (disabled) return;
+        onClick?.();
+      }}
+    >
+      <span className="rgl-window-close-x" aria-hidden="true" />
     </button>
   );
 }

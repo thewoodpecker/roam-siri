@@ -1,5 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
-import BirthdayCard3D, { CARD_SEED_NOTES, CardOpenButton, CardSignPop } from './rgl/BirthdayCard3D';
+import BirthdayCard3D, { CARD_SEED_NOTES, CardOpenButton, CardSignPop, CardWindowClose } from './rgl/BirthdayCard3D';
 import RGLStage from './rgl/RGLStage';
 import SoftBlurText from './SoftBlurText';
 import RoamIcon3D from './RoamIcon3D';
@@ -425,14 +425,8 @@ export default function RGLPage() {
       onClick={toggleCard}
     />
   );
-  const birthdayLead = 'Happy Birthday';
-  const nameDelay = 0.06 + birthdayLead.replace(/\s/g, '').length * 0.025;
-
   const birthdayLabel = (
-    <div
-      className={`rgl-gift-caption${labelPlay ? ' is-visible' : ''}`}
-      style={{ '--rgl-name-color': paletteColors.accent }}
-    >
+    <div className={`rgl-gift-caption${labelPlay ? ' is-visible' : ''}`}>
       <div className="rgl-gift-chip rgl-gift-date-tag">
         <SoftBlurText
           key={`date-${arriveBurst}-${labelPlay}`}
@@ -445,31 +439,6 @@ export default function RGLPage() {
           duration={0.9}
         />
       </div>
-      <div className="rgl-gift-chip rgl-gift-label">
-        <p className="rgl-birthday-label">
-          <SoftBlurText
-            key={`lead-${birthdayName}-${arriveBurst}-${labelPlay}`}
-            as="span"
-            className="rgl-birthday-lead"
-            text={birthdayLead}
-            play={labelPlay}
-            delay={0.06}
-            stagger={0.025}
-            duration={0.9}
-          />
-          {' '}
-          <SoftBlurText
-            key={`name-${birthdayName}-${arriveBurst}-${labelPlay}`}
-            as="span"
-            className="rgl-birthday-name"
-            text={birthdayName}
-            play={labelPlay}
-            delay={nameDelay}
-            stagger={0.025}
-            duration={0.9}
-          />
-        </p>
-      </div>
     </div>
   );
 
@@ -477,10 +446,7 @@ export default function RGLPage() {
     <div
       className="rgl-page"
       data-theme={theme}
-      style={{
-        ...birthdayCssVars(theme, paletteId),
-        '--rgl-name-color': paletteColors.accent,
-      }}
+      style={birthdayCssVars(theme, paletteId)}
     >
       <aside className="rgl-sidebar">
         <div className="rgl-brand">
@@ -643,6 +609,13 @@ export default function RGLPage() {
                     />
                   )}
                   {giftVisible && (
+                    <CardWindowClose
+                      disabled={dismissing}
+                      dismissing={dismissing}
+                      onClick={dismissGift}
+                    />
+                  )}
+                  {giftVisible && (
                     <div
                       ref={hostRef}
                       className={giftClass}
@@ -684,6 +657,11 @@ export default function RGLPage() {
                 onAnimationEnd={onGiftMotionEnd}
                 onTransitionEnd={onGiftMotionEnd}
               >
+                <CardWindowClose
+                  disabled={dismissing}
+                  dismissing={dismissing}
+                  onClick={dismissGift}
+                />
                 {arriveFx && (
                   <GiftArriveFX
                     accent={paletteColors.accent}

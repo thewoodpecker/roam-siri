@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import BirthdayCard3D, { CARD_SEED_NOTES, CardOpenButton, CardSignPop } from './rgl/BirthdayCard3D';
+import BirthdayCard3D, { CARD_SEED_NOTES, CardOpenButton, CardSignPop, CardWindowClose } from './rgl/BirthdayCard3D';
 import RGLStage from './rgl/RGLStage';
 import SoftBlurText from './SoftBlurText';
 import BirthdayGlow from './BirthdayGlow';
@@ -317,15 +317,12 @@ export default function BirthdayGiftOverlay({
     .join(' ');
 
   const giftDate = formatGiftDate();
-  const birthdayLead = 'Happy Birthday';
-  const nameDelay = 0.06 + birthdayLead.replace(/\s/g, '').length * 0.025;
 
   return (
     <div
       ref={hostRef}
       className="birthday-gift-host"
       data-theme={theme}
-      style={{ '--rgl-name-color': paletteColors.accent }}
     >
       {showScrim && (
         <button
@@ -335,6 +332,7 @@ export default function BirthdayGiftOverlay({
           onClick={dismiss}
         />
       )}
+      <CardWindowClose disabled={dismissing} dismissing={dismissing} onClick={dismiss} />
       <div
         className={giftClass}
         onAnimationEnd={onGiftMotionEnd}
@@ -347,10 +345,7 @@ export default function BirthdayGiftOverlay({
           />
         )}
         <div className="rgl-gift-anchor">
-          <div
-            className={`rgl-gift-caption${labelPlay ? ' is-visible' : ''}`}
-            style={{ '--rgl-name-color': paletteColors.accent }}
-          >
+          <div className={`rgl-gift-caption${labelPlay ? ' is-visible' : ''}`}>
             <div className="rgl-gift-chip rgl-gift-date-tag">
               <SoftBlurText
                 key={`date-${arriveBurst}-${labelPlay}-${playKey}`}
@@ -362,31 +357,6 @@ export default function BirthdayGiftOverlay({
                 stagger={0.02}
                 duration={0.9}
               />
-            </div>
-            <div className="rgl-gift-chip rgl-gift-label">
-              <p className="rgl-birthday-label">
-                <SoftBlurText
-                  key={`lead-${name}-${arriveBurst}-${labelPlay}-${playKey}`}
-                  as="span"
-                  className="rgl-birthday-lead"
-                  text={birthdayLead}
-                  play={labelPlay}
-                  delay={0.06}
-                  stagger={0.025}
-                  duration={0.9}
-                />
-                {' '}
-                <SoftBlurText
-                  key={`name-${name}-${arriveBurst}-${labelPlay}-${playKey}`}
-                  as="span"
-                  className="rgl-birthday-name"
-                  text={name}
-                  play={labelPlay}
-                  delay={nameDelay}
-                  stagger={0.025}
-                  duration={0.9}
-                />
-              </p>
             </div>
           </div>
           <div className="rgl-gift-slide">

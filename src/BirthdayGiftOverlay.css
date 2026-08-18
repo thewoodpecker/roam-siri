@@ -1,5 +1,12 @@
 @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&display=swap');
 
+@font-face {
+  font-family: 'Possibility';
+  src: url('/fonts/Possibility-Bold.otf') format('opentype');
+  font-weight: 700;
+  font-display: block;
+}
+
 /* Match .sc-window chrome exactly (ShowcaseMap.css). corner-shape is NOT
    inherited with border-radius — without it, overflow:hidden clips as a
    round corner and leaves a light crescent inside the window squircle. */
@@ -101,7 +108,7 @@
 .rgl-card-toggle {
   position: absolute;
   left: 50%;
-  bottom: 56px;
+  bottom: 32px;
   z-index: 3;
   margin: 0;
   padding: 7px 16px;
@@ -145,14 +152,90 @@
   cursor: default;
 }
 
-.rgl-gift-layer.is-card-open .rgl-card-toggle {
-  bottom: max(16px, 5%);
-}
-
 .rgl-gift-layer.is-dismissing .rgl-card-toggle {
   opacity: 0;
   pointer-events: none;
   transition: opacity 220ms ease-out;
+}
+
+/* Same slot as `.sc-titlebar` close light: 14px inset, 12px dot, 42px bar. */
+.rgl-window-close {
+  position: absolute;
+  top: 15px;
+  left: 14px;
+  z-index: 100003;
+  width: 12px;
+  height: 12px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: #ff5f57;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  pointer-events: auto;
+  opacity: 1;
+  transform: scale(1);
+  transition:
+    opacity 220ms ease-out,
+    transform 100ms ease-out;
+}
+
+.rgl-window-close::before {
+  content: '';
+  position: absolute;
+  inset: -8px;
+}
+
+.rgl-window-close:hover:not(:disabled) {
+  background: #ff4b42;
+}
+
+.rgl-window-close:active:not(:disabled) {
+  transform: scale(0.9);
+}
+
+.rgl-window-close:disabled {
+  cursor: default;
+}
+
+.rgl-window-close.is-dismissing,
+.rgl-gift-layer.is-dismissing .rgl-window-close {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.rgl-window-close-x {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 80ms ease;
+}
+
+.rgl-window-close:hover:not(:disabled) .rgl-window-close-x {
+  opacity: 0.72;
+}
+
+.rgl-window-close-x::before,
+.rgl-window-close-x::after {
+  content: '';
+  position: absolute;
+  left: 2.5px;
+  top: 5.5px;
+  width: 7px;
+  height: 1px;
+  background: #4a0000;
+  border-radius: 1px;
+}
+
+.rgl-window-close-x::before {
+  transform: rotate(45deg);
+}
+
+.rgl-window-close-x::after {
+  transform: rotate(-45deg);
 }
 
 .rgl-gift-chip {
@@ -168,12 +251,6 @@
 .rgl-gift-date-tag {
   padding: 6px 12px;
   border-radius: var(--radius-full);
-}
-
-.rgl-gift-label {
-  padding: 0;
-  border: 0;
-  background: transparent;
 }
 
 .rgl-gift-date-tag::before {
@@ -198,40 +275,17 @@
   to { opacity: 1; }
 }
 
-.rgl-date-label,
-.rgl-birthday-label,
-.rgl-birthday-lead,
-.rgl-birthday-name {
+.rgl-date-label {
   position: relative;
   z-index: 1;
   margin: 0;
   font-family: var(--font-family-primary, Inter, system-ui, sans-serif);
   white-space: nowrap;
-}
-
-.rgl-date-label {
   font-size: 13px;
   font-weight: 500;
   line-height: 18px;
   letter-spacing: -0.15px;
   color: var(--text-secondary);
-}
-
-.rgl-birthday-label {
-  display: block;
-  font-size: 28px;
-  font-weight: 600;
-  line-height: 34px;
-  letter-spacing: -0.6px;
-  color: var(--text-primary);
-}
-
-.rgl-birthday-lead {
-  color: var(--text-primary);
-}
-
-.rgl-birthday-name {
-  color: var(--rgl-name-color, var(--text-primary));
 }
 
 .rgl-gift-chip .sc-soft-blur-word {
