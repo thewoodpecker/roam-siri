@@ -21,7 +21,7 @@ function prefersReducedMotion() {
   );
 }
 
-function GiftArriveFX({ accent, burstKey }) {
+export function GiftArriveFX({ accent, burstKey }) {
   const sparks = Array.from({ length: SPARK_COUNT }, (_, i) => {
     const angle = (360 / SPARK_COUNT) * i + (i % 4) * 5;
     const dist = 160 + (i % 6) * 36;
@@ -97,10 +97,20 @@ export default function BirthdayGiftOverlay({
   const [cardReady, setCardReady] = useState(false);
   const [facing, setFacing] = useState(false);
   const [notes, setNotes] = useState(CARD_SEED_NOTES);
+  const [selectedNoteId, setSelectedNoteId] = useState(null);
   const [draft, setDraft] = useState(null);
   const [draftText, setDraftText] = useState('');
   const dismissedRef = useRef(false);
   const skipTapRef = useRef(false);
+  const skipPickUntil = useRef(0);
+  const skipTapTimer = useRef(0);
+  const armSkipTap = useCallback(() => {
+    skipTapRef.current = true;
+    window.clearTimeout(skipTapTimer.current);
+    skipTapTimer.current = window.setTimeout(() => {
+      skipTapRef.current = false;
+    }, 0);
+  }, []);
   const paletteColors = paletteColorsFor(theme, paletteId);
 
   useEffect(() => {
@@ -130,6 +140,7 @@ export default function BirthdayGiftOverlay({
     setCardReady(false);
     setFacing(false);
     setNotes(CARD_SEED_NOTES);
+    setSelectedNoteId(null);
     setDraft(null);
     setDraftText('');
     if (prefersReducedMotion()) {
@@ -213,56 +224,85 @@ export default function BirthdayGiftOverlay({
 
   const pickInside = useCallback((hit) => {
     if (!cardOpen) return;
-    skipTapRef.current = true;
+    if (performance.now() < skipPickUntil.current) return;
+    armSkipTap();
     const host = hostRef.current;
     if (!host) return;
     const rect = host.getBoundingClientRect();
+    setSelectedNoteId(null);
     setDraft({
       page: hit.page,
+      col: hit.col,
+      row: hit.row,
       u: hit.u,
       v: hit.v,
       x: hit.clientX - rect.left,
       y: hit.clientY - rect.top,
     });
     setDraftText('');
-  }, [cardOpen]);
+  }, [cardOpen, armSkipTap]);
 
   const cancelDraft = useCallback(() => {
     setDraft(null);
     setDraftText('');
   }, []);
 
+  const restCard = useCallback(() => {
+    if (dismissing) return;
+    if (draft) cancelDraft();
+    if (cardOpen) setCardOpen(false);
+  }, [dismissing, draft, cardOpen, cancelDraft]);
+
   const toggleCard = useCallback(() => {
-    if (!cardReady || dismissing || draft) return;
-    if (skipTapRef.current) {
-      skipTapRef.current = false;
-      return;
-    }
+    if (!cardReady || dismissing) return;
     setDraft(null);
     setDraftText('');
-    setCardOpen((open) => !open);
-  }, [cardReady, dismissing, draft]);
+    setCardOpen((open) => {
+      if (!open) skipPickUntil.current = performance.now() + 500;
+      return !open;
+    });
+  }, [cardReady, dismissing]);
 
   const commitSign = useCallback(() => {
     const text = draftText.trim();
     if (!draft || !text) return;
-    skipTapRef.current = true;
+    armSkipTap();
+    if (notes.some((n) => String(n.id).startsWith('me-'))) {
+      setDraft(null);
+      setDraftText('');
+      return;
+    }
+    const id = `me-${Date.now()}`;
     setNotes((prev) => [
       ...prev,
       {
-        id: `me-${Date.now()}`,
+        id,
         page: draft.page,
+        col: draft.col,
+        row: draft.row,
         u: draft.u,
         v: draft.v,
-        rotate: (Math.random() * 14) - 7,
+        rotate: 0,
         name: signerName,
         text,
         ink: 4,
       },
     ]);
+    setSelectedNoteId(id);
     setDraft(null);
     setDraftText('');
-  }, [draft, draftText, signerName]);
+  }, [draft, draftText, signerName, notes, armSkipTap]);
+
+  const changeNote = useCallback((id, patch) => {
+    setNotes((prev) => prev.map((n) => (n.id === id ? { ...n, ...patch } : n)));
+  }, []);
+
+  const removeNote = useCallback((id) => {
+    armSkipTap();
+    setNotes((prev) => prev.filter((n) => n.id !== id));
+    setSelectedNoteId((cur) => (cur === id ? null : cur));
+    setDraft((cur) => (cur?.noteId === id ? null : cur));
+  }, [armSkipTap]);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -276,11 +316,10 @@ export default function BirthdayGiftOverlay({
         setCardOpen(false);
         return;
       }
-      dismiss();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [open, draft, cardOpen, cancelDraft, dismiss]);
+  }, [open, draft, cardOpen, cancelDraft]);
 
   if (!open && !dismissing) return null;
 
@@ -311,8 +350,10 @@ export default function BirthdayGiftOverlay({
         <button
           type="button"
           className={scrimClass}
-          aria-label="Dismiss card"
-          onClick={dismiss}
+          aria-label={cardOpen ? 'Close card' : undefined}
+          aria-hidden={!cardOpen}
+          tabIndex={cardOpen ? 0 : -1}
+          onClick={restCard}
         />
       )}
       <CardWindowClose disabled={dismissing} dismissing={dismissing} onClick={dismiss} />
@@ -328,29 +369,60 @@ export default function BirthdayGiftOverlay({
           />
         )}
         <div className="rgl-gift-anchor">
+          <CardSignPop
+            draft={draft}
+            value={draftText}
+            onChange={setDraftText}
+            onSign={commitSign}
+            onCancel={cancelDraft}
+          />
           <div className="rgl-gift-slide">
             <div className={`rgl-gift-zoom${cardOpen ? ' is-open' : ''}`}>
               <RGLStage
                 className="rgl-canvas rgl-canvas-card"
-                key={`${theme}-${paletteId}-${playKey}`}
+                key={`${theme}-${playKey}`}
                 appearSpinKey={appearSpinKey}
                 appearTurns={APPEAR_TURNS}
                 appearDuration={ENTER_MS / 1000}
                 idleSpin={!facing}
                 holdYaw={facing ? 0 : null}
                 tapSpin={!facing}
-                allowDrag={!facing}
-                onTap={cardReady && !dismissing && !draft ? toggleCard : undefined}
+                allowDrag={!cardOpen}
+                onTap={
+                  cardReady && !dismissing
+                    ? () => {
+                        if (skipTapRef.current) {
+                          skipTapRef.current = false;
+                          return;
+                        }
+                        restCard();
+                      }
+                    : undefined
+                }
               >
                 <BirthdayCard3D
                   open={cardOpen}
-                  followPointer={cardOpen && !draft}
+                  followPointer={cardOpen}
                   name={name}
                   notes={notes}
                   draft={draft ? { ...draft, text: draftText, name: signerName } : null}
                   theme={theme}
                   paletteId={paletteId}
+                  selectedNoteId={selectedNoteId}
                   onInsidePick={pickInside}
+                  onSelectNote={setSelectedNoteId}
+                  onNoteChange={changeNote}
+                  onRemoveNote={removeNote}
+                  onClose={() => setCardOpen(false)}
+                  onGrabStart={() => {
+                    armSkipTap();
+                  }}
+                  onInsideClick={() => {
+                    if (!cardReady || dismissing || draft) return;
+                    armSkipTap();
+                    skipPickUntil.current = performance.now() + 500;
+                    setCardOpen(true);
+                  }}
                 />
               </RGLStage>
             </div>
@@ -363,13 +435,6 @@ export default function BirthdayGiftOverlay({
           />
         </div>
       </div>
-      <CardSignPop
-        draft={draft}
-        value={draftText}
-        onChange={setDraftText}
-        onSign={commitSign}
-        onCancel={cancelDraft}
-      />
     </div>
   );
 }

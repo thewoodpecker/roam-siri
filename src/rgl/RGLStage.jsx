@@ -2,11 +2,12 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { CARD_OPEN_STIFFNESS } from './cardMotion';
-import { RGL_VIEW_HALF } from './materials';
-import { BadgeStudioEnvironment, BadgeStudioLights } from './StudioEnvironment';
+import { RGLLights, RGL_VIEW_HALF } from './materials';
+import { useLightRig } from './lightRig';
+import { StageEnvironment } from './StudioEnvironment';
 
 /** Match RoamIcon3D interaction constants so gifts feel identical. */
-const SPIN_SPEED = 0.7;
+const SPIN_SPEED = 0.38;
 const TAP_SPIN_DURATION = 0.38;
 const DRAG_SENSITIVITY = 0.01;
 const FLING_FRICTION = 1.85;
@@ -156,14 +157,20 @@ export default function RGLStage({
   appearSpinKey = 0,
   appearTurns = 0,
   appearDuration = 1.1,
+  snapYawKey = 0,
+  snapYaw = 0,
+  snapDuration = 0.38,
   interactive = true,
   idleSpin = true,
   holdYaw = null,
   tapSpin = true,
   allowDrag = true,
   onTap = null,
+  onOrbit = null,
+  environment = 'softbox',
 }) {
   const reduceMotion = usePrefersReducedMotion();
+  const { studio } = useLightRig();
   const hostRef = useRef(null);
   const unbindDragRef = useRef(null);
   const drag = useRef({
@@ -182,6 +189,8 @@ export default function RGLStage({
   holdYawRef.current = holdYaw;
   const onTapRef = useRef(onTap);
   onTapRef.current = onTap;
+  const onOrbitRef = useRef(onOrbit);
+  onOrbitRef.current = onOrbit;
   const tapSpinRef = useRef(tapSpin);
   tapSpinRef.current = tapSpin;
   const dragEnabled = interactive && allowDrag;
@@ -202,6 +211,21 @@ export default function RGLStage({
       duration: appearDuration,
     };
   }, [appearSpinKey, appearTurns, appearDuration, reduceMotion]);
+
+  // Cover change: shortest-path spin to the preview yaw, then holdYaw keeps it there.
+  useEffect(() => {
+    if (!snapYawKey || reduceMotion) return;
+    const start = rotationY.current;
+    let delta = snapYaw - start;
+    delta = Math.atan2(Math.sin(delta), Math.cos(delta));
+    angularVel.current = 0;
+    spinBurst.current = {
+      start,
+      delta,
+      elapsed: 0,
+      duration: snapDuration,
+    };
+  }, [snapYawKey, snapYaw, snapDuration, reduceMotion]);
 
   const endDrag = useCallback((e) => {
     if (!dragEnabled || !drag.current.active) return;
@@ -241,15 +265,10 @@ export default function RGLStage({
 
     const host = e.currentTarget;
     hostRef.current = host;
-    try {
-      host.setPointerCapture(e.pointerId);
-    } catch {
-      /* capture can throw if the pointer is already released */
-    }
     host.style.cursor = 'grabbing';
 
-    // Track on window so a fast fling past the 180px canvas still gets
-    // move samples + pointerup (setPointerCapture alone is flaky here).
+    // Track on window so a fast fling past the canvas still gets samples.
+    // Capture only after the pointer actually moves so a tap still hits the card.
     unbindDragRef.current?.();
     const onMove = (ev) => {
       if (!drag.current.active) return;
@@ -257,8 +276,18 @@ export default function RGLStage({
       const dx = ev.clientX - drag.current.lastX;
       drag.current.lastX = ev.clientX;
       drag.current.lastT = t;
-      if (Math.abs(dx) > 0.5) drag.current.moved = true;
-      rotationY.current += dx * DRAG_SENSITIVITY;
+      if (Math.abs(dx) > 0.5) {
+        if (!drag.current.moved) {
+          drag.current.moved = true;
+          onOrbitRef.current?.();
+          try {
+            host.setPointerCapture(ev.pointerId);
+          } catch {
+            /* capture can throw if the pointer is already released */
+          }
+        }
+        rotationY.current += dx * DRAG_SENSITIVITY;
+      }
       const samples = drag.current.samples;
       samples.push({ t, x: ev.clientX });
       if (samples.length > FLING_SAMPLE_MAX) samples.shift();
@@ -316,19 +345,25 @@ export default function RGLStage({
     >
       <Canvas
         dpr={[1, 2]}
-        gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
+        gl={{
+          antialias: true,
+          alpha: true,
+          powerPreference: 'high-performance',
+          stencil: false,
+        }}
         orthographic
         camera={{ position: CAMERA_POS, near: 0.1, far: 40, zoom: 1 }}
         style={{ background: 'transparent', width: '100%', height: '100%' }}
         frameloop="always"
+        performance={{ min: 1, max: 1 }}
         onCreated={({ gl }) => {
           gl.setClearColor(0x000000, 0);
         }}
       >
         <FitOrthoCamera />
-        <BadgeStudioLights />
+        <RGLLights lights={studio} />
         <Suspense fallback={null}>
-          <BadgeStudioEnvironment />
+          <StageEnvironment id={environment} />
         </Suspense>
         <OrbitingSubject
           drag={drag}

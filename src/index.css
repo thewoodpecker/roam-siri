@@ -3,6 +3,31 @@
    doesn't have to inline an external @import (and so the font kicks off
    earlier in the critical path). */
 
+@font-face {
+  font-family: 'Possibility';
+  src: url('/fonts/Possibility-Bold.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: block;
+}
+
+:root {
+  --font-possibility: 'Possibility';
+}
+
+/* Forces the preloaded face to be used on first paint (matches the @font-face). */
+.possibility-font-probe {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  font-family: 'Possibility', sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  pointer-events: none;
+}
+
 /* Navbar animations */
 @keyframes silver-swipe {
   0% { background-position: 100% 0; }

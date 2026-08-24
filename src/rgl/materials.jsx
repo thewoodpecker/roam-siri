@@ -23,23 +23,99 @@ export const ROAM_GOLD_LIGHT_EMISSIVE = '#E8C56A';
 export const BADGE_GOLD_PROPS = {
   color: '#E8B84A',
   metalness: 1,
-  roughness: 0.18,
+  roughness: 0.05,
   clearcoat: 1,
-  clearcoatRoughness: 0.08,
+  clearcoatRoughness: 0.02,
   reflectivity: 1,
+  specularIntensity: 1,
   emissive: '#8B6914',
   emissiveIntensity: 0.08,
-  envMapIntensity: 1,
+  envMapIntensity: 1.15,
   flatShading: false,
 };
 
+export const BADGE_SILVER_PROPS = {
+  color: '#C8CED6',
+  metalness: 1,
+  roughness: 0.04,
+  clearcoat: 1,
+  clearcoatRoughness: 0.02,
+  reflectivity: 1,
+  specularIntensity: 1,
+  emissive: '#2E3238',
+  emissiveIntensity: 0.03,
+  envMapIntensity: 1.35,
+  flatShading: false,
+};
+
+export const BADGE_BLACK_FOIL_PROPS = {
+  color: '#0B0B0D',
+  metalness: 1,
+  roughness: 0.02,
+  clearcoat: 1,
+  clearcoatRoughness: 0,
+  reflectivity: 1,
+  ior: 1.5,
+  specularIntensity: 1,
+  emissive: '#000000',
+  emissiveIntensity: 0,
+  envMapIntensity: 1.65,
+  flatShading: false,
+};
+
+export const FOIL_METALS = [
+  {
+    id: 'gold',
+    name: 'Gold',
+    swatch: '#E8B84A',
+    ink: '#E8B84A',
+    gradient: 'linear-gradient(145deg, #FFF3C4 0%, #E8B84A 46%, #9A6E22 100%)',
+    props: BADGE_GOLD_PROPS,
+  },
+  {
+    id: 'silver',
+    name: 'Silver',
+    swatch: '#C5CAD3',
+    ink: '#C8CED6',
+    gradient: 'linear-gradient(145deg, #FFFFFF 0%, #C8CED6 48%, #7E848C 100%)',
+    props: BADGE_SILVER_PROPS,
+  },
+  {
+    id: 'black',
+    name: 'Black',
+    swatch: '#111114',
+    ink: '#0B0B0D',
+    gradient: 'linear-gradient(145deg, #8A8A92 0%, #1C1C20 36%, #050506 70%, #4A4A52 100%)',
+    props: BADGE_BLACK_FOIL_PROPS,
+  },
+];
+
+export function getFoilMetal(id = 'gold') {
+  return FOIL_METALS.find((m) => m.id === id) ?? FOIL_METALS[0];
+}
+
 /**
- * Gift colorways — 12 evenly spaced hues (30° steps) around the wheel.
- * Same body/accent relationship at every step so the set feels cohesive.
- * `body` = box · `accent` = ribbon/bow (metallic).
- * `gold` is the gold spoke (~60°) for brand continuity.
+ * Gift colorways — Black & Silver plus hues around the wheel.
+ * `body` = card / box · `accent` = foil / ribbon.
  */
 export const GIFT_PALETTES = [
+  {
+    id: 'gold',
+    name: 'Black & Silver',
+    blurb: 'Roam black + silver foil',
+    dark: {
+      body: '#000000',
+      accent: '#C8CED6',
+      accentEmissive: '#8A9098',
+      emissiveIntensity: 0.06,
+    },
+    light: {
+      body: '#000000',
+      accent: '#E4E7EC',
+      accentEmissive: '#C8CED6',
+      emissiveIntensity: 0.14,
+    },
+  },
   {
     id: 'crimson',
     name: 'Crimson',
@@ -72,23 +148,6 @@ export const GIFT_PALETTES = [
       accent: '#FFB890',
       accentEmissive: '#E87848',
       emissiveIntensity: 0.13,
-    },
-  },
-  {
-    id: 'gold',
-    name: 'Gold',
-    blurb: '60° — gold',
-    dark: {
-      body: '#2E2C28',
-      accent: ROAM_GOLD,
-      accentEmissive: ROAM_GOLD_EMISSIVE,
-      emissiveIntensity: 0.06,
-    },
-    light: {
-      body: '#FFF8EC',
-      accent: ROAM_GOLD_LIGHT,
-      accentEmissive: ROAM_GOLD_LIGHT_EMISSIVE,
-      emissiveIntensity: 0.14,
     },
   },
   {
@@ -247,7 +306,7 @@ export const GIFT_PALETTES = [
 ];
 
 export function getGiftPalette(id = 'gold') {
-  const key = id === 'roam' ? 'gold' : id;
+  const key = id === 'roam' || id === 'black' ? 'gold' : id;
   return GIFT_PALETTES.find((p) => p.id === key) ?? GIFT_PALETTES.find((p) => p.id === 'gold') ?? GIFT_PALETTES[0];
 }
 
@@ -284,7 +343,7 @@ export const bodyMaterialProps = {
   color: ROAM_BLACK,
   // Soft paper/card finish — low metal so palette tints read in the diffuse,
   // not only in specular hotspots (high metal + clearcoat crushed the color).
-  roughness: 0.42,
+  roughness: 0.18,
   metalness: 0.08,
   clearcoat: 0.35,
   clearcoatRoughness: 0.35,
@@ -335,28 +394,63 @@ export function goldMaterialPropsFor(theme = 'dark', paletteId = 'gold') {
 }
 
 /**
- * Soft studio lighting — same rig for every RGL gift.
- * Keys sit farther out with long, low-decay point lamps so the light
- * reads bigger and more dispersed than the tight icon-matched defaults.
+ * Textbook scene lights — ambient fill + key/fill directionals.
+ * Intensities use Math.PI so they match R3F / Three physical units.
+ * Positions are world-space; the sidebar plot can drag lamps that have `id`.
  */
-export function RGLLights() {
-  return (
-    <>
-      <ambientLight intensity={0.85} />
-      <hemisphereLight args={['#fff8f2', '#121218', 0.55]} />
-      {/* Body fill — farther / softer than the icon keys */}
-      <directionalLight position={[5.5, 7.5, 8]} intensity={2.1} color="#fff8f2" />
-      <directionalLight position={[-6, 2.5, 4.5]} intensity={1.0} color="#b0c8ff" />
-      <directionalLight position={[0, 4, -6]} intensity={0.8} />
-      <directionalLight position={[-2, -3.5, 5.5]} intensity={0.6} color="#ffe8d8" />
-      <pointLight position={[3.2, 4.5, 5.5]} intensity={1.85} distance={42} decay={1} color="#ffffff" />
-      <pointLight position={[-4, 1.2, 4]} intensity={1.05} distance={38} decay={1} color="#c8d8ff" />
-      {/* Gold — big warm lamps, long reach so ribbons catch soft wrap */}
-      <directionalLight position={[7, 8.5, 9]} intensity={2.5} color="#fff8e8" />
-      <directionalLight position={[-7, 4, 4.5]} intensity={1.55} color="#ffd78a" />
-      <pointLight position={[4.5, 6.5, 7]} intensity={3.0} distance={52} decay={1} color="#fff8e8" />
-      <pointLight position={[-5.5, 3, 5.5]} intensity={1.85} distance={48} decay={1} color="#ffd78a" />
-      <pointLight position={[0, -3.5, 7.5]} intensity={1.45} distance={44} decay={1} color="#ffffff" />
-    </>
-  );
+export const STUDIO_LIGHTS = [
+  { kind: 'ambient', intensity: Math.PI },
+  { kind: 'directional', id: 'key', label: 'Key', position: [4, 6, 8], intensity: Math.PI, color: '#ffffff' },
+  { kind: 'directional', id: 'fill', label: 'Fill', position: [-5, 3, 5], intensity: Math.PI * 0.5, color: '#ffffff' },
+];
+
+/** Extra open-card lamps — none; the stage rig stays on. Gleam is separate. */
+export const OPEN_CARD_LIGHTS = [];
+
+/** Hover point light — world XZ from NDC, Z drops closer as the card opens. */
+export const GLEAM_LIGHT = {
+  spanX: 1.4,
+  spanY: 1.1,
+  yBias: 0.12,
+  zClosed: 1.9,
+  zOpenDrop: 0.7,
+  intensity0: 9,
+  intensityOpen: 15,
+  distance: 4.6,
+  decay: 2,
+};
+
+export function RGLLights({ lights = STUDIO_LIGHTS }) {
+  return lights.map((light, i) => {
+    if (light.kind === 'ambient') {
+      return <ambientLight key={light.id || i} intensity={light.intensity} />;
+    }
+    if (light.kind === 'hemisphere') {
+      return (
+        <hemisphereLight
+          key={light.id || i}
+          args={[light.color || '#ffffff', light.ground || '#444444', light.intensity]}
+        />
+      );
+    }
+    if (light.kind === 'point') {
+      return (
+        <pointLight
+          key={light.id || i}
+          position={light.position}
+          intensity={light.intensity}
+          distance={light.distance}
+          color={light.color}
+        />
+      );
+    }
+    return (
+      <directionalLight
+        key={light.id || i}
+        position={light.position}
+        intensity={light.intensity}
+        color={light.color}
+      />
+    );
+  });
 }

@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef, useMemo, useCallback, lazy, Suspense } from 'react';
+import { loadPossibilityFont } from './possibilityFont';
 import ReactDOM from 'react-dom';
 // data.js imports removed — floor data is self-contained
 import SiriGlow from './SiriGlow';
@@ -3219,26 +3220,11 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
   }, []);
   useEffect(() => {
     let cancelled = false;
-    const markReady = () => {
+    loadPossibilityFont().then(() => {
       if (!cancelled) setHeroFontsReady(true);
-    };
-    // Wait for Possibility so hero never paints the fallback face
-    if (document.fonts?.load) {
-      document.fonts
-        .load('700 48px Possibility')
-        .then(() => document.fonts.ready)
-        .then(markReady)
-        .catch(markReady);
-    } else if (document.fonts?.ready) {
-      document.fonts.ready.then(markReady).catch(markReady);
-    } else {
-      markReady();
-    }
-    // Failsafe so hero isn't stuck hidden if font load hangs
-    const failsafe = setTimeout(markReady, 2500);
+    });
     return () => {
       cancelled = true;
-      clearTimeout(failsafe);
     };
   }, []);
   useEffect(() => {

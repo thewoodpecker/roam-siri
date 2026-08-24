@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&display=swap');
+@import './woodward-tokens.css';
 
 @font-face {
   font-family: 'Possibility';
@@ -18,6 +19,10 @@
   border-radius: var(--radius-2xl);
   corner-shape: superellipse(1.6);
   overflow: hidden;
+}
+
+.birthday-gift-host:has(.rgl-face-dock.is-on) {
+  overflow: visible;
 }
 
 /* Dim the host window — clipped by host overflow + matching radius. */
@@ -79,6 +84,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: visible;
 }
 
 .rgl-card-toggle {
@@ -134,7 +140,7 @@
   transition: opacity 220ms ease-out;
 }
 
-/* Figma Dismiss chip: 28px circle, 6px padding, 16px icon, Shadow 2. */
+/* Dismiss chip: 28px circle, 16px icon. Solid fill, no glass blur. */
 .rgl-window-close {
   position: absolute;
   top: 16px;
@@ -149,10 +155,12 @@
   padding: 6px;
   box-sizing: border-box;
   border: 0;
-  border-radius: var(--radius-full);
-  corner-shape: superellipse(1.6);
+  border-radius: 50%;
+  corner-shape: round;
   background: var(--bg-surface-elevated-secondary);
   box-shadow: var(--shadow-2);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   cursor: pointer;
   appearance: none;
   -webkit-appearance: none;
@@ -233,7 +241,8 @@
   flex-shrink: 0;
 }
 
-.rgl-gift-layer.is-card-open {
+.rgl-gift-layer.is-card-open,
+.rgl-gift-layer.is-inspecting {
   overflow: visible;
 }
 
@@ -397,88 +406,253 @@
   cursor: pointer !important;
 }
 
-.bday-sign-pop {
+.rgl-face-dock {
   position: absolute;
-  z-index: 100010;
-  width: 220px;
-  padding: 10px;
-  box-sizing: border-box;
-  pointer-events: auto;
-  transform: translate(-12px, 14px);
-  background: #f3ead8;
-  border: 1px solid rgba(44, 36, 22, 0.16);
-  border-radius: var(--radius-sm);
-  box-shadow: var(--shadow-3);
-  color-scheme: light;
+  right: calc(50% + 104px);
+  top: 0;
+  bottom: 0;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  height: fit-content;
+  margin-block: auto;
+  opacity: 1;
+  visibility: hidden;
+  pointer-events: none;
 }
 
-.bday-sign-pop-input {
+.rgl-face-dock.is-on {
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.rgl-face-dock-sign.is-aimed {
+  right: calc(100% - var(--sign-x) - 6px);
+  left: auto;
+  top: var(--sign-y);
+  bottom: auto;
+  height: 0;
+  margin-block: 0;
+  overflow: visible;
+}
+
+.rgl-face-dock-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  width: 228px;
+  padding: 12px;
+  box-sizing: border-box;
+  border-radius: 10px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--bg-surface-elevated-primary, #1e1d20) 62%, transparent);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+}
+
+.rgl-page[data-theme='light'] .rgl-face-dock-panel,
+.birthday-gift-host[data-theme='light'] .rgl-face-dock-panel {
+  background: color-mix(in srgb, var(--solid-white, #fff) 62%, transparent);
+}
+
+.rgl-face-dock-label {
+  margin: 0;
+  padding: 0 2px;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: rgba(255, 255, 255, 0.38);
+}
+
+.rgl-page[data-theme='light'] .rgl-face-dock-label,
+.birthday-gift-host[data-theme='light'] .rgl-face-dock-label {
+  color: rgba(0, 0, 0, 0.38);
+}
+
+.rgl-face-dock .rgl-chip-row {
+  justify-content: flex-start;
+}
+
+.rgl-face-dock-backs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.rgl-face-dock-backs .rgl-chip {
+  justify-content: center;
+  width: 100%;
+  padding: 0 6px;
+}
+
+.rgl-face-dock-field-slot {
+  height: 28px;
+  flex-shrink: 0;
+}
+
+.rgl-field.rgl-face-dock-field {
+  width: 100%;
+  height: 28px;
+  margin: 0;
+  font-size: 12px;
+}
+
+.rgl-face-dock-field:focus,
+.rgl-face-dock-field:focus-visible {
+  outline: none;
+  outline-color: transparent !important;
+}
+
+.rgl-face-dock-field:disabled {
+  opacity: 0.4;
+  color: rgba(255, 255, 255, 0.38);
+  cursor: default;
+  pointer-events: none;
+}
+
+.rgl-page[data-theme='light'] .rgl-face-dock-field:disabled,
+.birthday-gift-host[data-theme='light'] .rgl-face-dock-field:disabled {
+  color: rgba(0, 0, 0, 0.38);
+}
+
+.rgl-face-dock-note {
+  display: block;
   width: 100%;
   min-height: 64px;
   margin: 0;
-  padding: 0;
-  border: 0;
+  padding: 8px 10px;
+  box-sizing: border-box;
   resize: none;
-  background: transparent;
-  font-family: 'Caveat', cursive;
-  font-size: 18px;
-  font-weight: 400;
-  line-height: 1.25;
-  color: #2c2416;
+  border: 0;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.35;
   outline: none;
 }
 
-.bday-sign-pop-input::placeholder {
-  color: rgba(44, 36, 22, 0.28);
+.rgl-face-dock-note::placeholder {
+  color: rgba(255, 255, 255, 0.3);
 }
 
-.bday-sign-pop-bar {
-  display: flex;
+.rgl-face-dock-note:hover,
+.rgl-face-dock-note:focus,
+.rgl-face-dock-note:focus-visible {
+  background: rgba(255, 255, 255, 0.12);
+  outline: none;
+  outline-color: transparent !important;
+  box-shadow: none;
+}
+
+.rgl-page[data-theme='light'] .rgl-face-dock-note,
+.birthday-gift-host[data-theme='light'] .rgl-face-dock-note {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.rgl-page[data-theme='light'] .rgl-face-dock-note::placeholder,
+.birthday-gift-host[data-theme='light'] .rgl-face-dock-note::placeholder {
+  color: rgba(0, 0, 0, 0.3);
+}
+
+.rgl-page[data-theme='light'] .rgl-face-dock-note:hover,
+.rgl-page[data-theme='light'] .rgl-face-dock-note:focus,
+.rgl-page[data-theme='light'] .rgl-face-dock-note:focus-visible,
+.birthday-gift-host[data-theme='light'] .rgl-face-dock-note:hover,
+.birthday-gift-host[data-theme='light'] .rgl-face-dock-note:focus,
+.birthday-gift-host[data-theme='light'] .rgl-face-dock-note:focus-visible {
+  background: rgba(0, 0, 0, 0.07);
+}
+
+.rgl-face-dock-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.rgl-face-dock-action {
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
-  margin-top: 8px;
-}
-
-.bday-sign-pop-count {
-  margin-right: auto;
-  font-family: var(--font-family-primary, Inter, system-ui, sans-serif);
-  font-size: 10px;
-  font-weight: 500;
-  color: rgba(44, 36, 22, 0.32);
-}
-
-.bday-sign-pop-cancel,
-.bday-sign-pop-sign {
+  justify-content: center;
+  height: 24px;
   margin: 0;
-  padding: 5px 10px;
+  padding: 0 8px;
   border: 0;
-  border-radius: var(--radius-xs);
-  font-family: var(--font-family-primary, Inter, system-ui, sans-serif);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.5);
+  font: inherit;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 450;
+  line-height: 1;
+  white-space: nowrap;
   cursor: pointer;
   appearance: none;
   -webkit-appearance: none;
-  transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1), opacity 160ms ease;
+  transition: color 0.15s ease, background-color 0.15s ease;
 }
 
-.bday-sign-pop-cancel:active,
-.bday-sign-pop-sign:active {
-  transform: scale(0.97);
+.rgl-face-dock-action:hover {
+  color: #f2f2f3;
 }
 
-.bday-sign-pop-cancel {
-  background: transparent;
-  color: rgba(44, 36, 22, 0.55);
+.rgl-face-dock-action.is-primary {
+  background: #f2f2f3;
+  color: #000;
 }
 
-.bday-sign-pop-sign {
-  background: #2c2416;
-  color: #f3ead8;
-}
-
-.bday-sign-pop-sign:disabled {
-  opacity: 0.35;
+.rgl-face-dock-action.is-primary:disabled {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.28);
   cursor: default;
-  transform: none;
+}
+
+.rgl-page[data-theme='light'] .rgl-face-dock-action,
+.birthday-gift-host[data-theme='light'] .rgl-face-dock-action {
+  background: rgba(0, 0, 0, 0.04);
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.rgl-page[data-theme='light'] .rgl-face-dock-action:hover,
+.birthday-gift-host[data-theme='light'] .rgl-face-dock-action:hover {
+  color: #1a1a1a;
+}
+
+.rgl-page[data-theme='light'] .rgl-face-dock-action.is-primary,
+.birthday-gift-host[data-theme='light'] .rgl-face-dock-action.is-primary {
+  background: #1a1a1a;
+  color: #fff;
+}
+
+.rgl-page[data-theme='light'] .rgl-face-dock-action.is-primary:disabled,
+.birthday-gift-host[data-theme='light'] .rgl-face-dock-action.is-primary:disabled {
+  background: rgba(0, 0, 0, 0.04);
+  color: rgba(0, 0, 0, 0.28);
+}
+
+.rgl-face-dock-lead {
+  width: 52px;
+  height: 20px;
+  flex-shrink: 0;
+  overflow: visible;
+  color: rgba(255, 255, 255, 0.3);
+  pointer-events: none;
+}
+
+.rgl-page[data-theme='light'] .rgl-face-dock-lead,
+.birthday-gift-host[data-theme='light'] .rgl-face-dock-lead {
+  color: rgba(0, 0, 0, 0.28);
+}
+
+.rgl-face-dock-lead line {
+  stroke: currentColor;
+  stroke-width: 1;
+  stroke-linecap: round;
+}
+
+.rgl-face-dock-lead circle {
+  fill: currentColor;
 }
