@@ -278,6 +278,7 @@
   display: block;
   width: 100%;
   height: auto;
+  margin-top: 10px;
   overflow: visible;
   touch-action: none;
   user-select: none;
@@ -645,6 +646,11 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
+}
+
+.rgl-map-window-live .sc-toolbar-pill-label,
+.rgl-map-window-live .birthday-gift-host {
+  pointer-events: auto;
 }
 
 /* Sandbox floor without map — same full-stage canvas as the map window. */

@@ -1,8 +1,10 @@
 import { useFrame, useThree } from '@react-three/fiber';
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import {
   getFoilMetal,
+  getCardFinish,
+  resolveCardFinish,
   bodyMaterialProps,
   paletteColorsFor,
   RGL_SUBJECT_SIZE,
@@ -13,9 +15,11 @@ import {
   CARD_OPEN_STIFFNESS,
   FOLD_COMMIT_T,
   FOLD_FLICK_VT,
-  HINGE_FOLLOW_ANGLE,
-  HINGE_FOLLOW_STIFFNESS,
-  HINGE_FOLLOW_YAW,
+  PAGE_COMMIT_T,
+  PAGE_FLICK_VT,
+  PAGE_LEFT_REST_T,
+  PAGE_REST_T,
+  PAGE_TURN_STIFFNESS,
   PALETTE_LERP_STIFFNESS,
 } from './cardMotion';
 
@@ -25,8 +29,10 @@ const LEAF_T = 0.004;
 const NOTES_W = LEAF_W * 0.92;
 const NOTES_H = LEAF_H * 0.92;
 const CORNER = 0.036;
-/** Cover fold when open — 120° so the card stays tented, not laid flat. */
-const OPEN_ANGLE = (120 * Math.PI) / 180;
+/** Cover fold when open — 115°, not 180°. The left leaf stays standing. */
+const OPEN_ANGLE = (115 * Math.PI) / 180;
+/** No bisector yaw — that squared the tent to the camera and read as a flat book. */
+const OPEN_YAW = 0;
 /** Outer metal rim sitting proud of the tray — unused on the flat card. */
 const RIM_OUTER_INSET = 0.006;
 const RIM_WIDTH = 0.018;
@@ -37,12 +43,17 @@ const WELL_RECESS = 0.006;
 const FOIL_DISPLACE = 0;
 /** Resting pose — cracked open so it reads as a card, not a slab. */
 const REST_OPEN = 0.24;
-const OPEN_GROW = 1.28;
+const OPEN_GROW = 1.16;
 const FIT_SCALE = (RGL_SUBJECT_SIZE * 0.7) / LEAF_H;
 /** Match RGLStage SUBJECT_TIP so edge projection lands on the cursor. */
 const CARD_STAGE_TIP = 0.04;
-const FOLD_HANDLE_GEO = new THREE.BoxGeometry(0.28, LEAF_H * 1.02, 0.26);
+/** Thin strip on the cover's opening edge — keep it off the inside pages. */
+const FOLD_HANDLE_GEO = new THREE.BoxGeometry(0.1, LEAF_H * 0.92, 0.08);
+const PAGE_TURN_FULL = new THREE.PlaneGeometry(LEAF_W * 0.96, LEAF_H * 0.94);
+const PAGE_TURN_OUTER = new THREE.PlaneGeometry(LEAF_W * 0.62, LEAF_H * 0.94);
+const DRAG_ARM_PX = 8;
 const _foldEdge = new THREE.Vector3();
+const _pageEdge = new THREE.Vector3();
 
 /**
  * Screen-space center of both leaves after hinge `theta` and yaw `phi`.
@@ -82,11 +93,19 @@ function cardFocus(theta, phi = 0) {
 
 const REST_FOCUS = cardFocus(-OPEN_ANGLE * REST_OPEN);
 
+function foldPeek(t) {
+  return Math.max(0, Math.min(1, (t - REST_OPEN) / (1 - REST_OPEN)));
+}
+
+function openPhi(peek) {
+  return peek * OPEN_YAW;
+}
+
 /** World position of the cover's free edge at open amount `t` (1 = open). */
 function coverEdgeWorld(t, scale, out) {
-  const peek = Math.max(0, Math.min(1, (t - REST_OPEN) / (1 - REST_OPEN)));
+  const peek = foldPeek(t);
   const theta = -OPEN_ANGLE * t;
-  const phi = peek * (OPEN_ANGLE / 2 - Math.PI / 2);
+  const phi = openPhi(peek);
   const grow = 1 + (OPEN_GROW - 1) * peek;
   const sc = FIT_SCALE * scale * grow;
   const mid = cardFocus(theta, phi);
@@ -137,9 +156,61 @@ function ndcXFromEvent(e, el) {
   if (r.width <= 0) return 0;
   return ((e.clientX - r.left) / r.width) * 2 - 1;
 }
+
+/** Free edge of the inner sheet at turn amount `flipT` (0 = right leaf, 1 = cover). */
+function pageEdgeWorld(flipT, openT, scale, out) {
+  const peek = foldPeek(openT);
+  const coverTheta = -OPEN_ANGLE * openT;
+  const theta = coverTheta * THREE.MathUtils.clamp(flipT, 0, 1);
+  const phi = openPhi(peek);
+  const grow = 1 + (OPEN_GROW - 1) * peek;
+  const sc = FIT_SCALE * scale * grow;
+  const mid = cardFocus(coverTheta, phi);
+  const c = Math.cos(theta);
+  const s = Math.sin(theta);
+  const hx = LEAF_W;
+  const hz = LEAF_T / 2;
+  const lx = hx * c + hz * s;
+  const lz = -hx * s + hz * c + LEAF_T / 2;
+  const pc = Math.cos(phi);
+  const ps = Math.sin(phi);
+  const rx = lx * pc + lz * ps;
+  const rz = -lx * ps + lz * pc;
+  const x = rx * sc - mid.x * sc;
+  const z = rz * sc - mid.z * sc;
+  const tipC = Math.cos(CARD_STAGE_TIP);
+  const tipS = Math.sin(CARD_STAGE_TIP);
+  out.set(x, -z * tipS, z * tipC);
+  return out;
+}
+
+function solvePageFlipT(ndcX, camera, scale, openT) {
+  pageEdgeWorld(0, openT, scale, _pageEdge).project(camera);
+  const xRight = _pageEdge.x;
+  pageEdgeWorld(1, openT, scale, _pageEdge).project(camera);
+  const xLeft = _pageEdge.x;
+  const span = xRight - xLeft;
+  if (Math.abs(span) < 0.08) {
+    return THREE.MathUtils.clamp(1 - (ndcX - xLeft) / 0.7, 0, 1);
+  }
+  const target = THREE.MathUtils.clamp(ndcX, Math.min(xLeft, xRight), Math.max(xLeft, xRight));
+  let lo = 0;
+  let hi = 1;
+  for (let i = 0; i < 16; i++) {
+    const mid = (lo + hi) / 2;
+    pageEdgeWorld(mid, openT, scale, _pageEdge).project(camera);
+    if (span > 0) {
+      if (_pageEdge.x < target) hi = mid;
+      else lo = mid;
+    } else if (_pageEdge.x > target) hi = mid;
+    else lo = mid;
+  }
+  return (lo + hi) / 2;
+}
+/** Logical inside-page layout — notes, greeting, and hit tests stay in this space. */
 const TEX_W = 512;
 const TEX_H = 704;
-/** Cover art is authored at 512×704, then scaled onto this texture. */
+/** Cover art is authored at 512×704, then scaled onto this texture. Inside writing uses the same. */
 const FOIL_DRAW_W = 512;
 const FOIL_DRAW_H = 704;
 const FOIL_W = 1024;
@@ -147,6 +218,11 @@ const FOIL_H = 1408;
 
 const ZONE_COLS = 4;
 const ZONE_ROWS = 8;
+/** Keep handwriting inside its claimed cells — 0.1 let neighbors collide. */
+const ZONE_INSET_RATIO = 0.22;
+/** Short notes still take a 2×2 block so neighbors don't sit on top of each other. */
+const NOTE_MIN_COLS = 2;
+const NOTE_MIN_ROWS = 3;
 
 function zoneNoteUv(col, row) {
   return {
@@ -210,6 +286,11 @@ function zoneKey(page, col, row) {
   return `${page}-${col}-${row}`;
 }
 
+function noteSpread(note) {
+  const s = note?.spread;
+  return Number.isInteger(s) && s > 0 ? s : 0;
+}
+
 /** Printed greeting on the right page — keep those cells off-limits. */
 const GREETING_ZONE_KEYS = (() => {
   const keys = [];
@@ -221,6 +302,10 @@ const GREETING_ZONE_KEYS = (() => {
   return keys;
 })();
 
+function reservedSignZoneKeys(spread = 0) {
+  return spread === 0 ? new Set(GREETING_ZONE_KEYS) : new Set();
+}
+
 function noteZone(note) {
   if (Number.isInteger(note.col) && Number.isInteger(note.row)) {
     return { page: note.page, col: note.col, row: note.row };
@@ -229,21 +314,52 @@ function noteZone(note) {
   return { page: note.page, col, row };
 }
 
-function occupiedZoneKeys(notes, exceptId) {
-  const taken = new Set(GREETING_ZONE_KEYS);
-  for (const note of notes) {
+function occupiedZoneKeys(notes, exceptId, spread = 0) {
+  const taken = reservedSignZoneKeys(spread);
+  for (const note of notes || []) {
     if (!note || note.id === exceptId || note.id === '__draft') continue;
-    const z = noteZone(note);
-    taken.add(zoneKey(z.page, z.col, z.row));
+    if (noteSpread(note) !== spread) continue;
+    for (const cell of claimZonesForNote(note, taken)) {
+      taken.add(zoneKey(cell.page, cell.col, cell.row));
+    }
   }
   return taken;
 }
 
+function freeSignCells(notes, spread = 0) {
+  const taken = occupiedZoneKeys(notes, null, spread);
+  const cells = [];
+  for (const page of ['left', 'right']) {
+    for (let row = 0; row < ZONE_ROWS; row++) {
+      for (let col = 0; col < ZONE_COLS; col++) {
+        if (!taken.has(zoneKey(page, col, row))) cells.push({ page, col, row });
+      }
+    }
+  }
+  return cells;
+}
+
+function neededSpreadCount(notes) {
+  let max = 0;
+  for (const n of notes || []) {
+    if (!n || n.id === '__draft') continue;
+    max = Math.max(max, noteSpread(n));
+  }
+  return Math.max(1, max + 1);
+}
+
 export const CARD_SEED_NOTES = [
-  { id: 'chelsea', page: 'left', col: 0, row: 0, ...zoneNoteUv(0, 0), rotate: -6, name: 'Chelsea', text: 'Hope it’s a good one — save me a slice.' },
-  { id: 'howard', page: 'left', col: 0, row: 3, ...zoneNoteUv(0, 3), rotate: 4, name: 'Howard', text: 'Another trip around the sun.' },
-  { id: 'rob', page: 'left', col: 0, row: 7, ...zoneNoteUv(0, 7), rotate: -3, name: 'Rob', text: 'Get after it, Klas.' },
+  { id: 'chelsea', page: 'left', spread: 0, col: 0, row: 0, ...zoneNoteUv(0, 0), rotate: -6, name: 'Chelsea', text: 'Hope it’s a good one — save me a slice.' },
+  { id: 'howard', page: 'left', spread: 0, col: 2, row: 3, ...zoneNoteUv(2, 3), rotate: 4, name: 'Howard', text: 'Another trip around the sun.' },
+  { id: 'rob', page: 'left', spread: 0, col: 0, row: 6, ...zoneNoteUv(0, 6), rotate: -3, name: 'Rob', text: 'Get after it, Klas.' },
 ];
+
+export function cardSeedNotesFor(name = 'Klas') {
+  const first = String(name || 'Klas').trim() || 'Klas';
+  return CARD_SEED_NOTES.map((note) => (
+    note.id === 'rob' ? { ...note, text: `Get after it, ${first}.` } : note
+  ));
+}
 
 function shadeSmooth(geo) {
   geo.computeVertexNormals();
@@ -372,8 +488,8 @@ function isPureBlack(hex) {
   return hsl.s < 0.08 && hsl.l < 0.2;
 }
 
-const CARD_CHARCOAL = '#3D3D42';
-const CARD_CHARCOAL_WELL = '#2A2A2E';
+const CARD_CHARCOAL = '#35353A';
+const CARD_CHARCOAL_WELL = '#242428';
 
 function brighterCardBody(hex, theme) {
   if (isPureBlack(hex)) return new THREE.Color(CARD_CHARCOAL);
@@ -400,7 +516,7 @@ function colorLuma(color) {
   return 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b;
 }
 
-/** Printed inside ink — dark on light/mid paper, foil only on charcoal/black. */
+/** UI chrome on the inside pages (zone marks). Writing is silver foil. */
 function insideWritingInk(paper, foilInk) {
   return colorLuma(paper) > 0.3 ? '#141414' : foilInk;
 }
@@ -462,58 +578,209 @@ function isOwnNote(note) {
   return String(note?.id || '').startsWith('me-') || note?.id === '__draft';
 }
 
-function hasOwnMessage(notes) {
+export function hasOwnMessage(notes) {
   return (notes || []).some((n) => n && isOwnNote(n) && n.id !== '__draft');
 }
 
-function markedZoneKeys(notes) {
+function markedZoneKeys(notes, spread = 0) {
   const keys = new Set();
-  for (const note of notes) {
-    if (!note || !isOwnNote(note)) continue;
-    const z = noteZone(note);
-    keys.add(zoneKey(z.page, z.col, z.row));
+  const taken = reservedSignZoneKeys(spread);
+  for (const note of notes || []) {
+    if (!note || noteSpread(note) !== spread) continue;
+    const cells = claimZonesForNote(note, taken);
+    for (const cell of cells) {
+      taken.add(zoneKey(cell.page, cell.col, cell.row));
+      if (isOwnNote(note)) keys.add(zoneKey(cell.page, cell.col, cell.row));
+    }
   }
   return keys;
 }
 
-function ownNoteInZone(notes, page, col, row) {
-  return (notes || []).find((note) => {
-    if (!note || !isOwnNote(note) || note.id === '__draft') return false;
-    const z = noteZone(note);
-    return z.page === page && z.col === col && z.row === row;
-  }) || null;
+function noteOccupyingZone(notes, page, col, row, spread = 0) {
+  const taken = reservedSignZoneKeys(spread);
+  let found = null;
+  for (const note of notes || []) {
+    if (!note || noteSpread(note) !== spread) continue;
+    const cells = claimZonesForNote(note, taken);
+    for (const cell of cells) {
+      taken.add(zoneKey(cell.page, cell.col, cell.row));
+      if (cell.page === page && cell.col === col && cell.row === row) found = note;
+    }
+  }
+  return found;
 }
 
-function layoutNote(ctx, note, w, h) {
-  const wrapW = w * (0.78 / ZONE_COLS);
-  const edge = w * 0.04;
+function ownNoteInZone(notes, page, col, row, spread = 0) {
+  const note = noteOccupyingZone(notes, page, col, row, spread);
+  if (!note || !isOwnNote(note) || note.id === '__draft') return null;
+  return note;
+}
+
+let _noteMeasureCtx = null;
+function noteMeasureCtx() {
+  if (_noteMeasureCtx) return _noteMeasureCtx;
+  if (typeof document === 'undefined') return null;
+  _noteMeasureCtx = document.createElement('canvas').getContext('2d');
+  return _noteMeasureCtx;
+}
+
+function measureNoteBlock(ctx, note, wrapW) {
   ctx.font = NOTE_FONT;
-  const lines = wrapText(ctx, note.text, wrapW);
+  ctx.textBaseline = 'alphabetic';
+  const lines = wrapText(ctx, note?.text || '', wrapW);
+  const msgMetrics = ctx.measureText('Hg');
+  const ascent = Math.ceil(msgMetrics.actualBoundingBoxAscent || NOTE_LINE_H * 0.72);
+  let textW = 0;
+  for (const line of lines) textW = Math.max(textW, ctx.measureText(line).width);
   ctx.font = NOTE_SIGN_FONT;
-  let textW = ctx.measureText(`— ${note.name}`).width;
-  ctx.font = NOTE_FONT;
-  for (const line of lines) {
-    textW = Math.max(textW, ctx.measureText(line).width);
+  const sign = `— ${note?.name || ''}`;
+  const signMetrics = ctx.measureText(sign);
+  textW = Math.max(textW, signMetrics.width);
+  const signDescent = Math.ceil(signMetrics.actualBoundingBoxDescent || NOTE_SIGN_H * 0.28);
+  const blockH = ascent + lines.length * NOTE_LINE_H + 6 + signDescent;
+  return { lines, textW, blockH, ascent };
+}
+
+function cellsBounds(cells) {
+  let minC = Infinity;
+  let minR = Infinity;
+  let maxC = -Infinity;
+  let maxR = -Infinity;
+  for (const cell of cells) {
+    minC = Math.min(minC, cell.col);
+    minR = Math.min(minR, cell.row);
+    maxC = Math.max(maxC, cell.col);
+    maxR = Math.max(maxR, cell.row);
   }
+  return {
+    col: minC,
+    row: minR,
+    colSpan: maxC - minC + 1,
+    rowSpan: maxR - minR + 1,
+  };
+}
+
+function findFreeRect(page, origin, cols, rows, taken) {
+  for (let rShift = 0; rShift < rows; rShift++) {
+    for (let cShift = 0; cShift < cols; cShift++) {
+      const c0 = origin.col - cShift;
+      const r0 = origin.row - rShift;
+      if (c0 < 0 || r0 < 0 || c0 + cols > ZONE_COLS || r0 + rows > ZONE_ROWS) continue;
+      const cells = [];
+      let ok = true;
+      for (let r = r0; r < r0 + rows && ok; r++) {
+        for (let c = c0; c < c0 + cols; c++) {
+          if (
+            (c !== origin.col || r !== origin.row)
+            && taken.has(zoneKey(page, c, r))
+          ) {
+            ok = false;
+            break;
+          }
+          cells.push({ page, col: c, row: r });
+        }
+      }
+      if (ok) return cells;
+    }
+  }
+  return null;
+}
+
+function largestVerticalStrip(page, origin, taken) {
+  const cells = [{ page, col: origin.col, row: origin.row }];
+  for (let r = origin.row + 1; r < ZONE_ROWS; r++) {
+    if (taken.has(zoneKey(page, origin.col, r))) break;
+    cells.push({ page, col: origin.col, row: r });
+  }
+  const up = [];
+  for (let r = origin.row - 1; r >= 0; r--) {
+    if (taken.has(zoneKey(page, origin.col, r))) break;
+    up.unshift({ page, col: origin.col, row: r });
+  }
+  return up.concat(cells);
+}
+
+function claimZonesForNote(note, taken, w = TEX_W, h = TEX_H, ctx = noteMeasureCtx()) {
+  const origin = noteZone(note);
+  if (
+    !ctx
+    || !Number.isInteger(origin.col)
+    || !Number.isInteger(origin.row)
+  ) {
+    return [origin];
+  }
+  const cellW = w / ZONE_COLS;
+  const cellH = h / ZONE_ROWS;
+  const inset = Math.min(cellW, cellH) * ZONE_INSET_RATIO;
+  const page = origin.page;
+  const fits = (cols, rows) => {
+    const innerW = cellW * cols - inset * 2;
+    const innerH = cellH * rows - inset * 2;
+    if (innerW < 8 || innerH < 8) return false;
+    return measureNoteBlock(ctx, note, innerW).blockH <= innerH;
+  };
+
+  let colsNeeded = NOTE_MIN_COLS;
+  let rowsNeeded = NOTE_MIN_ROWS;
+  while (rowsNeeded < ZONE_ROWS && !fits(colsNeeded, rowsNeeded)) rowsNeeded += 1;
+  while (colsNeeded < ZONE_COLS && !fits(colsNeeded, rowsNeeded)) colsNeeded += 1;
+
+  let cells = findFreeRect(page, origin, colsNeeded, rowsNeeded, taken);
+  if (cells) return cells;
+
+  rowsNeeded = NOTE_MIN_ROWS;
+  while (rowsNeeded < ZONE_ROWS && !fits(1, rowsNeeded)) rowsNeeded += 1;
+  cells = findFreeRect(page, origin, 1, rowsNeeded, taken);
+  if (cells) return cells;
+
+  for (let cols = 2; cols <= ZONE_COLS; cols++) {
+    let rows = NOTE_MIN_ROWS;
+    while (rows < ZONE_ROWS && !fits(cols, rows)) rows += 1;
+    cells = findFreeRect(page, origin, cols, rows, taken);
+    if (cells) return cells;
+  }
+
+  const strip = largestVerticalStrip(page, origin, taken);
+  if (strip.length <= rowsNeeded) return strip;
+  const down = strip.filter((cell) => cell.row >= origin.row);
+  if (down.length >= rowsNeeded) return down.slice(0, rowsNeeded);
+  const missing = rowsNeeded - down.length;
+  const up = strip.filter((cell) => cell.row < origin.row);
+  return up.slice(Math.max(0, up.length - missing)).concat(down);
+}
+
+function layoutNote(ctx, note, w, h, allNotes) {
+  const edge = w * 0.04;
   const z = noteZone(note);
-  const pinToZone = isOwnNote(note) && Number.isInteger(z.col) && Number.isInteger(z.row);
-  ctx.textBaseline = pinToZone ? 'alphabetic' : 'top';
-  const ascent = pinToZone
-    ? Math.ceil(ctx.measureText('Hg').actualBoundingBoxAscent || NOTE_LINE_H * 0.72)
-    : 0;
-  const blockH = (pinToZone ? ascent : 0) + lines.length * NOTE_LINE_H + NOTE_SIGN_H;
+  const pinToZone = Number.isInteger(z.col) && Number.isInteger(z.row);
   const pad = NOTE_BOX_PAD;
+  const cellW = w / ZONE_COLS;
+  const cellH = h / ZONE_ROWS;
+  const inset = Math.min(cellW, cellH) * ZONE_INSET_RATIO;
+  let wrapW = w * (0.78 / ZONE_COLS);
   let x;
   let y;
   let angle;
+  let clipW = 0;
+  let clipH = 0;
   if (pinToZone) {
-    const cellW = w / ZONE_COLS;
-    const cellH = h / ZONE_ROWS;
-    const inset = Math.min(cellW, cellH) * 0.1;
-    x = z.col * cellW + inset;
-    y = z.row * cellH + inset;
+    const taken = occupiedZoneKeys(allNotes || [], note.id, noteSpread(note));
+    const cells = claimZonesForNote(note, taken, w, h, ctx);
+    const bounds = cellsBounds(cells);
+    wrapW = Math.max(8, cellW * bounds.colSpan - inset * 2);
+    clipW = wrapW;
+    clipH = Math.max(8, cellH * bounds.rowSpan - inset * 2);
+    x = bounds.col * cellW + inset;
+    y = bounds.row * cellH + inset;
     angle = 0;
-  } else {
+  }
+  const measured = measureNoteBlock(ctx, note, wrapW);
+  const { lines, textW, ascent } = measured;
+  ctx.textBaseline = pinToZone ? 'alphabetic' : 'top';
+  const blockH = pinToZone
+    ? measured.blockH
+    : lines.length * NOTE_LINE_H + NOTE_SIGN_H;
+  if (!pinToZone) {
     x = note.u * w;
     y = (1 - note.v) * h;
     angle = ((note.rotate || 0) * Math.PI) / 180;
@@ -530,8 +797,10 @@ function layoutNote(ctx, note, w, h) {
     pad,
     lines,
     angle,
-    ascent,
+    ascent: pinToZone ? ascent : 0,
     pinToZone,
+    clipW,
+    clipH,
   };
 }
 
@@ -552,10 +821,21 @@ function localOnNote(px, py, layout) {
   };
 }
 
-function hitOwnNote(ctx, note, u, v, w, h) {
+function hitOwnNote(ctx, note, u, v, w, h, allNotes) {
   if (!isOwnNote(note)) return null;
-  const layout = layoutNote(ctx, note, w, h);
+  const layout = layoutNote(ctx, note, w, h, allNotes);
   const p = canvasFromUv(u, v, w, h);
+  if (layout.pinToZone && layout.clipW > 0 && layout.clipH > 0) {
+    if (
+      p.x >= layout.x
+      && p.x <= layout.x + layout.clipW
+      && p.y >= layout.y
+      && p.y <= layout.y + layout.clipH
+    ) {
+      return { kind: 'move' };
+    }
+    return null;
+  }
   const local = localOnNote(p.x, p.y, layout);
   if (
     local.x >= -layout.pad
@@ -568,9 +848,14 @@ function hitOwnNote(ctx, note, u, v, w, h) {
   return null;
 }
 
-function drawNote(ctx, note, w, h, ink = '#ffffff', selected = false) {
-  const layout = layoutNote(ctx, note, w, h);
+function drawNote(ctx, note, w, h, ink = '#ffffff', selected = false, allNotes) {
+  const layout = layoutNote(ctx, note, w, h, allNotes);
   ctx.save();
+  if (layout.pinToZone && layout.clipW > 0 && layout.clipH > 0) {
+    ctx.beginPath();
+    ctx.rect(layout.x, layout.y, layout.clipW, layout.clipH);
+    ctx.clip();
+  }
   ctx.translate(layout.x + layout.textW * 0.5, layout.y + layout.blockH * 0.5);
   ctx.rotate(layout.angle);
   ctx.translate(-layout.textW * 0.5, -layout.blockH * 0.5);
@@ -639,13 +924,13 @@ function foilBurst(ctx, x, y, r, rays = 14) {
 }
 
 export const COVER_DESIGNS = [
-  { id: 'classic', name: 'Classic' },
+  { id: 'classic', name: 'Fireworks' },
   { id: 'script', name: 'Stars' },
   { id: 'quiet', name: 'Quiet' },
   { id: 'burst', name: 'Burst' },
   { id: 'sparks', name: 'Sparks' },
   { id: 'balloons', name: 'Balloons' },
-  { id: 'cupcakes', name: 'Cupcakes' },
+  { id: 'cupcakes', name: 'Cupcake' },
 ];
 
 function paintName(ctx, name, y, size = 92) {
@@ -751,52 +1036,143 @@ function drawCoverBalloons(ctx, name) {
   paintCoverLettering(ctx, name);
 }
 
-function foilCupcake(ctx, x, y, s = 1) {
+function foilSprinkle(ctx, x, y, len = 7, tilt = 0) {
   ctx.save();
   ctx.translate(x, y);
-  ctx.scale(s, s);
+  ctx.rotate(tilt);
+  ctx.lineCap = 'round';
+  ctx.lineWidth = 2.5;
   ctx.beginPath();
-  ctx.moveTo(-22, 6);
-  ctx.lineTo(-16, 36);
-  ctx.quadraticCurveTo(0, 42, 16, 36);
-  ctx.lineTo(22, 6);
-  ctx.closePath();
-  ctx.fill();
-  ctx.lineWidth = 1.7;
-  for (let i = -2; i <= 2; i++) {
-    ctx.beginPath();
-    ctx.moveTo(i * 7, 8);
-    ctx.lineTo(i * 5.2, 34);
-    ctx.stroke();
-  }
-  ctx.beginPath();
-  ctx.moveTo(-26, 8);
-  ctx.quadraticCurveTo(-18, -6, -8, 2);
-  ctx.quadraticCurveTo(0, -16, 8, 2);
-  ctx.quadraticCurveTo(18, -6, 26, 8);
-  ctx.quadraticCurveTo(12, 16, 0, 12);
-  ctx.quadraticCurveTo(-12, 16, -26, 8);
-  ctx.closePath();
-  ctx.fill();
-  ctx.beginPath();
-  ctx.arc(0, -14, 5.5, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.lineWidth = 2.2;
-  ctx.beginPath();
-  ctx.moveTo(0, -18);
-  ctx.lineTo(0, -34);
+  ctx.moveTo(-len * 0.5, 0);
+  ctx.lineTo(len * 0.5, 0);
   ctx.stroke();
+  ctx.restore();
+}
+
+function foilEngrave(ctx, paint) {
+  ctx.save();
+  ctx.fillStyle = '#000000';
+  ctx.strokeStyle = '#000000';
+  ctx.globalCompositeOperation = 'source-over';
+  paint();
+  ctx.restore();
+}
+
+function foilCupcake(ctx, x, y, s = 1, tilt = 0, top = 'candle') {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(tilt);
+  ctx.scale(s, s);
+  ctx.fillStyle = '#ffffff';
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+
   ctx.beginPath();
-  ctx.moveTo(0, -34);
-  ctx.lineTo(8, -30);
-  ctx.lineTo(0, -26);
+  ctx.moveTo(-24, 12);
+  ctx.lineTo(-16, 38);
+  ctx.quadraticCurveTo(-14, 47, -6, 48);
+  ctx.lineTo(6, 48);
+  ctx.quadraticCurveTo(14, 47, 16, 38);
+  ctx.lineTo(24, 12);
   ctx.closePath();
   ctx.fill();
+
+  foilEngrave(ctx, () => {
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(-24, 12);
+    ctx.lineTo(-16, 38);
+    ctx.quadraticCurveTo(-14, 47, -6, 48);
+    ctx.lineTo(6, 48);
+    ctx.quadraticCurveTo(14, 47, 16, 38);
+    ctx.lineTo(24, 12);
+    ctx.closePath();
+    ctx.clip();
+    ctx.lineWidth = 3.2;
+    ctx.lineCap = 'round';
+    for (const t of [-1, 1]) {
+      ctx.beginPath();
+      ctx.moveTo(t * 9, 18);
+      ctx.lineTo(t * 6.2, 44);
+      ctx.stroke();
+    }
+    ctx.restore();
+  });
+
+  for (let i = 0; i < 5; i++) {
+    ctx.beginPath();
+    ctx.arc(-16 + i * 8, 11, 6.4, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  ctx.beginPath();
+  ctx.arc(-17, 2, 13, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(17, 2, 13, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(0, -3, 15, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(0, -18, 10, 0, Math.PI * 2);
+  ctx.fill();
+
+  foilEngrave(ctx, () => {
+    ctx.lineWidth = 4.2;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(-13, 1);
+    ctx.quadraticCurveTo(-18, -10, -4, -22);
+    ctx.stroke();
+  });
+
+  if (top === 'candle') {
+    ctx.beginPath();
+    ctx.moveTo(-4.4, -26);
+    ctx.lineTo(-3.8, -41);
+    ctx.quadraticCurveTo(0, -45, 3.8, -41);
+    ctx.lineTo(4.4, -26);
+    ctx.closePath();
+    ctx.fill();
+    ctx.lineWidth = 2.2;
+    ctx.beginPath();
+    ctx.moveTo(0, -43);
+    ctx.lineTo(0, -48);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(0, -68);
+    ctx.bezierCurveTo(9.5, -57, 8, -47, 0, -45);
+    ctx.bezierCurveTo(-8, -47, -9.5, -57, 0, -68);
+    ctx.closePath();
+    ctx.fill();
+    foilEngrave(ctx, () => {
+      ctx.beginPath();
+      ctx.ellipse(0, -54, 2.8, 5, 0, 0, Math.PI * 2);
+      ctx.fill();
+    });
+  } else {
+    ctx.lineWidth = 2.4;
+    ctx.beginPath();
+    ctx.moveTo(3, -34);
+    ctx.quadraticCurveTo(11, -44, 7, -56);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(0, -34, 7.4, 0, Math.PI * 2);
+    ctx.fill();
+    foilEngrave(ctx, () => {
+      ctx.beginPath();
+      ctx.arc(-2.4, -36, 2.6, 0, Math.PI * 2);
+      ctx.fill();
+    });
+  }
+
   ctx.restore();
 }
 
 function drawCoverCupcakes(ctx, name) {
-  foilCupcake(ctx, 256, 158, 1.15);
+  foilCupcake(ctx, 256, 138, 1.05, 0, 'candle');
   paintCoverLettering(ctx, name);
 }
 
@@ -860,7 +1236,7 @@ function drawBackFoil(ctx, backId = 'text', text = DEFAULT_BACK_TEXT) {
   ctx.lineJoin = 'round';
   ctx.lineCap = 'round';
   if (backId === 'cupcake') {
-    foilCupcake(ctx, 256, 598, 0.85);
+    foilCupcake(ctx, 256, 586, 0.7);
   } else if (backId === 'balloon') {
     foilBalloon(ctx, 256, 562, 20, 28, 0);
   } else if (backId === 'firework') {
@@ -921,7 +1297,7 @@ function hexRgba(hex, alpha) {
   return `rgba(${Math.round(c.r * 255)}, ${Math.round(c.g * 255)}, ${Math.round(c.b * 255)}, ${alpha})`;
 }
 
-function makeFoilDecalMaterial(alphaMap, displace = 0, foilProps = getFoilMetal().props) {
+function makeFoilDecalMaterial(alphaMap, displace = 0, foilProps = getFoilMetal('silver').props) {
   return new THREE.MeshPhysicalMaterial({
     ...foilProps,
     alphaMap,
@@ -934,37 +1310,8 @@ function makeFoilDecalMaterial(alphaMap, displace = 0, foilProps = getFoilMetal(
   });
 }
 
-function makeInsidePageTexture(draw) {
-  const canvas = document.createElement('canvas');
-  canvas.width = TEX_W;
-  canvas.height = TEX_H;
-  const ctx = canvas.getContext('2d');
-  draw(ctx, canvas.width, canvas.height);
-  const tex = new THREE.CanvasTexture(canvas);
-  tex.colorSpace = THREE.SRGBColorSpace;
-  tex.generateMipmaps = false;
-  tex.minFilter = THREE.LinearFilter;
-  tex.magFilter = THREE.LinearFilter;
-  tex.anisotropy = 1;
-  tex.needsUpdate = true;
-  return tex;
-}
-
-/** Inside writing — unlit so left/right pages share the same ink. */
-function makeInsidePageMaterial(map, ink = '#ffffff') {
-  return new THREE.MeshBasicMaterial({
-    color: ink,
-    map,
-    transparent: true,
-    alphaTest: 0.08,
-    side: THREE.FrontSide,
-    depthTest: true,
-    depthWrite: false,
-    polygonOffset: true,
-    polygonOffsetFactor: -8,
-    polygonOffsetUnits: -8,
-    toneMapped: false,
-  });
+function foilAlphaMap(mat) {
+  return mat?.alphaMap ?? null;
 }
 
 function paintInsideGreeting(ctx, name, w, h) {
@@ -984,81 +1331,87 @@ function paintInsideGreeting(ctx, name, w, h) {
     ctx.fillText(text, x, y);
   };
 
-  paint(26, `Dear ${name},`, cx, cy - 118, 1.2);
-  paint(34, 'Happy Birthday', cx, cy - 74, 1.5);
-
-  const lines = [
-    'Another trip around the sun.',
-    'The map’s a little quieter today —',
-    'go enjoy the cake. We’ll keep',
-    'the lights on for you.',
-  ];
-  lines.forEach((line, i) => {
-    paint(24, line, cx, cy + 6 + i * 30, 1.2);
-  });
-
-  paint(24, 'With love, Roam HQ', cx, cy + 148, 1.2);
+  paint(26, `Dear ${name},`, cx, cy - 44, 1.2);
+  paint(34, 'Happy Birthday', cx, cy, 1.5);
+  paint(24, 'With love, Roam HQ', cx, cy + 56, 1.2);
 }
 
-function paintInsidePage(ctx, side, notes, name, selectedId) {
+function paintInsidePage(ctx, side, notes, name, selectedId, spread = 0) {
   ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-  if (side === 'right') {
-    paintInsideGreeting(ctx, name || 'Klas', ctx.canvas.width, ctx.canvas.height);
+  ctx.fillStyle = '#000000';
+  ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+  ctx.setTransform(ctx.canvas.width / TEX_W, 0, 0, ctx.canvas.height / TEX_H, 0, 0);
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  if (side === 'right' && spread === 0) {
+    paintInsideGreeting(ctx, name || 'Klas', TEX_W, TEX_H);
   }
   notes
-    .filter((n) => n.page === side)
+    .filter((n) => n.page === side && noteSpread(n) === spread)
     .forEach((note) => {
       drawNote(
         ctx,
         note,
-        ctx.canvas.width,
-        ctx.canvas.height,
+        TEX_W,
+        TEX_H,
         '#ffffff',
         note.id === selectedId && isOwnNote(note),
+        notes,
       );
     });
 }
 
-function drawInsidePage(side, notes, name, selectedId) {
-  return makeInsidePageTexture((ctx) => paintInsidePage(ctx, side, notes, name, selectedId));
+function drawInsidePage(side, notes, name, selectedId, spread = 0) {
+  return makeFoilTexture((ctx) => paintInsidePage(ctx, side, notes, name, selectedId, spread));
 }
 
-function pageNotesStamp(notes, side, selectedId) {
-  let stamp = '';
+function pageNotesStamp(notes, side, selectedId, spread = 0) {
+  let stamp = `s${spread}|`;
   for (const note of notes) {
-    if (note.page !== side) continue;
-    stamp += `${note.id}:${note.col}:${note.row}:${note.u}:${note.v}:${note.rotate}:${note.id === selectedId ? 1 : 0}|`;
+    if (note.page !== side || noteSpread(note) !== spread) continue;
+    stamp += `${note.id}:${note.col}:${note.row}:${note.u}:${note.v}:${note.rotate}:${note.text}:${note.id === selectedId ? 1 : 0}|`;
   }
   return stamp;
 }
 
-function paintPageTexture(mesh, side, notes, name, selectedId) {
-  const tex = mesh?.material?.map;
+function paintPageTexture(mesh, side, notes, name, selectedId, spread = 0) {
+  const tex = foilAlphaMap(mesh?.material);
   const ctx = tex?.image?.getContext?.('2d');
   if (!ctx) return;
-  paintInsidePage(ctx, side, notes, name, selectedId);
+  paintInsidePage(ctx, side, notes, name, selectedId, spread);
   tex.needsUpdate = true;
 }
 
-function useInsideNotesMat(side, notes, fontsReady, name, selectedId, skipPaintRef, ink) {
+function useInsideNotesMat(side, notes, fontsReady, name, selectedId, skipPaintRef, foilProps, spread = 0) {
   const mat = useMemo(() => {
-    const tex = drawInsidePage(side, [], name, selectedId);
-    return makeInsidePageMaterial(tex, ink);
-  }, [side, name]);
-  const stamp = pageNotesStamp(notes, side, selectedId);
-  useLayoutEffect(() => {
-    mat.color.set(ink);
-  }, [mat, ink]);
+    const tex = drawInsidePage(side, [], name, selectedId, spread);
+    return makeFoilDecalMaterial(tex, FOIL_DISPLACE, foilProps);
+  }, [side, name, foilProps]);
+  const stamp = pageNotesStamp(notes, side, selectedId, spread);
   useLayoutEffect(() => {
     if (skipPaintRef?.current) return;
-    const tex = mat.map;
+    const tex = foilAlphaMap(mat);
     if (!tex?.image) return;
     const ctx = tex.image.getContext('2d');
-    paintInsidePage(ctx, side, notes, name, selectedId);
+    paintInsidePage(ctx, side, notes, name, selectedId, spread);
     tex.needsUpdate = true;
-  }, [mat, side, notes, fontsReady, name, selectedId, stamp, skipPaintRef]);
+  }, [mat, side, notes, fontsReady, name, selectedId, stamp, skipPaintRef, spread]);
   return mat;
+}
+
+function useFlipPageMat(foilProps) {
+  const mat = useMemo(() => {
+    const tex = drawInsidePage('left', [], 'Klas', null, 1);
+    return makeFoilDecalMaterial(tex, FOIL_DISPLACE, foilProps);
+  }, [foilProps]);
+  const paint = useCallback((side, notes, name, selectedId, spread) => {
+    const tex = foilAlphaMap(mat);
+    if (!tex?.image) return;
+    paintInsidePage(tex.image.getContext('2d'), side, notes, name, selectedId, spread);
+    tex.needsUpdate = true;
+  }, [mat]);
+  useEffect(() => () => mat.dispose(), [mat]);
+  return [mat, paint];
 }
 
 function makeZoneMarkTexture(ink) {
@@ -1110,298 +1463,21 @@ function makeZoneDismissTexture() {
   return tex;
 }
 
-const JINGLE_BEAT = 0.34;
-const JINGLE_NOTES = [
-  [261.63, 0.0, 0.5], [261.63, 0.5, 0.5], [293.66, 1.0, 1], [261.63, 2.0, 1], [349.23, 3.0, 1], [329.63, 4.0, 2],
-  [261.63, 6.0, 0.5], [261.63, 6.5, 0.5], [293.66, 7.0, 1], [261.63, 8.0, 1], [392.0, 9.0, 1], [349.23, 10.0, 2],
-  [261.63, 12.0, 0.5], [261.63, 12.5, 0.5], [523.25, 13.0, 1], [440.0, 14.0, 1], [349.23, 15.0, 1], [329.63, 16.0, 1], [293.66, 17.0, 2],
-  [466.16, 19.0, 0.5], [466.16, 19.5, 0.5], [440.0, 20.0, 1], [349.23, 21.0, 1], [392.0, 22.0, 1], [349.23, 23.0, 2],
-];
-
-let jingleCtx = null;
-let jingleNodes = [];
-let jingleTimer = 0;
-
-function stopBirthdayJingle() {
-  window.clearTimeout(jingleTimer);
-  jingleTimer = 0;
-  for (const node of jingleNodes) {
-    try {
-      node.stop?.();
-      node.disconnect?.();
-    } catch {
-      /* already stopped */
-    }
-  }
-  jingleNodes = [];
-}
-
-function unlockBirthdayJingle() {
-  const AC = window.AudioContext || window.webkitAudioContext;
-  if (!AC) return;
-  if (!jingleCtx) jingleCtx = new AC();
-  return jingleCtx.resume?.();
-}
-
-function startBell(ctx, dest, { freq, start, peak, ring = 1.35 }) {
-  const car = ctx.createOscillator();
-  const mod = ctx.createOscillator();
-  const modGain = ctx.createGain();
-  const out = ctx.createGain();
-  car.type = 'sine';
-  mod.type = 'sine';
-  car.frequency.setValueAtTime(freq, start);
-  mod.frequency.setValueAtTime(freq * 3.5, start);
-  modGain.gain.setValueAtTime(freq * 2.4, start);
-  modGain.gain.exponentialRampToValueAtTime(freq * 0.2, start + 0.18);
-  modGain.gain.exponentialRampToValueAtTime(0.0001, start + ring);
-  out.gain.setValueAtTime(0.0001, start);
-  out.gain.exponentialRampToValueAtTime(peak, start + 0.006);
-  out.gain.exponentialRampToValueAtTime(peak * 0.28, start + 0.22);
-  out.gain.exponentialRampToValueAtTime(0.0001, start + ring);
-  mod.connect(modGain);
-  modGain.connect(car.frequency);
-  car.connect(out);
-  out.connect(dest);
-  car.start(start);
-  mod.start(start);
-  car.stop(start + ring + 0.05);
-  mod.stop(start + ring + 0.05);
-  jingleNodes.push(car, mod, modGain, out);
-
-  const partial = ctx.createOscillator();
-  const pGain = ctx.createGain();
-  partial.type = 'sine';
-  partial.frequency.setValueAtTime(freq * 2.76, start);
-  pGain.gain.setValueAtTime(0.0001, start);
-  pGain.gain.exponentialRampToValueAtTime(peak * 0.16, start + 0.005);
-  pGain.gain.exponentialRampToValueAtTime(0.0001, start + ring * 0.45);
-  partial.connect(pGain);
-  pGain.connect(dest);
-  partial.start(start);
-  partial.stop(start + ring * 0.5);
-  jingleNodes.push(partial, pGain);
-}
-
-function startTine(ctx, dest, { freq, start, peak, ring = 0.55 }) {
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-  osc.type = 'triangle';
-  osc.frequency.setValueAtTime(freq, start);
-  gain.gain.setValueAtTime(0.0001, start);
-  gain.gain.exponentialRampToValueAtTime(peak, start + 0.004);
-  gain.gain.exponentialRampToValueAtTime(0.0001, start + ring);
-  osc.connect(gain);
-  gain.connect(dest);
-  osc.start(start);
-  osc.stop(start + ring + 0.03);
-  jingleNodes.push(osc, gain);
-}
-
-function startBirthdayJingle(onEnded) {
-  stopBirthdayJingle();
-  const AC = window.AudioContext || window.webkitAudioContext;
-  if (!AC) {
-    onEnded?.();
-    return;
-  }
-  if (!jingleCtx) jingleCtx = new AC();
-  const ctx = jingleCtx;
-  ctx.resume?.();
-
-  const master = ctx.createGain();
-  master.gain.value = 0.22;
-  const sparkle = ctx.createBiquadFilter();
-  sparkle.type = 'highshelf';
-  sparkle.frequency.value = 2400;
-  sparkle.gain.value = 5;
-  master.connect(sparkle);
-  sparkle.connect(ctx.destination);
-
-  const wet = ctx.createGain();
-  wet.gain.value = 0.32;
-  const delay = ctx.createDelay(1);
-  delay.delayTime.value = 0.22;
-  const feedback = ctx.createGain();
-  feedback.gain.value = 0.28;
-  const delayTone = ctx.createBiquadFilter();
-  delayTone.type = 'highpass';
-  delayTone.frequency.value = 900;
-  wet.connect(delay);
-  delay.connect(delayTone);
-  delayTone.connect(feedback);
-  feedback.connect(delay);
-  delayTone.connect(master);
-
-  jingleNodes.push(master, sparkle, wet, delay, feedback, delayTone);
-
-  const t0 = ctx.currentTime + 0.06;
-  let last = 0;
-
-  for (const [freq, startBeat, durBeats] of JINGLE_NOTES) {
-    const start = t0 + startBeat * JINGLE_BEAT;
-    const ring = Math.max(durBeats * JINGLE_BEAT * 1.7, 1.15);
-    last = Math.max(last, startBeat * JINGLE_BEAT + ring);
-    const bell = freq * 2;
-    startBell(ctx, master, { freq: bell, start, peak: 0.42, ring });
-    startBell(ctx, wet, { freq: bell, start, peak: 0.18, ring: ring * 1.15 });
-    startTine(ctx, master, { freq: bell * 2, start, peak: 0.22, ring: 0.42 });
-    if (durBeats >= 1) {
-      startBell(ctx, master, {
-        freq: bell * 1.5,
-        start: start + 0.03,
-        peak: 0.12,
-        ring: ring * 0.8,
-      });
-    }
-    if (durBeats >= 2) {
-      startTine(ctx, wet, { freq: bell * 3, start: start + 0.08, peak: 0.1, ring: 0.7 });
-      startBell(ctx, wet, { freq: bell * 2, start: start + 0.12, peak: 0.08, ring: 0.9 });
-    }
-  }
-
-  jingleTimer = window.setTimeout(() => {
-    stopBirthdayJingle();
-    onEnded?.();
-  }, last * 1000 + 180);
-}
-
-function makeJingleButtonTexture(playing) {
-  const size = 128;
-  const canvas = document.createElement('canvas');
-  canvas.width = size;
-  canvas.height = size;
-  const ctx = canvas.getContext('2d');
-  const cx = size / 2;
-  const cy = size / 2;
-  ctx.fillStyle = '#ffffff';
-  ctx.beginPath();
-  ctx.arc(cx, cy, size / 2 - 2, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.globalCompositeOperation = 'destination-out';
-  ctx.fillStyle = '#000';
-  if (playing) {
-    const bw = 12;
-    const bh = 36;
-    const gap = 10;
-    ctx.fillRect(cx - gap - bw, cy - bh / 2, bw, bh);
-    ctx.fillRect(cx + gap, cy - bh / 2, bw, bh);
-  } else {
-    ctx.beginPath();
-    ctx.moveTo(cx - 14, cy - 22);
-    ctx.lineTo(cx + 24, cy);
-    ctx.lineTo(cx - 14, cy + 22);
-    ctx.closePath();
-    ctx.fill();
-  }
-  const tex = new THREE.CanvasTexture(canvas);
-  tex.colorSpace = THREE.SRGBColorSpace;
-  tex.needsUpdate = true;
-  return tex;
-}
-
-const JINGLE_BTN_SIZE = 0.1;
-
-function InsideJingleButton({ ink }) {
-  const { gl } = useThree();
-  const [playing, setPlaying] = useState(true);
-  const wantPlay = useRef(true);
-  const playMap = useMemo(() => makeJingleButtonTexture(false), []);
-  const pauseMap = useMemo(() => makeJingleButtonTexture(true), []);
-  const geo = useMemo(
-    () => new THREE.PlaneGeometry(JINGLE_BTN_SIZE, JINGLE_BTN_SIZE),
-    [],
-  );
-  const mat = useMemo(
-    () =>
-      new THREE.MeshBasicMaterial({
-        color: ink,
-        map: pauseMap,
-        transparent: true,
-        alphaTest: 0.08,
-        depthWrite: false,
-        toneMapped: false,
-      }),
-    [pauseMap],
-  );
-
-  useEffect(() => {
-    mat.color.set(ink);
-  }, [mat, ink]);
-
-  useEffect(() => {
-    mat.map = playing ? pauseMap : playMap;
-    mat.needsUpdate = true;
-  }, [mat, playing, playMap, pauseMap]);
-
-  useEffect(() => {
-    let cancelled = false;
-    unlockBirthdayJingle();
-    const delay = window.setTimeout(() => {
-      if (cancelled || !wantPlay.current) return;
-      startBirthdayJingle(() => {
-        if (cancelled) return;
-        wantPlay.current = false;
-        setPlaying(false);
-      });
-    }, 280);
-    return () => {
-      cancelled = true;
-      window.clearTimeout(delay);
-      stopBirthdayJingle();
-      geo.dispose();
-      playMap.dispose();
-      pauseMap.dispose();
-      mat.dispose();
-    };
-  }, [geo, playMap, pauseMap, mat]);
-
-  return (
-    <mesh
-      geometry={geo}
-      material={mat}
-      position={[NOTES_W * 0.5 - 0.072, -NOTES_H * 0.5 + 0.072, 0.006]}
-      renderOrder={14}
-      onPointerOver={(e) => {
-        e.stopPropagation();
-        setStageCursor(gl, 'pointer');
-      }}
-      onPointerOut={(e) => {
-        e.stopPropagation();
-        setStageCursor(gl, '');
-      }}
-      onPointerDown={(e) => {
-        e.stopPropagation();
-        e.nativeEvent?.stopPropagation?.();
-      }}
-      onClick={(e) => {
-        e.stopPropagation();
-        e.nativeEvent?.stopPropagation?.();
-        e.nativeEvent?.stopImmediatePropagation?.();
-        if (wantPlay.current) {
-          wantPlay.current = false;
-          stopBirthdayJingle();
-          setPlaying(false);
-          return;
-        }
-        wantPlay.current = true;
-        startBirthdayJingle(() => {
-          wantPlay.current = false;
-          setPlaying(false);
-        });
-        setPlaying(true);
-      }}
-    />
-  );
-}
-
 const ZONE_CELL_W = NOTES_W / ZONE_COLS;
 const ZONE_CELL_H = NOTES_H / ZONE_ROWS;
 const ZONE_DISMISS_SIZE = Math.min(ZONE_CELL_W, ZONE_CELL_H) * 0.28;
 
-function SignZoneOverlay({ page, hoverRef, notesRef, active, ink, onRemoveNote }) {
+function zoneGroupCenter(bounds) {
+  return {
+    x: ((bounds.col + bounds.colSpan * 0.5) / ZONE_COLS - 0.5) * NOTES_W,
+    y: (0.5 - (bounds.row + bounds.rowSpan * 0.5) / ZONE_ROWS) * NOTES_H,
+  };
+}
+
+function SignZoneOverlay({ page, hoverRef, notesRef, draftRef, active, ink, onRemoveNote, spread = 0 }) {
   const { gl } = useThree();
   const meshes = useRef([]);
+  const groupRef = useRef(null);
   const dismissRef = useRef(null);
   const dismissHot = useRef(false);
   const pinned = useRef(null);
@@ -1428,25 +1504,79 @@ function SignZoneOverlay({ page, hoverRef, notesRef, active, ink, onRemoveNote }
   useFrame(() => {
     const list = meshes.current;
     const dismiss = dismissRef.current;
+    const group = groupRef.current;
     if (!active) {
       for (let i = 0; i < list.length; i++) {
         if (list[i]) list[i].visible = false;
       }
+      if (group) group.visible = false;
       if (dismiss) dismiss.visible = false;
       pinned.current = null;
       return;
     }
     const hover = hoverRef.current;
     const notes = notesRef.current || [];
-    const taken = occupiedZoneKeys(notes);
-    const marked = markedZoneKeys(notes);
+    const draft = draftRef?.current;
+    const taken = occupiedZoneKeys(notes, null, spread);
+    const marked = markedZoneKeys(notes, spread);
     const canSign = !hasOwnMessage(notes);
+    const draftZone =
+      canSign
+      && draft
+      && !draft.noteId
+      && draft.page === page
+      && (draft.spread ?? 0) === spread
+        ? draft
+        : null;
     const hoveredOwn =
       hover?.page === page
-        ? ownNoteInZone(notes, page, hover.col, hover.row)
+        ? ownNoteInZone(notes, page, hover.col, hover.row, spread)
         : null;
     if (hoveredOwn) {
-      pinned.current = { col: hover.col, row: hover.row, id: hoveredOwn.id };
+      const origin = noteZone(hoveredOwn);
+      pinned.current = { col: origin.col, row: origin.row, id: hoveredOwn.id };
+    }
+    const draftKeys = new Set();
+    let draftCells = [];
+    if (draftZone) {
+      const draftNote = notes.find(
+        (n) => n.id === '__draft' && n.page === page && noteSpread(n) === spread,
+      );
+      if (draftNote) {
+        draftCells = claimZonesForNote(draftNote, taken).filter((cell) => cell.page === page);
+        for (const cell of draftCells) {
+          draftKeys.add(zoneKey(cell.page, cell.col, cell.row));
+        }
+      } else {
+        draftCells = [{ page, col: draftZone.col, row: draftZone.row }];
+        draftKeys.add(zoneKey(page, draftZone.col, draftZone.row));
+      }
+    }
+    let groupCells = draftCells.length > 1 ? draftCells : [];
+    if (!groupCells.length) {
+      const own = notes.find(
+        (n) => n && isOwnNote(n) && n.id !== '__draft' && noteSpread(n) === spread,
+      );
+      if (own) {
+        const free = occupiedZoneKeys(notes, own.id, spread);
+        groupCells = claimZonesForNote(own, free).filter((cell) => cell.page === page);
+      }
+    }
+    const grouped = groupCells.length > 1;
+    const groupedKeys = new Set(
+      grouped ? groupCells.map((cell) => zoneKey(cell.page, cell.col, cell.row)) : [],
+    );
+    if (group) {
+      if (grouped) {
+        const bounds = cellsBounds(groupCells);
+        const mid = zoneGroupCenter(bounds);
+        group.visible = true;
+        group.position.set(mid.x, mid.y, 0.0015);
+        group.scale.set(bounds.colSpan, bounds.rowSpan, 1);
+      } else {
+        group.visible = false;
+        group.scale.set(1, 1, 1);
+      }
     }
     let i = 0;
     for (let row = 0; row < ZONE_ROWS; row++) {
@@ -1459,8 +1589,10 @@ function SignZoneOverlay({ page, hoverRef, notesRef, active, ink, onRemoveNote }
           && hover?.page === page
           && hover.col === col
           && hover.row === row
-          && !taken.has(key);
-        const show = marked.has(key) || hovering;
+          && !taken.has(key)
+          && !draftKeys.has(key);
+        const drafting = draftKeys.has(key) && !groupedKeys.has(key);
+        const show = hovering || drafting || (marked.has(key) && !groupedKeys.has(key));
         mesh.visible = show;
         if (show) mesh.material.opacity = 1;
       }
@@ -1473,12 +1605,13 @@ function SignZoneOverlay({ page, hoverRef, notesRef, active, ink, onRemoveNote }
       return;
     }
     if (!dismiss) return;
-    const col = pin.col;
-    const row = pin.row;
+    const groupBounds = grouped ? cellsBounds(groupCells) : null;
+    const dismissCol = groupBounds ? groupBounds.col + groupBounds.colSpan - 1 : pin.col;
+    const dismissRow = groupBounds ? groupBounds.row : pin.row;
     dismiss.visible = true;
     dismiss.position.set(
-      ((col + 0.5) / ZONE_COLS - 0.5) * NOTES_W + ZONE_CELL_W / 2 - ZONE_DISMISS_SIZE * 0.62,
-      (0.5 - (row + 0.5) / ZONE_ROWS) * NOTES_H + ZONE_CELL_H / 2 - ZONE_DISMISS_SIZE * 0.62,
+      ((dismissCol + 0.5) / ZONE_COLS - 0.5) * NOTES_W + ZONE_CELL_W / 2 - ZONE_DISMISS_SIZE * 0.62,
+      (0.5 - (dismissRow + 0.5) / ZONE_ROWS) * NOTES_H + ZONE_CELL_H / 2 - ZONE_DISMISS_SIZE * 0.62,
       0.004,
     );
   });
@@ -1515,6 +1648,20 @@ function SignZoneOverlay({ page, hoverRef, notesRef, active, ink, onRemoveNote }
   return (
     <group>
       {cells}
+      <mesh
+        ref={groupRef}
+        geometry={geo}
+        visible={false}
+        raycast={() => {}}
+      >
+        <meshBasicMaterial
+          map={map}
+          transparent
+          opacity={0.32}
+          depthWrite={false}
+          toneMapped={false}
+        />
+      </mesh>
       <mesh
         ref={dismissRef}
         geometry={dismissGeo}
@@ -1579,7 +1726,9 @@ function CardFace({
   pageMeshes,
   hoverRef,
   notesRef,
+  draftRef,
   ink,
+  spread = 0,
   children,
 }) {
   const notesZ = 0.0005;
@@ -1619,18 +1768,20 @@ function CardFace({
             hoverRef={hoverRef}
             notesRef={notesRef}
             ink={ink}
+            spread={spread}
           />
           {interactive && (
             <SignZoneOverlay
               page={page}
               hoverRef={hoverRef}
               notesRef={notesRef}
+              draftRef={draftRef}
               active={interactive}
               ink={ink}
               onRemoveNote={onRemoveNote}
+              spread={spread}
             />
           )}
-          {page === 'right' && interactive && <InsideJingleButton ink={ink} />}
         </group>
       )}
       {children}
@@ -1668,6 +1819,7 @@ function InsidePage({
   hoverRef,
   notesRef,
   ink,
+  spread = 0,
 }) {
   const mesh = useRef(null);
   const down = useRef(null);
@@ -1693,6 +1845,7 @@ function InsidePage({
     hoverRef,
     notesRef,
     ink,
+    spread,
   };
 
   const setMesh = (node) => {
@@ -1723,11 +1876,10 @@ function InsidePage({
   const hitAtUv = (u, v) => {
     const ctx = pageCtx();
     if (!ctx) return null;
-    const own = (fns.current.notesRef?.current || fns.current.notes).filter(
-      (n) => n.page === page && isOwnNote(n),
-    );
+    const all = fns.current.notesRef?.current || fns.current.notes;
+    const own = all.filter((n) => n.page === page && isOwnNote(n));
     for (let i = own.length - 1; i >= 0; i--) {
-      const hit = hitOwnNote(ctx, own[i], u, v, TEX_W, TEX_H);
+      const hit = hitOwnNote(ctx, own[i], u, v, TEX_W, TEX_H, all);
       if (hit) return { note: own[i], ...hit };
     }
     return null;
@@ -1744,14 +1896,23 @@ function InsidePage({
   const onWinMove = useRef((e) => {
     const session = drag.current;
     if (!session) return;
+    if (!session.armed) {
+      const dist = Math.hypot(e.clientX - session.x, e.clientY - session.y);
+      if (dist < DRAG_ARM_PX) return;
+      session.armed = true;
+    }
     if (draggingRef) draggingRef.current = true;
     const hit = hitFromClient(e.clientX, e.clientY);
     if (!hit) return;
     const { col, row } = zoneFromUv(hit.u, hit.v);
-    const taken = occupiedZoneKeys(fns.current.notesRef?.current || fns.current.notes, session.id);
+    const taken = occupiedZoneKeys(
+      fns.current.notesRef?.current || fns.current.notes,
+      session.id,
+      fns.current.spread,
+    );
     if (taken.has(zoneKey(hit.page, col, row))) return;
     const uv = zoneNoteUv(col, row);
-    const patch = { page: hit.page, col, row, u: uv.u, v: uv.v };
+    const patch = { page: hit.page, col, row, u: uv.u, v: uv.v, spread: fns.current.spread };
     const href = fns.current.hoverRef;
     if (href) href.current = { page: hit.page, col, row };
     pendingNote.current = { id: session.id, patch };
@@ -1776,8 +1937,9 @@ function InsidePage({
         const selectedId = fns.current.selectedId;
         const meshes = fns.current.pageMeshes?.current || {};
         const notesNow = fns.current.notesRef?.current || fns.current.notes;
+        const spread = fns.current.spread;
         pages.forEach((side) => {
-          paintPageTexture(meshes[side], side, notesNow, cardName, selectedId);
+          paintPageTexture(meshes[side], side, notesNow, cardName, selectedId, spread);
         });
       });
     }
@@ -1798,31 +1960,37 @@ function InsidePage({
     drag.current = null;
     if (draggingRef) draggingRef.current = false;
     setCursor(null);
-    window.removeEventListener('pointermove', onWinMove);
-    window.removeEventListener('pointerup', onWinUp);
+    window.removeEventListener('pointermove', onWinMove, true);
+    window.removeEventListener('pointerup', onWinUp, true);
+    window.removeEventListener('pointercancel', onWinUp, true);
   }).current;
 
   const onPointerDown = (e) => {
     if (!interactive) return;
-    e.stopPropagation();
-    e.nativeEvent?.stopPropagation?.();
     down.current = { x: e.clientX, y: e.clientY };
     if (!e.uv) return;
     const hit = hitAtUv(e.uv.x, e.uv.y);
     if (!hit) {
       drag.current = null;
+      if (draggingRef) draggingRef.current = false;
       return;
     }
+    e.stopPropagation();
+    e.nativeEvent?.stopPropagation?.();
     fns.current.onSelectNote?.(hit.note.id);
     drag.current = {
       id: hit.note.id,
       kind: 'move',
       note: hit.note,
       page: hit.note.page,
+      x: e.clientX,
+      y: e.clientY,
+      armed: false,
     };
     setCursor('grabbing');
-    window.addEventListener('pointermove', onWinMove);
-    window.addEventListener('pointerup', onWinUp);
+    window.addEventListener('pointermove', onWinMove, true);
+    window.addEventListener('pointerup', onWinUp, true);
+    window.addEventListener('pointercancel', onWinUp, true);
   };
 
   const onPointerMove = (e) => {
@@ -1837,11 +2005,16 @@ function InsidePage({
       return;
     }
     const notesNow = fns.current.notesRef?.current || fns.current.notes;
+    const spreadNow = fns.current.spread;
+    if (ownNoteInZone(notesNow, page, col, row, spreadNow)) {
+      setCursor('move');
+      return;
+    }
     if (hasOwnMessage(notesNow)) {
       setCursor(null);
       return;
     }
-    const taken = occupiedZoneKeys(notesNow);
+    const taken = occupiedZoneKeys(notesNow, null, spreadNow);
     setCursor(taken.has(zoneKey(page, col, row)) ? null : 'sign');
   };
 
@@ -1862,15 +2035,14 @@ function InsidePage({
     if (start && Math.hypot(e.clientX - start.x, e.clientY - start.y) > 8) return;
     const { col, row } = zoneFromUv(e.uv.x, e.uv.y);
     const notesNow = fns.current.notesRef?.current || fns.current.notes;
+    const spreadNow = fns.current.spread;
+    const occupant = noteOccupyingZone(notesNow, page, col, row, spreadNow);
     const ownHit = hitAtUv(e.uv.x, e.uv.y)?.note
-      || notesNow.find((n) => {
-        if (n.page !== page || !isOwnNote(n) || n.id === '__draft') return false;
-        const z = noteZone(n);
-        return z.col === col && z.row === row;
-      });
+      || (occupant && isOwnNote(occupant) && occupant.id !== '__draft' ? occupant : null);
     const pickCol = ownHit?.col ?? col;
     const pickRow = ownHit?.row ?? row;
     const pickPage = ownHit?.page || page;
+    const pickSpread = ownHit ? noteSpread(ownHit) : spreadNow;
     const anchor = projectZoneTopLeft(
       mesh.current,
       camera,
@@ -1883,6 +2055,7 @@ function InsidePage({
       const uv = zoneNoteUv(pickCol, pickRow);
       onPick?.({
         page: pickPage,
+        spread: pickSpread,
         col: pickCol,
         row: pickRow,
         u: ownHit.u ?? uv.u,
@@ -1894,7 +2067,25 @@ function InsidePage({
       });
       return;
     }
-    if (hasOwnMessage(notesNow) || occupiedZoneKeys(notesNow).has(zoneKey(page, col, row))) {
+    if (occupant?.id === '__draft') {
+      const z = noteZone(occupant);
+      const uv = zoneNoteUv(z.col, z.row);
+      const draftAnchor = projectZoneTopLeft(mesh.current, camera, gl, z.col, z.row)
+        || { clientX: e.clientX, clientY: e.clientY };
+      onPick?.({
+        page: z.page,
+        spread: noteSpread(occupant),
+        col: z.col,
+        row: z.row,
+        u: occupant.u ?? uv.u,
+        v: occupant.v ?? uv.v,
+        clientX: draftAnchor.clientX,
+        clientY: draftAnchor.clientY,
+        text: occupant.text,
+      });
+      return;
+    }
+    if (hasOwnMessage(notesNow) || occupiedZoneKeys(notesNow, null, spreadNow).has(zoneKey(page, col, row))) {
       onSelectNote?.(null);
       return;
     }
@@ -1902,6 +2093,7 @@ function InsidePage({
     const uv = zoneNoteUv(col, row);
     onPick?.({
       page,
+      spread: spreadNow,
       col,
       row,
       u: uv.u,
@@ -1912,9 +2104,11 @@ function InsidePage({
   };
 
   useEffect(() => () => {
-    window.removeEventListener('pointermove', onWinMove);
-    window.removeEventListener('pointerup', onWinUp);
-  }, [onWinMove, onWinUp]);
+    window.removeEventListener('pointermove', onWinMove, true);
+    window.removeEventListener('pointerup', onWinUp, true);
+    window.removeEventListener('pointercancel', onWinUp, true);
+    if (draggingRef) draggingRef.current = false;
+  }, [onWinMove, onWinUp, draggingRef]);
 
   return (
     <mesh
@@ -2072,6 +2266,7 @@ function CoverFoldHandle({
   scale,
   openT,
   foldDrag,
+  pageDrag,
   noteDragging,
   onClose,
   onGrabStart,
@@ -2089,28 +2284,44 @@ function CoverFoldHandle({
     () => () => {
       unbind.current?.();
       unbind.current = null;
+      foldDrag.current = null;
       setStageCursor(gl, 'pointer');
     },
-    [gl],
+    [gl, foldDrag],
   );
+
+  useEffect(() => {
+    if (enabled) return undefined;
+    unbind.current?.();
+    unbind.current = null;
+    foldDrag.current = null;
+    return undefined;
+  }, [enabled, foldDrag]);
 
   if (!enabled) return null;
 
   const onPointerDown = (e) => {
-    if (noteDragging?.current) return;
+    if (noteDragging?.current || pageDrag?.current) return;
     e.stopPropagation();
-    e.nativeEvent?.stopImmediatePropagation?.();
-    onGrabStart?.();
-    const t = openT.current;
-    foldDrag.current = {
-      t,
-      lastT: t,
-      lastAt: performance.now(),
-      vt: 0,
-    };
-    setStageCursor(gl, 'grabbing');
+    e.nativeEvent?.stopPropagation?.();
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const startT = openT.current;
+    let armed = false;
 
     const onMove = (ev) => {
+      if (!armed) {
+        if (Math.hypot(ev.clientX - startX, ev.clientY - startY) < DRAG_ARM_PX) return;
+        armed = true;
+        onGrabStart?.();
+        foldDrag.current = {
+          t: startT,
+          lastT: startT,
+          lastAt: performance.now(),
+          vt: 0,
+        };
+        setStageCursor(gl, 'grabbing');
+      }
       if (!foldDrag.current) return;
       const next = solveCoverOpenT(ndcXFromEvent(ev, gl.domElement), camera, scale);
       const now = performance.now();
@@ -2122,32 +2333,36 @@ function CoverFoldHandle({
     };
     const onUp = () => {
       unbind.current = null;
-      window.removeEventListener('pointermove', onMove);
-      window.removeEventListener('pointerup', onUp);
-      window.removeEventListener('pointercancel', onUp);
+      window.removeEventListener('pointermove', onMove, true);
+      window.removeEventListener('pointerup', onUp, true);
+      window.removeEventListener('pointercancel', onUp, true);
       const drag = foldDrag.current;
       foldDrag.current = null;
-      const tNow = drag?.t ?? openT.current;
-      const flickClose = (drag?.vt ?? 0) < -FOLD_FLICK_VT;
+      if (!drag) {
+        setStageCursor(gl, hovering.current ? 'grab' : 'pointer');
+        return;
+      }
+      const tNow = drag.t ?? openT.current;
+      const flickClose = (drag.vt ?? 0) < -FOLD_FLICK_VT;
       const commit = tNow <= FOLD_COMMIT_T || flickClose;
       setStageCursor(gl, hovering.current && !commit ? 'grab' : 'pointer');
       if (commit) onClose?.();
     };
     unbind.current?.();
-    window.addEventListener('pointermove', onMove);
-    window.addEventListener('pointerup', onUp);
-    window.addEventListener('pointercancel', onUp);
+    window.addEventListener('pointermove', onMove, true);
+    window.addEventListener('pointerup', onUp, true);
+    window.addEventListener('pointercancel', onUp, true);
     unbind.current = () => {
-      window.removeEventListener('pointermove', onMove);
-      window.removeEventListener('pointerup', onUp);
-      window.removeEventListener('pointercancel', onUp);
+      window.removeEventListener('pointermove', onMove, true);
+      window.removeEventListener('pointerup', onUp, true);
+      window.removeEventListener('pointercancel', onUp, true);
     };
   };
 
   return (
     <mesh
       geometry={FOLD_HANDLE_GEO}
-      position={[LEAF_W / 2 + 0.06, 0, 0]}
+      position={[LEAF_W / 2 + 0.04, 0, 0]}
       onPointerDown={onPointerDown}
       onPointerOver={(e) => {
         e.stopPropagation();
@@ -2169,18 +2384,140 @@ function CoverFoldHandle({
   );
 }
 
+function PageFlickHandle({
+  enabled,
+  dir,
+  area = 'outer',
+  scale,
+  openT,
+  flipT,
+  pageDrag,
+  foldDrag,
+  noteDragging,
+  flipRef,
+  onGrabStart,
+  onDown,
+  onTap,
+  onRelease,
+}) {
+  const { gl, camera } = useThree();
+  const hovering = useRef(false);
+  const unbind = useRef(null);
+
+  useEffect(
+    () => () => {
+      unbind.current?.();
+      unbind.current = null;
+    },
+    [],
+  );
+
+  if (!enabled || !dir) return null;
+
+  const onPointerDown = (e) => {
+    if (noteDragging?.current || foldDrag?.current || pageDrag.current) return;
+    if (flipRef?.current?.goal != null) return;
+    e.stopPropagation();
+    e.nativeEvent?.stopPropagation?.();
+    onDown?.();
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const startT = flipT.current;
+    let armed = false;
+
+    const onMove = (ev) => {
+      if (!armed) {
+        if (Math.hypot(ev.clientX - startX, ev.clientY - startY) < DRAG_ARM_PX) return;
+        armed = true;
+        onGrabStart?.();
+        pageDrag.current = {
+          dir,
+          t: startT,
+          lastT: startT,
+          lastAt: performance.now(),
+          vt: 0,
+        };
+        setStageCursor(gl, 'grabbing');
+      }
+      if (!pageDrag.current) return;
+      let next = solvePageFlipT(ndcXFromEvent(ev, gl.domElement), camera, scale, openT.current);
+      if (dir > 0) next = Math.min(next, PAGE_LEFT_REST_T);
+      const now = performance.now();
+      const dt = Math.max(0.008, (now - pageDrag.current.lastAt) / 1000);
+      pageDrag.current.vt = (next - pageDrag.current.lastT) / dt;
+      pageDrag.current.lastT = next;
+      pageDrag.current.lastAt = now;
+      pageDrag.current.t = next;
+    };
+    const onUp = () => {
+      unbind.current = null;
+      window.removeEventListener('pointermove', onMove, true);
+      window.removeEventListener('pointerup', onUp, true);
+      window.removeEventListener('pointercancel', onUp, true);
+      const drag = pageDrag.current;
+      pageDrag.current = null;
+      setStageCursor(gl, hovering.current ? 'grab' : 'pointer');
+      if (!armed) {
+        onTap?.();
+        return;
+      }
+      if (!drag) return;
+      onRelease?.(drag);
+    };
+    unbind.current?.();
+    window.addEventListener('pointermove', onMove, true);
+    window.addEventListener('pointerup', onUp, true);
+    window.addEventListener('pointercancel', onUp, true);
+    unbind.current = () => {
+      window.removeEventListener('pointermove', onMove, true);
+      window.removeEventListener('pointerup', onUp, true);
+      window.removeEventListener('pointercancel', onUp, true);
+    };
+  };
+
+  const full = area === 'full';
+  const geo = full ? PAGE_TURN_FULL : PAGE_TURN_OUTER;
+  const x = full ? 0 : LEAF_W * 0.18;
+
+  return (
+    <mesh
+      geometry={geo}
+      position={[x, 0, 0.02]}
+      renderOrder={20}
+      onPointerDown={onPointerDown}
+      onPointerOver={(e) => {
+        e.stopPropagation();
+        hovering.current = true;
+        if (!pageDrag.current) setStageCursor(gl, 'grab');
+      }}
+      onPointerOut={() => {
+        hovering.current = false;
+        if (!pageDrag.current) setStageCursor(gl, 'pointer');
+      }}
+    >
+      <meshBasicMaterial
+        transparent
+        opacity={0}
+        depthWrite={false}
+        depthTest={false}
+        side={THREE.DoubleSide}
+      />
+    </mesh>
+  );
+}
+
 /**
  * Birthday greeting card — same studio materials as the pack gifts,
  * two thin leaves hinged at the spine. `open` drives the fold.
  */
 export default function BirthdayCard3D({
   open = false,
-  followPointer = true,
   name = 'Klas',
   notes = CARD_SEED_NOTES,
   draft = null,
   theme = 'dark',
   paletteId = 'gold',
+  finishId = 'paper',
   scale = 1,
   selectedNoteId = null,
   coverId = 'classic',
@@ -2192,41 +2529,49 @@ export default function BirthdayCard3D({
   onRemoveNote,
   onClose,
   onGrabStart,
-  onFrontClick,
-  onBackClick,
   onInsideClick,
+  onPagesChange,
+  pageTurnRef,
 }) {
   const reduceMotion = usePrefersReducedMotion();
   const openT = useRef(open ? 1 : REST_OPEN);
   const hinge = useRef(null);
   const root = useRef(null);
-  const pointerX = useRef(0);
-  const pointer = useRef({ x: 0, y: 0, over: false });
-  const followX = useRef(0);
   const noteDragging = useRef(false);
   const foldDrag = useRef(null);
+  const pageDrag = useRef(null);
   const pageMeshes = useRef({ left: null, right: null });
   const zoneHoverRef = useRef(null);
   const liveNotesRef = useRef(CARD_SEED_NOTES);
+  const draftRef = useRef(draft);
+  const autoPickedOpen = useRef(false);
+  const flipHinge = useRef(null);
+  const stackHinge = useRef(null);
+  const flipT = useRef(0);
+  const settledSpread = useRef(0);
   const openPeek = useRef(open ? 1 : 0);
-  const { gl } = useThree();
+  const { gl, camera } = useThree();
+  draftRef.current = draft;
   const colors = paletteColorsFor(theme, paletteId);
   const pureBlack = isPureBlack(colors.body);
   const foilMetal = getFoilMetal('silver');
   const foilInk = foilMetal.ink;
   const paperColor = brighterCardBody(colors.body, theme);
   const writingInk = insideWritingInk(paperColor, foilInk);
+  const cardFinish = getCardFinish(finishId);
   const paletteGoal = useRef({
     body: brighterCardBody(colors.body, theme),
     well: wellBodyColor(colors.body, theme),
     black: pureBlack ? 1 : 0,
     foil: foilMetal.props,
+    finish: resolveCardFinish(cardFinish, pureBlack ? 1 : 0),
   });
   paletteGoal.current = {
     body: brighterCardBody(colors.body, theme),
     well: wellBodyColor(colors.body, theme),
     black: pureBlack ? 1 : 0,
     foil: foilMetal.props,
+    finish: resolveCardFinish(cardFinish, pureBlack ? 1 : 0),
   };
   const blackMix = useRef(pureBlack ? 1 : 0);
   const [fontsReady, setFontsReady] = useState(false);
@@ -2243,23 +2588,6 @@ export default function BirthdayCard3D({
     };
   }, []);
 
-  useEffect(() => {
-    const onMove = (e) => {
-      const el = gl.domElement;
-      const r = el.getBoundingClientRect();
-      if (r.width <= 0 || r.height <= 0) return;
-      const nx = ((e.clientX - r.left) / r.width) * 2 - 1;
-      const ny = -((e.clientY - r.top) / r.height) * 2 + 1;
-      const over = nx >= -1 && nx <= 1 && ny >= -1 && ny <= 1;
-      pointer.current.x = Math.max(-1, Math.min(1, nx));
-      pointer.current.y = Math.max(-1, Math.min(1, ny));
-      pointer.current.over = over;
-      pointerX.current = pointer.current.x;
-    };
-    window.addEventListener('pointermove', onMove, { passive: true });
-    return () => window.removeEventListener('pointermove', onMove);
-  }, [gl]);
-
   const geos = getCardGeos();
   const leafGeo = geos.leaf;
   const rimGeo = geos.rim;
@@ -2268,17 +2596,13 @@ export default function BirthdayCard3D({
   const notesGeo = geos.notes;
   const backCoverGeo = geos.backCover;
 
+  const startFinish = resolveCardFinish(cardFinish, pureBlack ? 1 : 0);
   const outsideMat = useMemo(
     () =>
       new THREE.MeshPhysicalMaterial({
         ...bodyMaterialProps,
         color: brighterCardBody(colors.body, theme),
-        roughness: pureBlack ? 0.42 : 0.52,
-        metalness: 0,
-        clearcoat: 0,
-        clearcoatRoughness: 0.5,
-        reflectivity: 0.08,
-        envMapIntensity: 0.65,
+        ...startFinish.outside,
         side: THREE.DoubleSide,
       }),
     [theme],
@@ -2288,11 +2612,7 @@ export default function BirthdayCard3D({
       new THREE.MeshPhysicalMaterial({
         ...bodyMaterialProps,
         color: wellBodyColor(colors.body, theme),
-        roughness: 0.2,
-        metalness: pureBlack ? 0 : 0.05,
-        clearcoat: pureBlack ? 0 : 0.18,
-        clearcoatRoughness: 0.22,
-        envMapIntensity: 1.3,
+        ...startFinish.well,
         side: THREE.DoubleSide,
       }),
     [theme],
@@ -2325,6 +2645,7 @@ export default function BirthdayCard3D({
       {
         id: '__draft',
         page: draft.page,
+        spread: draft.spread ?? 0,
         col: draft.col,
         row: draft.row,
         u: draft.u,
@@ -2336,10 +2657,41 @@ export default function BirthdayCard3D({
     ];
   }, [notes, draft]);
 
+  const spreadCount = useMemo(() => neededSpreadCount(paintedNotes), [paintedNotes]);
+  const [spread, setSpread] = useState(0);
+  const [flip, setFlip] = useState(null);
+  const spreadRef = useRef(0);
+  const flipRef = useRef(null);
+  spreadRef.current = spread;
+  flipRef.current = flip;
+  const hasNext = spread < spreadCount - 1;
+  const hasPrev = spread > 0;
+  const showInsert = open && (hasNext || !!flip);
+  const showStack = open && hasPrev && !flip;
+
+  useEffect(() => {
+    setSpread((s) => Math.min(s, Math.max(0, spreadCount - 1)));
+  }, [spreadCount]);
+
   useLayoutEffect(() => {
     if (!noteDragging.current) liveNotesRef.current = paintedNotes;
   }, [paintedNotes]);
 
+  const leftSpread = flip?.dir < 0 ? flip.to : spread;
+  const rightSpread = flip?.dir < 0 ? flip.from : hasNext ? spread + 1 : spread;
+  const flipFrontSpread = flip?.dir < 0 ? flip.to : spread;
+  const flipBackSpread = flip?.dir < 0 ? flip.from : spread + 1;
+
+  const coverLeftMat = useInsideNotesMat(
+    'left',
+    paintedNotes,
+    fontsReady,
+    name,
+    selectedNoteId,
+    noteDragging,
+    foilMetal.props,
+    0,
+  );
   const insideLeftMat = useInsideNotesMat(
     'left',
     paintedNotes,
@@ -2347,7 +2699,8 @@ export default function BirthdayCard3D({
     name,
     selectedNoteId,
     noteDragging,
-    writingInk,
+    foilMetal.props,
+    leftSpread,
   );
   const insideRightMat = useInsideNotesMat(
     'right',
@@ -2356,8 +2709,26 @@ export default function BirthdayCard3D({
     name,
     selectedNoteId,
     noteDragging,
-    writingInk,
+    foilMetal.props,
+    rightSpread,
   );
+  const [flipFrontMat, paintFlipFront] = useFlipPageMat(foilMetal.props);
+  const [flipBackMat, paintFlipBack] = useFlipPageMat(foilMetal.props);
+
+  useLayoutEffect(() => {
+    if (!showInsert) return;
+    paintFlipFront('right', paintedNotes, name, selectedNoteId, flipFrontSpread);
+    paintFlipBack('left', paintedNotes, name, selectedNoteId, flipBackSpread);
+  }, [
+    showInsert,
+    flipFrontSpread,
+    flipBackSpread,
+    paintedNotes,
+    name,
+    selectedNoteId,
+    paintFlipFront,
+    paintFlipBack,
+  ]);
 
   useEffect(() => () => outsideMat.dispose(), [outsideMat]);
   useEffect(() => () => wellMat.dispose(), [wellMat]);
@@ -2373,32 +2744,57 @@ export default function BirthdayCard3D({
     const clampedDt = Math.min(dt, 0.05);
     if (dragging) {
       openT.current = target;
-      followX.current = 0;
     } else if (reduceMotion.current) {
       openT.current = target;
-      followX.current = 0;
     } else {
       const kOpen = 1 - Math.exp(-CARD_OPEN_STIFFNESS * clampedDt);
       openT.current += (target - openT.current) * kOpen;
       if (Math.abs(target - openT.current) < 0.0008) openT.current = target;
-
-      const want = followPointer && openT.current > 0.9 && !noteDragging.current
-        ? pointerX.current
-        : 0;
-      const kFollow = 1 - Math.exp(-HINGE_FOLLOW_STIFFNESS * clampedDt);
-      followX.current += (want - followX.current) * kFollow;
-      if (Math.abs(want - followX.current) < 0.0008) followX.current = want;
     }
     const t = openT.current;
-    const u = (t - REST_OPEN) / (1 - REST_OPEN);
-    const peek = Math.max(0, Math.min(1, u));
+    const peek = foldPeek(t);
     openPeek.current = peek;
     const grow = 1 + (OPEN_GROW - 1) * peek;
-    const x = followX.current * peek;
-    const theta = -OPEN_ANGLE * t - x * HINGE_FOLLOW_ANGLE;
-    const phi = peek * (OPEN_ANGLE / 2 - Math.PI / 2) - x * HINGE_FOLLOW_YAW;
+    const theta = -OPEN_ANGLE * t;
+    const phi = openPhi(peek);
     if (hinge.current) {
       hinge.current.rotation.y = theta;
+    }
+    const restT = open && hasNext && !flipRef.current ? PAGE_REST_T : 0;
+    if (pageDrag.current) {
+      flipT.current = pageDrag.current.t;
+    } else if (flipRef.current?.goal != null) {
+      const turning = flipRef.current;
+      const goal = turning.goal;
+      if (reduceMotion.current) {
+        flipT.current = goal;
+      } else {
+        const kFlip = 1 - Math.exp(-PAGE_TURN_STIFFNESS * clampedDt);
+        flipT.current += (goal - flipT.current) * kFlip;
+        if (Math.abs(goal - flipT.current) < 0.002) flipT.current = goal;
+      }
+      if (flipT.current === goal) {
+        const committed = (turning.dir > 0 && goal === PAGE_LEFT_REST_T) || (turning.dir < 0 && goal === 0);
+        if (committed) {
+          settledSpread.current = turning.to;
+          setSpread(turning.to);
+        }
+        flipT.current = committed ? 0 : restT;
+        flipRef.current = null;
+        setFlip(null);
+      }
+    } else if (reduceMotion.current) {
+      flipT.current = restT;
+    } else {
+      const kFlip = 1 - Math.exp(-PAGE_TURN_STIFFNESS * clampedDt);
+      flipT.current += (restT - flipT.current) * kFlip;
+      if (Math.abs(restT - flipT.current) < 0.002) flipT.current = restT;
+    }
+    if (flipHinge.current && (showInsert || pageDrag.current)) {
+      flipHinge.current.rotation.y = theta * flipT.current;
+    }
+    if (stackHinge.current) {
+      stackHinge.current.rotation.y = theta * PAGE_LEFT_REST_T;
     }
     if (root.current) {
       const sc = FIT_SCALE * scale * grow;
@@ -2411,25 +2807,140 @@ export default function BirthdayCard3D({
     const kPalette = reduceMotion.current ? 1 : 1 - Math.exp(-PALETTE_LERP_STIFFNESS * clampedDt);
     const goal = paletteGoal.current;
     blackMix.current = lerpScalar(blackMix.current, goal.black, kPalette);
-    const mix = blackMix.current;
     outsideMat.color.lerp(goal.body, kPalette);
     wellMat.color.lerp(goal.well, kPalette);
-    outsideMat.metalness = lerpScalar(outsideMat.metalness, 0, kPalette);
-    outsideMat.roughness = lerpScalar(outsideMat.roughness, 0.52 - 0.1 * mix, kPalette);
-    outsideMat.clearcoatRoughness = lerpScalar(outsideMat.clearcoatRoughness, 0.5, kPalette);
-    outsideMat.reflectivity = lerpScalar(outsideMat.reflectivity, 0.08, kPalette);
-    wellMat.metalness = lerpScalar(wellMat.metalness, 0.05 * (1 - mix), kPalette);
-    wellMat.clearcoat = lerpScalar(wellMat.clearcoat, 0.18 * (1 - mix), kPalette);
-    outsideMat.envMapIntensity = lerpScalar(outsideMat.envMapIntensity, 0.65, kPalette);
-    wellMat.envMapIntensity = lerpScalar(wellMat.envMapIntensity, 1.3, kPalette);
-    outsideMat.clearcoat = lerpScalar(outsideMat.clearcoat, 0, kPalette);
+    const outside = goal.finish.outside;
+    const well = goal.finish.well;
+    outsideMat.metalness = lerpScalar(outsideMat.metalness, outside.metalness, kPalette);
+    outsideMat.roughness = lerpScalar(outsideMat.roughness, outside.roughness, kPalette);
+    outsideMat.clearcoat = lerpScalar(outsideMat.clearcoat, outside.clearcoat, kPalette);
+    outsideMat.clearcoatRoughness = lerpScalar(outsideMat.clearcoatRoughness, outside.clearcoatRoughness, kPalette);
+    outsideMat.reflectivity = lerpScalar(outsideMat.reflectivity, outside.reflectivity, kPalette);
+    outsideMat.envMapIntensity = lerpScalar(outsideMat.envMapIntensity, outside.envMapIntensity, kPalette);
+    wellMat.metalness = lerpScalar(wellMat.metalness, well.metalness, kPalette);
+    wellMat.roughness = lerpScalar(wellMat.roughness, well.roughness, kPalette);
+    wellMat.clearcoat = lerpScalar(wellMat.clearcoat, well.clearcoat, kPalette);
+    wellMat.clearcoatRoughness = lerpScalar(wellMat.clearcoatRoughness, well.clearcoatRoughness, kPalette);
+    wellMat.envMapIntensity = lerpScalar(wellMat.envMapIntensity, well.envMapIntensity, kPalette);
     lerpFoilMaterial(foilMat, goal.foil, kPalette);
     lerpFoilMaterial(frontDecalMat, goal.foil, kPalette);
     lerpFoilMaterial(backDecalMat, goal.foil, kPalette);
+    lerpFoilMaterial(insideLeftMat, goal.foil, kPalette);
+    lerpFoilMaterial(coverLeftMat, goal.foil, kPalette);
+    lerpFoilMaterial(insideRightMat, goal.foil, kPalette);
+    lerpFoilMaterial(flipFrontMat, goal.foil, kPalette);
+    lerpFoilMaterial(flipBackMat, goal.foil, kPalette);
+
+    if (!open) {
+      autoPickedOpen.current = false;
+    } else if (
+      !autoPickedOpen.current
+      && !draft
+      && !flip
+      && !pageDrag.current
+      && !hasNext
+      && peek >= 0.96
+      && !hasOwnMessage(notes)
+    ) {
+      const cells = freeSignCells(notes, spread);
+      const cell = cells.length ? cells[(Math.random() * cells.length) | 0] : null;
+      const mesh = cell ? pageMeshes.current[cell.page] : null;
+      const anchor = mesh ? projectZoneTopLeft(mesh, camera, gl, cell.col, cell.row) : null;
+      if (cell && anchor) {
+        autoPickedOpen.current = true;
+        zoneHoverRef.current = { page: cell.page, col: cell.col, row: cell.row };
+        const uv = zoneNoteUv(cell.col, cell.row);
+        const hit = {
+          page: cell.page,
+          spread,
+          col: cell.col,
+          row: cell.row,
+          u: uv.u,
+          v: uv.v,
+          clientX: anchor.clientX,
+          clientY: anchor.clientY,
+          auto: true,
+        };
+        queueMicrotask(() => onInsidePick?.(hit));
+      } else if (!cells.length || hasOwnMessage(notes)) {
+        autoPickedOpen.current = true;
+      }
+    } else if (open && (draft || hasOwnMessage(notes))) {
+      autoPickedOpen.current = true;
+    }
   });
 
   const faceZ = LEAF_T / 2;
   const insideZ = -LEAF_T / 2;
+
+  const turnForward = useCallback(() => {
+    const s = spreadRef.current;
+    if (s >= spreadCount - 1 || flipRef.current?.goal != null) return;
+    const next = { from: s, to: s + 1, dir: 1, goal: PAGE_LEFT_REST_T };
+    flipRef.current = next;
+    setFlip(next);
+  }, [spreadCount]);
+
+  const turnBack = useCallback(() => {
+    const s = spreadRef.current;
+    if (s <= 0 || flipRef.current?.goal != null) return;
+    flipT.current = PAGE_LEFT_REST_T;
+    const next = { from: s, to: s - 1, dir: -1, goal: 0 };
+    flipRef.current = next;
+    setFlip(next);
+  }, []);
+
+  const readyBackTurn = useCallback(() => {
+    const s = spreadRef.current;
+    if (s <= 0) return;
+    flipT.current = PAGE_LEFT_REST_T;
+    const next = { from: s, to: s - 1, dir: -1, goal: null };
+    flipRef.current = next;
+    setFlip(next);
+  }, []);
+
+  const releasePage = useCallback((drag) => {
+    const s = spreadRef.current;
+    const vt = drag.vt ?? 0;
+    const tNow = drag.t ?? flipT.current;
+    if (drag.dir > 0) {
+      if (s >= spreadCount - 1) return;
+      const commit = tNow >= PAGE_COMMIT_T || vt > PAGE_FLICK_VT;
+      if (!commit) return;
+      const next = { from: s, to: s + 1, dir: 1, goal: PAGE_LEFT_REST_T };
+      flipRef.current = next;
+      setFlip(next);
+      return;
+    }
+    if (s <= 0) return;
+    const commit = tNow <= 1 - PAGE_COMMIT_T || vt < -PAGE_FLICK_VT;
+    const next = { from: s, to: s - 1, dir: -1, goal: commit ? 0 : PAGE_LEFT_REST_T };
+    flipRef.current = next;
+    setFlip(next);
+  }, [spreadCount]);
+
+  useEffect(() => {
+    onPagesChange?.({ spread, count: spreadCount });
+  }, [spread, spreadCount, onPagesChange]);
+
+  if (pageTurnRef) {
+    pageTurnRef.current = { next: turnForward, prev: turnBack };
+  }
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const onKey = (e) => {
+      if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        turnForward();
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        turnBack();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open, turnForward, turnBack]);
 
   const faceProps = {
     rimGeo,
@@ -2448,6 +2959,7 @@ export default function BirthdayCard3D({
     pageMeshes,
     hoverRef: zoneHoverRef,
     notesRef: liveNotesRef,
+    draftRef,
     ink: writingInk,
   };
 
@@ -2467,7 +2979,9 @@ export default function BirthdayCard3D({
             inset={false}
             notesMat={insideRightMat}
             page="right"
-            interactive={open}
+            spread={rightSpread}
+            interactive={open && !flip && !hasNext}
+            pageMeshes={hasNext ? undefined : pageMeshes}
             onPick={onInsidePick}
           />
           <FaceClickCatcher enabled={!open} onActivate={onInsideClick} />
@@ -2479,7 +2993,96 @@ export default function BirthdayCard3D({
             greetingGeo={backCoverGeo}
             greetingMat={backDecalMat}
           />
-          <FaceClickCatcher enabled={!open} onActivate={onBackClick} />
+          <FaceClickCatcher enabled={!open} onActivate={onInsideClick} />
+        </group>
+        <PageFlickHandle
+          enabled={open && hasNext}
+          dir={1}
+          area="full"
+          scale={scale}
+          openT={openT}
+          flipT={flipT}
+          pageDrag={pageDrag}
+          foldDrag={foldDrag}
+          noteDragging={noteDragging}
+          flipRef={flipRef}
+          onGrabStart={onGrabStart}
+          onTap={turnForward}
+          onRelease={releasePage}
+        />
+      </group>
+
+      <group ref={stackHinge} position={[0, 0, LEAF_T / 2]} visible={showStack} renderOrder={3}>
+        <group position={[LEAF_W / 2, 0, LEAF_T / 2]}>
+          <mesh geometry={leafGeo} material={outsideMat} raycast={() => {}} />
+          <group position={[0, 0, insideZ - 0.0008]} rotation={[0, Math.PI, 0]}>
+            <CardFace
+              {...faceProps}
+              inset={false}
+              notesMat={insideLeftMat}
+              page="left"
+              spread={spread}
+              interactive={open && !flip}
+              pageMeshes={pageMeshes}
+              onPick={onInsidePick}
+            />
+            <PageFlickHandle
+              enabled={open && hasPrev}
+              dir={-1}
+              area="outer"
+              scale={scale}
+              openT={openT}
+              flipT={flipT}
+              pageDrag={pageDrag}
+              foldDrag={foldDrag}
+              noteDragging={noteDragging}
+              flipRef={flipRef}
+              onGrabStart={onGrabStart}
+              onDown={readyBackTurn}
+              onTap={turnBack}
+              onRelease={releasePage}
+            />
+          </group>
+        </group>
+      </group>
+
+      <group ref={flipHinge} position={[0, 0, LEAF_T / 2]} visible={showInsert} renderOrder={4}>
+        <group position={[LEAF_W / 2, 0, LEAF_T / 2]}>
+          <mesh geometry={leafGeo} material={outsideMat} raycast={() => {}} />
+          <group position={[0, 0, faceZ + 0.0008]}>
+            <CardFace
+              {...faceProps}
+              inset={false}
+              notesMat={flipFrontMat}
+              page="right"
+              spread={flipFrontSpread}
+              interactive={open && !flip && hasNext}
+              pageMeshes={hasNext ? pageMeshes : undefined}
+              onPick={onInsidePick}
+            />
+          </group>
+          <mesh
+            geometry={notesGeo}
+            material={flipBackMat}
+            position={[0, 0, insideZ - 0.0008]}
+            rotation={[0, Math.PI, 0]}
+            raycast={() => {}}
+          />
+          <PageFlickHandle
+            enabled={open && hasNext}
+            dir={1}
+            area="outer"
+            scale={scale}
+            openT={openT}
+            flipT={flipT}
+            pageDrag={pageDrag}
+            foldDrag={foldDrag}
+            noteDragging={noteDragging}
+            flipRef={flipRef}
+            onGrabStart={onGrabStart}
+            onTap={turnForward}
+            onRelease={releasePage}
+          />
         </group>
       </group>
 
@@ -2488,15 +3091,17 @@ export default function BirthdayCard3D({
           <mesh geometry={leafGeo} material={outsideMat} />
           <group position={[0, 0, faceZ]}>
             <CardFace {...faceProps} raised greetingMat={frontDecalMat} />
-            <FaceClickCatcher enabled={!open} onActivate={onFrontClick} />
+            <FaceClickCatcher enabled={!open} onActivate={onInsideClick} />
           </group>
           <group position={[0, 0, insideZ]} rotation={[0, Math.PI, 0]}>
             <CardFace
               {...faceProps}
               inset={false}
-              notesMat={insideLeftMat}
+              notesMat={coverLeftMat}
               page="left"
-              interactive={open}
+              spread={0}
+              interactive={open && !flip && !hasPrev}
+              pageMeshes={hasPrev ? undefined : pageMeshes}
               onPick={onInsidePick}
             />
             <FaceClickCatcher enabled={!open} onActivate={onInsideClick} />
@@ -2506,6 +3111,7 @@ export default function BirthdayCard3D({
             scale={scale}
             openT={openT}
             foldDrag={foldDrag}
+            pageDrag={pageDrag}
             noteDragging={noteDragging}
             onClose={onClose}
             onGrabStart={onGrabStart}
@@ -2519,26 +3125,90 @@ export default function BirthdayCard3D({
 
 const MAX_MESSAGE = 140;
 
-export function CardOpenButton({ open, visible, disabled, onClick }) {
+export function CardOpenButton({ open, visible, disabled, signed = false, onClick, onDone }) {
+  const showDone = Boolean(visible && signed && onDone);
   return (
-    <button
-      type="button"
-      className={`rgl-card-toggle${visible ? ' is-visible' : ''}`}
-      disabled={disabled}
-      aria-pressed={open}
-      onPointerDown={(e) => {
-        e.stopPropagation();
-        if (!open) unlockBirthdayJingle();
-      }}
-      onClick={(e) => {
-        e.stopPropagation();
-        if (disabled) return;
-        if (!open) unlockBirthdayJingle();
-        onClick?.();
-      }}
-    >
-      {open ? 'Close' : 'Open'}
-    </button>
+    <div className="rgl-card-dock">
+      <button
+        type="button"
+        className={`rgl-card-toggle${visible ? ' is-visible' : ''}`}
+        disabled={disabled}
+        aria-pressed={open}
+        onPointerDown={(e) => e.stopPropagation()}
+        onClick={(e) => {
+          e.stopPropagation();
+          if (disabled) return;
+          onClick?.();
+        }}
+      >
+        {open ? 'Close' : 'Open'}
+      </button>
+      <button
+        type="button"
+        className={`rgl-card-toggle rgl-card-done${showDone ? ' is-visible' : ''}`}
+        disabled={disabled || !showDone}
+        aria-label="Done"
+        aria-hidden={!showDone}
+        tabIndex={showDone ? 0 : -1}
+        onPointerDown={(e) => e.stopPropagation()}
+        onClick={(e) => {
+          e.stopPropagation();
+          if (disabled || !showDone) return;
+          onDone?.();
+        }}
+      >
+        Done
+      </button>
+    </div>
+  );
+}
+
+function PageNavChevron({ dir }) {
+  return (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+      <path
+        d={dir < 0 ? 'M8.5 2.5L4 7l4.5 4.5' : 'M5.5 2.5L10 7 5.5 11.5'}
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+export function CardPageNav({ visible, hasPrev, hasNext, onPrev, onNext }) {
+  return (
+    <>
+      <button
+        type="button"
+        className={`rgl-page-nav rgl-page-nav-prev${visible && hasPrev ? ' is-visible' : ''}`}
+        disabled={!visible || !hasPrev}
+        aria-label="Previous page"
+        onPointerDown={(e) => e.stopPropagation()}
+        onClick={(e) => {
+          e.stopPropagation();
+          if (!hasPrev) return;
+          onPrev?.();
+        }}
+      >
+        <PageNavChevron dir={-1} />
+      </button>
+      <button
+        type="button"
+        className={`rgl-page-nav rgl-page-nav-next${visible && hasNext ? ' is-visible' : ''}`}
+        disabled={!visible || !hasNext}
+        aria-label="Next page"
+        onPointerDown={(e) => e.stopPropagation()}
+        onClick={(e) => {
+          e.stopPropagation();
+          if (!hasNext) return;
+          onNext?.();
+        }}
+      >
+        <PageNavChevron dir={1} />
+      </button>
+    </>
   );
 }
 
@@ -2562,23 +3232,59 @@ export function CardWindowClose({ disabled, dismissing, onClick }) {
   );
 }
 
+const DOCK_FADE_MS = 180;
+
+export function useDockFade(open) {
+  const [exiting, setExiting] = useState(false);
+  const prev = useRef(open);
+
+  if (open !== prev.current) {
+    prev.current = open;
+    if (open) {
+      if (exiting) setExiting(false);
+    } else if (!exiting) {
+      setExiting(true);
+    }
+  }
+
+  useEffect(() => {
+    if (open || !exiting) return undefined;
+    const t = window.setTimeout(() => setExiting(false), DOCK_FADE_MS);
+    return () => window.clearTimeout(t);
+  }, [open, exiting]);
+
+  return exiting;
+}
+
 export function CardSignPop({ draft, value, onChange, onSign, onCancel }) {
   const inputRef = useRef(null);
-  const aim = Number.isFinite(draft?.x) && Number.isFinite(draft?.y);
+  const lastDraft = useRef(draft);
+  const open = Boolean(draft);
+  const exiting = useDockFade(open);
+  if (draft) lastDraft.current = draft;
+  const placed = lastDraft.current;
+  const aim = Number.isFinite(placed?.x) && Number.isFinite(placed?.y);
+  const present = open || exiting;
 
   useEffect(() => {
     if (!draft) return undefined;
-    const t = window.setTimeout(() => inputRef.current?.focus(), 40);
+    const t = window.setTimeout(() => {
+      const el = inputRef.current;
+      if (!el) return;
+      el.focus();
+      const end = el.value.length;
+      el.setSelectionRange(end, end);
+    }, 40);
     return () => window.clearTimeout(t);
   }, [draft]);
 
   return (
     <div
-      className={`rgl-face-dock rgl-face-dock-sign${draft ? ' is-on' : ''}${aim ? ' is-aimed' : ''}`}
-      aria-hidden={!draft}
+      className={`rgl-face-dock rgl-face-dock-sign${open ? ' is-on' : ''}${exiting ? ' is-exit' : ''}${aim ? ' is-aimed' : ''}`}
+      aria-hidden={!present}
       style={
         aim
-          ? { '--sign-x': `${draft.x}px`, '--sign-y': `${draft.y}px` }
+          ? { '--sign-x': `${placed.x}px`, '--sign-y': `${placed.y}px` }
           : undefined
       }
       onPointerDown={(e) => e.stopPropagation()}
@@ -2586,15 +3292,15 @@ export function CardSignPop({ draft, value, onChange, onSign, onCancel }) {
       <form
         className="rgl-face-dock-panel"
         role="dialog"
-        aria-modal={draft ? 'true' : undefined}
+        aria-modal={present ? 'true' : undefined}
         aria-labelledby="bday-sign-title"
         onSubmit={(e) => {
           e.preventDefault();
-          if (value.trim()) onSign();
+          if (open && value.trim()) onSign();
         }}
       >
         <p id="bday-sign-title" className="rgl-face-dock-label">
-          {draft?.noteId ? 'Edit' : 'Message'}
+          {placed?.noteId ? 'Edit' : 'Add a Message'}
         </p>
         <textarea
           ref={inputRef}
@@ -2603,7 +3309,7 @@ export function CardSignPop({ draft, value, onChange, onSign, onCancel }) {
           maxLength={MAX_MESSAGE}
           rows={3}
           placeholder="Happy birthday…"
-          tabIndex={draft ? 0 : -1}
+          tabIndex={open ? 0 : -1}
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === 'Escape') {
@@ -2613,7 +3319,7 @@ export function CardSignPop({ draft, value, onChange, onSign, onCancel }) {
             if (e.key === 'Enter' && !e.shiftKey) {
               e.preventDefault();
               e.stopPropagation();
-              if (value.trim()) onSign();
+              if (open && value.trim()) onSign();
             }
           }}
         />
@@ -2621,14 +3327,14 @@ export function CardSignPop({ draft, value, onChange, onSign, onCancel }) {
           <button
             type="submit"
             className="rgl-face-dock-action is-primary"
-            disabled={!draft || !value.trim()}
+            disabled={!value.trim()}
           >
-            {draft?.noteId ? 'Save' : 'Sign'}
+            {placed?.noteId ? 'Save' : 'Sign'}
           </button>
           <button
             type="button"
             className="rgl-face-dock-action"
-            tabIndex={draft ? 0 : -1}
+            tabIndex={open ? 0 : -1}
             onClick={onCancel}
           >
             Cancel

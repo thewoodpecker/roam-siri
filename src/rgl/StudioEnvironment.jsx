@@ -57,10 +57,31 @@ const DREI_PRESETS = new Set(
   STAGE_ENVIRONMENTS.filter((e) => e.id !== 'softbox').map((e) => e.id),
 );
 
-/** IBL for the RGL canvas — custom softboxes or a drei HDR preset. */
+const PHOTOGRAPHIC_HDRI = '/rgl/hdri/studio_small_03_1k.hdr';
+
+/** Playground A/B: current lights vs a photographic studio HDRI. */
+export const CARD_ENVIRONMENTS = [
+  { id: 'none', name: 'Lights', blurb: 'Current lighting, no HDRI' },
+  { id: 'studio', name: 'Photographic', blurb: 'Photographic HDRI' },
+];
+
+/** IBL for the RGL canvas — none, custom softboxes, or a photographic HDRI. */
 export function StageEnvironment({ id = 'softbox' }) {
+  if (!id || id === 'none') return null;
+  if (id === 'studio') {
+    return (
+      <Environment
+        files={PHOTOGRAPHIC_HDRI}
+        frames={1}
+        resolution={256}
+        environmentIntensity={1}
+      />
+    );
+  }
   if (id === 'softbox' || !DREI_PRESETS.has(id)) {
     return <BadgeStudioEnvironment />;
   }
-  return <Environment preset={id} frames={1} resolution={128} environmentIntensity={1} />;
+  return (
+    <Environment key={id} preset={id} frames={1} resolution={256} environmentIntensity={1} />
+  );
 }

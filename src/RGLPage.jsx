@@ -1,23 +1,27 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import BirthdayCard3D, {
   BACK_DESIGNS,
-  CARD_SEED_NOTES,
   COVER_DESIGNS,
   DEFAULT_BACK_TEXT,
   CardOpenButton,
+  CardPageNav,
   CardSignPop,
   CardWindowClose,
+  cardSeedNotesFor,
+  hasOwnMessage,
+  useDockFade,
 } from './rgl/BirthdayCard3D';
 import RGLStage from './rgl/RGLStage';
 import { GiftArriveFX } from './BirthdayGiftOverlay';
 import LightingPlot from './rgl/LightingPlot';
+import { CARD_ENVIRONMENTS } from './rgl/StudioEnvironment';
 import {
   GIFT_PALETTES,
   birthdayCssVars,
   paletteColorsFor,
 } from './rgl/materials';
 import { CARD_OPEN_SETTLE_MS, COVER_SNAP_MS } from './rgl/cardMotion';
-import { offices } from './data';
+import { CARD_PEOPLE, personById, personName, randomCardLook } from './rgl/cardLook';
 import './RGLPage.css';
 
 function PanelSection({ title, children }) {
@@ -43,25 +47,63 @@ function Chip({ active, onClick, children, title, ...rest }) {
   );
 }
 
+function PaletteSwatches({ theme, paletteId, onSelect, className }) {
+  return (
+    <div
+      className={['rgl-chip-row', className].filter(Boolean).join(' ')}
+      role="listbox"
+      aria-label="Color"
+    >
+      {GIFT_PALETTES.map((p) => {
+        const colors = theme === 'light' ? p.light : p.dark;
+        const blackBody = colors.body === '#000000';
+        const fill = blackBody ? '#1A1A1D' : colors.accent;
+        return (
+          <button
+            key={p.id}
+            type="button"
+            role="option"
+            aria-selected={p.id === paletteId}
+            aria-label={p.name}
+            title={p.name}
+            className={`rgl-swatch${p.id === paletteId ? ' is-active' : ''}`}
+            style={{
+              background: fill,
+              boxShadow: blackBody ? `inset 0 0 0 1.5px ${colors.accent}` : undefined,
+            }}
+            onClick={() => onSelect(p.id)}
+          >
+            {p.id === paletteId && <SwatchCheck color={swatchMarkColor(fill)} />}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 function FaceDock({
   side,
   visible,
   coverId,
   backId,
   backText,
+  theme,
+  paletteId,
   onSelectCover,
   onSelectBack,
   onBackText,
+  onSelectPalette,
 }) {
   const shown = side === 'back' ? 'back' : 'cover';
+  const exiting = useDockFade(visible);
   return (
     <div
-      className={`rgl-face-dock${visible ? ' is-on' : ''}`}
+      className={`rgl-face-dock${visible ? ' is-on' : ''}${exiting ? ' is-exit' : ''}`}
       aria-hidden={!visible}
       onPointerDown={(e) => e.stopPropagation()}
     >
       <div className="rgl-face-dock-panel">
-        <p className="rgl-face-dock-label">{shown === 'back' ? 'Back' : 'Cover'}</p>
+        <p className="rgl-face-dock-label">{shown === 'back' ? 'Back Cover' : 'Cover'}</p>
         {shown === 'back' ? (
           <>
             <div className="rgl-chip-row rgl-face-dock-backs" role="listbox" aria-label="Back">
@@ -93,19 +135,28 @@ function FaceDock({
             </div>
           </>
         ) : (
-          <div className="rgl-chip-row" role="listbox" aria-label="Cover">
-            {COVER_DESIGNS.map((cover) => (
-              <Chip
-                key={cover.id}
-                role="option"
-                aria-selected={cover.id === coverId}
-                active={cover.id === coverId}
-                onClick={() => onSelectCover(cover.id)}
-              >
-                {cover.name}
-              </Chip>
-            ))}
-          </div>
+          <>
+            <div className="rgl-chip-row" role="listbox" aria-label="Cover">
+              {COVER_DESIGNS.map((cover) => (
+                <Chip
+                  key={cover.id}
+                  role="option"
+                  aria-selected={cover.id === coverId}
+                  active={cover.id === coverId}
+                  onClick={() => onSelectCover(cover.id)}
+                >
+                  {cover.name}
+                </Chip>
+              ))}
+            </div>
+            <p className="rgl-face-dock-label">Color</p>
+            <PaletteSwatches
+              className="rgl-face-dock-swatches"
+              theme={theme}
+              paletteId={paletteId}
+              onSelect={onSelectPalette}
+            />
+          </>
         )}
       </div>
       <svg className="rgl-face-dock-lead" viewBox="0 0 72 24" aria-hidden="true">
@@ -162,46 +213,6 @@ const ARRIVE_AT = 0.35;
 /** Birthday label — shortly after glow, while the gift is still settling. */
 const LABEL_AT = 0.45;
 
-const CARD_PEOPLE = (() => {
-  const rows = offices
-    .filter((o) => o.id < 100 && o.people?.[0]?.name)
-    .map((o) => {
-      const full = o.people[0].name;
-      const parts = full.split(/\s+/);
-      return {
-        id: String(o.id),
-        first: parts[0],
-        last: parts[parts.length - 1],
-        full,
-      };
-    });
-  const counts = {};
-  rows.forEach((row) => {
-    counts[row.first] = (counts[row.first] || 0) + 1;
-  });
-  return rows
-    .map((row) => ({
-      ...row,
-      label: counts[row.first] > 1 ? `${row.first} ${row.last[0]}.` : row.first,
-    }))
-    .sort((a, b) => a.label.localeCompare(b.label));
-})();
-
-const DEFAULT_PERSON_ID = CARD_PEOPLE.find((p) => p.first === 'Klas')?.id ?? CARD_PEOPLE[0]?.id ?? '20';
-
-function pickPaletteId(exclude) {
-  const ids = GIFT_PALETTES.map((p) => p.id);
-  if (ids.length === 0) return exclude ?? 'gold';
-  let next = ids[Math.floor(Math.random() * ids.length)];
-  if (ids.length > 1 && exclude) {
-    let guard = 0;
-    while (next === exclude && guard++ < 12) {
-      next = ids[Math.floor(Math.random() * ids.length)];
-    }
-  }
-  return next;
-}
-
 function prefersReducedMotion() {
   return (
     typeof window !== 'undefined' &&
@@ -215,6 +226,7 @@ export default function RGLPage() {
   const [coverId, setCoverId] = useState('classic');
   const [backId, setBackId] = useState('text');
   const [backText, setBackText] = useState(DEFAULT_BACK_TEXT);
+  const lastLook = useRef({ paletteId: '', coverId: '', backId: '', personId: '' });
   const [showMap, setShowMap] = useState(true);
   const [mapBirthday, setMapBirthday] = useState(true);
   const [tickerEmpty, setTickerEmpty] = useState(false);
@@ -232,11 +244,13 @@ export default function RGLPage() {
   const [coverSnapKey, setCoverSnapKey] = useState(0);
   const [previewYaw, setPreviewYaw] = useState(0);
   const [previewAfterClose, setPreviewAfterClose] = useState(null);
-  const [notes, setNotes] = useState(CARD_SEED_NOTES);
+  const [notes, setNotes] = useState(() => cardSeedNotesFor('Klas'));
   const [selectedNoteId, setSelectedNoteId] = useState(null);
   const [draft, setDraft] = useState(null);
   const [draftText, setDraftText] = useState('');
+  const [pages, setPages] = useState({ spread: 0, count: 1 });
   const hostRef = useRef(null);
+  const pageTurnRef = useRef({ next() {}, prev() {} });
   const skipTapRef = useRef(false);
   const skipPickUntil = useRef(0);
   const skipTapTimer = useRef(0);
@@ -247,13 +261,15 @@ export default function RGLPage() {
       skipTapRef.current = false;
     }, 0);
   }, []);
-  const [personId, setPersonId] = useState(DEFAULT_PERSON_ID);
+  const [personId, setPersonId] = useState('20');
+  const [environment, setEnvironment] = useState('studio');
   const lastInspect = useRef('cover');
   if (inspect) lastInspect.current = inspect;
   const presentingCover = inspect != null || previewAfterClose != null;
   const showMapStage = showMap;
   const giftVisible = giftOpen || dismissing;
-  const birthdayName = CARD_PEOPLE.find((p) => p.id === personId)?.first ?? 'Klas';
+  const birthdayName = personName(personId);
+  const birthdayPerson = personById(personId);
 
   useEffect(() => {
     if (cardOpen) {
@@ -316,6 +332,13 @@ export default function RGLPage() {
   }, [theme]);
 
   const runEnter = useCallback(() => {
+    const next = randomCardLook(lastLook.current);
+    lastLook.current = next;
+    setPaletteId(next.paletteId);
+    setCoverId(next.coverId);
+    setBackId(next.backId);
+    setPersonId(next.personId);
+    setNotes(cardSeedNotesFor(next.name));
     setDismissing(false);
     setGiftOpen(true);
     setLabelPlay(false);
@@ -325,7 +348,6 @@ export default function RGLPage() {
     setCardReady(false);
     setFacing(false);
     setInspect(null);
-    setNotes(CARD_SEED_NOTES);
     setSelectedNoteId(null);
     setDraft(null);
     setDraftText('');
@@ -388,7 +410,6 @@ export default function RGLPage() {
   }, [giftOpen, dismissing]);
 
   const showGift = useCallback(() => {
-    setPaletteId((prev) => pickPaletteId(prev));
     runEnter();
   }, [runEnter]);
 
@@ -449,7 +470,7 @@ export default function RGLPage() {
 
   const pickInside = useCallback((hit) => {
     if (!cardOpen) return;
-    if (performance.now() < skipPickUntil.current) return;
+    if (!hit?.auto && performance.now() < skipPickUntil.current) return;
     armSkipTap();
     const host = hostRef.current;
     if (!host) return;
@@ -457,6 +478,7 @@ export default function RGLPage() {
     setSelectedNoteId(hit.noteId || null);
     setDraft({
       page: hit.page,
+      spread: hit.spread ?? 0,
       col: hit.col,
       row: hit.row,
       u: hit.u,
@@ -520,6 +542,7 @@ export default function RGLPage() {
         {
           id,
           page: draft.page,
+          spread: draft.spread ?? 0,
           col: draft.col,
           row: draft.row,
           u: draft.u,
@@ -569,6 +592,7 @@ export default function RGLPage() {
     <RGLStage
       className="rgl-canvas rgl-canvas-card"
       key={theme}
+      environment={environment}
       appearSpinKey={appearSpinKey}
       appearTurns={APPEAR_TURNS}
       appearDuration={ENTER_MS / 1000}
@@ -586,13 +610,12 @@ export default function RGLPage() {
               : null
       }
       tapSpin={!facing && !presentingCover}
-      allowDrag={!cardOpen}
+      allowDrag
       onOrbit={() => setInspect(null)}
       onTap={cardReady && !dismissing ? onStageTap : undefined}
     >
       <BirthdayCard3D
         open={cardOpen}
-        followPointer={cardOpen}
         name={birthdayName}
         notes={notes}
         draft={draft ? { ...draft, text: draftText, name: 'Joe' } : null}
@@ -610,16 +633,6 @@ export default function RGLPage() {
         onGrabStart={() => {
           armSkipTap();
         }}
-        onFrontClick={() => {
-          if (!cardReady || dismissing || draft) return;
-          armSkipTap();
-          inspectFace('cover');
-        }}
-        onBackClick={() => {
-          if (!cardReady || dismissing || draft) return;
-          armSkipTap();
-          inspectFace('back');
-        }}
         onInsideClick={() => {
           if (!cardReady || dismissing || draft) return;
           armSkipTap();
@@ -627,6 +640,8 @@ export default function RGLPage() {
           setInspect(null);
           setCardOpen(true);
         }}
+        onPagesChange={setPages}
+        pageTurnRef={pageTurnRef}
       />
     </RGLStage>
   );
@@ -636,7 +651,19 @@ export default function RGLPage() {
       open={cardOpen}
       visible={labelPlay}
       disabled={!cardReady || dismissing}
+      signed={hasOwnMessage(notes)}
       onClick={toggleCard}
+      onDone={dismissGift}
+    />
+  );
+
+  const pageNav = (
+    <CardPageNav
+      visible={labelPlay && cardOpen && pages.count > 1}
+      hasPrev={pages.spread > 0}
+      hasNext={pages.spread < pages.count - 1}
+      onPrev={() => pageTurnRef.current.prev()}
+      onNext={() => pageTurnRef.current.next()}
     />
   );
 
@@ -647,8 +674,11 @@ export default function RGLPage() {
       coverId={coverId}
       backId={backId}
       backText={backText}
+      theme={theme}
+      paletteId={paletteId}
       onSelectCover={selectCover}
       onSelectBack={selectBack}
+      onSelectPalette={setPaletteId}
       onBackText={(value) => {
         setBackText(value);
         inspectFace('back', false);
@@ -732,34 +762,24 @@ export default function RGLPage() {
           </PanelSection>
 
           <PanelSection title="Palette">
-            <div className="rgl-chip-row" role="listbox" aria-label="Palette">
-              {GIFT_PALETTES.map((p) => {
-                const colors = theme === 'light' ? p.light : p.dark;
-                const blackBody = colors.body === '#000000';
-                const fill = blackBody ? '#1A1A1D' : colors.accent;
-                return (
-                  <button
-                    key={p.id}
-                    type="button"
-                    role="option"
-                    aria-selected={p.id === paletteId}
-                    aria-label={p.name}
-                    title={p.name}
-                    className={`rgl-swatch${p.id === paletteId ? ' is-active' : ''}`}
-                    style={{
-                      background: fill,
-                      boxShadow: blackBody ? `inset 0 0 0 1.5px ${colors.accent}` : undefined,
-                    }}
-                    onClick={() => setPaletteId(p.id)}
-                  >
-                    {p.id === paletteId && <SwatchCheck color={swatchMarkColor(fill)} />}
-                  </button>
-                );
-              })}
-            </div>
+            <PaletteSwatches theme={theme} paletteId={paletteId} onSelect={setPaletteId} />
           </PanelSection>
 
           <PanelSection title="Lights">
+            <div className="rgl-chip-row" role="listbox" aria-label="Environment">
+              {CARD_ENVIRONMENTS.map((env) => (
+                <Chip
+                  key={env.id}
+                  role="option"
+                  title={env.blurb}
+                  aria-selected={env.id === environment}
+                  active={env.id === environment}
+                  onClick={() => setEnvironment(env.id)}
+                >
+                  {env.name}
+                </Chip>
+              ))}
+            </div>
             <LightingPlot
               open={cardOpen}
               gleamColor={gleamColor}
@@ -828,6 +848,7 @@ export default function RGLPage() {
                         showTicker
                         birthdayPaletteId={paletteId}
                         birthdayEnabled={mapBirthday}
+                        birthdayPerson={birthdayPerson}
                         tickerEmpty={tickerEmpty}
                       />
                     </Suspense>
@@ -864,6 +885,7 @@ export default function RGLPage() {
                       )}
                       <div className="rgl-gift-anchor">
                         {cardToggle}
+                        {pageNav}
                         {faceDock}
                         <CardSignPop
                           draft={draft}
@@ -904,6 +926,7 @@ export default function RGLPage() {
                 )}
                 <div className="rgl-gift-anchor">
                   {cardToggle}
+                  {pageNav}
                   {faceDock}
                   <CardSignPop
                     draft={draft}

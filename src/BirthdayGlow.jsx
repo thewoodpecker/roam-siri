@@ -213,16 +213,16 @@ void main() {
   vec2 toward = md > 0.001 ? -delta / md : vec2(0.0);
   vec2 warpedFrag = frag + toward * head * 22.0 + toward * trail * 14.0;
 
-  float spark = birthdaySparkles(warpedFrag, u_time, 0.22);
-  /* Flecks along the trail itself. */
-  spark += birthdaySparkles(frag * 1.15 + u_time * 2.0, u_time, 0.28) * trail * 1.35;
-  spark += birthdaySparkles(frag + 40.0, u_time, 0.18) * trail * 0.7;
+  /* Hover-only — no ambient starfield. Sparkles live on the cursor wake. */
+  float hover = clamp(trail * 1.2 + head * 0.95, 0.0, 2.6);
+  float spark = birthdaySparkles(warpedFrag, u_time, 0.7) * hover;
+  spark += birthdaySparkles(frag * 1.15 + u_time * 2.0, u_time, 0.52) * trail * 1.55;
+  spark += birthdaySparkles(frag + 40.0, u_time, 0.36) * trail * 0.9;
   spark = clamp(spark, 0.0, 1.0) * field;
-  spark *= 1.0 + trail * 1.55 + head * 0.85;
 
-  float alpha = spark * 0.9;
+  float alpha = spark * 0.95;
   if (u_reduce > 0.5) {
-    alpha = field * 0.14;
+    alpha = 0.0;
     spark = 0.0;
   }
   alpha = clamp(alpha, 0.0, 1.0);
@@ -260,7 +260,7 @@ function compile(gl, type, src) {
 /**
  * Birthday celebration FX.
  * - `floor`  — soft palette wash + sparkles along an office floor
- * - `radial` — sparkling disc behind the gift (cursor-interactive when enabled)
+ * - `radial` — hover sparkle trail behind the gift (no ambient field)
  */
 export default function BirthdayGlow({
   active = true,

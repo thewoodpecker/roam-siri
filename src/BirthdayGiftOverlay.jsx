@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import BirthdayCard3D, { CARD_SEED_NOTES, CardOpenButton, CardSignPop, CardWindowClose } from './rgl/BirthdayCard3D';
+import BirthdayCard3D, { CardOpenButton, CardPageNav, CardSignPop, CardWindowClose, cardSeedNotesFor, hasOwnMessage } from './rgl/BirthdayCard3D';
 import RGLStage from './rgl/RGLStage';
 import BirthdayGlow from './BirthdayGlow';
 import { paletteColorsFor } from './rgl/materials';
 import { CARD_OPEN_SETTLE_MS } from './rgl/cardMotion';
+import { randomCardLook } from './rgl/cardLook';
 import './BirthdayGiftOverlay.css';
 
 /** Must match `.rgl-gift-bounce-in` duration. */
@@ -75,18 +76,21 @@ export function GiftArriveFX({ accent, burstKey }) {
  * experience as the RGL playground, clipped to a relative host (e.g. .sc-window).
  *
  * `playKey` increments replay the enter while `open` stays true.
+ * Each enter picks a new color, cover, and back.
+ * Pass `name` to keep the recipient; otherwise a person is chosen at random.
  */
 export default function BirthdayGiftOverlay({
   open,
   playKey = 0,
   onDismissed,
   theme = 'dark',
-  paletteId = 'gold',
-  name = 'Klas',
+  name,
   signerName = 'Joe',
   showScrim = true,
 }) {
   const hostRef = useRef(null);
+  const lastLook = useRef({ paletteId: '', coverId: '', backId: '', personId: '' });
+  const [look, setLook] = useState(() => randomCardLook());
   const [entering, setEntering] = useState(true);
   const [dismissing, setDismissing] = useState(false);
   const [arriveFx, setArriveFx] = useState(false);
@@ -96,11 +100,13 @@ export default function BirthdayGiftOverlay({
   const [cardOpen, setCardOpen] = useState(false);
   const [cardReady, setCardReady] = useState(false);
   const [facing, setFacing] = useState(false);
-  const [notes, setNotes] = useState(CARD_SEED_NOTES);
+  const [notes, setNotes] = useState(() => cardSeedNotesFor(look.name));
   const [selectedNoteId, setSelectedNoteId] = useState(null);
   const [draft, setDraft] = useState(null);
   const [draftText, setDraftText] = useState('');
+  const [pages, setPages] = useState({ spread: 0, count: 1 });
   const dismissedRef = useRef(false);
+  const pageTurnRef = useRef({ next() {}, prev() {} });
   const skipTapRef = useRef(false);
   const skipPickUntil = useRef(0);
   const skipTapTimer = useRef(0);
@@ -111,7 +117,7 @@ export default function BirthdayGiftOverlay({
       skipTapRef.current = false;
     }, 0);
   }, []);
-  const paletteColors = paletteColorsFor(theme, paletteId);
+  const paletteColors = paletteColorsFor(theme, look.paletteId);
 
   useEffect(() => {
     if (cardOpen) {
@@ -131,6 +137,10 @@ export default function BirthdayGiftOverlay({
   }, [onDismissed]);
 
   const runEnter = useCallback(() => {
+    const next = randomCardLook(lastLook.current);
+    if (name) next.name = name;
+    lastLook.current = next;
+    setLook(next);
     dismissedRef.current = false;
     setDismissing(false);
     setArriveFx(false);
@@ -139,7 +149,7 @@ export default function BirthdayGiftOverlay({
     setCardOpen(false);
     setCardReady(false);
     setFacing(false);
-    setNotes(CARD_SEED_NOTES);
+    setNotes(cardSeedNotesFor(next.name));
     setSelectedNoteId(null);
     setDraft(null);
     setDraftText('');
@@ -178,7 +188,7 @@ export default function BirthdayGiftOverlay({
       window.clearTimeout(labelTimer);
       window.clearTimeout(readyTimer);
     };
-  }, []);
+  }, [name]);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -224,7 +234,7 @@ export default function BirthdayGiftOverlay({
 
   const pickInside = useCallback((hit) => {
     if (!cardOpen) return;
-    if (performance.now() < skipPickUntil.current) return;
+    if (!hit?.auto && performance.now() < skipPickUntil.current) return;
     armSkipTap();
     const host = hostRef.current;
     if (!host) return;
@@ -232,6 +242,7 @@ export default function BirthdayGiftOverlay({
     setSelectedNoteId(null);
     setDraft({
       page: hit.page,
+      spread: hit.spread ?? 0,
       col: hit.col,
       row: hit.row,
       u: hit.u,
@@ -278,6 +289,7 @@ export default function BirthdayGiftOverlay({
       {
         id,
         page: draft.page,
+        spread: draft.spread ?? 0,
         col: draft.col,
         row: draft.row,
         u: draft.u,
@@ -387,7 +399,7 @@ export default function BirthdayGiftOverlay({
                 idleSpin={!facing}
                 holdYaw={facing ? 0 : null}
                 tapSpin={!facing}
-                allowDrag={!cardOpen}
+                allowDrag
                 onTap={
                   cardReady && !dismissing
                     ? () => {
@@ -402,12 +414,13 @@ export default function BirthdayGiftOverlay({
               >
                 <BirthdayCard3D
                   open={cardOpen}
-                  followPointer={cardOpen}
-                  name={name}
+                  name={look.name}
                   notes={notes}
                   draft={draft ? { ...draft, text: draftText, name: signerName } : null}
                   theme={theme}
-                  paletteId={paletteId}
+                  paletteId={look.paletteId}
+                  coverId={look.coverId}
+                  backId={look.backId}
                   selectedNoteId={selectedNoteId}
                   onInsidePick={pickInside}
                   onSelectNote={setSelectedNoteId}
@@ -423,6 +436,8 @@ export default function BirthdayGiftOverlay({
                     skipPickUntil.current = performance.now() + 500;
                     setCardOpen(true);
                   }}
+                  onPagesChange={setPages}
+                  pageTurnRef={pageTurnRef}
                 />
               </RGLStage>
             </div>
@@ -431,7 +446,16 @@ export default function BirthdayGiftOverlay({
             open={cardOpen}
             visible={labelPlay}
             disabled={!cardReady || dismissing}
+            signed={hasOwnMessage(notes)}
             onClick={toggleCard}
+            onDone={dismiss}
+          />
+          <CardPageNav
+            visible={labelPlay && cardOpen && pages.count > 1}
+            hasPrev={pages.spread > 0}
+            hasNext={pages.spread < pages.count - 1}
+            onPrev={() => pageTurnRef.current.prev()}
+            onNext={() => pageTurnRef.current.next()}
           />
         </div>
       </div>

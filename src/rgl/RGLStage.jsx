@@ -85,7 +85,7 @@ function FitOrthoCamera() {
  * Y-axis turntable with the same physics as RoamIcon3D:
  * idle spin, 1:1 drag, fling with friction, tap-to-spin burst.
  */
-function OrbitingSubject({ children, drag, rotationY, spinBurst, angularVel, idleSpinRef, holdYawRef }) {
+function OrbitingSubject({ children, drag, rotationY, spinBurst, angularVel, idleSpinRef, holdYawRef, holdArmedRef }) {
   const group = useRef(null);
   const reduceMotion = usePrefersReducedMotion();
 
@@ -105,7 +105,7 @@ function OrbitingSubject({ children, drag, rotationY, spinBurst, angularVel, idl
       }
     } else if (drag.current.active) {
       // Rotation is 1:1 with the pointer in the drag handlers
-    } else if (holdYawRef.current != null) {
+    } else if (holdYawRef.current != null && holdArmedRef.current) {
       spinBurst.current = null;
       angularVel.current = 0;
       let diff = holdYawRef.current - rotationY.current;
@@ -185,8 +185,12 @@ export default function RGLStage({
   const spinBurst = useRef(null);
   const idleSpinRef = useRef(idleSpin);
   const holdYawRef = useRef(holdYaw);
+  const holdArmedRef = useRef(holdYaw != null);
   idleSpinRef.current = idleSpin;
   holdYawRef.current = holdYaw;
+  useEffect(() => {
+    holdArmedRef.current = holdYaw != null;
+  }, [holdYaw, idleSpin]);
   const onTapRef = useRef(onTap);
   onTapRef.current = onTap;
   const onOrbitRef = useRef(onOrbit);
@@ -279,6 +283,7 @@ export default function RGLStage({
       if (Math.abs(dx) > 0.5) {
         if (!drag.current.moved) {
           drag.current.moved = true;
+          holdArmedRef.current = false;
           onOrbitRef.current?.();
           try {
             host.setPointerCapture(ev.pointerId);
@@ -331,6 +336,7 @@ export default function RGLStage({
     <div
       ref={hostRef}
       className={className}
+      data-environment={environment}
       style={{
         cursor: dragEnabled ? 'grab' : interactive ? 'pointer' : 'default',
         touchAction: 'none',
@@ -363,7 +369,7 @@ export default function RGLStage({
         <FitOrthoCamera />
         <RGLLights lights={studio} />
         <Suspense fallback={null}>
-          <StageEnvironment id={environment} />
+          <StageEnvironment key={environment} id={environment} />
         </Suspense>
         <OrbitingSubject
           drag={drag}
@@ -372,6 +378,7 @@ export default function RGLStage({
           angularVel={angularVel}
           idleSpinRef={idleSpinRef}
           holdYawRef={holdYawRef}
+          holdArmedRef={holdArmedRef}
         >
           {children}
         </OrbitingSubject>

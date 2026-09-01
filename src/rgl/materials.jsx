@@ -37,7 +37,7 @@ export const BADGE_GOLD_PROPS = {
 export const BADGE_SILVER_PROPS = {
   color: '#C8CED6',
   metalness: 1,
-  roughness: 0.04,
+  roughness: 0.05,
   clearcoat: 1,
   clearcoatRoughness: 0.02,
   reflectivity: 1,
@@ -51,7 +51,7 @@ export const BADGE_SILVER_PROPS = {
 export const BADGE_BLACK_FOIL_PROPS = {
   color: '#0B0B0D',
   metalness: 1,
-  roughness: 0.02,
+  roughness: 0.04,
   clearcoat: 1,
   clearcoatRoughness: 0,
   reflectivity: 1,
@@ -350,6 +350,104 @@ export const bodyMaterialProps = {
   reflectivity: 0.45,
   flatShading: false,
 };
+
+/** Card body finishes — paper is the default greeting-card look. */
+export const CARD_FINISHES = [
+  {
+    id: 'paper',
+    name: 'Paper',
+    outside: {
+      metalness: 0,
+      roughness: 0.52,
+      roughnessBlack: 0.42,
+      clearcoat: 0,
+      clearcoatRoughness: 0.5,
+      reflectivity: 0.08,
+      envMapIntensity: 0.65,
+    },
+    well: {
+      metalness: 0.05,
+      metalnessBlack: 0,
+      roughness: 0.2,
+      clearcoat: 0.18,
+      clearcoatBlack: 0,
+      clearcoatRoughness: 0.22,
+      envMapIntensity: 1.3,
+    },
+  },
+  {
+    id: 'metal',
+    name: 'Metal',
+    outside: {
+      metalness: 1,
+      roughness: 0.2,
+      roughnessBlack: 0.14,
+      clearcoat: 0.18,
+      clearcoatRoughness: 0.18,
+      reflectivity: 1,
+      envMapIntensity: 1.4,
+    },
+    well: {
+      metalness: 1,
+      roughness: 0.14,
+      clearcoat: 0.12,
+      clearcoatRoughness: 0.14,
+      envMapIntensity: 1.55,
+    },
+  },
+  {
+    id: 'plastic',
+    name: 'Plastic',
+    outside: {
+      metalness: 0.04,
+      roughness: 0.24,
+      roughnessBlack: 0.18,
+      clearcoat: 0.88,
+      clearcoatRoughness: 0.1,
+      reflectivity: 0.55,
+      envMapIntensity: 1.05,
+    },
+    well: {
+      metalness: 0.02,
+      roughness: 0.16,
+      clearcoat: 0.72,
+      clearcoatRoughness: 0.08,
+      envMapIntensity: 1.2,
+    },
+  },
+];
+
+export function getCardFinish(id = 'paper') {
+  return CARD_FINISHES.find((f) => f.id === id) ?? CARD_FINISHES[0];
+}
+
+function mixFinishChannel(base, black, t) {
+  if (black == null) return base;
+  return base + (black - base) * t;
+}
+
+/** Resolve a finish against the black-body mix used by the card lerp. */
+export function resolveCardFinish(finish, black = 0) {
+  const o = finish.outside;
+  const w = finish.well;
+  return {
+    outside: {
+      metalness: o.metalness,
+      roughness: mixFinishChannel(o.roughness, o.roughnessBlack, black),
+      clearcoat: o.clearcoat,
+      clearcoatRoughness: o.clearcoatRoughness,
+      reflectivity: o.reflectivity,
+      envMapIntensity: o.envMapIntensity,
+    },
+    well: {
+      metalness: mixFinishChannel(w.metalness, w.metalnessBlack, black),
+      roughness: w.roughness,
+      clearcoat: mixFinishChannel(w.clearcoat, w.clearcoatBlack, black),
+      clearcoatRoughness: w.clearcoatRoughness,
+      envMapIntensity: w.envMapIntensity,
+    },
+  };
+}
 
 /** Body props for the current stage theme + gift palette. */
 export function bodyMaterialPropsFor(theme = 'dark', paletteId = 'gold') {

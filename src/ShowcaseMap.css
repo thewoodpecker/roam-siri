@@ -1810,6 +1810,10 @@
   filter: invert(1);
 }
 
+.sc-viewport[data-theme="light"] .sc-toolbar-group > .sc-toolbar-pill-label img {
+  filter: none;
+}
+
 /* Light mode: toolbar pill colors */
 .sc-viewport[data-theme="light"] .sc-toolbar-pill {
   color: #1D1D1F;
@@ -3668,10 +3672,39 @@
 }
 
 .sc-toolbar-pill-label {
+  position: relative;
   gap: 4px;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.sc-toolbar-group > .sc-toolbar-pill.sc-toolbar-pill-label {
+  border-radius: 20px;
+  pointer-events: auto;
+}
+
+.sc-toolbar-birthday-glow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.sc-toolbar-birthday-avatar {
+  position: relative;
+  z-index: 1;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  display: block;
 }
 
 .sc-toolbar-pill-label span {
+  position: relative;
+  z-index: 1;
   font-family: var(--font-family-primary);
   font-size: 12px;
   font-weight: 400;

@@ -4857,17 +4857,31 @@ function ExternalMeetingsPreview() {
 // Reusable before/after compare slider — drag the vertical handle to reveal
 // the difference between two stacked images. The "before" image (leftSrc)
 // sits beneath; the "after" image (rightSrc) is clipped to the right of the
-// divider, so dragging right reveals more of it.
-function CompareSlider({ leftSrc, rightSrc, leftAlt = '', rightAlt = '' }) {
+// divider, so dragging right reveals more of it. When srcs are omitted, labeled
+// placeholder surfaces stand in for the images. `rightContent` can replace
+// the right image (used by the Your Office WebGL embed).
+function CompareSlider({
+  aspectRatio,
+  label = 'Compare images',
+  leftAlt = '',
+  leftLabel,
+  leftSrc,
+  rightAlt = '',
+  rightContent,
+  rightLabel,
+  rightSrc,
+}) {
   const containerRef = useRef(null);
   const [pos, setPos] = useState(0.5);
   const draggingRef = useRef(false);
+  const usePlaceholders = !leftSrc || !rightSrc;
 
   useEffect(() => {
     const onMove = (e) => {
       if (!draggingRef.current || !containerRef.current) return;
       const rect = containerRef.current.getBoundingClientRect();
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      if (clientX == null) return;
       const x = (clientX - rect.left) / rect.width;
       setPos(Math.max(0, Math.min(1, x)));
     };
@@ -4884,20 +4898,74 @@ function CompareSlider({ leftSrc, rightSrc, leftAlt = '', rightAlt = '' }) {
     };
   }, []);
 
-  const startDrag = () => { draggingRef.current = true; };
+  const startDrag = (e) => {
+    if (e.target instanceof Element && e.target.closest('iframe')) return;
+    e.preventDefault();
+    draggingRef.current = true;
+    containerRef.current?.focus();
+  };
+
+  const onKeyDown = (e) => {
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      setPos((v) => Math.max(0, v - 0.05));
+      return;
+    }
+    if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      setPos((v) => Math.min(1, v + 0.05));
+      return;
+    }
+    if (e.key === 'Home') {
+      e.preventDefault();
+      setPos(0);
+      return;
+    }
+    if (e.key === 'End') {
+      e.preventDefault();
+      setPos(1);
+    }
+  };
+
+  const percent = Math.round(pos * 100);
+  const clipStyle = { clipPath: `inset(0 0 0 ${percent}%)` };
+  const frameStyle = aspectRatio ? { '--fp-compare-aspect': aspectRatio } : undefined;
+
+  const leftLayer = leftSrc ? (
+    <img className="fp-vbg-img" src={leftSrc} alt={leftAlt} />
+  ) : (
+    <div className="fp-vbg-placeholder fp-vbg-placeholder-left">{leftLabel}</div>
+  );
+  const rightLayer = rightContent ? (
+    rightContent
+  ) : rightSrc ? (
+    <img className="fp-vbg-img" src={rightSrc} alt={rightAlt} />
+  ) : (
+    <div className="fp-vbg-placeholder fp-vbg-placeholder-right">{rightLabel}</div>
+  );
 
   return (
     <div
       ref={containerRef}
-      className="fp-image-preview fp-vbg-compare"
+      className={`fp-image-preview fp-vbg-compare${usePlaceholders ? ' fp-vbg-compare-fill' : ''}`}
+      style={frameStyle}
+      role="slider"
+      tabIndex={0}
+      aria-label={label}
+      aria-orientation="horizontal"
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuenow={percent}
       onMouseDown={startDrag}
       onTouchStart={startDrag}
+      onKeyDown={onKeyDown}
     >
-      <img className="fp-vbg-img" src={leftSrc} alt={leftAlt} />
-      <div className="fp-vbg-clip" style={{ clipPath: `inset(0 0 0 ${pos * 100}%)` }}>
-        <img className="fp-vbg-img" src={rightSrc} alt={rightAlt} />
+      {usePlaceholders ? <div className="fp-vbg-sizer" aria-hidden="true" /> : null}
+      {leftLayer}
+      <div className="fp-vbg-clip" style={clipStyle}>
+        {rightLayer}
       </div>
-      <div className="fp-vbg-divider" style={{ left: `${pos * 100}%` }}>
+      <div className="fp-vbg-divider" style={{ left: `${percent}%` }}>
         <span className="fp-vbg-handle" aria-hidden="true">
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
             <path d="M5 3L2 7L5 11M9 3L12 7L9 11" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
@@ -4905,6 +4973,72 @@ function CompareSlider({ leftSrc, rightSrc, leftAlt = '', rightAlt = '' }) {
         </span>
       </div>
     </div>
+  );
+}
+
+function OfficeComparePlaceholder({ aspectRatio = '16 / 9', leftLabel, rightContent, rightLabel }) {
+  return (
+    <CompareSlider
+      aspectRatio={aspectRatio}
+      label={`${leftLabel} compared with ${rightLabel}`}
+      leftLabel={leftLabel}
+      rightContent={rightContent}
+      rightLabel={rightLabel}
+    />
+  );
+}
+
+const VIRTUAL_OFFICE_EMBED_SRC = '/virtual-office.htm?embed=1&building=yext';
+
+function VirtualOfficeEmbed() {
+  const iframeRef = useRef(null);
+  const pausedRef = useRef(false);
+
+  const postPaused = (paused) => {
+    pausedRef.current = paused;
+    iframeRef.current?.contentWindow?.postMessage(
+      { source: 'roam-virtual-office', paused },
+      '*'
+    );
+  };
+
+  useEffect(() => {
+    const iframe = iframeRef.current;
+    if (!iframe) return;
+
+    const onLoad = () => { postPaused(pausedRef.current); };
+    iframe.addEventListener('load', onLoad);
+
+    if (typeof IntersectionObserver === 'undefined') {
+      return () => iframe.removeEventListener('load', onLoad);
+    }
+
+    let seenIntersecting = false;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry) return;
+      // The iframe can be 0×0 on the first callback (layout not ready). Pausing
+      // then freezes the WebGL intro at scale 0 — a black grid with no tower.
+      if (entry.boundingClientRect.height < 8) return;
+      if (entry.isIntersecting) seenIntersecting = true;
+      if (!seenIntersecting) return;
+      postPaused(!entry.isIntersecting);
+    }, { threshold: 0.05 });
+    observer.observe(iframe);
+    return () => {
+      iframe.removeEventListener('load', onLoad);
+      observer.disconnect();
+    };
+  }, []);
+
+  return (
+    <iframe
+      ref={iframeRef}
+      className="fp-vbg-webgl"
+      title="Digital office building"
+      src={VIRTUAL_OFFICE_EMBED_SRC}
+      loading="eager"
+      tabIndex={-1}
+    />
   );
 }
 
@@ -7990,6 +8124,100 @@ export const FEATURES = {
       { variant: 'reviews' },
     ],
   },
+  'your-office': {
+    hideHeroCtas: true,
+    seo: {
+      title: 'Your Office, Inside Your Computer | Roam Virtual Workspace',
+      description:
+        'All the productivity and culture of an office building, without the commute, geographic talent restrictions, distraction, or rent. A skeuomorphic virtual office inside Roam.',
+    },
+    title: (
+      <>
+        Your Office,
+        <br />
+        Inside Your Computer
+      </>
+    ),
+    hero: (
+      <p>
+        All the productivity & culture of an office building. Without the commute, geographic talent
+        restrictions, distraction, or rent. We’re taking everything that makes a great office work
+        and designing a skeuomorphic version of it inside Roam. Your virtual office takes 20 minutes
+        to learn and costs 50 times less than office rent.
+      </p>
+    ),
+    sections: [
+      {
+        desc: 'A digital virtual version of your physical office space',
+        interactive: true,
+        eager: true,
+        visual: (
+          <OfficeComparePlaceholder
+            leftLabel="Physical office building"
+            rightContent={<VirtualOfficeEmbed />}
+            rightLabel="Digital office building"
+          />
+        ),
+      },
+      {
+        desc: 'That includes theater features like the office floor plan',
+        interactive: true,
+        eager: true,
+        visual: (
+          <OfficeComparePlaceholder
+            leftLabel="Physical floor plan"
+            rightLabel="Digital floor plan"
+          />
+        ),
+      },
+      {
+        title: 'Meeting Rooms',
+        interactive: true,
+        eager: true,
+        visual: (
+          <OfficeComparePlaceholder leftLabel="Video meeting" rightLabel="In-person meeting" />
+        ),
+      },
+      {
+        desc: 'Lobby Reception for greeting guests',
+        interactive: true,
+        eager: true,
+        visual: (
+          <OfficeComparePlaceholder
+            aspectRatio="16 / 10"
+            leftLabel="Digital lobby"
+            rightLabel="Physical lobby"
+          />
+        ),
+      },
+      {
+        interactive: true,
+        eager: true,
+        visual: (
+          <OfficeComparePlaceholder
+            aspectRatio="16 / 3"
+            leftLabel="Digital lobby"
+            rightLabel="Physical lobby"
+          />
+        ),
+      },
+      {
+        desc: 'A place to showcase books, art, merit, and more.',
+        interactive: true,
+        eager: true,
+        visual: (
+          <OfficeComparePlaceholder leftLabel="Digital reception" rightLabel="Physical reception" />
+        ),
+      },
+      {
+        interactive: true,
+        eager: true,
+        visual: (
+          <OfficeComparePlaceholder leftLabel="Digital shelf" rightLabel="Physical bookshelf" />
+        ),
+      },
+    ],
+  },
 };
 
 export const FEATURE_ORDER = [
@@ -8274,7 +8502,7 @@ function CurrencyPriceCards({ cards }) {
   );
 }
 
-function FeatureSection({ eyebrow, title, subtitle, titleImage, desc, visual, icons, variant, cards, bullets, left, right, columns, columnsStyle, leadContent, items, itemMarker, flashcards, featureSlug, rows, body, subBullets, footer, mapAlign, interactive, offer, plans, footnote, ctas, trust, price, priceMeta, reviews }) {
+function FeatureSection({ eyebrow, title, subtitle, titleImage, desc, visual, icons, variant, cards, bullets, left, right, columns, columnsStyle, leadContent, items, itemMarker, flashcards, featureSlug, rows, body, subBullets, footer, mapAlign, interactive, eager, offer, plans, footnote, ctas, trust, price, priceMeta, reviews }) {
   if (variant === 'reviews') {
     return <HomepageReviews limit={items?.length || 6} />;
   }
@@ -8654,11 +8882,22 @@ function FeatureSection({ eyebrow, title, subtitle, titleImage, desc, visual, ic
     );
   }
   const slug = title ? sectionSlug(title) : null;
+  const hasText = Boolean(
+    eyebrow ||
+    titleImage ||
+    title ||
+    subtitle ||
+    (desc != null && desc !== '') ||
+    (subBullets && subBullets.length > 0) ||
+    (icons && icons.length > 0) ||
+    (ctas && ctas.length > 0)
+  );
   return (
     <section
       id={slug || undefined}
       className={`fp-section ${variant ? `fp-section-${variant}` : ''}`}
     >
+      {hasText ? (
       <div className="fp-section-text">
         {eyebrow && <div className="fp-section-eyebrow text-caption-strong">{eyebrow}</div>}
         {titleImage && <img className="fp-section-title-image" src={titleImage.src} alt={titleImage.alt || ''} />}
@@ -8669,7 +8908,7 @@ function FeatureSection({ eyebrow, title, subtitle, titleImage, desc, visual, ic
           </h2>
         )}
         {subtitle && <div className="fp-section-subtitle">{subtitle}</div>}
-        <p className="fp-section-desc text-body">{desc}</p>
+        {desc != null && desc !== '' && <p className="fp-section-desc text-body">{desc}</p>}
         {subBullets && subBullets.length > 0 && (
           <ul className="fp-section-sub-bullets text-body">
             {subBullets.map((b, i) => <li key={i}>{b}</li>)}
@@ -8704,9 +8943,10 @@ function FeatureSection({ eyebrow, title, subtitle, titleImage, desc, visual, ic
           </div>
         )}
       </div>
+      ) : null}
       {visual && (
         <div className="fp-section-visual" data-map-align={mapAlign || undefined} data-interactive={interactive ? 'true' : undefined}>
-          <LazyVisualMount>{visual}</LazyVisualMount>
+          {eager ? visual : <LazyVisualMount>{visual}</LazyVisualMount>}
         </div>
       )}
     </section>
@@ -8838,7 +9078,7 @@ function FeaturePageInner({ slug }) {
     const prevTitle = document.title;
     const metaDesc = document.querySelector('meta[name="description"]');
     const prevDesc = metaDesc ? metaDesc.getAttribute('content') : null;
-    document.title = feature.seo?.title || `${feature.title} — Roam`;
+    document.title = feature.seo?.title || `${typeof feature.title === 'string' ? feature.title : 'Roam'} — Roam`;
     if (metaDesc && feature.seo?.description) {
       metaDesc.setAttribute('content', feature.seo.description);
     }
@@ -8884,7 +9124,7 @@ function FeaturePageInner({ slug }) {
     <div className="sc-viewport fp-page" data-theme={theme} data-slug={slug}>
       {showGrid && (
         <div className="sc-grid-debug">
-          {Array.from({ length: 12 }).map((_, i) => <div key={i} className="sc-grid-debug-col" />)}
+          {Array.from({ length: slug === 'your-office' ? 8 : 12 }).map((_, i) => <div key={i} className="sc-grid-debug-col" />)}
         </div>
       )}
       <div className="sc-navbar-wrap">
@@ -8899,13 +9139,15 @@ function FeaturePageInner({ slug }) {
 
       <div className="fp-hero">
         <div className="fp-hero-inner">
-          <div className="fp-eyebrow text-caption-strong">{feature.eyebrow}</div>
+          {feature.eyebrow ? <div className="fp-eyebrow text-caption-strong">{feature.eyebrow}</div> : null}
           <h1 className="fp-hero-title">{feature.title}</h1>
-          <p className="fp-hero-sub text-body">{feature.hero}</p>
+          <div className="fp-hero-sub text-body">{feature.hero}</div>
+          {feature.hideHeroCtas ? null : (
           <div className="fp-cta-row">
             <button className="sc-promo-btn">Book Demo</button>
             <button className="sc-promo-btn">Free Trial</button>
           </div>
+          )}
         </div>
         {slug === 'pricing' && (
           <div className="fp-hero-currency">
@@ -8914,9 +9156,11 @@ function FeaturePageInner({ slug }) {
         )}
       </div>
 
+      {feature.visual ? (
       <div className="fp-hero-visual">
         <div className="fp-hero-stage" data-map-align={feature.heroMapAlign || undefined}>{feature.visual}</div>
       </div>
+      ) : null}
 
       {feature.quote && <FeatureQuote {...feature.quote} />}
 

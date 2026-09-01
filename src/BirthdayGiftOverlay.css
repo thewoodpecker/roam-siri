@@ -21,7 +21,8 @@
   overflow: hidden;
 }
 
-.birthday-gift-host:has(.rgl-face-dock.is-on) {
+.birthday-gift-host:has(.rgl-face-dock.is-on),
+.birthday-gift-host:has(.rgl-face-dock.is-exit) {
   overflow: visible;
 }
 
@@ -87,11 +88,20 @@
   overflow: visible;
 }
 
-.rgl-card-toggle {
+.rgl-card-dock {
   position: absolute;
   left: 50%;
   bottom: 32px;
   z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.rgl-card-toggle {
+  position: relative;
   margin: 0;
   padding: 7px 16px;
   border: 0.5px solid var(--border);
@@ -105,16 +115,24 @@
   font-weight: 500;
   letter-spacing: -0.15px;
   line-height: 18px;
+  white-space: nowrap;
   cursor: pointer;
   appearance: none;
   -webkit-appearance: none;
   pointer-events: none;
   opacity: 0;
-  transform: translateX(-50%);
+  transform: none;
   transition:
     opacity 560ms cubic-bezier(0.23, 1, 0.32, 1),
     transform 100ms ease-out,
     background-color 160ms ease;
+}
+
+.rgl-card-done {
+  position: absolute;
+  left: 100%;
+  top: 0;
+  margin-left: 8px;
 }
 
 .rgl-card-toggle.is-visible {
@@ -127,11 +145,69 @@
 }
 
 .rgl-card-toggle:active:not(:disabled) {
-  transform: translateX(-50%) scale(0.97);
+  transform: scale(0.97);
 }
 
 .rgl-card-toggle:disabled {
   cursor: default;
+}
+
+.rgl-page-nav {
+  position: absolute;
+  top: 50%;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  margin: 0;
+  padding: 0;
+  border: 0.5px solid var(--border);
+  border-radius: 50%;
+  box-sizing: border-box;
+  background: var(--background-primary);
+  color: var(--text-primary);
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(-50%);
+  transition:
+    opacity 560ms cubic-bezier(0.23, 1, 0.32, 1),
+    transform 100ms ease-out,
+    background-color 160ms ease;
+}
+
+.rgl-page-nav-prev {
+  left: 16px;
+}
+
+.rgl-page-nav-next {
+  right: 16px;
+}
+
+.rgl-page-nav.is-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.rgl-page-nav:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--background-primary) 88%, var(--text-primary));
+}
+
+.rgl-page-nav:active:not(:disabled) {
+  transform: translateY(-50%) scale(0.97);
+}
+
+.rgl-page-nav:disabled {
+  cursor: default;
+}
+
+.rgl-gift-layer.is-dismissing .rgl-page-nav {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .rgl-gift-layer.is-dismissing .rgl-card-toggle {
@@ -242,7 +318,9 @@
 }
 
 .rgl-gift-layer.is-card-open,
-.rgl-gift-layer.is-inspecting {
+.rgl-gift-layer.is-inspecting,
+.rgl-gift-layer:has(.rgl-face-dock.is-on),
+.rgl-gift-layer:has(.rgl-face-dock.is-exit) {
   overflow: visible;
 }
 
@@ -383,7 +461,10 @@
   .rgl-gift-slide,
   .rgl-gift-zoom,
   .rgl-gift-zoom .rgl-canvas-card,
-  .birthday-gift-host .rgl-gift-zoom .rgl-canvas {
+  .birthday-gift-host .rgl-gift-zoom .rgl-canvas,
+  .rgl-face-dock,
+  .rgl-face-dock-panel,
+  .rgl-face-dock-lead {
     transition: none !important;
     animation: none !important;
   }
@@ -416,14 +497,26 @@
   align-items: center;
   height: fit-content;
   margin-block: auto;
-  opacity: 1;
   visibility: hidden;
   pointer-events: none;
+  transition: visibility 0s linear 180ms;
 }
 
 .rgl-face-dock.is-on {
   visibility: visible;
   pointer-events: auto;
+  transition: visibility 0s linear 0s;
+}
+
+.rgl-face-dock-panel,
+.rgl-face-dock-lead {
+  opacity: 0;
+  transition: opacity 180ms ease-out;
+}
+
+.rgl-face-dock.is-on .rgl-face-dock-panel,
+.rgl-face-dock.is-on .rgl-face-dock-lead {
+  opacity: 1;
 }
 
 .rgl-face-dock-sign.is-aimed {
@@ -444,7 +537,9 @@
   width: 228px;
   padding: 12px;
   box-sizing: border-box;
-  border-radius: 10px;
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  corner-shape: superellipse(1.6);
   overflow: hidden;
   background: color-mix(in srgb, var(--bg-surface-elevated-primary, #1e1d20) 62%, transparent);
   backdrop-filter: blur(20px) saturate(140%);
@@ -472,6 +567,10 @@
 
 .rgl-face-dock .rgl-chip-row {
   justify-content: flex-start;
+}
+
+.rgl-face-dock-swatches {
+  gap: 6px;
 }
 
 .rgl-face-dock-backs {

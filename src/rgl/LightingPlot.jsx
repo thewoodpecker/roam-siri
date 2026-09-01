@@ -9,7 +9,7 @@ const CY = 96;
 const SCALE = 12.2;
 /** Card glyph is slightly oversized so the tent reads at this size. */
 const CARD_LEAF = 1.85;
-const OPEN_RAD = (120 * Math.PI) / 180;
+const OPEN_RAD = (115 * Math.PI) / 180;
 const LABEL_SHIFT = {
   key: [10, 3],
   fill: [-10, 3],
