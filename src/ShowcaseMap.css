@@ -999,6 +999,12 @@
   transform-origin: 50% -14px;
 }
 
+.sc-map-feature-window-host .sc-github-tooltip.sc-birthday-sign-tip {
+  top: auto;
+  bottom: calc(100% + 6px);
+  transform-origin: 50% calc(100% + 14px);
+}
+
 .sc-map-feature-window-host .miniRoamOS::after,
 .sc-map-feature-window-host .sc-wallpaper,
 .sc-map-feature-window-host .sc-navbar-wrap,
@@ -1343,6 +1349,7 @@
   flex-shrink: 0;
   cursor: grab;
   position: relative;
+  z-index: 8;
 }
 
 .sc-titlebar:active {
@@ -1832,9 +1839,9 @@
   color: #1D1D1F;
 }
 
-.sc-viewport[data-theme="light"] .sc-toolbar-pill svg path,
-.sc-viewport[data-theme="light"] .sc-toolbar-pill svg circle,
-.sc-viewport[data-theme="light"] .sc-toolbar-pill svg rect {
+.sc-viewport[data-theme="light"] .sc-toolbar-pill:not(.sc-birthday-sign-chip) svg path,
+.sc-viewport[data-theme="light"] .sc-toolbar-pill:not(.sc-birthday-sign-chip) svg circle,
+.sc-viewport[data-theme="light"] .sc-toolbar-pill:not(.sc-birthday-sign-chip) svg rect {
   stroke: #1D1D1F;
 }
 
@@ -1891,10 +1898,19 @@
   position: relative;
 }
 
-/* Ticker sits between titlebar and content — drop the content's top card edge. */
+/* Ticker sits between titlebar and content — drop the content's top card edge.
+   z-index 7 beats the ticker (6) so overflowing office tooltips paint over it;
+   titlebar stays at 8 so chrome still wins. Overflow stays visible so the
+   tooltip isn't clipped at the content/ticker seam. */
 .sc-window:has(.map-ticker) .sc-content {
   border-radius: 0;
   border-top: none;
+  z-index: 7;
+  overflow: visible;
+}
+
+.sc-window:has(.map-ticker) .sc-map {
+  overflow: visible;
 }
 
 /* Map grid area */
@@ -2090,7 +2106,63 @@
 }
 
 .sc-room-birthday {
+  position: relative;
   z-index: 2;
+}
+
+.sc-grid-cell:has(.sc-birthday-sign-tip) {
+  z-index: 100;
+}
+
+/* Reuses .sc-github-tooltip chrome. Combined selector beats the GitHub
+   `pointer-events: none` rule (same class count would lose by source order). */
+.sc-github-tooltip.sc-birthday-sign-tip {
+  appearance: none;
+  -webkit-appearance: none;
+  margin: 0;
+  border: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  pointer-events: auto;
+  animation: sc-github-tip-in 260ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  transition: transform 160ms ease-out, background 120ms ease;
+}
+
+.sc-github-tooltip.sc-birthday-sign-tip .sc-github-tooltip-meta,
+.sc-birthday-sign-chip .sc-github-tooltip-meta {
+  font-family: var(--font-family-primary);
+}
+
+.sc-birthday-card-icon {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  display: block;
+  overflow: visible;
+}
+
+.sc-birthday-card-icon-front {
+  fill: var(--birthday-card, var(--birthday-body));
+}
+
+.sc-birthday-card-icon-back {
+  fill: color-mix(in srgb, var(--birthday-card, var(--birthday-body)) 82%, black);
+}
+
+.sc-github-tooltip.sc-birthday-sign-tip:hover {
+  background: var(--bg-surface-elevated-primary);
+}
+
+.sc-github-tooltip.sc-birthday-sign-tip:active {
+  transform: translateX(-50%) scale(0.97);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sc-github-tooltip.sc-birthday-sign-tip {
+    animation: none;
+  }
 }
 
 /* Story bubble — above avatar, matches Figma */
@@ -3681,6 +3753,63 @@
 .sc-toolbar-group > .sc-toolbar-pill.sc-toolbar-pill-label {
   border-radius: 20px;
   pointer-events: auto;
+  padding-right: 12px;
+}
+
+/* Same chrome as the office Sign Card tooltip. */
+.sc-viewport .sc-toolbar-group > .sc-toolbar-pill.sc-birthday-sign-chip {
+  appearance: none;
+  -webkit-appearance: none;
+  position: relative;
+  margin: 0;
+  border: 0;
+  font: inherit;
+  text-align: left;
+  gap: 6px;
+  justify-content: flex-start;
+  align-items: center;
+  box-sizing: border-box;
+  height: 32px;
+  padding: 0 12px 0 8px;
+  border-radius: var(--radius-full);
+  background: var(--bg-surface-elevated-secondary, #29272b);
+  box-shadow: var(--shadow-4), inset 0 0.5px 0 0 var(--border);
+  color: inherit;
+  overflow: hidden;
+  isolation: isolate;
+  pointer-events: auto;
+}
+
+.sc-birthday-sign-chip .sc-birthday-card-icon,
+.sc-birthday-sign-chip .sc-github-tooltip-text {
+  position: relative;
+  z-index: 1;
+}
+
+.sc-birthday-sign-chip .sc-birthday-card-icon {
+  width: 24px;
+  height: 24px;
+}
+
+.sc-birthday-sign-chip .sc-github-tooltip-title {
+  font-size: 11px;
+  line-height: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.sc-birthday-sign-chip .sc-github-tooltip-meta {
+  font-size: 11px;
+  line-height: 13px;
+}
+
+.sc-viewport .sc-toolbar-group > .sc-toolbar-pill.sc-birthday-sign-chip:hover {
+  background: var(--bg-surface-elevated-primary);
+}
+
+.sc-viewport[data-theme="light"] .sc-toolbar-group > .sc-toolbar-pill.sc-birthday-sign-chip,
+.sc-viewport[data-theme="light"] .sc-toolbar-group > .sc-toolbar-pill.sc-birthday-sign-chip:hover {
+  box-shadow: var(--shadow-4);
 }
 
 .sc-toolbar-birthday-glow {

@@ -1,14 +1,11 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import BirthdayCard3D, {
-  BACK_DESIGNS,
   COVER_DESIGNS,
   DEFAULT_BACK_TEXT,
-  CardOpenButton,
   CardPageNav,
   CardSignPop,
   CardWindowClose,
   cardSeedNotesFor,
-  hasOwnMessage,
   useDockFade,
 } from './rgl/BirthdayCard3D';
 import RGLStage from './rgl/RGLStage';
@@ -85,12 +82,10 @@ function FaceDock({
   side,
   visible,
   coverId,
-  backId,
   backText,
   theme,
   paletteId,
   onSelectCover,
-  onSelectBack,
   onBackText,
   onSelectPalette,
 }) {
@@ -105,35 +100,16 @@ function FaceDock({
       <div className="rgl-face-dock-panel">
         <p className="rgl-face-dock-label">{shown === 'back' ? 'Back Cover' : 'Cover'}</p>
         {shown === 'back' ? (
-          <>
-            <div className="rgl-chip-row rgl-face-dock-backs" role="listbox" aria-label="Back">
-              {BACK_DESIGNS.map((back) => (
-                <Chip
-                  key={back.id}
-                  role="option"
-                  aria-selected={back.id === backId}
-                  active={back.id === backId}
-                  onClick={() => onSelectBack(back.id)}
-                >
-                  {back.name}
-                </Chip>
-              ))}
-            </div>
-            <div className="rgl-face-dock-field-slot">
-              <input
-                className="rgl-field rgl-face-dock-field"
-                type="text"
-                value={backText}
-                maxLength={48}
-                spellCheck={false}
-                aria-label="Back text"
-                placeholder={DEFAULT_BACK_TEXT}
-                tabIndex={backId === 'text' ? 0 : -1}
-                disabled={backId !== 'text'}
-                onChange={(e) => onBackText(e.target.value)}
-              />
-            </div>
-          </>
+          <input
+            className="rgl-field rgl-face-dock-field"
+            type="text"
+            value={backText}
+            maxLength={48}
+            spellCheck={false}
+            aria-label="Back text"
+            placeholder={DEFAULT_BACK_TEXT}
+            onChange={(e) => onBackText(e.target.value)}
+          />
         ) : (
           <>
             <div className="rgl-chip-row" role="listbox" aria-label="Cover">
@@ -222,13 +198,13 @@ function prefersReducedMotion() {
 
 export default function RGLPage() {
   const [theme, setTheme] = useState('dark');
-  const [paletteId, setPaletteId] = useState('gold');
+  const [paletteId, setPaletteId] = useState('crimson');
   const [coverId, setCoverId] = useState('classic');
-  const [backId, setBackId] = useState('text');
   const [backText, setBackText] = useState(DEFAULT_BACK_TEXT);
   const lastLook = useRef({ paletteId: '', coverId: '', backId: '', personId: '' });
   const [showMap, setShowMap] = useState(true);
   const [mapBirthday, setMapBirthday] = useState(true);
+  const [birthdayCta, setBirthdayCta] = useState('toolbar');
   const [tickerEmpty, setTickerEmpty] = useState(false);
   const [giftOpen, setGiftOpen] = useState(true);
   const [entering, setEntering] = useState(true);
@@ -249,10 +225,14 @@ export default function RGLPage() {
   const [draft, setDraft] = useState(null);
   const [draftText, setDraftText] = useState('');
   const [pages, setPages] = useState({ spread: 0, count: 1 });
+  const [leaving, setLeaving] = useState(false);
   const hostRef = useRef(null);
+  const zoneAimRef = useRef(null);
+  const leavingRef = useRef(false);
   const pageTurnRef = useRef({ next() {}, prev() {} });
   const skipTapRef = useRef(false);
   const skipPickUntil = useRef(0);
+  const autoOpenedRef = useRef(false);
   const skipTapTimer = useRef(0);
   const armSkipTap = useCallback(() => {
     skipTapRef.current = true;
@@ -262,6 +242,8 @@ export default function RGLPage() {
     }, 0);
   }, []);
   const [personId, setPersonId] = useState('20');
+  const personIdRef = useRef(personId);
+  personIdRef.current = personId;
   const [environment, setEnvironment] = useState('studio');
   const lastInspect = useRef('cover');
   if (inspect) lastInspect.current = inspect;
@@ -276,9 +258,10 @@ export default function RGLPage() {
       setFacing(true);
       return undefined;
     }
+    if (leaving || dismissing) return undefined;
     const id = window.setTimeout(() => setFacing(false), CARD_OPEN_SETTLE_MS);
     return () => window.clearTimeout(id);
-  }, [cardOpen]);
+  }, [cardOpen, leaving, dismissing]);
 
   useEffect(() => {
     if (cardOpen) {
@@ -286,7 +269,7 @@ export default function RGLPage() {
       setInspect(null);
       return undefined;
     }
-    if (previewAfterClose == null) return undefined;
+    if (previewAfterClose == null || leaving || dismissing) return undefined;
     const yaw = previewAfterClose;
     const id = window.setTimeout(() => {
       setPreviewAfterClose(null);
@@ -295,19 +278,20 @@ export default function RGLPage() {
       setCoverSnapKey((n) => n + 1);
     }, CARD_OPEN_SETTLE_MS);
     return () => window.clearTimeout(id);
-  }, [cardOpen, previewAfterClose]);
+  }, [cardOpen, previewAfterClose, leaving, dismissing]);
 
   const inspectFace = useCallback((side, snap = true) => {
-    if (cardOpen) return;
+    if (cardOpen || leaving || dismissing) return;
     const yaw = side === 'back' ? Math.PI : 0;
     setInspect(side);
     setPreviewAfterClose(null);
     setPreviewYaw(yaw);
     if (snap) setCoverSnapKey((n) => n + 1);
-  }, [cardOpen]);
+  }, [cardOpen, leaving, dismissing]);
 
   const selectCover = useCallback((id) => {
     setCoverId(id);
+    if (leaving || dismissing) return;
     if (cardOpen) {
       setDraft(null);
       setDraftText('');
@@ -316,12 +300,7 @@ export default function RGLPage() {
       return;
     }
     inspectFace('cover');
-  }, [cardOpen, inspectFace]);
-
-  const selectBack = useCallback((id) => {
-    setBackId(id);
-    inspectFace('back');
-  }, [inspectFace]);
+  }, [cardOpen, leaving, dismissing, inspectFace]);
 
   useEffect(() => {
     const html = document.documentElement;
@@ -332,12 +311,9 @@ export default function RGLPage() {
   }, [theme]);
 
   const runEnter = useCallback(() => {
-    const next = randomCardLook(lastLook.current);
+    const next = randomCardLook(lastLook.current, { lockPersonId: personIdRef.current });
     lastLook.current = next;
-    setPaletteId(next.paletteId);
     setCoverId(next.coverId);
-    setBackId(next.backId);
-    setPersonId(next.personId);
     setNotes(cardSeedNotesFor(next.name));
     setDismissing(false);
     setGiftOpen(true);
@@ -346,6 +322,9 @@ export default function RGLPage() {
     setArriveFx(false);
     setCardOpen(false);
     setCardReady(false);
+    leavingRef.current = false;
+    setLeaving(false);
+    autoOpenedRef.current = false;
     setFacing(false);
     setInspect(null);
     setSelectedNoteId(null);
@@ -394,8 +373,22 @@ export default function RGLPage() {
     return typeof cancel === 'function' ? cancel : undefined;
   }, [runEnter]);
 
+  useEffect(() => {
+    if (cardOpen) autoOpenedRef.current = true;
+  }, [cardOpen]);
+
+  useEffect(() => {
+    if (!giftOpen || dismissing || leaving || !cardReady || autoOpenedRef.current) return;
+    autoOpenedRef.current = true;
+    skipPickUntil.current = performance.now() + 500;
+    setInspect(null);
+    setCardOpen(true);
+  }, [giftOpen, dismissing, leaving, cardReady]);
+
   const dismissGift = useCallback(() => {
     if (!giftOpen || dismissing) return;
+    setDraft(null);
+    setDraftText('');
     if (prefersReducedMotion()) {
       setGiftOpen(false);
       setDismissing(false);
@@ -408,6 +401,25 @@ export default function RGLPage() {
     setLabelPlay(false);
     setDismissing(true);
   }, [giftOpen, dismissing]);
+  const dismissGiftRef = useRef(dismissGift);
+  dismissGiftRef.current = dismissGift;
+
+  const beginLeave = useCallback(() => {
+    if (leavingRef.current || !giftOpen || dismissing) return;
+    leavingRef.current = true;
+    setLeaving(true);
+    setCardOpen(false);
+  }, [giftOpen, dismissing]);
+
+  useEffect(() => {
+    if (!leaving) return undefined;
+    if (prefersReducedMotion()) {
+      dismissGiftRef.current();
+      return undefined;
+    }
+    const t = window.setTimeout(() => dismissGiftRef.current(), CARD_OPEN_SETTLE_MS);
+    return () => window.clearTimeout(t);
+  }, [leaving]);
 
   const showGift = useCallback(() => {
     runEnter();
@@ -469,7 +481,7 @@ export default function RGLPage() {
     .join(' ');
 
   const pickInside = useCallback((hit) => {
-    if (!cardOpen) return;
+    if (!cardOpen || leaving) return;
     if (!hit?.auto && performance.now() < skipPickUntil.current) return;
     armSkipTap();
     const host = hostRef.current;
@@ -488,7 +500,7 @@ export default function RGLPage() {
       noteId: hit.noteId || null,
     });
     setDraftText(hit.text || '');
-  }, [cardOpen, armSkipTap]);
+  }, [cardOpen, leaving, armSkipTap]);
 
   const cancelDraft = useCallback(() => {
     setDraft(null);
@@ -496,31 +508,20 @@ export default function RGLPage() {
   }, []);
 
   const restCard = useCallback(() => {
-    if (dismissing) return;
+    if (dismissing || leaving) return;
     if (draft) cancelDraft();
     setInspect(null);
     if (cardOpen) setCardOpen(false);
-  }, [dismissing, draft, cardOpen, cancelDraft]);
-
-  const toggleCard = useCallback(() => {
-    if (!cardReady || dismissing) return;
-    setDraft(null);
-    setDraftText('');
-    setInspect(null);
-    setCardOpen((open) => {
-      if (!open) skipPickUntil.current = performance.now() + 500;
-      return !open;
-    });
-  }, [cardReady, dismissing]);
+  }, [dismissing, leaving, draft, cardOpen, cancelDraft]);
 
   const onStageTap = useCallback(() => {
-    if (!cardReady || dismissing) return;
+    if (!cardReady || dismissing || leaving) return;
     if (skipTapRef.current) {
       skipTapRef.current = false;
       return;
     }
     restCard();
-  }, [cardReady, dismissing, restCard]);
+  }, [cardReady, dismissing, leaving, restCard]);
 
   const commitSign = useCallback(() => {
     const text = draftText.trim();
@@ -554,10 +555,14 @@ export default function RGLPage() {
         },
       ]);
       setSelectedNoteId(id);
+      setDraft(null);
+      setDraftText('');
+      beginLeave();
+      return;
     }
     setDraft(null);
     setDraftText('');
-  }, [draft, draftText, notes, armSkipTap]);
+  }, [draft, draftText, notes, armSkipTap, beginLeave]);
 
   const changeNote = useCallback((id, patch) => {
     setNotes((prev) => prev.map((n) => (n.id === id ? { ...n, ...patch } : n)));
@@ -574,6 +579,7 @@ export default function RGLPage() {
     if (!giftVisible) return undefined;
     const onKey = (e) => {
       if (e.key !== 'Escape') return;
+      if (leaving) return;
       if (draft) {
         cancelDraft();
         return;
@@ -586,7 +592,7 @@ export default function RGLPage() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [giftVisible, draft, cardOpen, inspect, cancelDraft]);
+  }, [giftVisible, leaving, draft, cardOpen, inspect, cancelDraft]);
 
   const giftContent = (
     <RGLStage
@@ -611,6 +617,7 @@ export default function RGLPage() {
       }
       tapSpin={!facing && !presentingCover}
       allowDrag
+      idleCursor={cardOpen ? 'pointer' : 'default'}
       onOrbit={() => setInspect(null)}
       onTap={cardReady && !dismissing ? onStageTap : undefined}
     >
@@ -622,8 +629,9 @@ export default function RGLPage() {
         theme={theme}
         paletteId={paletteId}
         coverId={coverId}
-        backId={backId}
+        backId="text"
         backText={backText}
+        appearOpenKey={appearSpinKey}
         selectedNoteId={selectedNoteId}
         onInsidePick={pickInside}
         onSelectNote={setSelectedNoteId}
@@ -634,7 +642,7 @@ export default function RGLPage() {
           armSkipTap();
         }}
         onInsideClick={() => {
-          if (!cardReady || dismissing || draft) return;
+          if (!cardReady || dismissing || leaving || draft) return;
           armSkipTap();
           skipPickUntil.current = performance.now() + 500;
           setInspect(null);
@@ -642,19 +650,9 @@ export default function RGLPage() {
         }}
         onPagesChange={setPages}
         pageTurnRef={pageTurnRef}
+        zoneAimRef={zoneAimRef}
       />
     </RGLStage>
-  );
-
-  const cardToggle = (
-    <CardOpenButton
-      open={cardOpen}
-      visible={labelPlay}
-      disabled={!cardReady || dismissing}
-      signed={hasOwnMessage(notes)}
-      onClick={toggleCard}
-      onDone={dismissGift}
-    />
   );
 
   const pageNav = (
@@ -670,14 +668,12 @@ export default function RGLPage() {
   const faceDock = (
     <FaceDock
       side={inspect || lastInspect.current}
-      visible={inspect != null && !cardOpen && cardReady && !dismissing}
+      visible={inspect != null && !cardOpen && cardReady && !dismissing && !leaving}
       coverId={coverId}
-      backId={backId}
       backText={backText}
       theme={theme}
       paletteId={paletteId}
       onSelectCover={selectCover}
-      onSelectBack={selectBack}
       onSelectPalette={setPaletteId}
       onBackText={(value) => {
         setBackText(value);
@@ -713,8 +709,29 @@ export default function RGLPage() {
             </select>
           </PanelSection>
 
-          <PanelSection title="Cover">
-            <div className="rgl-chip-row" role="listbox" aria-label="Cover">
+          <PanelSection title="Sign">
+            <div className="rgl-chip-row" role="listbox" aria-label="Sign">
+              <Chip
+                role="option"
+                aria-selected={birthdayCta === 'toolbar'}
+                active={birthdayCta === 'toolbar'}
+                onClick={() => setBirthdayCta('toolbar')}
+              >
+                Toolbar
+              </Chip>
+              <Chip
+                role="option"
+                aria-selected={birthdayCta === 'office'}
+                active={birthdayCta === 'office'}
+                onClick={() => setBirthdayCta('office')}
+              >
+                Office
+              </Chip>
+            </div>
+          </PanelSection>
+
+          <PanelSection title="design">
+            <div className="rgl-chip-row" role="listbox" aria-label="design">
               {COVER_DESIGNS.map((cover) => (
                 <Chip
                   key={cover.id}
@@ -727,38 +744,6 @@ export default function RGLPage() {
                 </Chip>
               ))}
             </div>
-          </PanelSection>
-
-          <PanelSection title="Back">
-            <div className="rgl-chip-row" role="listbox" aria-label="Back">
-              {BACK_DESIGNS.map((back) => (
-                <Chip
-                  key={back.id}
-                  role="option"
-                  aria-selected={back.id === backId}
-                  active={back.id === backId}
-                  onClick={() => selectBack(back.id)}
-                >
-                  {back.name}
-                </Chip>
-              ))}
-            </div>
-            {backId === 'text' && (
-              <input
-                className="rgl-field"
-                type="text"
-                value={backText}
-                maxLength={48}
-                spellCheck={false}
-                aria-label="Back text"
-                placeholder={DEFAULT_BACK_TEXT}
-                onChange={(e) => {
-                  setBackText(e.target.value);
-                  inspectFace('back', false);
-                }}
-                onFocus={() => inspectFace('back', false)}
-              />
-            )}
           </PanelSection>
 
           <PanelSection title="Palette">
@@ -849,6 +834,7 @@ export default function RGLPage() {
                         birthdayPaletteId={paletteId}
                         birthdayEnabled={mapBirthday}
                         birthdayPerson={birthdayPerson}
+                        birthdayCta={birthdayCta}
                         tickerEmpty={tickerEmpty}
                       />
                     </Suspense>
@@ -865,7 +851,7 @@ export default function RGLPage() {
                   )}
                   {giftVisible && (
                     <CardWindowClose
-                      disabled={dismissing}
+                      disabled={dismissing || leaving}
                       dismissing={dismissing}
                       onClick={dismissGift}
                     />
@@ -884,7 +870,6 @@ export default function RGLPage() {
                         />
                       )}
                       <div className="rgl-gift-anchor">
-                        {cardToggle}
                         {pageNav}
                         {faceDock}
                         <CardSignPop
@@ -893,6 +878,7 @@ export default function RGLPage() {
                           onChange={setDraftText}
                           onSign={commitSign}
                           onCancel={cancelDraft}
+                          aimRef={zoneAimRef}
                         />
                         <div className="rgl-gift-slide">
                           <div className={`rgl-gift-zoom${cardOpen ? ' is-open' : ''}`}>
@@ -914,7 +900,7 @@ export default function RGLPage() {
                 onTransitionEnd={onGiftMotionEnd}
               >
                 <CardWindowClose
-                  disabled={dismissing}
+                  disabled={dismissing || leaving}
                   dismissing={dismissing}
                   onClick={dismissGift}
                 />
@@ -925,7 +911,6 @@ export default function RGLPage() {
                   />
                 )}
                 <div className="rgl-gift-anchor">
-                  {cardToggle}
                   {pageNav}
                   {faceDock}
                   <CardSignPop
@@ -934,6 +919,7 @@ export default function RGLPage() {
                     onChange={setDraftText}
                     onSign={commitSign}
                     onCancel={cancelDraft}
+                    aimRef={zoneAimRef}
                   />
                   <div className="rgl-gift-slide">
                     <div className={`rgl-gift-zoom${cardOpen ? ' is-open' : ''}`}>

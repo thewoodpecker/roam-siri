@@ -95,27 +95,10 @@ export function getFoilMetal(id = 'gold') {
 }
 
 /**
- * Gift colorways — Black & Silver plus hues around the wheel.
+ * Gift colorways — hues around the wheel.
  * `body` = card / box · `accent` = foil / ribbon.
  */
 export const GIFT_PALETTES = [
-  {
-    id: 'gold',
-    name: 'Black & Silver',
-    blurb: 'Roam black + silver foil',
-    dark: {
-      body: '#000000',
-      accent: '#C8CED6',
-      accentEmissive: '#8A9098',
-      emissiveIntensity: 0.06,
-    },
-    light: {
-      body: '#000000',
-      accent: '#E4E7EC',
-      accentEmissive: '#C8CED6',
-      emissiveIntensity: 0.14,
-    },
-  },
   {
     id: 'crimson',
     name: 'Crimson',
@@ -305,27 +288,36 @@ export const GIFT_PALETTES = [
   },
 ];
 
-export function getGiftPalette(id = 'gold') {
-  const key = id === 'roam' || id === 'black' ? 'gold' : id;
-  return GIFT_PALETTES.find((p) => p.id === key) ?? GIFT_PALETTES.find((p) => p.id === 'gold') ?? GIFT_PALETTES[0];
+export function getGiftPalette(id = 'crimson') {
+  return GIFT_PALETTES.find((p) => p.id === id) ?? GIFT_PALETTES[0];
 }
 
 /** Resolved body/accent hexes for the active stage theme. */
-export function paletteColorsFor(theme = 'dark', paletteId = 'gold') {
+export function paletteColorsFor(theme = 'dark', paletteId = 'crimson') {
   const pal = getGiftPalette(paletteId);
   return theme === 'light' ? pal.light : pal.dark;
+}
+
+/** Paper color of the opened gift card — light-stage body (charcoal if black). */
+export function visibleCardBody(_theme = 'dark', paletteId = 'crimson') {
+  const { body } = paletteColorsFor('light', paletteId);
+  const hex = String(body).replace('#', '');
+  const n = parseInt(hex.length === 3 ? hex.split('').map((c) => c + c).join('') : hex, 16);
+  if (!n) return '#35353A';
+  return body.startsWith('#') ? body : `#${hex}`;
 }
 
 /**
  * CSS custom properties shared by gift FX, birthday ticker shine,
  * and the office BirthdayGlow — keep all three on the same palette.
  */
-export function birthdayCssVars(theme = 'dark', paletteId = 'gold') {
+export function birthdayCssVars(theme = 'dark', paletteId = 'crimson') {
   const { accent, accentEmissive, body } = paletteColorsFor(theme, paletteId);
   return {
     '--birthday-accent': accent,
     '--birthday-accent-emissive': accentEmissive,
     '--birthday-body': body,
+    '--birthday-card': visibleCardBody(theme, paletteId),
   };
 }
 
@@ -450,7 +442,7 @@ export function resolveCardFinish(finish, black = 0) {
 }
 
 /** Body props for the current stage theme + gift palette. */
-export function bodyMaterialPropsFor(theme = 'dark', paletteId = 'gold') {
+export function bodyMaterialPropsFor(theme = 'dark', paletteId = 'crimson') {
   const { body } = paletteColorsFor(theme, paletteId);
   return {
     ...bodyMaterialProps,
@@ -473,7 +465,7 @@ export const goldMaterialProps = {
 };
 
 /** Accent (ribbon) props for the current stage theme + gift palette. */
-export function accentMaterialPropsFor(theme = 'dark', paletteId = 'gold') {
+export function accentMaterialPropsFor(theme = 'dark', paletteId = 'crimson') {
   const { accent, accentEmissive, emissiveIntensity } = paletteColorsFor(
     theme,
     paletteId,
@@ -487,7 +479,7 @@ export function accentMaterialPropsFor(theme = 'dark', paletteId = 'gold') {
 }
 
 /** @deprecated Prefer accentMaterialPropsFor — kept for call-site clarity. */
-export function goldMaterialPropsFor(theme = 'dark', paletteId = 'gold') {
+export function goldMaterialPropsFor(theme = 'dark', paletteId = 'crimson') {
   return accentMaterialPropsFor(theme, paletteId);
 }
 

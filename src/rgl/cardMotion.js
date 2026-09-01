@@ -1,7 +1,9 @@
 /** Shared open/close blend — hinge fold and yaw-to-camera use this. */
-export const CARD_OPEN_STIFFNESS = 16;
-/** Time to 98% with stiffness 8 — keep facing the camera this long after close starts. */
-export const CARD_OPEN_SETTLE_MS = 280;
+export const CARD_OPEN_STIFFNESS = 8;
+/** First fold after the appear bounce — slower so the open can be watched. */
+export const CARD_APPEAR_OPEN_STIFFNESS = 3.2;
+/** Time to ~98% of the blend. Keep facing the camera this long after close starts. */
+export const CARD_OPEN_SETTLE_MS = 500;
 /** Cover-design preview: snap to the front, then hold before idle spin resumes. */
 export const COVER_SNAP_MS = 380;
 export const COVER_HOLD_MS = 2000;

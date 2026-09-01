@@ -29,7 +29,7 @@ import LoadReveal from './LoadReveal';
 import MapTicker from './MapTicker';
 import BirthdayGlow, { BIRTHDAY_GOLD } from './BirthdayGlow';
 import { birthdayCssVars, paletteColorsFor } from './rgl/materials';
-import { birthdayChipLabel, CARD_PEOPLE } from './rgl/cardLook';
+import { SIGN_CARD_TITLE, CARD_PEOPLE, birthdayChipLabel } from './rgl/cardLook';
 import './ShowcaseMap.css';
 
 const RoamIcon3D = lazy(() => import('./RoamIcon3D'));
@@ -719,8 +719,104 @@ function AiVibeIcon({ src, label, combo = false, bg }) {
   );
 }
 
+/** Rest / hover path pairs from `public/card.svg` and `public/card-hovered.svg`. */
+const CARD_ICON = {
+  back: {
+    rest: 'M5 4.8673C5 4.36964 5.36593 3.94772 5.85858 3.87735L17.8586 2.16306C18.461 2.077 19 2.54446 19 3.15301V17.1327C19 17.6304 18.6341 18.0523 18.1414 18.1227L6.14142 19.8369C5.53899 19.923 5 19.4555 5 18.847V4.8673Z',
+    hover: 'M5 4.80842C5 4.33688 5.3294 3.92941 5.79047 3.83061L17.7905 1.25918C18.413 1.12579 19 1.60034 19 2.23699V16.1916C19 16.6631 18.6706 17.0706 18.2095 17.1694L6.20953 19.7408C5.58702 19.8742 5 19.3997 5 18.763V4.80842Z',
+  },
+  front: {
+    rest: 'M5 5.19821C5 4.57431 5.56505 4.10274 6.17889 4.21434L15.1789 5.85071C15.6544 5.93716 16 6.35129 16 6.83458V20.8018C16 21.4257 15.435 21.8973 14.8211 21.7857L5.82112 20.1493C5.34563 20.0628 5 19.6487 5 19.1654V5.19821Z',
+    hover: 'M5 5.34403C5 4.67417 5.64574 4.19372 6.28735 4.3862L14.2873 6.7862C14.7103 6.9131 15 7.30242 15 7.74403V21.656C15 22.3258 14.3543 22.8063 13.7127 22.6138L5.71265 20.2138C5.28967 20.0869 5 19.6976 5 19.256V5.34403Z',
+  },
+};
+
+function CardIconMorph({ to, dir }) {
+  return (
+    <animate
+      data-dir={dir}
+      attributeName="d"
+      to={to}
+      dur="0.22s"
+      fill="freeze"
+      restart="always"
+      begin="indefinite"
+      calcMode="spline"
+      keyTimes="0;1"
+      keySplines="0.23 1 0.32 1"
+    />
+  );
+}
+
+function BirthdayCardIcon({ size = 32 }) {
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const svg = ref.current;
+    const host = svg?.closest('button');
+    if (!svg || !host) return undefined;
+
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const front = svg.querySelector('.sc-birthday-card-icon-front');
+    const back = svg.querySelector('.sc-birthday-card-icon-back');
+    const setOpen = (open) => {
+      if (reduce.matches) {
+        front?.setAttribute('d', open ? CARD_ICON.front.hover : CARD_ICON.front.rest);
+        back?.setAttribute('d', open ? CARD_ICON.back.hover : CARD_ICON.back.rest);
+        return;
+      }
+      const dir = open ? 'open' : 'close';
+      svg.querySelectorAll(`animate[data-dir="${dir}"]`).forEach((el) => {
+        if (typeof el.beginElement === 'function') el.beginElement();
+      });
+    };
+    const onEnter = () => setOpen(true);
+    const onLeave = () => setOpen(false);
+    host.addEventListener('pointerenter', onEnter);
+    host.addEventListener('pointerleave', onLeave);
+    host.addEventListener('focus', onEnter);
+    host.addEventListener('blur', onLeave);
+    return () => {
+      host.removeEventListener('pointerenter', onEnter);
+      host.removeEventListener('pointerleave', onLeave);
+      host.removeEventListener('focus', onEnter);
+      host.removeEventListener('blur', onLeave);
+    };
+  }, []);
+
+  return (
+    <svg
+      ref={ref}
+      className="sc-birthday-card-icon"
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+    >
+      <path className="sc-birthday-card-icon-back" d={CARD_ICON.back.rest}>
+        <CardIconMorph dir="open" to={CARD_ICON.back.hover} />
+        <CardIconMorph dir="close" to={CARD_ICON.back.rest} />
+      </path>
+      <path className="sc-birthday-card-icon-front" d={CARD_ICON.front.rest}>
+        <CardIconMorph dir="open" to={CARD_ICON.front.hover} />
+        <CardIconMorph dir="close" to={CARD_ICON.front.rest} />
+      </path>
+    </svg>
+  );
+}
+
+function BirthdaySignCopy({ name }) {
+  return (
+    <div className="sc-github-tooltip-text">
+      <p className="sc-github-tooltip-title">{SIGN_CARD_TITLE}</p>
+      <p className="sc-github-tooltip-meta">{birthdayChipLabel(name)}</p>
+    </div>
+  );
+}
+
 // Private office room card — uses the same markup as mapv3
-function PrivateRoomCard({ room, storyBubble, onPersonClick, onRoomClick, spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, showPhysicalTags = false, vibeOverride = false, glowOfficeId = null, glowOfficeVibe = null, theme = 'dark', birthdayAccent = BIRTHDAY_GOLD, birthdayEnabled = true }) {
+function PrivateRoomCard({ room, storyBubble, onPersonClick, onRoomClick, spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, showPhysicalTags = false, vibeOverride = false, glowOfficeId = null, glowOfficeVibe = null, theme = 'dark', birthdayAccent = BIRTHDAY_GOLD, birthdayEnabled = true, birthdayCta = 'toolbar', onBirthdaySign = null }) {
   const [talking, setTalking] = useState({});
   const hasTalk = room.people.length > 1;
   const cursorGlow = theme === 'light' ? CURSOR_LIGHT : CURSOR_DARK;
@@ -850,6 +946,20 @@ function PrivateRoomCard({ room, storyBubble, onPersonClick, onRoomClick, spotif
           )}
         </div>
       </div>
+      {isBirthday && birthdayCta === 'office' && (
+        <button
+          type="button"
+          className="sc-github-tooltip sc-birthday-sign-tip"
+          aria-label={`${SIGN_CARD_TITLE} — ${birthdayChipLabel(room.birthday?.name)}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            onBirthdaySign?.(room.birthday?.name);
+          }}
+        >
+          <BirthdayCardIcon />
+          <BirthdaySignCopy name={room.birthday?.name} />
+        </button>
+      )}
     </div>
   );
 }
@@ -2215,6 +2325,7 @@ const DEFAULT_BIRTHDAY_PERSON =
   CARD_PEOPLE.find((p) => p.first === 'Jeff') ?? {
     first: 'Jeff',
     avatar: '/headshots/jeff-grossman.jpg',
+    officeName: 'Jeff G.',
   };
 
 function resolveBirthdayPerson(person) {
@@ -2223,11 +2334,11 @@ function resolveBirthdayPerson(person) {
 }
 
 // Main showcase component
-export default function ShowcaseMap({ initialFloor = 'R&D', embedded = false, autoKnock = false, spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, hideOnIt = false, onItAutoOpen = false, shelfAutoOpen = false, shareAutoOpen = false, theme, autoCycleFloors = false, autoCycleDms = false, showPhysicalTags = false, onAirOverride = null, agentsRoom = null, officeAgents = null, workrooms = null, peopleOverrides = null, peopleLimits = null, vibeOverride = false, hideElevator = false, hiddenRooms = null, extraRooms = null, editable = false, allowWindowOpens = false, defaultLayout = null, onPersonalAgentsClick = null, showTicker = undefined, birthdayPaletteId = 'gold', birthdayEnabled = true, birthdayPerson = null, tickerEmpty = false } = {}) {
+export default function ShowcaseMap({ initialFloor = 'R&D', embedded = false, autoKnock = false, spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, hideOnIt = false, onItAutoOpen = false, shelfAutoOpen = false, shareAutoOpen = false, theme, autoCycleFloors = false, autoCycleDms = false, showPhysicalTags = false, onAirOverride = null, agentsRoom = null, officeAgents = null, workrooms = null, peopleOverrides = null, peopleLimits = null, vibeOverride = false, hideElevator = false, hiddenRooms = null, extraRooms = null, editable = false, allowWindowOpens = false, defaultLayout = null, onPersonalAgentsClick = null, showTicker = undefined, birthdayPaletteId = 'crimson', birthdayEnabled = true, birthdayPerson = null, birthdayCta = 'toolbar', tickerEmpty = false } = {}) {
   return (
     <ChatProvider>
       <WindowManagerProvider initialWindows={INITIAL_WINDOWS}>
-        <ShowcaseMapInner initialFloor={initialFloor} embedded={embedded} autoKnock={autoKnock} spotifyAlwaysOpen={spotifyAlwaysOpen} githubAlwaysOpen={githubAlwaysOpen} figmaAlwaysOpen={figmaAlwaysOpen} hideOnIt={hideOnIt} onItAutoOpen={onItAutoOpen} shelfAutoOpen={shelfAutoOpen} shareAutoOpen={shareAutoOpen} themeOverride={theme} autoCycleFloors={autoCycleFloors} autoCycleDms={autoCycleDms} showPhysicalTags={showPhysicalTags} onAirOverride={onAirOverride} agentsRoom={agentsRoom} officeAgents={officeAgents} workrooms={workrooms} peopleOverrides={peopleOverrides} peopleLimits={peopleLimits} vibeOverride={vibeOverride} hideElevator={hideElevator} hiddenRooms={hiddenRooms} extraRooms={extraRooms} editable={editable} allowWindowOpens={allowWindowOpens} defaultLayout={defaultLayout} onPersonalAgentsClick={onPersonalAgentsClick} showTicker={showTicker} birthdayPaletteId={birthdayPaletteId} birthdayEnabled={birthdayEnabled} birthdayPerson={birthdayPerson} tickerEmpty={tickerEmpty} />
+        <ShowcaseMapInner initialFloor={initialFloor} embedded={embedded} autoKnock={autoKnock} spotifyAlwaysOpen={spotifyAlwaysOpen} githubAlwaysOpen={githubAlwaysOpen} figmaAlwaysOpen={figmaAlwaysOpen} hideOnIt={hideOnIt} onItAutoOpen={onItAutoOpen} shelfAutoOpen={shelfAutoOpen} shareAutoOpen={shareAutoOpen} themeOverride={theme} autoCycleFloors={autoCycleFloors} autoCycleDms={autoCycleDms} showPhysicalTags={showPhysicalTags} onAirOverride={onAirOverride} agentsRoom={agentsRoom} officeAgents={officeAgents} workrooms={workrooms} peopleOverrides={peopleOverrides} peopleLimits={peopleLimits} vibeOverride={vibeOverride} hideElevator={hideElevator} hiddenRooms={hiddenRooms} extraRooms={extraRooms} editable={editable} allowWindowOpens={allowWindowOpens} defaultLayout={defaultLayout} onPersonalAgentsClick={onPersonalAgentsClick} showTicker={showTicker} birthdayPaletteId={birthdayPaletteId} birthdayEnabled={birthdayEnabled} birthdayPerson={birthdayPerson} birthdayCta={birthdayCta} tickerEmpty={tickerEmpty} />
       </WindowManagerProvider>
     </ChatProvider>
   );
@@ -2391,25 +2502,25 @@ function useTargetHintStyle(targetRef, active, offset = { top: -30, left: 'cente
   return style;
 }
 
-function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = false, spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, hideOnIt = false, onItAutoOpen = false, shelfAutoOpen = false, shareAutoOpen = false, themeOverride = null, autoCycleFloors = false, autoCycleDms = false, showPhysicalTags = false, onAirOverride = null, agentsRoom = null, officeAgents = null, workrooms = null, peopleOverrides = null, peopleLimits = null, vibeOverride = false, hideElevator = false, hiddenRooms = null, extraRooms = null, editable = false, allowWindowOpens = false, defaultLayout = null, onPersonalAgentsClick = null, showTicker: showTickerProp, birthdayPaletteId = 'gold', birthdayEnabled = true, birthdayPerson = null, tickerEmpty = false }) {
+function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = false, spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, hideOnIt = false, onItAutoOpen = false, shelfAutoOpen = false, shareAutoOpen = false, themeOverride = null, autoCycleFloors = false, autoCycleDms = false, showPhysicalTags = false, onAirOverride = null, agentsRoom = null, officeAgents = null, workrooms = null, peopleOverrides = null, peopleLimits = null, vibeOverride = false, hideElevator = false, hiddenRooms = null, extraRooms = null, editable = false, allowWindowOpens = false, defaultLayout = null, onPersonalAgentsClick = null, showTicker: showTickerProp, birthdayPaletteId = 'crimson', birthdayEnabled = true, birthdayPerson = null, birthdayCta = 'toolbar', tickerEmpty = false }) {
   const [themeState, setThemeState] = useState('dark');
   const theme = themeOverride || themeState;
   const setTheme = themeOverride ? () => {} : setThemeState;
   const birthdayAccent = paletteColorsFor(theme, birthdayPaletteId).accent;
   const birthdayVars = birthdayCssVars(theme, birthdayPaletteId);
   const chipPerson = resolveBirthdayPerson(birthdayPerson);
-  const chipLabel = birthdayChipLabel(chipPerson.first);
+  const birthdayOfficeName = birthdayPerson ? chipPerson.officeName : null;
   // Company News ticker — on for the live homepage map; opt-in for embeds (e.g. RGL).
   const showTicker = showTickerProp ?? !embedded;
   /** Birthday card celebration from ticker click — Klas + active palette. */
   const [birthdayGift, setBirthdayGift] = useState({ open: false, playKey: 0 });
-  const openBirthdayGift = useCallback((name = 'Klas') => {
+  const openBirthdayGift = useCallback((giftName = chipPerson.first) => {
     if (!birthdayEnabled) return;
-    setBirthdayGift((prev) => ({ open: true, playKey: prev.playKey + 1, name }));
-  }, [birthdayEnabled]);
+    setBirthdayGift((prev) => ({ open: true, playKey: prev.playKey + 1, name: giftName }));
+  }, [birthdayEnabled, chipPerson.first]);
   const handleBirthdayTickerClick = useCallback(() => {
-    openBirthdayGift('Klas');
-  }, [openBirthdayGift]);
+    openBirthdayGift(chipPerson.first);
+  }, [openBirthdayGift, chipPerson.first]);
   const handleBirthdayGiftDismissed = useCallback(() => {
     setBirthdayGift((prev) => ({ ...prev, open: false }));
   }, []);
@@ -3065,9 +3176,15 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
       if (officeAgents && room.type === 'private' && officeAgents[room.name]?.length) {
         agentDock = officeAgents[room.name];
       }
-      return { ...room, name, people, agentDock, _anim: movements.anim[room.id] || null };
+      let birthday = room.birthday;
+      if (birthdayOfficeName) {
+        birthday = room.type === 'private' && room.name === birthdayOfficeName
+          ? { name: chipPerson.first }
+          : undefined;
+      }
+      return { ...room, name, people, agentDock, birthday, _anim: movements.anim[room.id] || null };
     });
-  }, [activeFloor, movements, onAirOverride, agentsRoom, officeAgents, workrooms, peopleOverrides, hiddenSet, extraRooms]);
+  }, [activeFloor, movements, onAirOverride, agentsRoom, officeAgents, workrooms, peopleOverrides, peopleLimits, hiddenSet, extraRooms, birthdayOfficeName, chipPerson.first]);
 
   const theaterSpeakers = useMemo(() => {
     if (activeFloor === 'TheaterOnAir') {
@@ -3851,6 +3968,8 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
                         theme={theme}
                         birthdayAccent={birthdayAccent}
                         birthdayEnabled={birthdayEnabled}
+                        birthdayCta={birthdayCta}
+                        onBirthdaySign={() => openBirthdayGift(chipPerson.first)}
                         showPhysicalTags={showPhysicalTags}
                         spotifyAlwaysOpen={spotifyAlwaysOpen}
                         githubAlwaysOpen={githubAlwaysOpen}
@@ -4037,25 +4156,19 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
             <div className="sc-toolbar-pill" data-tooltip="AInbox" onClick={() => { pinAppWindow(ainboxWin, 'left'); ainboxWin.open(); }}>
               <img src="/icons/chat.svg" width="16" height="16" alt="" />
             </div>
-            {birthdayEnabled && (
-              <div
-                className="sc-toolbar-pill sc-toolbar-pill-label"
-                role="button"
-                aria-label={chipLabel}
+            {birthdayEnabled && birthdayCta !== 'office' && (
+              <button
+                type="button"
+                className="sc-toolbar-pill sc-birthday-sign-chip"
+                aria-label={`${SIGN_CARD_TITLE} — ${birthdayChipLabel(chipPerson.first)}`}
                 onClick={() => openBirthdayGift(chipPerson.first)}
               >
                 <div className="sc-toolbar-birthday-glow" aria-hidden="true">
-                  <BirthdayGlow active borderRadius={20} color={birthdayAccent} />
+                  <BirthdayGlow active borderRadius={16} color={birthdayAccent} />
                 </div>
-                <img
-                  className="sc-toolbar-birthday-avatar"
-                  src={chipPerson.avatar}
-                  width="20"
-                  height="20"
-                  alt=""
-                />
-                <span>{chipLabel}</span>
-              </div>
+                <BirthdayCardIcon size={24} />
+                <BirthdaySignCopy name={chipPerson.first} />
+              </button>
             )}
             {onPersonalAgentsClick && (
               <div

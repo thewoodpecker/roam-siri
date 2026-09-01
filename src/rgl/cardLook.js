@@ -1,9 +1,7 @@
 import { offices } from '../data';
-import { GIFT_PALETTES } from './materials';
 
-/** Cover / back ids — keep in sync with COVER_DESIGNS / BACK_DESIGNS in BirthdayCard3D. */
+/** Cover ids — keep in sync with COVER_DESIGNS in BirthdayCard3D. */
 export const COVER_IDS = ['classic', 'script', 'quiet', 'burst', 'sparks', 'balloons', 'cupcakes'];
-export const BACK_IDS = ['text', 'cupcake', 'balloon', 'firework'];
 
 export function pickExcept(ids, exclude) {
   if (!ids.length) return exclude;
@@ -24,6 +22,7 @@ export const CARD_PEOPLE = (() => {
         last: parts[parts.length - 1],
         full,
         avatar: office.people[0].avatar,
+        officeName: office.name,
       };
     });
   const counts = {};
@@ -49,26 +48,35 @@ export function personName(personId) {
   return personById(personId)?.first ?? 'Klas';
 }
 
+export const SIGN_CARD_LABEL = 'Sign Birthday Card';
+export const SIGN_CARD_TITLE = 'Sign Card';
+
 export function birthdayChipLabel(first) {
   return `${first}'s Birthday`;
 }
 
-export function randomCardLook(exclude = {}) {
-  const paletteId = pickExcept(
-    GIFT_PALETTES.map((p) => p.id),
-    exclude.paletteId,
-  );
+export const DEFAULT_PALETTE_ID = 'crimson';
+
+export function randomCardLook(exclude = {}, lock = {}) {
+  const paletteId = lock.paletteId || DEFAULT_PALETTE_ID;
   const coverId = pickExcept(COVER_IDS, exclude.coverId);
-  const backId = pickExcept(BACK_IDS, exclude.backId);
-  const personId = pickExcept(
-    CARD_PEOPLE.map((p) => p.id),
-    exclude.personId,
-  );
+  const backId = 'text';
+  const lockedPerson = lock.lockPersonId
+    ? personById(lock.lockPersonId)
+    : lock.lockName
+      ? CARD_PEOPLE.find((p) => p.first === lock.lockName || p.officeName === lock.lockName)
+      : null;
+  const personId = lockedPerson
+    ? lockedPerson.id
+    : pickExcept(
+      CARD_PEOPLE.map((p) => p.id),
+      exclude.personId,
+    );
   return {
     paletteId,
     coverId,
     backId,
     personId,
-    name: personName(personId),
+    name: lockedPerson?.first ?? lock.lockName ?? personName(personId),
   };
 }

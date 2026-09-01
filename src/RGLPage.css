@@ -603,7 +603,7 @@
 
 .rgl-map-window-host .sc-content,
 .rgl-map-window-host .sc-map {
-  overflow: hidden !important;
+  overflow: visible !important;
 }
 
 .rgl-map-window-host .miniRoamOS::after,
@@ -649,6 +649,8 @@
 }
 
 .rgl-map-window-live .sc-toolbar-pill-label,
+.rgl-map-window-live .sc-birthday-sign-chip,
+.rgl-map-window-live .sc-birthday-sign-tip,
 .rgl-map-window-live .birthday-gift-host {
   pointer-events: auto;
 }

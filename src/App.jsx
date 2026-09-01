@@ -16,7 +16,7 @@ const FeaturePage = lazy(() => import('./FeaturePage'));
 // RWN (Remote Work News) hub — only renders for #/rwn, keep it lazy too.
 const RWNPage = lazy(() => import('./RWNPage'));
 
-// RGL — Roam GL sandbox for 3D map objects (#/rgl).
+// Birthday playground (#/birthday).
 const RGLPage = lazy(() => import('./RGLPage'));
 
 // Flip to `false` to show the dev settings icon in the top-left
@@ -1359,7 +1359,7 @@ function TabSwitcher({ activeTab, onTabChange }) {
     { id: 'big-meetings', label: 'Big Meetings' },
     { id: 'experimental', label: 'EPCOT' },
     { id: 'spinner', label: 'Spinner' },
-    { id: 'rgl', label: 'Birthday Playground' },
+    { id: 'birthday', label: 'Birthday Playground' },
   ];
 
   return (
@@ -3450,12 +3450,15 @@ function useHashTab() {
     // Split the hash into segments so external tools (e.g. Figma's capture
     // script) can prepend their own params and the route still matches.
     const segments = window.location.hash.replace('#', '').split(/[&?]/);
-    const valid = ['map-v3', 'design-studio', 'agent-garage', 'activity-glow', 'claude-max', 'big-vibe', 'big-meetings', 'war-room', 'experimental', 'spinner', 'rgl', 'showcase'];
+    const valid = ['map-v3', 'design-studio', 'agent-garage', 'activity-glow', 'claude-max', 'big-vibe', 'big-meetings', 'war-room', 'experimental', 'spinner', 'birthday', 'showcase'];
     for (const seg of segments) {
-      // `#/rgl` arrives as `/rgl` after stripping `#` — normalize leading slash.
+      // `#/birthday` arrives as `/birthday` after stripping `#`.
       const normalized = seg.replace(/^\//, '');
+      // Old `#/rgl` bookmarks still open the playground.
+      if (normalized === 'rgl') return 'birthday';
       if (valid.includes(normalized)) return normalized;
       const [k, v] = seg.split('=');
+      if (v === 'rgl') return 'birthday';
       if (k === 'tab' && valid.includes(v)) return v;
     }
     return 'showcase';
@@ -3463,15 +3466,24 @@ function useHashTab() {
   const [tab, setTab] = useState(getTab);
 
   useEffect(() => {
-    const onHash = () => setTab(getTab());
+    const rewriteLegacyRgl = () => {
+      const hash = window.location.hash;
+      if (/^#\/rgl(?:\/|$|[?&])/i.test(hash) || /^#rgl(?:\/|$|[?&])/i.test(hash)) {
+        history.replaceState(null, '', `${window.location.pathname}${window.location.search}#/birthday`);
+      }
+    };
+    rewriteLegacyRgl();
+    const onHash = () => {
+      rewriteLegacyRgl();
+      setTab(getTab());
+    };
     window.addEventListener('hashchange', onHash);
     return () => window.removeEventListener('hashchange', onHash);
   }, []);
 
   const setActiveTab = (t) => {
-    // Birthday playground lives at the path-style `#/rgl` route (same as
-    // direct links / bookmarks), not the flat `#rgl` tab form.
-    window.location.hash = t === 'rgl' ? '/rgl' : t;
+    // Birthday playground lives at the path-style `#/birthday` route.
+    window.location.hash = t === 'birthday' ? '/birthday' : t;
     setTab(t);
   };
 
@@ -3561,9 +3573,9 @@ export default function App() {
   const [activeTab, setActiveTab] = useHashTab();
   const featureSlug = useFeatureRoute();
   const isRwn = useRwnRoute();
-  // Drive this off the tab parser — a separate `#/rgl` regex missed query
+  // Drive this off the tab parser — a separate `#/birthday` regex missed query
   // extras and left the layout empty (settings gear only).
-  const isRgl = activeTab === 'rgl';
+  const isRgl = activeTab === 'birthday';
 
   return (
     <>
@@ -3575,7 +3587,7 @@ export default function App() {
             </Suspense>
           </RglErrorBoundary>
           <div className="toolbar" style={HIDE_CHROME ? { display: 'none' } : undefined}>
-            <TabSwitcher activeTab="rgl" onTabChange={setActiveTab} />
+            <TabSwitcher activeTab="birthday" onTabChange={setActiveTab} />
           </div>
         </>
       ) : isRwn ? (

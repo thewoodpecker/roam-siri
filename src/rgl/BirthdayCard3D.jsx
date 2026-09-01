@@ -13,6 +13,7 @@ import { useLightRig } from './lightRig';
 import { loadPossibilityFont, isPossibilityReady } from '../possibilityFont';
 import {
   CARD_OPEN_STIFFNESS,
+  CARD_APPEAR_OPEN_STIFFNESS,
   FOLD_COMMIT_T,
   FOLD_FLICK_VT,
   PAGE_COMMIT_T,
@@ -231,32 +232,45 @@ function zoneNoteUv(col, row) {
   };
 }
 
+function zoneCenterLocal(col, row) {
+  return {
+    x: ((col + 0.5) / ZONE_COLS - 0.5) * NOTES_W,
+    y: (0.5 - (row + 0.5) / ZONE_ROWS) * NOTES_H,
+  };
+}
+
 function zoneCornerLocals(col, row) {
   const w = NOTES_W / ZONE_COLS;
   const h = NOTES_H / ZONE_ROWS;
-  const cx = ((col + 0.5) / ZONE_COLS - 0.5) * NOTES_W;
-  const cy = (0.5 - (row + 0.5) / ZONE_ROWS) * NOTES_H;
+  const c = zoneCenterLocal(col, row);
   const hx = w * 0.46;
   const hy = h * 0.46;
   return [
-    { x: cx - hx, y: cy + hy },
-    { x: cx + hx, y: cy + hy },
-    { x: cx - hx, y: cy - hy },
-    { x: cx + hx, y: cy - hy },
+    { x: c.x - hx, y: c.y + hy },
+    { x: c.x + hx, y: c.y + hy },
+    { x: c.x - hx, y: c.y - hy },
+    { x: c.x + hx, y: c.y - hy },
   ];
 }
 
+const _projWorld = new THREE.Vector3();
+const _projCam = new THREE.Vector3();
+
 function projectMeshPoint(mesh, camera, gl, local) {
   if (!mesh || !camera || !gl) return null;
-  const v = new THREE.Vector3(local.x, local.y, 0);
+  camera.updateMatrixWorld();
+  _projWorld.set(local.x, local.y, local.z ?? 0);
   mesh.updateWorldMatrix(true, false);
-  mesh.localToWorld(v);
-  v.project(camera);
+  mesh.localToWorld(_projWorld);
+  _projCam.copy(_projWorld).applyMatrix4(camera.matrixWorldInverse);
+  const inFront = _projCam.z < 0;
+  _projWorld.project(camera);
   const r = gl.domElement.getBoundingClientRect();
   if (r.width <= 0 || r.height <= 0) return null;
   return {
-    clientX: (v.x * 0.5 + 0.5) * r.width + r.left,
-    clientY: (-v.y * 0.5 + 0.5) * r.height + r.top,
+    clientX: (_projWorld.x * 0.5 + 0.5) * r.width + r.left,
+    clientY: (-_projWorld.y * 0.5 + 0.5) * r.height + r.top,
+    visible: inFront,
   };
 }
 
@@ -491,22 +505,24 @@ function isPureBlack(hex) {
 const CARD_CHARCOAL = '#35353A';
 const CARD_CHARCOAL_WELL = '#242428';
 
-function brighterCardBody(hex, theme) {
-  if (isPureBlack(hex)) return new THREE.Color(CARD_CHARCOAL);
-  const c = new THREE.Color(hex);
+/** Card stock pulled from the swatch accent so palette changes survive studio lighting. */
+function cardStockColor(theme, paletteId) {
+  const { accent, body } = paletteColorsFor(theme, paletteId);
+  if (isPureBlack(body)) return new THREE.Color(CARD_CHARCOAL);
+  const c = new THREE.Color(accent);
   const hsl = { h: 0, s: 0, l: 0 };
   c.getHSL(hsl);
-  const sat = Math.min(1, theme === 'light' ? hsl.s * 1.08 + 0.04 : hsl.s * 1.25 + 0.1);
   const lit = theme === 'light'
-    ? Math.min(0.96, hsl.l + 0.04)
-    : Math.min(0.5, hsl.l * 1.75 + 0.12);
+    ? Math.min(0.82, hsl.l + 0.1)
+    : Math.min(0.46, Math.max(0.28, hsl.l * 0.62));
+  const sat = Math.min(0.64, hsl.s * (theme === 'light' ? 0.58 : 0.78));
   c.setHSL(hsl.h, sat, lit);
   return c;
 }
 
-function wellBodyColor(hex, theme) {
-  if (isPureBlack(hex)) return new THREE.Color(CARD_CHARCOAL_WELL);
-  const c = brighterCardBody(hex, theme);
+function wellBodyColor(stock, theme) {
+  const c = stock.clone();
+  if (isPureBlack(c)) return new THREE.Color(CARD_CHARCOAL_WELL);
   c.offsetHSL(0, theme === 'light' ? 0.02 : 0.06, theme === 'light' ? -0.07 : -0.1);
   return c;
 }
@@ -1292,11 +1308,6 @@ function drawBackTexture(backId = 'text', text = DEFAULT_BACK_TEXT) {
   return makeFoilTexture((ctx) => drawBackFoil(ctx, backId, text));
 }
 
-function hexRgba(hex, alpha) {
-  const c = new THREE.Color(hex);
-  return `rgba(${Math.round(c.r * 255)}, ${Math.round(c.g * 255)}, ${Math.round(c.b * 255)}, ${alpha})`;
-}
-
 function makeFoilDecalMaterial(alphaMap, displace = 0, foilProps = getFoilMetal('silver').props) {
   return new THREE.MeshPhysicalMaterial({
     ...foilProps,
@@ -1414,15 +1425,15 @@ function useFlipPageMat(foilProps) {
   return [mat, paint];
 }
 
-function makeZoneMarkTexture(ink) {
+function makeZoneMarkTexture() {
   const size = 256;
   const radius = 8;
   const canvas = document.createElement('canvas');
   canvas.width = size;
   canvas.height = size;
   const ctx = canvas.getContext('2d');
-  ctx.fillStyle = hexRgba(ink, 0.16);
-  ctx.strokeStyle = ink;
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.22)';
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
   ctx.lineWidth = 1;
   ctx.setLineDash([16, 10]);
   ctx.beginPath();
@@ -1474,7 +1485,7 @@ function zoneGroupCenter(bounds) {
   };
 }
 
-function SignZoneOverlay({ page, hoverRef, notesRef, draftRef, active, ink, onRemoveNote, spread = 0 }) {
+function SignZoneOverlay({ page, hoverRef, notesRef, draftRef, active, onRemoveNote, spread = 0 }) {
   const { gl } = useThree();
   const meshes = useRef([]);
   const groupRef = useRef(null);
@@ -1489,7 +1500,7 @@ function SignZoneOverlay({ page, hoverRef, notesRef, draftRef, active, ink, onRe
     () => new THREE.PlaneGeometry(ZONE_DISMISS_SIZE, ZONE_DISMISS_SIZE),
     [],
   );
-  const map = useMemo(() => makeZoneMarkTexture(ink), [ink]);
+  const map = useMemo(() => makeZoneMarkTexture(), []);
   const dismissMap = useMemo(() => makeZoneDismissTexture(), []);
   useEffect(
     () => () => {
@@ -1777,7 +1788,6 @@ function CardFace({
               notesRef={notesRef}
               draftRef={draftRef}
               active={interactive}
-              ink={ink}
               onRemoveNote={onRemoveNote}
               spread={spread}
             />
@@ -2209,7 +2219,7 @@ function FaceClickCatcher({ enabled, onActivate }) {
     () => () => {
       unbind.current?.();
       unbind.current = null;
-      setStageCursor(gl, 'pointer');
+      setStageCursor(gl, 'default');
     },
     [gl],
   );
@@ -2221,11 +2231,11 @@ function FaceClickCatcher({ enabled, onActivate }) {
       position={[0, 0, 0.03]}
       onPointerOver={(e) => {
         e.stopPropagation();
-        setStageCursor(gl, 'pointer');
+        setStageCursor(gl, 'grab');
       }}
       onPointerOut={(e) => {
         e.stopPropagation();
-        setStageCursor(gl, 'grab');
+        setStageCursor(gl, 'default');
       }}
       onPointerDown={(e) => {
         e.stopPropagation();
@@ -2516,7 +2526,7 @@ export default function BirthdayCard3D({
   notes = CARD_SEED_NOTES,
   draft = null,
   theme = 'dark',
-  paletteId = 'gold',
+  paletteId = 'crimson',
   finishId = 'paper',
   scale = 1,
   selectedNoteId = null,
@@ -2532,6 +2542,8 @@ export default function BirthdayCard3D({
   onInsideClick,
   onPagesChange,
   pageTurnRef,
+  zoneAimRef,
+  appearOpenKey = 0,
 }) {
   const reduceMotion = usePrefersReducedMotion();
   const openT = useRef(open ? 1 : REST_OPEN);
@@ -2545,6 +2557,7 @@ export default function BirthdayCard3D({
   const liveNotesRef = useRef(CARD_SEED_NOTES);
   const draftRef = useRef(draft);
   const autoPickedOpen = useRef(false);
+  const slowAppearOpen = useRef(true);
   const flipHinge = useRef(null);
   const stackHinge = useRef(null);
   const flipT = useRef(0);
@@ -2553,28 +2566,33 @@ export default function BirthdayCard3D({
   const { gl, camera } = useThree();
   draftRef.current = draft;
   const colors = paletteColorsFor(theme, paletteId);
+  const paperColor = cardStockColor(theme, paletteId);
+  const wellColor = wellBodyColor(paperColor, theme);
   const pureBlack = isPureBlack(colors.body);
   const foilMetal = getFoilMetal('silver');
   const foilInk = foilMetal.ink;
-  const paperColor = brighterCardBody(colors.body, theme);
   const writingInk = insideWritingInk(paperColor, foilInk);
   const cardFinish = getCardFinish(finishId);
   const paletteGoal = useRef({
-    body: brighterCardBody(colors.body, theme),
-    well: wellBodyColor(colors.body, theme),
+    body: paperColor,
+    well: wellColor,
     black: pureBlack ? 1 : 0,
     foil: foilMetal.props,
     finish: resolveCardFinish(cardFinish, pureBlack ? 1 : 0),
   });
   paletteGoal.current = {
-    body: brighterCardBody(colors.body, theme),
-    well: wellBodyColor(colors.body, theme),
+    body: paperColor,
+    well: wellColor,
     black: pureBlack ? 1 : 0,
     foil: foilMetal.props,
     finish: resolveCardFinish(cardFinish, pureBlack ? 1 : 0),
   };
   const blackMix = useRef(pureBlack ? 1 : 0);
   const [fontsReady, setFontsReady] = useState(false);
+
+  useEffect(() => {
+    slowAppearOpen.current = true;
+  }, [appearOpenKey]);
 
   useEffect(() => {
     let cancelled = false;
@@ -2601,7 +2619,7 @@ export default function BirthdayCard3D({
     () =>
       new THREE.MeshPhysicalMaterial({
         ...bodyMaterialProps,
-        color: brighterCardBody(colors.body, theme),
+        color: paperColor.clone(),
         ...startFinish.outside,
         side: THREE.DoubleSide,
       }),
@@ -2611,7 +2629,7 @@ export default function BirthdayCard3D({
     () =>
       new THREE.MeshPhysicalMaterial({
         ...bodyMaterialProps,
-        color: wellBodyColor(colors.body, theme),
+        color: wellColor.clone(),
         ...startFinish.well,
         side: THREE.DoubleSide,
       }),
@@ -2744,12 +2762,21 @@ export default function BirthdayCard3D({
     const clampedDt = Math.min(dt, 0.05);
     if (dragging) {
       openT.current = target;
+      slowAppearOpen.current = false;
     } else if (reduceMotion.current) {
       openT.current = target;
+      if (open) slowAppearOpen.current = false;
     } else {
-      const kOpen = 1 - Math.exp(-CARD_OPEN_STIFFNESS * clampedDt);
+      const opening = open && target > openT.current + 0.0008;
+      const stiffness = slowAppearOpen.current && opening
+        ? CARD_APPEAR_OPEN_STIFFNESS
+        : CARD_OPEN_STIFFNESS;
+      const kOpen = 1 - Math.exp(-stiffness * clampedDt);
       openT.current += (target - openT.current) * kOpen;
-      if (Math.abs(target - openT.current) < 0.0008) openT.current = target;
+      if (Math.abs(target - openT.current) < 0.0008) {
+        openT.current = target;
+        if (open) slowAppearOpen.current = false;
+      }
     }
     const t = openT.current;
     const peek = foldPeek(t);
@@ -2850,6 +2877,8 @@ export default function BirthdayCard3D({
         autoPickedOpen.current = true;
         zoneHoverRef.current = { page: cell.page, col: cell.col, row: cell.row };
         const uv = zoneNoteUv(cell.col, cell.row);
+        const center = projectMeshPoint(mesh, camera, gl, zoneCenterLocal(cell.col, cell.row));
+        if (zoneAimRef) zoneAimRef.current = center || anchor;
         const hit = {
           page: cell.page,
           spread,
@@ -2867,6 +2896,23 @@ export default function BirthdayCard3D({
       }
     } else if (open && (draft || hasOwnMessage(notes))) {
       autoPickedOpen.current = true;
+    }
+
+    if (zoneAimRef) {
+      const d = draftRef.current;
+      if (
+        d
+        && (d.page === 'left' || d.page === 'right')
+        && Number.isInteger(d.col)
+        && Number.isInteger(d.row)
+      ) {
+        const mesh = pageMeshes.current[d.page];
+        zoneAimRef.current = mesh
+          ? projectMeshPoint(mesh, camera, gl, zoneCenterLocal(d.col, d.row))
+          : null;
+      } else {
+        zoneAimRef.current = null;
+      }
     }
   });
 
@@ -3125,44 +3171,6 @@ export default function BirthdayCard3D({
 
 const MAX_MESSAGE = 140;
 
-export function CardOpenButton({ open, visible, disabled, signed = false, onClick, onDone }) {
-  const showDone = Boolean(visible && signed && onDone);
-  return (
-    <div className="rgl-card-dock">
-      <button
-        type="button"
-        className={`rgl-card-toggle${visible ? ' is-visible' : ''}`}
-        disabled={disabled}
-        aria-pressed={open}
-        onPointerDown={(e) => e.stopPropagation()}
-        onClick={(e) => {
-          e.stopPropagation();
-          if (disabled) return;
-          onClick?.();
-        }}
-      >
-        {open ? 'Close' : 'Open'}
-      </button>
-      <button
-        type="button"
-        className={`rgl-card-toggle rgl-card-done${showDone ? ' is-visible' : ''}`}
-        disabled={disabled || !showDone}
-        aria-label="Done"
-        aria-hidden={!showDone}
-        tabIndex={showDone ? 0 : -1}
-        onPointerDown={(e) => e.stopPropagation()}
-        onClick={(e) => {
-          e.stopPropagation();
-          if (disabled || !showDone) return;
-          onDone?.();
-        }}
-      >
-        Done
-      </button>
-    </div>
-  );
-}
-
 function PageNavChevron({ dir }) {
   return (
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
@@ -3256,14 +3264,20 @@ export function useDockFade(open) {
   return exiting;
 }
 
-export function CardSignPop({ draft, value, onChange, onSign, onCancel }) {
+export function CardSignPop({ draft, value, onChange, onSign, onCancel, aimRef }) {
   const inputRef = useRef(null);
+  const dockRef = useRef(null);
+  const panelRef = useRef(null);
+  const svgRef = useRef(null);
+  const lineRef = useRef(null);
+  const dotRef = useRef(null);
   const lastDraft = useRef(draft);
+  const aimedRef = useRef(false);
+  const [aimed, setAimed] = useState(false);
   const open = Boolean(draft);
   const exiting = useDockFade(open);
   if (draft) lastDraft.current = draft;
-  const placed = lastDraft.current;
-  const aim = Number.isFinite(placed?.x) && Number.isFinite(placed?.y);
+  const pin = lastDraft.current;
   const present = open || exiting;
 
   useEffect(() => {
@@ -3278,73 +3292,149 @@ export function CardSignPop({ draft, value, onChange, onSign, onCancel }) {
     return () => window.clearTimeout(t);
   }, [draft]);
 
-  return (
-    <div
-      className={`rgl-face-dock rgl-face-dock-sign${open ? ' is-on' : ''}${exiting ? ' is-exit' : ''}${aim ? ' is-aimed' : ''}`}
-      aria-hidden={!present}
-      style={
-        aim
-          ? { '--sign-x': `${placed.x}px`, '--sign-y': `${placed.y}px` }
-          : undefined
+  useLayoutEffect(() => {
+    if (!present) {
+      aimedRef.current = false;
+      setAimed(false);
+      return undefined;
+    }
+    let raf = 0;
+    const tick = () => {
+      const svg = svgRef.current;
+      const line = lineRef.current;
+      const dot = dotRef.current;
+      const dock = dockRef.current;
+      const panel = panelRef.current;
+      const aim = aimRef?.current;
+      if (
+        svg
+        && line
+        && dot
+        && dock
+        && panel
+        && aim
+        && Number.isFinite(aim.clientX)
+        && Number.isFinite(aim.clientY)
+      ) {
+        const sr = svg.getBoundingClientRect();
+        const w = Math.max(1, sr.width);
+        const h = Math.max(1, sr.height);
+        const y = aim.clientY - sr.top;
+        const x2 = aim.clientX - sr.left;
+        const panelW = panel.getBoundingClientRect().width;
+        const panelH = panel.getBoundingClientRect().height;
+        const pad = 16;
+        const gap = 96;
+        const top = Math.max(pad, Math.min(y - panelH / 2, h - panelH - pad));
+        dock.style.top = `${top}px`;
+        const rightEdge = Math.max(pad + panelW, Math.min(x2 - gap, w - pad));
+        dock.style.right = `${w - rightEdge}px`;
+        dock.style.left = 'auto';
+        const pr = panel.getBoundingClientRect();
+        const x1 = pr.right - sr.left;
+        svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+        line.setAttribute('x1', String(x1));
+        line.setAttribute('y1', String(y));
+        line.setAttribute('x2', String(x2));
+        line.setAttribute('y2', String(y));
+        dot.setAttribute('cx', String(x2));
+        dot.setAttribute('cy', String(y));
+        svg.style.visibility = aim.visible === false ? 'hidden' : '';
+        if (!aimedRef.current) {
+          aimedRef.current = true;
+          setAimed(true);
+        }
       }
-      onPointerDown={(e) => e.stopPropagation()}
-    >
-      <form
-        className="rgl-face-dock-panel"
-        role="dialog"
-        aria-modal={present ? 'true' : undefined}
-        aria-labelledby="bday-sign-title"
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (open && value.trim()) onSign();
-        }}
+      raf = requestAnimationFrame(tick);
+    };
+    tick();
+    return () => {
+      cancelAnimationFrame(raf);
+      const dock = dockRef.current;
+      if (dock) {
+        dock.style.top = '';
+        dock.style.right = '';
+        dock.style.left = '';
+      }
+    };
+  }, [present, aimRef]);
+
+  return (
+    <>
+      <div
+        ref={dockRef}
+        className={`rgl-face-dock rgl-face-dock-sign${open && aimed ? ' is-on' : ''}${exiting ? ' is-exit' : ''}${aimed ? ' is-aimed' : ''}`}
+        aria-hidden={!present}
+        onPointerDown={(e) => e.stopPropagation()}
       >
-        <p id="bday-sign-title" className="rgl-face-dock-label">
-          {placed?.noteId ? 'Edit' : 'Add a Message'}
-        </p>
-        <textarea
-          ref={inputRef}
-          className="rgl-face-dock-note"
-          value={value}
-          maxLength={MAX_MESSAGE}
-          rows={3}
-          placeholder="Happy birthday…"
-          tabIndex={open ? 0 : -1}
-          onChange={(e) => onChange(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Escape') {
-              e.stopPropagation();
-              onCancel();
-            }
-            if (e.key === 'Enter' && !e.shiftKey) {
-              e.preventDefault();
-              e.stopPropagation();
-              if (open && value.trim()) onSign();
-            }
+        <form
+          ref={panelRef}
+          className="rgl-face-dock-panel"
+          role="dialog"
+          aria-modal={present ? 'true' : undefined}
+          aria-labelledby="bday-sign-title"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (open && value.trim()) onSign();
           }}
-        />
-        <div className="rgl-face-dock-actions">
-          <button
-            type="submit"
-            className="rgl-face-dock-action is-primary"
-            disabled={!value.trim()}
-          >
-            {placed?.noteId ? 'Save' : 'Sign'}
-          </button>
-          <button
-            type="button"
-            className="rgl-face-dock-action"
+        >
+          <div className="rgl-face-dock-head">
+            <p id="bday-sign-title" className="rgl-face-dock-label">
+              {pin?.noteId ? 'Edit' : 'Add a Message'}
+            </p>
+            <span id="bday-sign-count" className="rgl-face-dock-count" aria-live="polite">
+              {value.length} / {MAX_MESSAGE}
+            </span>
+          </div>
+          <textarea
+            ref={inputRef}
+            className="rgl-face-dock-note"
+            value={value}
+            maxLength={MAX_MESSAGE}
+            rows={3}
+            placeholder="Happy birthday…"
             tabIndex={open ? 0 : -1}
-            onClick={onCancel}
-          >
-            Cancel
-          </button>
-        </div>
-      </form>
-      <svg className="rgl-face-dock-lead" viewBox="0 0 72 24" aria-hidden="true">
-        <line x1="0" y1="12" x2="58" y2="12" />
-        <circle cx="64" cy="12" r="3" />
-      </svg>
-    </div>
+            aria-describedby="bday-sign-count"
+            onChange={(e) => onChange(e.target.value.slice(0, MAX_MESSAGE))}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                e.stopPropagation();
+                onCancel();
+              }
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                e.stopPropagation();
+                e.nativeEvent?.stopImmediatePropagation?.();
+                if (open && value.trim()) onSign();
+              }
+            }}
+          />
+          <div className="rgl-face-dock-actions">
+            <button
+              type="button"
+              className="rgl-face-dock-action is-primary"
+              disabled={!value.trim()}
+              onClick={() => {
+                if (open && value.trim()) onSign();
+              }}
+            >
+              {pin?.noteId ? 'Save' : 'Sign'}
+            </button>
+          </div>
+        </form>
+      </div>
+      {present && (
+        <svg
+          ref={svgRef}
+          className={`rgl-sign-pointer${open && aimed ? ' is-on' : ''}${exiting ? ' is-exit' : ''}`}
+          viewBox="0 0 1 1"
+          preserveAspectRatio="none"
+          aria-hidden="true"
+        >
+          <line ref={lineRef} x1="0" y1="0" x2="0" y2="0" />
+          <circle ref={dotRef} cx="0" cy="0" r="3" />
+        </svg>
+      )}
+    </>
   );
 }

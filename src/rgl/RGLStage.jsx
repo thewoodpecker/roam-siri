@@ -150,6 +150,7 @@ function OrbitingSubject({ children, drag, rotationY, spinBurst, angularVel, idl
  * and the same drag / fling / tap-spin physics as RoamIcon3D.
  *
  * Pass interactive={false} for map decorations (idle spin only, no grab).
+ * Idle cursor stays `default` so grab only appears when a mesh (the card) sets it.
  */
 export default function RGLStage({
   children,
@@ -165,6 +166,7 @@ export default function RGLStage({
   holdYaw = null,
   tapSpin = true,
   allowDrag = true,
+  idleCursor = 'default',
   onTap = null,
   onOrbit = null,
   environment = 'softbox',
@@ -198,11 +200,23 @@ export default function RGLStage({
   const tapSpinRef = useRef(tapSpin);
   tapSpinRef.current = tapSpin;
   const dragEnabled = interactive && allowDrag;
+  const restCursor = dragEnabled ? idleCursor : interactive ? 'pointer' : 'default';
+  const restCursorRef = useRef(restCursor);
+  restCursorRef.current = restCursor;
 
   useEffect(() => () => {
     unbindDragRef.current?.();
     unbindDragRef.current = null;
   }, []);
+
+  useEffect(() => {
+    if (drag.current.active) return;
+    const host = hostRef.current;
+    if (!host) return;
+    host.style.cursor = restCursor;
+    const canvas = host.querySelector('canvas');
+    if (canvas) canvas.style.cursor = restCursor;
+  }, [restCursor]);
 
   // Appear: N full Y turns over the bounce-in window, then resume idle spin.
   useEffect(() => {
@@ -247,7 +261,11 @@ export default function RGLStage({
     }
 
     const host = hostRef.current;
-    if (host) host.style.cursor = dragEnabled ? 'grab' : 'pointer';
+    if (host) {
+      host.style.cursor = restCursorRef.current;
+      const canvas = host.querySelector('canvas');
+      if (canvas) canvas.style.cursor = restCursorRef.current;
+    }
     const pid = e?.pointerId;
     if (pid != null && host?.hasPointerCapture?.(pid)) {
       host.releasePointerCapture(pid);
@@ -338,7 +356,7 @@ export default function RGLStage({
       className={className}
       data-environment={environment}
       style={{
-        cursor: dragEnabled ? 'grab' : interactive ? 'pointer' : 'default',
+        cursor: restCursor,
         touchAction: 'none',
         userSelect: 'none',
         pointerEvents: interactive ? 'auto' : 'none',
