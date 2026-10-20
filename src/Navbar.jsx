@@ -10,6 +10,7 @@ const productsMenu = [
       { title: "Theater", description: "All-Hands Presentations", href: "#/feature/theater" },
       { title: "AInbox", description: "Enterprise Messaging", href: "#/feature/ainbox" },
       { title: "Lobby", description: "Meeting Scheduler", href: "#/feature/lobby" },
+      { title: "Pizza", description: "Office pizza from Slice", href: "#/feature/pizza" },
       { title: "Magicast", description: "Integrated AI Screen Recorder", href: "#/feature/magicast" },
       { title: "Magic Minutes", description: "AI Meeting Summarization", href: "#/feature/magic-minutes" },
       { title: "On-It", description: "Your AI Assistant", href: "#/feature/on-it" },

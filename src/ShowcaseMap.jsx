@@ -737,13 +737,13 @@ function CardIconMorph({ to, dir }) {
       data-dir={dir}
       attributeName="d"
       to={to}
-      dur="0.22s"
+      dur="0.45s"
       fill="freeze"
       restart="always"
       begin="indefinite"
       calcMode="spline"
       keyTimes="0;1"
-      keySplines="0.23 1 0.32 1"
+      keySplines="0.42 0 0.58 1"
     />
   );
 }
@@ -2035,28 +2035,116 @@ function LazyVisible({ children, rootMargin = '400px 0px', className, style }) {
   );
 }
 
-function MapFeatureVisual({ theme, className }) {
+function MapFeatureVisual({ theme, className, eager = false }) {
+  const map = <ShowcaseMap embedded initialFloor="Homepage" />;
   return (
     <div className={`sc-feature-visual sc-feature-visual-left sc-feature-visual-map${className ? ' ' + className : ''}`}>
       <div className="sc-feature-wallpaper sc-feature-wallpaper-map" style={{ backgroundImage: `url(/wallpapers/wallpaper-${theme}.png)` }}>
-        <LazyVisible className="sc-map-feature-window-host">
-          <ShowcaseMap embedded initialFloor="Homepage" />
-        </LazyVisible>
+        {eager ? <div className="sc-map-feature-window-host">{map}</div> : <LazyVisible className="sc-map-feature-window-host">{map}</LazyVisible>}
       </div>
     </div>
   );
 }
 
-function DropInFeatureVisual({ theme, className }) {
+function DropInFeatureVisual({ theme, className, eager = false }) {
+  const map = <ShowcaseMap embedded autoKnock initialFloor="DropIn" />;
   return (
     <div className={`sc-feature-visual sc-feature-visual-map${className ? ' ' + className : ''}`}>
       <div className="sc-feature-wallpaper sc-feature-wallpaper-map" style={{ backgroundImage: `url(/wallpapers/wallpaper-${theme}.png)` }}>
-        <LazyVisible className="sc-map-feature-window-host">
-          <ShowcaseMap embedded autoKnock initialFloor="DropIn" />
-        </LazyVisible>
+        {eager ? <div className="sc-map-feature-window-host">{map}</div> : <LazyVisible className="sc-map-feature-window-host">{map}</LazyVisible>}
       </div>
     </div>
   );
+}
+
+const EXPORT_DUMMY_WIN = { position: { x: 0, y: 0 }, zIndex: 1, isFocused: true, focus: () => {}, close: () => {}, open: () => {} };
+
+export const HOMEPAGE_EXPORT_VISUALS = [
+  { id: 'hero', title: 'Hero Map' },
+  { id: 'virtual-office', title: 'Virtual Office' },
+  { id: 'drop-in-meetings', title: 'Drop-In Meetings' },
+  { id: 'video-conferencing', title: 'Video Conferencing' },
+  { id: 'theater', title: 'Theater' },
+  { id: 'ainbox', title: 'Group Chat' },
+  { id: 'magic-minutes', title: 'AI-Powered Meeting Summaries' },
+  { id: 'lobby', title: 'Scheduling' },
+  { id: 'magicast', title: 'AI Screen Recorder' },
+  { id: 'on-it', title: 'Your AI Assistant is On-It' },
+  { id: 'on-air', title: 'On-Air' },
+];
+
+export function HomepageExportVisual({ id, theme = 'dark' }) {
+  const wallpaper = { backgroundImage: `url(/wallpapers/wallpaper-${theme}.png)` };
+  const framed = (child, left = false) => (
+    <div className={`sc-feature-visual${left ? ' sc-feature-visual-left' : ''}`}>
+      <div className="sc-feature-wallpaper" style={wallpaper}>{child}</div>
+    </div>
+  );
+  const theaterSpeakers = [p('Ashley B.'), p('Daniel R.'), p('Olivia S.')].filter(person => person?.video);
+  const joe = SHOWCASE_PEOPLE[0];
+
+  switch (id) {
+    case 'hero':
+      return (
+        <div className="sc-feature-visual sc-feature-visual-left sc-feature-visual-map">
+          <div className="sc-feature-wallpaper sc-feature-wallpaper-map" style={wallpaper}>
+            <div className="sc-map-feature-window-host">
+              <ShowcaseMap embedded initialFloor="R&D" />
+            </div>
+          </div>
+        </div>
+      );
+    case 'virtual-office':
+      return <MapFeatureVisual theme={theme} eager />;
+    case 'drop-in-meetings':
+      return <DropInFeatureVisual theme={theme} eager />;
+    case 'video-conferencing':
+      return framed(
+        <MeetingWindow
+          win={EXPORT_DUMMY_WIN}
+          onDrag={() => {}}
+          roomName="Daily Standup"
+          gesturesEnabled={false}
+          people={[p('Ashley B.'), p('Emily C.'), p('Hannah B.'), p('Mia C.'), p('Ethan B.'), p('Sarah M.')]}
+        />,
+        true,
+      );
+    case 'theater':
+      return framed(
+        <TheaterWindow
+          win={EXPORT_DUMMY_WIN}
+          onDrag={() => {}}
+          speakers={theaterSpeakers}
+          audience={SHOWCASE_PEOPLE}
+          me={joe}
+          onOpenChat={() => {}}
+        />,
+      );
+    case 'ainbox':
+      return framed(
+        <AInbox
+          win={EXPORT_DUMMY_WIN}
+          onDrag={() => {}}
+          initialThreadView={{ chatId: 'engineering', messageId: 2 }}
+          favoritesOverride={AINBOX_ENG_FAVORITES}
+          sectionsOverride={AINBOX_ENG_SECTIONS}
+          messagesOverride={AINBOX_ENG_MESSAGES}
+        />,
+        true,
+      );
+    case 'magic-minutes':
+      return framed(<MagicMinutes win={EXPORT_DUMMY_WIN} onDrag={() => {}} />);
+    case 'lobby':
+      return framed(<Lobby win={EXPORT_DUMMY_WIN} onDrag={() => {}} />, true);
+    case 'magicast':
+      return <MagicastFeatureVisual theme={theme} />;
+    case 'on-it':
+      return framed(<OnItFeatureChat />, true);
+    case 'on-air':
+      return framed(<OnAir win={EXPORT_DUMMY_WIN} onDrag={() => {}} demo />);
+    default:
+      return null;
+  }
 }
 
 export function OnItFeatureChat({ initialMessages, taskSummary, taskSteps, compact = false } = {}) {
@@ -3219,7 +3307,6 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
   const [glowAgentRoomId, setGlowAgentRoomId] = useState(null);
   const [glowAgentColor, setGlowAgentColor] = useState(null);
   useEffect(() => {
-    const VIBES = ['claude', 'codex', 'cursor', 'both'];
     const pickAgentColor = (room) => {
       if (room.departments) {
         const all = room.departments.flatMap(d =>
@@ -3238,7 +3325,9 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
       if (candidateOffices.length > 0) {
         const r = candidateOffices[officeIdx % candidateOffices.length];
         setGlowOfficeId(r.id);
-        setGlowOfficeVibe(activeVibes[r.id] || VIBES[officeIdx % VIBES.length]);
+        // Spotlight an office that's already vibe-coding. Inventing a vibe
+        // here stacks a glow on top of the active set.
+        setGlowOfficeVibe(activeVibes[r.id] || null);
         officeIdx += 1;
       } else {
         setGlowOfficeId(null);
@@ -3568,8 +3657,8 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
     );
     if (privateRooms.length < 2) return;
     const timers = [];
-    const MAX_VIBES = Math.min(8, Math.max(3, Math.round(privateRooms.length * 0.25)));
-    const MIN_VIBES = Math.min(3, Math.max(2, Math.round(privateRooms.length * 0.12)));
+    const MAX_VIBES = Math.min(4, Math.max(2, Math.round(privateRooms.length * 0.125)));
+    const MIN_VIBES = Math.min(2, Math.max(1, Math.round(privateRooms.length * 0.06)));
     const SEED_COUNT = MAX_VIBES;
 
     // Clear so a fresh seed always includes Cursor (and every other type).
@@ -4156,20 +4245,6 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
             <div className="sc-toolbar-pill" data-tooltip="AInbox" onClick={() => { pinAppWindow(ainboxWin, 'left'); ainboxWin.open(); }}>
               <img src="/icons/chat.svg" width="16" height="16" alt="" />
             </div>
-            {birthdayEnabled && birthdayCta !== 'office' && (
-              <button
-                type="button"
-                className="sc-toolbar-pill sc-birthday-sign-chip"
-                aria-label={`${SIGN_CARD_TITLE} — ${birthdayChipLabel(chipPerson.first)}`}
-                onClick={() => openBirthdayGift(chipPerson.first)}
-              >
-                <div className="sc-toolbar-birthday-glow" aria-hidden="true">
-                  <BirthdayGlow active borderRadius={16} color={birthdayAccent} />
-                </div>
-                <BirthdayCardIcon size={24} />
-                <BirthdaySignCopy name={chipPerson.first} />
-              </button>
-            )}
             {onPersonalAgentsClick && (
               <div
                 className="sc-toolbar-pill sc-toolbar-pill-personal-agents sc-toolbar-pill-working"

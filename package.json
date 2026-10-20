@@ -7,7 +7,8 @@
     "dev": "node server.js & vite",
     "server": "node server.js",
     "build": "vite build",
-    "start": "node server.js"
+    "start": "node server.js",
+    "export:visuals": "node scripts/export-visuals.mjs"
   },
   "keywords": [],
   "author": "",
@@ -25,6 +26,8 @@
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^5.1.4",
+    "ffmpeg-static": "^5.3.0",
+    "playwright": "^1.63.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "vite": "^7.3.1"

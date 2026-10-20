@@ -12,12 +12,17 @@ import './App.css';
 // FeaturePage is ~380K and only renders for #/feature/* routes — keep it
 // out of the homepage bundle so most visitors don't pay for it.
 const FeaturePage = lazy(() => import('./FeaturePage'));
+const VisualExportPage = lazy(() => import('./VisualExport'));
 
 // RWN (Remote Work News) hub — only renders for #/rwn, keep it lazy too.
 const RWNPage = lazy(() => import('./RWNPage'));
 
 // Birthday playground (#/birthday).
 const RGLPage = lazy(() => import('./RGLPage'));
+
+// Award drop playground (#/awards). The coinery coin stays in this chunk.
+const AwardsPage = lazy(() => import('./AwardsPage'));
+const AwardsMeetingPage = lazy(() => import('./AwardsMeetingPage'));
 
 // Flip to `false` to show the dev settings icon in the top-left
 const HIDE_CHROME = false;
@@ -3490,6 +3495,21 @@ function useHashTab() {
   return [tab, setActiveTab];
 }
 
+function useExportRoute() {
+  const getPath = () => {
+    const m = window.location.hash.match(/^#\/export(?:\/(.*))?/i);
+    if (!m) return null;
+    return m[1] || '';
+  };
+  const [path, setPath] = useState(getPath);
+  useEffect(() => {
+    const onHash = () => setPath(getPath());
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, []);
+  return path;
+}
+
 function useFeatureRoute() {
   // Don't validate the slug against FEATURES here — FEATURES lives in the
   // lazy FeaturePage chunk. FeaturePageInner already returns null for an
@@ -3522,6 +3542,28 @@ function useRwnRoute() {
     return () => window.removeEventListener('hashchange', onHash);
   }, []);
   return isRwn;
+}
+
+function useAwardsRoute() {
+  const getIsAwards = () => /^#\/awards(?:\/|$)/i.test(window.location.hash);
+  const [isAwards, setIsAwards] = useState(getIsAwards);
+  useEffect(() => {
+    const onHash = () => setIsAwards(getIsAwards());
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, []);
+  return isAwards;
+}
+
+function useAwardsMeetingRoute() {
+  const getIsMeeting = () => /^#\/awards-meeting(?:\/|$)/i.test(window.location.hash);
+  const [isMeeting, setIsMeeting] = useState(getIsMeeting);
+  useEffect(() => {
+    const onHash = () => setIsMeeting(getIsMeeting());
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, []);
+  return isMeeting;
 }
 
 function RglSuspenseFallback() {
@@ -3572,14 +3614,22 @@ class RglErrorBoundary extends React.Component {
 export default function App() {
   const [activeTab, setActiveTab] = useHashTab();
   const featureSlug = useFeatureRoute();
+  const exportPath = useExportRoute();
+  const isExport = exportPath !== null;
   const isRwn = useRwnRoute();
+  const isAwards = useAwardsRoute();
+  const isAwardsMeeting = useAwardsMeetingRoute();
   // Drive this off the tab parser — a separate `#/birthday` regex missed query
   // extras and left the layout empty (settings gear only).
   const isRgl = activeTab === 'birthday';
 
   return (
     <>
-      {isRgl ? (
+      {isExport ? (
+        <Suspense fallback={null}>
+          <VisualExportPage path={exportPath} />
+        </Suspense>
+      ) : isRgl ? (
         <>
           <RglErrorBoundary>
             <Suspense fallback={<RglSuspenseFallback />}>
@@ -3590,6 +3640,14 @@ export default function App() {
             <TabSwitcher activeTab="birthday" onTabChange={setActiveTab} />
           </div>
         </>
+      ) : isAwardsMeeting ? (
+        <Suspense fallback={null}>
+          <AwardsMeetingPage />
+        </Suspense>
+      ) : isAwards ? (
+        <Suspense fallback={null}>
+          <AwardsPage />
+        </Suspense>
       ) : isRwn ? (
         <Suspense fallback={null}>
           <RWNPage />
@@ -3623,7 +3681,7 @@ export default function App() {
       )}
       {/* Pinned to the bottom of every page; stays mounted across route
           changes so it animates seamlessly through transitions. */}
-      {!isRgl && <RemoteWorkTicker />}
+      {!isRgl && !isExport && !isAwards && !isAwardsMeeting && <RemoteWorkTicker />}
     </>
   );
 }

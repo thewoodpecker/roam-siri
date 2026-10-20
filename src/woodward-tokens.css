@@ -15,7 +15,7 @@
   --bg-accented-secondary: var(--blue-600);
 
   /* ——— Background / Surface ——— */
-  --bg-surface-primary: var(--graphite-900);
+  --bg-surface-primary: var(--solid-black);
   --bg-surface-secondary: var(--solid-white);
   --bg-surface-raised: var(--graphite-800);
   --bg-surface-elevated-primary: var(--graphite-700);

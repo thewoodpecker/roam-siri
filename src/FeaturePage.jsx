@@ -51,6 +51,8 @@ import MagicMinutes from './MagicMinutes';
 import Recordings from './Recordings';
 import Calendar from './Calendar';
 import Lobby from './Lobby';
+import Pizza from './Pizza';
+import { ROAM_HQ } from './pizzaData';
 import Magnify from './Magnify';
 import OnAir from './OnAir';
 import MobileWindow from './MobileWindow';
@@ -91,6 +93,7 @@ const INITIAL_WINDOWS = [
   { id: 'theater', isOpen: true, position: { x: 0, y: 0 }, zIndex: 1 },
   { id: 'magicminutes', isOpen: true, position: { x: 0, y: 0 }, zIndex: 1 },
   { id: 'lobby', isOpen: true, position: { x: 0, y: 0 }, zIndex: 1 },
+  { id: 'pizza', isOpen: true, position: { x: 0, y: 0 }, zIndex: 1 },
   { id: 'onair', isOpen: true, position: { x: 0, y: 0 }, zIndex: 1 },
 ];
 
@@ -856,8 +859,9 @@ const ONAIR_EVENTS = [
 // Picked once per FeaturePage mount and provided via context to every on-air
 // visual. Defaults to World Cup so visuals rendered outside the on-air page
 // (or before the provider mounts) keep their existing content.
-const OnAirEventContext = React.createContext(ONAIR_EVENTS[0]);
+export const OnAirEventContext = React.createContext(ONAIR_EVENTS[0]);
 const useOnAirEvent = () => React.useContext(OnAirEventContext);
+export { ONAIR_EVENTS };
 function pickOnAirEvent() {
   return ONAIR_EVENTS[Math.floor(Math.random() * ONAIR_EVENTS.length)];
 }
@@ -2192,6 +2196,24 @@ function LobbyPreview({ initialNav, initialSelectedLinkId, initialDetailSection,
       initialDetailSection={initialDetailSection}
       initialLinks={initialLinks}
       scrollDetailToBottom={scrollDetailToBottom}
+    />
+  );
+}
+
+const PIZZA_CART_PREVIEW = [
+  { itemId: 'itm_pepperoni_sq', shopId: 'shp_prince', name: 'Pepperoni Square', priceCents: 600, image: 'square', qty: 4 },
+  { itemId: 'itm_knots', shopId: 'shp_prince', name: 'Garlic Knots', priceCents: 650, image: 'knots', qty: 2 },
+];
+
+function PizzaPreview({ initialNav, initialShopId, initialCart, initialAddress } = {}) {
+  return (
+    <Pizza
+      win={noopWin('pizza')}
+      onDrag={() => {}}
+      initialNav={initialNav}
+      initialShopId={initialShopId}
+      initialCart={initialCart}
+      initialAddress={initialAddress}
     />
   );
 }
@@ -7321,6 +7343,39 @@ export const FEATURES = {
       STANDARD_PRICING_COMPARE,
     ],
   },
+  'pizza': {
+    eyebrow: 'Pizza',
+    title: 'Pizza for the office.',
+    hero: 'Nearby Slice shops, a shared cart, and live order tracking — without leaving Roam.',
+    visual: <PizzaPreview />,
+    heroInteractive: true,
+    sections: [
+      {
+        title: 'Nearby shops',
+        desc: 'Slice’s shop directory, scored for the office. Rating, delivery time, and whether they’re open — same list chrome as Lobby.',
+        visual: <PizzaPreview initialAddress={ROAM_HQ} />,
+        interactive: true,
+      },
+      {
+        title: 'The menu',
+        desc: 'Tap a shop and the list becomes the menu. Same rows, same chrome. Add slices without leaving the window.',
+        visual: <PizzaPreview initialNav="menu" initialShopId="shp_prince" />,
+        interactive: true,
+      },
+      {
+        title: 'A shared cart',
+        desc: 'Build the order in Roam, then checkout as a single Slice order. Quantities bump in place.',
+        visual: <PizzaPreview initialNav="cart" initialCart={PIZZA_CART_PREVIEW} />,
+        interactive: true,
+      },
+      {
+        title: 'Orders',
+        desc: 'Preparing, on the way, delivered. Same card layout, status where the badges go.',
+        visual: <PizzaPreview initialNav="orders" />,
+        interactive: true,
+      },
+    ],
+  },
   'magicast': {
     eyebrow: 'Magicast',
     title: 'Record, edit, and share — without leaving Roam',
@@ -8233,6 +8288,34 @@ export const FEATURE_ORDER = [
   'mobile',
 ];
 
+// Folder layout for the MP4 export, matching Products nav + homepage.
+export const EXPORT_FEATURE_FOLDERS = [
+  { slug: 'homepage', folder: '00 Homepage' },
+  { slug: 'virtual-office', folder: '01 Virtual Office' },
+  { slug: 'drop-in-meetings', folder: '02 Drop-In Meetings' },
+  { slug: 'video-conferencing', folder: '03 Video Conferencing' },
+  { slug: 'theater', folder: '04 Theater' },
+  { slug: 'ainbox', folder: '05 AInbox' },
+  { slug: 'lobby', folder: '06 Lobby' },
+  { slug: 'pizza', folder: '07 Pizza' },
+  { slug: 'magicast', folder: '08 Magicast' },
+  { slug: 'magic-minutes', folder: '09 Magic Minutes' },
+  { slug: 'on-it', folder: '10 On-It' },
+  { slug: 'on-air', folder: '11 On-Air' },
+  { slug: 'mobile', folder: '12 Mobile' },
+];
+
+const EXPORT_SKIP_FEATURES = new Set(['pizza']);
+const EXPORT_SKIP_TITLES = new Set([
+  'Apple Watch',
+  'CarPlay',
+  'External Meetings',
+  'Desktop Recordings',
+  'HubSpot CRM Integration',
+  'Share Your Magicast',
+  'Download Your Social Media Press Kit',
+]);
+
 function CompareColumn({ side, data }) {
   return (
     <div className={`fp-compare-col fp-compare-col-${side}${data.featured ? ' fp-compare-col-featured' : ''}`}>
@@ -8276,12 +8359,76 @@ function CompareColumn({ side, data }) {
 
 // Generates a URL-safe slug from a section title so each titled section can
 // be deep-linked. "Laugh, Clap & Boo in Stereo" → "laugh-clap-and-boo-in-stereo"
-const sectionSlug = (s) => String(s || '')
+export const sectionSlug = (s) => String(s || '')
   .toLowerCase()
   .replace(/&amp;/g, 'and')
   .replace(/&/g, 'and')
   .replace(/[^a-z0-9]+/g, '-')
   .replace(/^-|-$/g, '');
+
+export function getFeatureExportVisual(featureSlug, sectionKey) {
+  const feat = FEATURES[featureSlug];
+  if (!feat) return null;
+  if (sectionKey === 'hero') {
+    if (!feat.visual) return null;
+    return {
+      visual: feat.visual,
+      mapAlign: feat.heroMapAlign,
+      interactive: feat.heroInteractive,
+      kind: 'hero',
+    };
+  }
+  let untitled = 0;
+  for (const s of feat.sections || []) {
+    if (!s.visual || EXPORT_SKIP_TITLES.has(s.title)) continue;
+    const key = s.title ? sectionSlug(s.title) : `section-${untitled++}`;
+    if (key === sectionKey) {
+      return {
+        visual: s.visual,
+        mapAlign: s.mapAlign,
+        interactive: s.interactive,
+        kind: 'section',
+      };
+    }
+  }
+  return null;
+}
+
+export function getVisualExportCatalog() {
+  const items = [];
+  for (const { slug, folder } of EXPORT_FEATURE_FOLDERS) {
+    if (slug === 'homepage' || EXPORT_SKIP_FEATURES.has(slug)) continue;
+    const feat = FEATURES[slug];
+    if (!feat) continue;
+    let index = 0;
+    if (feat.visual) {
+      items.push({
+        feature: slug,
+        section: 'hero',
+        folder,
+        index,
+        title: 'Hero',
+        hash: `#/export/${slug}/hero`,
+      });
+      index += 1;
+    }
+    let untitled = 0;
+    for (const s of feat.sections || []) {
+      if (!s.visual || EXPORT_SKIP_TITLES.has(s.title)) continue;
+      const key = s.title ? sectionSlug(s.title) : `section-${untitled++}`;
+      items.push({
+        feature: slug,
+        section: key,
+        folder,
+        index,
+        title: s.title || 'Untitled',
+        hash: `#/export/${slug}/${key}`,
+      });
+      index += 1;
+    }
+  }
+  return items;
+}
 
 // Inline link-copy button that appears next to a section title on hover and
 // writes a sharable deep link to the clipboard when clicked.
@@ -9158,7 +9305,7 @@ function FeaturePageInner({ slug }) {
 
       {feature.visual ? (
       <div className="fp-hero-visual">
-        <div className="fp-hero-stage" data-map-align={feature.heroMapAlign || undefined}>{feature.visual}</div>
+        <div className="fp-hero-stage" data-map-align={feature.heroMapAlign || undefined} data-interactive={feature.heroInteractive ? 'true' : undefined}>{feature.visual}</div>
       </div>
       ) : null}
 

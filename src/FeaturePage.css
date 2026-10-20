@@ -2244,6 +2244,7 @@
 .fp-hero-stage .ainbox-window,
 .fp-hero-stage .mm-win,
 .fp-hero-stage .lb-win,
+.fp-hero-stage .pz-win,
 .fp-hero-stage .mc-win,
 .fp-hero-stage .onair-window,
 .fp-section-visual .meeting-win,
@@ -2251,6 +2252,7 @@
 .fp-section-visual .ainbox-window,
 .fp-section-visual .mm-win,
 .fp-section-visual .lb-win,
+.fp-section-visual .pz-win,
 .fp-section-visual .mc-win,
 .fp-section-visual .onair-window {
   position: relative !important;
@@ -4978,6 +4980,7 @@
 .fp-map-preview .ainbox-window,
 .fp-map-preview .mm-win,
 .fp-map-preview .lb-win,
+.fp-map-preview .pz-win,
 .fp-map-preview .mc-win,
 .fp-map-preview .mc-window,
 .fp-map-preview .onair-window,
@@ -5291,6 +5294,7 @@
   .fp-section-visual:has(.ainbox-window),
   .fp-section-visual:has(.mm-win),
   .fp-section-visual:has(.lb-win),
+  .fp-section-visual:has(.pz-win),
   .fp-section-visual:has(.fp-knock-frame),
   .fp-section-visual:has(.fp-lock-frame),
   .fp-section-visual:has(.fp-krisp-frame),
@@ -5299,6 +5303,7 @@
   .fp-hero-stage:has(.ainbox-window),
   .fp-hero-stage:has(.mm-win),
   .fp-hero-stage:has(.lb-win),
+  .fp-hero-stage:has(.pz-win),
   .fp-hero-stage:has(.fp-knock-frame),
   .fp-hero-stage:has(.fp-lock-frame),
   .fp-hero-stage:has(.fp-krisp-frame) {
@@ -5585,8 +5590,10 @@
     transform-origin: top center;
   }
   .fp-section-visual .lb-win,
+  .fp-section-visual .pz-win,
   .fp-section-visual .ainbox-window,
   .fp-hero-stage .lb-win,
+  .fp-hero-stage .pz-win,
   .fp-hero-stage .ainbox-window {
     width: 780px !important;
     height: 580px !important;
@@ -10109,7 +10116,9 @@ button.fp-lbk-day {
   .fp-section-visual:has(.ainbox-window),
   .fp-hero-stage:has(.ainbox-window),
   .fp-section-visual:has(.lb-win),
-  .fp-hero-stage:has(.lb-win) {
+  .fp-hero-stage:has(.lb-win),
+  .fp-section-visual:has(.pz-win),
+  .fp-hero-stage:has(.pz-win) {
     justify-content: flex-start !important;
     padding-left: 32px !important;
   }
@@ -10121,7 +10130,9 @@ button.fp-lbk-day {
      existing `.fp-section-visual:has(.lb-win)` left-pin rule
      (justify-content + padding-left) already applies. */
   .fp-page[data-slug="lobby"] .fp-section-visual .lb-win:not(.fp-section-visual-wallpaper):not(.shelf-win):not(.mc-window):not(.mc-bubble):not(.fp-tags-magnify),
-  .fp-page[data-slug="lobby"] .fp-hero-stage .lb-win:not(.fp-section-visual-wallpaper):not(.shelf-win):not(.mc-window):not(.mc-bubble):not(.fp-tags-magnify) {
+  .fp-page[data-slug="lobby"] .fp-hero-stage .lb-win:not(.fp-section-visual-wallpaper):not(.shelf-win):not(.mc-window):not(.mc-bubble):not(.fp-tags-magnify),
+  .fp-page[data-slug="pizza"] .fp-section-visual .pz-win:not(.fp-section-visual-wallpaper):not(.shelf-win):not(.mc-window):not(.mc-bubble):not(.fp-tags-magnify),
+  .fp-page[data-slug="pizza"] .fp-hero-stage .pz-win:not(.fp-section-visual-wallpaper):not(.shelf-win):not(.mc-window):not(.mc-bubble):not(.fp-tags-magnify) {
     transform: scale(0.75) !important;
     transform-origin: top left !important;
   }
@@ -11628,4 +11639,68 @@ button.fp-lbk-day {
 
   /* Currency price cards stack on mobile. */
   .fp-price-cards-grid { grid-template-columns: 1fr !important; }
+}
+
+/* Isolated visual capture stage for `npm run export:visuals`. */
+.fp-export-page {
+  min-height: 100vh;
+  height: 100vh;
+  padding: 0 !important;
+  overflow: hidden;
+  background: none !important;
+  background-image: none !important;
+}
+.fp-export-page .fp-export-stage,
+.fp-export-page .fp-hero-stage,
+.fp-export-page .fp-section-visual {
+  width: 1440px !important;
+  height: 900px !important;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  background: none !important;
+  background-image: none !important;
+}
+.fp-export-page .fp-hero-stage::after,
+.fp-export-page .fp-section-visual::after,
+.fp-export-page .fp-section-visual-wallpaper,
+#fp-export-clip-wrap .fp-section-visual-wallpaper {
+  display: none !important;
+}
+.fp-export-page .fp-export-stage-homepage {
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none !important;
+}
+.fp-export-page .fp-export-stage-homepage .sc-feature-visual {
+  width: 800px;
+  height: 640px;
+  flex-shrink: 0;
+}
+.fp-export-index {
+  max-width: 720px;
+  margin: 48px auto;
+  padding: 0 24px;
+  color: var(--text-primary);
+  font-family: inherit;
+}
+.fp-export-index a { color: var(--text-accent); }
+#fp-export-clip-wrap {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: auto !important;
+  bottom: auto !important;
+  width: var(--export-clip-w) !important;
+  height: var(--export-clip-h) !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  background: #000 !important;
+  background-image: none !important;
+  transform: scale(var(--export-clip-scale, 4)) !important;
+  transform-origin: top left !important;
 }

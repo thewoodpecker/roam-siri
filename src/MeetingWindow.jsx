@@ -361,7 +361,7 @@ function MagicMinutesCatchUpPanel() {
   );
 }
 
-export default function MeetingWindow({ win, onDrag, roomName, people: allPeople, onOpenChat, onOpenOnAir, onOpenMagicMinutes, locked, autoReactions = true, handsRaised = false, onClickHands, roamojiOpen: roamojiInitialOpen = true, gesturesEnabled = true, incomingGesturesEnabled = false, captionsScript, initialViewMode = 'gallery', initialViewMenuOpen = false, compact = false, mmCatchUp = false, lockViewMode = false }) {
+export default function MeetingWindow({ win, onDrag, roomName, people: allPeople, onOpenChat, onOpenOnAir, onOpenMagicMinutes, locked, autoReactions = true, handsRaised = false, onClickHands, roamojiOpen: roamojiInitialOpen = true, gesturesEnabled = true, incomingGesturesEnabled = false, captionsScript, initialViewMode = 'gallery', initialViewMenuOpen = false, compact = false, mmCatchUp = false, lockViewMode = false, awardHotId = null }) {
   const people = useMemo(() => (allPeople || []).filter(p => p && (p.video || p.avatar)), [allPeople]);
   const [closing, setClosing] = useState(false);
   const [activeSpeaker, setActiveSpeaker] = useState(0);
@@ -640,7 +640,7 @@ export default function MeetingWindow({ win, onDrag, roomName, people: allPeople
               key={person.name}
               data-tile-id={person.name}
               style={style}
-              className={`meeting-win-tile ${i === activeSpeaker ? 'meeting-win-tile-active' : ''} ${!videoMap[i] ? 'meeting-win-tile-off' : ''} ${className}`}
+              className={`meeting-win-tile ${i === activeSpeaker ? 'meeting-win-tile-active' : ''} ${!videoMap[i] ? 'meeting-win-tile-off' : ''} ${awardHotId && person.name === awardHotId ? 'is-award-hot' : ''} ${className}`}
             >
               {videoMap[i] ? (
                 <video
@@ -650,6 +650,7 @@ export default function MeetingWindow({ win, onDrag, roomName, people: allPeople
                   loop
                   muted
                   playsInline
+                  preload="metadata"
                 />
               ) : (
                 <div className="meeting-win-avatar-wrap">

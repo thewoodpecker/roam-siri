@@ -1,0 +1,170 @@
+.awards-meeting-page {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000 url('/wallpapers/wallpaper-dark.png') center / cover no-repeat;
+  overflow: hidden;
+}
+
+.awards-meeting-page.is-dragging,
+.awards-meeting-page.is-dragging * {
+  cursor: none !important;
+  user-select: none;
+}
+
+/* Wallpaper dims. The meeting window sits above this scrim; an overlay
+   inside the window dims chrome while the tiles stay bright. */
+.awards-meeting-page.is-dragging::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.62);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.awards-meeting-stage {
+  position: relative;
+  z-index: 2;
+  width: 780px;
+  height: 580px;
+  flex-shrink: 0;
+}
+
+.awards-meeting-page .meeting-win {
+  animation: none;
+}
+
+/* Left chat bar — same pill as the map toolbar group
+   (.awards-page .sc-toolbar > .sc-toolbar-group:first-child):
+   38px, 6px padding, 12px gap, full superellipse, background-primary.
+   The balance button is portaled in beside the chat icon. */
+.awards-meeting-page .meeting-win-toolbar > .meeting-win-pill-group:first-child {
+  box-sizing: border-box;
+  flex-shrink: 0;
+  height: 38px;
+  gap: 12px;
+  padding: 6px;
+  border-radius: var(--radius-full);
+  corner-shape: superellipse(1.6);
+  background: var(--background-primary);
+  box-shadow: inset 0 0.5px 0 0 var(--border);
+}
+
+.awards-meeting-page .meeting-win-toolbar > .meeting-win-pill-group:first-child > .meeting-win-pill {
+  box-sizing: border-box;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+  border-radius: 0;
+}
+
+.awards-meeting-page .meeting-win-toolbar > .meeting-win-pill-group:first-child > .meeting-win-pill:hover {
+  background: transparent;
+}
+
+.awards-meeting-page .meeting-win-toolbar > .meeting-win-pill-group:first-child > .meeting-win-pill img {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+
+.awards-meeting-page .meeting-win-toolbar > .meeting-win-pill-group:first-child > .awards-balance,
+.awards-meeting-page .meeting-win-toolbar > .meeting-win-pill-group:first-child > .awards-balance:hover,
+.awards-meeting-page .meeting-win-toolbar > .meeting-win-pill-group:first-child > .awards-balance:hover .awards-coin,
+.awards-meeting-page .meeting-win-toolbar > .meeting-win-pill-group:first-child > .awards-balance:hover .awards-coin img {
+  transform: none;
+}
+
+.awards-meeting-page .meeting-win-light-close,
+.awards-meeting-page .meeting-win-pill-leave {
+  pointer-events: none;
+}
+
+.awards-meeting-page.is-dragging .meeting-win,
+.awards-meeting-page.is-dragging .meeting-win-body,
+.awards-meeting-page.is-dragging .meeting-win-grid {
+  overflow: visible;
+}
+
+.awards-meeting-page.is-dragging .meeting-win::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  background: rgba(0, 0, 0, 0.62);
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+/* Headshots fill the tile the way a camera feed would. */
+.awards-meeting-page .meeting-win-avatar-wrap {
+  inset: 0;
+  top: 0;
+  left: 0;
+  width: auto;
+  height: auto;
+  transform: none;
+}
+
+.awards-meeting-page .meeting-win-avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  object-fit: cover;
+  object-position: center 18%;
+}
+
+/* The four tiles fill the meeting body. Shrink the 2×2 tracks to 0.92
+   of that size and center them. The 8px gap stays 8px; the 780×580
+   window is unchanged. Each tile spans two of the four half-columns. */
+.awards-meeting-page .meeting-win-grid {
+  justify-content: center;
+  align-content: center;
+  grid-template-columns: repeat(4, calc(0.92 * (100% - 8px) / 4 - 4px)) !important;
+  grid-template-rows: repeat(2, calc(0.92 * (100% - 8px) / 2)) !important;
+}
+
+/* Same focus ring as .awards-head: 2px --border-focus fading in over
+   220ms, with a slight scale. 1.02 is a small bump; the map
+   heads stay at 1.28. Rest scale and the transition stay on the tile
+   after the drag class leaves, so a drop eases back to scale(1)
+   instead of snapping off with .is-dragging. */
+.awards-meeting-page .meeting-win-tile {
+  transform: scale(1);
+  transform-origin: center center;
+  transition: transform 220ms ease-in-out, box-shadow 220ms ease-in-out;
+}
+
+.awards-meeting-page.is-dragging .meeting-win-tile {
+  z-index: 5;
+  animation: none;
+  box-shadow:
+    var(--shadow-3),
+    0 0 0 2px rgb(from var(--border-focus) r g b / 0);
+}
+
+.awards-meeting-page.is-dragging .meeting-win-tile.is-award-hot {
+  z-index: 6;
+  transform: scale(var(--award-tile-scale));
+  box-shadow:
+    var(--shadow-3),
+    0 0 0 2px var(--border-focus);
+}
+
+/* Receiver caption. Visuals come from .gesture-waiting-message
+   (the Roamoji "Waiting for…" pill). This only pins it above the
+   tile name: the badge is bottom 12px and about 28px tall. */
+.awards-receive-caption {
+  position: fixed;
+  z-index: 2;
+  margin: 0;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateX(-50%);
+}
