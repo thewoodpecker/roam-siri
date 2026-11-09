@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const { optimizedMediaMiddleware } = require('./optimizedMedia.cjs');
 
 const app = express();
 app.use(cors());
@@ -147,8 +148,14 @@ app.get('/api/offices', (req, res) => {
   res.json(offices);
 });
 
+// Thumbnail stand-ins for headshots, seat avatars, and shelf photos.
+app.use(optimizedMediaMiddleware);
+
 // Serve static files in production
-app.use(express.static(path.join(__dirname, 'dist')));
+app.use(express.static(path.join(__dirname, 'dist'), {
+  maxAge: '1h',
+  immutable: false,
+}));
 app.get('/{*splat}', (req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });

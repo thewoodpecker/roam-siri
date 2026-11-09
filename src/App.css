@@ -11,8 +11,7 @@
 .toolbar {
   position: fixed;
   right: 16px;
-  /* Sit above the fixed Remote Work News ticker at the bottom. */
-  bottom: calc(16px + var(--rw-ticker-height, 0px));
+  bottom: 16px;
   z-index: 999999;
   display: flex;
   align-items: center;

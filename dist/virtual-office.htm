@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Roam — Virtual Office</title>
+<style>
+:root{
+  --accent:80,144,224;--accent-hex:#5090e0;
+  --bright:138,180,248;--bright-hex:#8ab4f8;
+  --hud-bg:rgba(2,3,8,0.7);
+  --hud-border:rgba(var(--accent),0.25);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{overflow:hidden;background:#000;font-family:'Inter',system-ui,sans-serif;color:#fff}
+canvas{display:block}
+
+/* ─── HUD FRAME ─── */
+#hud-frame{position:fixed;inset:0;z-index:40;pointer-events:none}
+#hud-top{position:absolute;top:0;left:0;right:0;height:48px;
+  background:linear-gradient(180deg,rgba(var(--accent),0.08) 0%,transparent 100%);
+  border-bottom:1px solid var(--hud-border);display:flex;align-items:center;justify-content:center;padding:0 16px}
+#hud-top span:first-child{position:absolute;left:16px}
+#hud-top span{font-size:9px;letter-spacing:2px;color:rgba(var(--accent),0.4);font-family:'SF Mono',Consolas,monospace}
+#hud-bottom{position:absolute;bottom:0;left:0;right:0;height:22px;
+  background:linear-gradient(0deg,rgba(var(--accent),0.06) 0%,transparent 100%);
+  border-top:1px solid var(--hud-border);display:flex;align-items:center;justify-content:space-between;padding:0 16px}
+#hud-bottom span{font-size:8px;letter-spacing:1.5px;color:rgba(var(--accent),0.3);font-family:'SF Mono',Consolas,monospace}
+.hud-corner{position:absolute;width:24px;height:24px;pointer-events:none}
+.hud-corner::before,.hud-corner::after{content:'';position:absolute;background:rgba(var(--accent),0.4)}
+.hud-corner.tl{top:48px;left:0}.hud-corner.tr{top:48px;right:0}.hud-corner.bl{bottom:22px;left:0}.hud-corner.br{bottom:22px;right:0}
+.hud-corner.tl::before,.hud-corner.bl::before{left:0;width:24px;height:1px}
+.hud-corner.tl::after,.hud-corner.tr::after{top:0;height:24px;width:1px}
+.hud-corner.tr::before,.hud-corner.br::before{right:0;width:24px;height:1px}
+.hud-corner.bl::after,.hud-corner.br::after{bottom:0;height:24px;width:1px}
+.hud-corner.tl::before{top:0}.hud-corner.tl::after{left:0}
+.hud-corner.tr::before{top:0}.hud-corner.tr::after{right:0}
+.hud-corner.bl::before{bottom:0}.hud-corner.bl::after{left:0}
+.hud-corner.br::before{bottom:0}.hud-corner.br::after{right:0}
+#hud-frame .side-line{position:absolute;width:1px;background:linear-gradient(180deg,transparent,rgba(var(--accent),0.15),transparent)}
+#hud-frame .side-line.left{left:0;top:72px;bottom:44px}
+#hud-frame .side-line.right{right:0;top:72px;bottom:44px}
+
+/* ─── VERSION NAV ─── */
+#version-nav{display:flex;gap:6px;align-items:center;pointer-events:auto}
+#version-nav a{color:rgba(var(--accent),0.5);font-size:9px;letter-spacing:2px;
+  font-family:'SF Mono',Consolas,monospace;text-decoration:none;
+  padding:3px 10px;border:1px solid rgba(var(--accent),0.15);transition:all .25s}
+#version-nav a:hover{color:var(--accent-hex);border-color:rgba(var(--accent),0.4)}
+#version-nav a.active{color:var(--bright-hex);border-color:rgba(var(--accent),0.4);background:rgba(var(--accent),0.1)}
+
+/* ─── FLOOR PANEL (left) ─── */
+#floor-panel{position:fixed;top:48px;left:0;bottom:22px;z-index:50;
+  display:flex;flex-direction:column;width:150px;padding:0;
+  border-right:1px solid var(--hud-border);
+  background:linear-gradient(90deg,rgba(2,3,8,0.5) 0%,transparent 100%)}
+#floor-panel .floor-buttons{display:flex;flex-direction:column;gap:2px;
+  flex:1;overflow-y:auto;scrollbar-width:none}
+#floor-panel .floor-buttons::-webkit-scrollbar{display:none}
+#floor-panel button{background:transparent;border:none;border-bottom:1px solid rgba(var(--accent),0.1);
+  color:rgba(var(--accent),0.55);width:100%;
+  padding:6px 10px;border-radius:0;cursor:pointer;font-size:10px;text-align:left;
+  transition:all .25s;font-family:'SF Mono',Consolas,monospace;letter-spacing:.5px;
+  pointer-events:auto}
+#floor-panel button.today{color:#3399FF}
+#floor-panel button.tomorrow{color:#33DD88}
+#floor-panel button:hover{filter:brightness(1.4);background:rgba(var(--accent),0.06)}
+#floor-panel button.active{filter:brightness(1.6);background:rgba(var(--accent),0.1)}
+#floor-panel button.overview{color:var(--bright-hex)}
+#floor-panel .section-label{color:rgba(var(--accent),0.6);font-size:8px;
+  letter-spacing:2px;padding:8px 10px 2px;margin-top:4px;
+  font-family:'SF Mono',Consolas,monospace;text-transform:uppercase;
+  border-top:1px solid rgba(var(--accent),0.15);font-weight:700}
+#floor-panel .section-label.tomorrow{color:rgba(50,220,130,0.6)}
+#floor-panel .floor-group-label{color:rgba(var(--accent),0.4);font-size:7px;
+  letter-spacing:1.5px;padding:3px 10px 1px;
+  font-family:'SF Mono',Consolas,monospace;text-transform:uppercase}
+#autoplay-toggle{position:fixed;bottom:22px;left:0;width:150px;z-index:51;
+  border:none;border-top:1px solid rgba(var(--accent),0.2);
+  color:var(--bright-hex);background:rgba(var(--accent),0.08);
+  padding:6px 10px;cursor:pointer;font-size:10px;text-align:left;
+  font-family:'SF Mono',Consolas,monospace;font-weight:600;letter-spacing:1px;
+  pointer-events:auto;transition:all .25s}
+#autoplay-toggle:hover{color:var(--accent-hex);background:rgba(var(--accent),0.15)}
+
+/* ─── INFO OVERLAY ─── */
+#info-overlay{display:none;position:fixed;left:0;top:0;
+  background:var(--hud-bg);border:1px solid var(--hud-border);padding:14px 16px;
+  max-width:260px;width:auto;z-index:100;backdrop-filter:blur(8px);pointer-events:auto}
+#info-overlay::before{content:'';position:absolute;top:0;left:8px;right:8px;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(var(--accent),0.3),transparent)}
+#info-overlay h2{color:var(--bright-hex);margin-bottom:4px;font-size:14px;font-weight:600;
+  font-family:'SF Mono',Consolas,monospace;letter-spacing:.5px}
+#info-overlay .floor-num{color:rgba(var(--accent),0.5);font-size:9px;letter-spacing:2px;
+  margin-bottom:2px;font-weight:500;font-family:'SF Mono',Consolas,monospace}
+#info-overlay .category-tag{font-size:8px;letter-spacing:2px;font-weight:700;
+  font-family:'SF Mono',Consolas,monospace;margin-bottom:4px}
+#info-overlay .category-tag.today{color:rgba(80,180,255,0.7)}
+#info-overlay .category-tag.tomorrow{color:rgba(50,220,130,0.7)}
+#info-overlay p{color:rgba(var(--accent),0.45);line-height:1.5;margin-bottom:12px;font-size:11px}
+#info-overlay .btn-row{display:flex;gap:6px}
+#info-overlay button{background:transparent;border:1px solid rgba(var(--accent),0.4);color:var(--accent-hex);
+  padding:4px 14px;border-radius:0;cursor:pointer;font-size:10px;transition:all .25s;
+  font-family:'SF Mono',Consolas,monospace;font-weight:500;letter-spacing:.5px;pointer-events:auto}
+#info-overlay button:hover{background:rgba(var(--accent),0.15);color:var(--bright-hex)}
+#info-overlay .btn-close{border-color:rgba(var(--accent),0.25);color:rgba(var(--accent),0.4)}
+#info-overlay .btn-close:hover{border-color:rgba(var(--accent),0.4);background:rgba(var(--accent),0.08);color:rgba(var(--accent),0.7)}
+
+/* ─── FPS ─── */
+#fps-counter{position:fixed;top:0;right:16px;height:48px;display:flex;align-items:center;color:rgba(var(--accent),0.3);
+  font-family:'SF Mono',Consolas,monospace;font-size:9px;z-index:50;letter-spacing:2px}
+
+/* ─── CSS2D labels ─── */
+.floor-label{background:rgba(0,0,0,0.85);
+  padding:5px 14px 5px 10px;border-radius:0;font-size:11px;font-weight:600;
+  font-family:'SF Mono',Consolas,monospace;
+  white-space:nowrap;pointer-events:none;letter-spacing:1.5px;backdrop-filter:blur(6px);
+  border:none;border-left:3px solid currentColor;
+  display:none;opacity:0}
+.floor-label.visible{display:block;opacity:1}
+.section-header-label{font-size:14px;font-weight:700;letter-spacing:3px;
+  font-family:Menlo,monospace;pointer-events:none;
+  text-shadow:0 0 12px currentColor;opacity:0.8}
+
+/* ─── Mobile ─── */
+#mobile-floors-btn{display:none;position:fixed;z-index:60;
+  width:32px;height:32px;border-radius:0;border:1px solid rgba(var(--accent),0.3);
+  background:var(--hud-bg);color:var(--accent-hex);font-size:16px;cursor:pointer;
+  pointer-events:auto;backdrop-filter:blur(8px);
+  font-family:'SF Mono',Consolas,monospace;line-height:1;padding:0;
+  align-items:center;justify-content:center;transition:all .25s;top:52px;left:6px}
+#mobile-floors-btn:hover{background:rgba(var(--accent),0.15);color:var(--bright-hex)}
+
+@media(max-width:768px){
+  #hud-top{height:36px;padding:0 10px}
+  #hud-top span{font-size:7px;letter-spacing:1.5px}
+  #fps-counter{height:36px;font-size:7px;right:10px}
+  #hud-bottom{height:18px;padding:0 10px;display:none}
+  #hud-bottom span{font-size:6px;letter-spacing:1px}
+  .hud-corner.tl,.hud-corner.tr{top:36px}
+  .hud-corner.bl,.hud-corner.br{display:none}
+  #hud-frame .side-line.left{top:60px;bottom:0}
+  #hud-frame .side-line.right{top:60px;bottom:0}
+  #floor-panel{position:fixed;top:36px;left:0;bottom:0;right:auto;
+    width:140px;height:auto;flex-direction:column;
+    border-right:1px solid var(--hud-border);border-top:none;
+    background:rgba(2,3,8,0.92);backdrop-filter:blur(12px);
+    padding:0;overflow:hidden;
+    transform:translateX(-100%);transition:transform .3s ease;z-index:55}
+  #floor-panel.open{transform:translateX(0)}
+  #floor-panel .floor-buttons{flex-direction:column;flex-wrap:nowrap;gap:0;
+    overflow-x:hidden;overflow-y:auto;justify-content:flex-start;
+    -webkit-overflow-scrolling:touch;scrollbar-width:none;flex:1}
+  #floor-panel button{width:100%;white-space:nowrap;padding:8px 10px;
+    font-size:9px;border-bottom:1px solid rgba(var(--accent),0.1);flex-shrink:0;text-align:left}
+  #autoplay-toggle{position:fixed;bottom:0;left:0;width:100%;height:35px;z-index:105;
+    border-top:1px solid rgba(var(--accent),0.2);border-right:none;
+    background:rgba(2,3,8,0.92);backdrop-filter:blur(8px);
+    padding:0 10px;font-size:11px;text-align:center;pointer-events:auto}
+  #mobile-floors-btn{display:flex;top:40px}
+  #info-overlay{left:0!important;right:0;top:auto!important;bottom:35px;
+    transform:none;max-width:100%;width:100%;border-left:none;border-right:none;border-bottom:none}
+  .floor-label{font-size:8px;padding:3px 8px}
+}
+@media(max-width:400px){
+  #floor-panel button{padding:6px 8px;font-size:8px}
+}
+
+html.vo-embed #hud-frame,
+html.vo-embed #version-nav,
+html.vo-embed #floor-panel,
+html.vo-embed #autoplay-toggle,
+html.vo-embed #fps-counter,
+html.vo-embed #mobile-floors-btn,
+html.vo-embed #info-overlay,
+html.vo-embed .floor-label,
+html.vo-embed .section-header-label {
+  display: none !important;
+}
+</style>
+</head>
+<body>
+
+<div id="hud-frame">
+  <div id="hud-top">
+    <span>ROAM VIRTUAL OFFICE</span>
+    <nav id="version-nav">
+      <a href="v1.html">V1</a>
+      <a href="v2.html">V2</a>
+      <a href="index.html" class="active">V3</a>
+    </nav>
+  </div>
+  <span id="fps-counter">-- FPS</span>
+  <div id="hud-bottom">
+    <span>ROAM MAKES REMOTE WORK</span>
+    <span>SEE WHO'S WORKING // DROP-IN INSTANTLY</span>
+    <span>FUTURE OF WORK</span>
+  </div>
+  <div class="hud-corner tl"></div>
+  <div class="hud-corner tr"></div>
+  <div class="hud-corner bl"></div>
+  <div class="hud-corner br"></div>
+  <div class="side-line left"></div>
+  <div class="side-line right"></div>
+</div>
+
+<div id="floor-panel"></div>
+<button id="mobile-floors-btn" aria-label="Floors">☰</button>
+
+<div id="info-overlay">
+  <div class="floor-num" id="overlay-floor-num"></div>
+  <div class="category-tag" id="overlay-category"></div>
+  <h2 id="overlay-title"></h2>
+  <p id="overlay-desc"></p>
+  <div class="btn-row">
+    <button id="overlay-close-btn" class="btn-close">Close</button>
+    <button id="overlay-overview-btn">◎ Overview</button>
+  </div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+<script type="module" src="/virtual-office.js"></script>
+</body>
+</html>

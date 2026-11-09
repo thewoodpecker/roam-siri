@@ -156,7 +156,14 @@ export default function SiriGlow({ active, color = '#EB6139', intensity = 1, wid
     shadesRef.current = getGlowShades(color);
   }, [color]);
 
+  const visibleRef = useRef(true);
+  const renderRef = useRef(null);
+
   const render = useCallback((time) => {
+    if (document.hidden || !visibleRef.current) {
+      animRef.current = null;
+      return;
+    }
     const halo = haloRef.current;
     const main = mainRef.current;
     const core = coreRef.current;
@@ -178,7 +185,8 @@ export default function SiriGlow({ active, color = '#EB6139', intensity = 1, wid
       }
     }
 
-    const dpr = window.devicePixelRatio || 1;
+    // The strokes are CSS-blurred, so a full retina buffer is wasted fill.
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
     const w = halo.clientWidth;
     const h = halo.clientHeight;
     [halo, main, core].forEach(c => {
@@ -237,6 +245,28 @@ export default function SiriGlow({ active, color = '#EB6139', intensity = 1, wid
 
     animRef.current = requestAnimationFrame(render);
   }, [active, borderRadius, cornerExponent, speedMult]);
+
+  renderRef.current = render;
+
+  useEffect(() => {
+    const el = haloRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') return undefined;
+    const kick = () => {
+      if (animRef.current || document.hidden || !visibleRef.current) return;
+      animRef.current = requestAnimationFrame((t) => renderRef.current?.(t));
+    };
+    const io = new IntersectionObserver(([entry]) => {
+      visibleRef.current = entry.isIntersecting;
+      if (entry.isIntersecting) kick();
+    }, { rootMargin: '120px 0px' });
+    io.observe(el);
+    const onVis = () => { if (!document.hidden) kick(); };
+    document.addEventListener('visibilitychange', onVis);
+    return () => {
+      io.disconnect();
+      document.removeEventListener('visibilitychange', onVis);
+    };
+  }, []);
 
   useEffect(() => {
     if (active) {

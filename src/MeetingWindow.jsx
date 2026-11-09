@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import ShareDialog from './ShareDialog';
+import ViewportVideo from './ViewportVideo';
 import { TileGestures } from './Gestures';
 import './Gestures.css';
 import './MeetingWindow.css';
@@ -643,13 +644,9 @@ export default function MeetingWindow({ win, onDrag, roomName, people: allPeople
               className={`meeting-win-tile ${i === activeSpeaker ? 'meeting-win-tile-active' : ''} ${!videoMap[i] ? 'meeting-win-tile-off' : ''} ${className}`}
             >
               {videoMap[i] ? (
-                <video
+                <ViewportVideo
                   className="meeting-win-video"
                   src={videoMap[i]}
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
                 />
               ) : (
                 <div className="meeting-win-avatar-wrap">

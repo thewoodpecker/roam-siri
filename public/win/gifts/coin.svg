@@ -1,0 +1,9 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Money">
+<mask id="stroke0_0_164" fill="white">
+<path d="M1 8C1 4.13401 4.13401 1 8 1C11.866 1 15 4.13401 15 8C15 11.866 11.866 15 8 15C4.13401 15 1 11.866 1 8Z" fill-rule="evenodd" clip-rule="evenodd"/>
+</mask>
+<path id="Union" d="M8 1C4.13401 1 1 4.13401 1 8C1 11.866 4.13401 15 8 15C11.866 15 15 11.866 15 8C15 4.13401 11.866 1 8 1Z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke="white" mask="url(#stroke0_0_164)"/>
+<path id="Union_2" d="M8 4C8.27614 4 8.5 4.22386 8.5 4.5V5H10C10.2761 5 10.5 5.22386 10.5 5.5C10.5 5.77614 10.2761 6 10 6H6.75C6.33579 6 6 6.33579 6 6.75C6 7.16421 6.33579 7.5 6.75 7.5H8.75C9.7165 7.5 10.5 8.2835 10.5 9.25C10.5 10.2165 9.7165 11 8.75 11H8.5V11.5C8.5 11.7761 8.27614 12 8 12C7.72386 12 7.5 11.7761 7.5 11.5V11H5.5C5.22386 11 5 10.7761 5 10.5C5 10.2239 5.22386 10 5.5 10H8.75C9.16421 10 9.5 9.66421 9.5 9.25C9.5 8.83579 9.16421 8.5 8.75 8.5H6.75C5.7835 8.5 5 7.7165 5 6.75C5 5.7835 5.7835 5 6.75 5H7.5V4.5C7.5 4.22386 7.72386 4 8 4Z" fill="white"/>
+</g>
+</svg>

@@ -26,8 +26,7 @@
   background: var(--bg-primary);
   color: var(--text-primary);
   font-family: var(--font-family-primary);
-  /* Keep clear of the global bottom ticker. */
-  padding-bottom: calc(var(--rw-ticker-height, 40px) + 56px);
+  padding-bottom: 56px;
 }
 
 /* Button reset for RWN's own controls ONLY. A bare `.rwn-page button`

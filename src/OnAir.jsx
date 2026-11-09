@@ -2,21 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import './OnAir.css';
 
 const ONAIR_COLORS = [
-  { bg: '#1a1a1a', image: '/on-air/static-landscape-black.png' },
-  { bg: '#d32f2f', image: '/on-air/static-landscape-red.png' },
-  { bg: '#ff8f00', image: '/on-air/static-landscape-orange.png' },
-  { bg: '#008e52', image: '/on-air/static-landscape-green.png' },
-  { bg: '#0059dc', image: '/on-air/on-air-blue-landscape.png' },
-  { bg: '#5700c9', image: '/on-air/static-landscape-purple.png' },
+  { bg: '#1a1a1a', image: '/on-air/opt/static-landscape-black.jpg' },
+  { bg: '#d32f2f', image: '/on-air/opt/static-landscape-red.jpg' },
+  { bg: '#ff8f00', image: '/on-air/opt/static-landscape-orange.jpg' },
+  { bg: '#008e52', image: '/on-air/opt/static-landscape-green.jpg' },
+  { bg: '#0059dc', image: '/on-air/opt/on-air-blue-landscape.jpg' },
+  { bg: '#5700c9', image: '/on-air/opt/static-landscape-purple.jpg' },
 ];
-
-// Preload all images
-ONAIR_COLORS.forEach(c => {
-  if (c.image) {
-    const img = new Image();
-    img.src = c.image;
-  }
-});
 
 const DEMO_EVENTS = [
   { title: 'The Future of Remote Work', desc: 'How AI and spatial computing will reshape the office', date: 'June 15, 2026 · 2:00 PM EST', location: 'Roam Virtual Auditorium', host: 'Howard Lerman', avatar: '/headshots/howard-lerman.jpg', color: 5 },
@@ -55,6 +47,16 @@ export default function OnAir({ win, onDrag, demo, staticEvent }) {
   }, [win.closeRequestId]);
 
   const [selectedColor, setSelectedColor] = useState(staticEvent?.color ?? 0);
+  // Only fetch a curtain once it's actually selected. The masters are 4K.
+  const [seenColors, setSeenColors] = useState(() => new Set([staticEvent?.color ?? 0]));
+  useEffect(() => {
+    setSeenColors((prev) => {
+      if (prev.has(selectedColor)) return prev;
+      const next = new Set(prev);
+      next.add(selectedColor);
+      return next;
+    });
+  }, [selectedColor]);
   // Demo mode — cycle through events with typewriter effect
   const [demoActive, setDemoActive] = useState(false);
   const [demoEvent, setDemoEvent] = useState(null);
@@ -152,12 +154,13 @@ export default function OnAir({ win, onDrag, demo, staticEvent }) {
       {/* Body */}
       <div className="onair-body">
         {/* Curtain backgrounds — all stacked, cross-fade with opacity */}
-        {ONAIR_COLORS.map((c, i) => c.image && (
+        {ONAIR_COLORS.map((c, i) => c.image && seenColors.has(i) && (
           <img
             key={c.image}
             className={`onair-curtain-bg ${i === selectedColor ? 'onair-curtain-active' : ''}`}
             src={c.image}
             alt=""
+            decoding="async"
           />
         ))}
 

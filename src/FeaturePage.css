@@ -158,7 +158,7 @@
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-  background-image: url('/wallpapers/wallpaper-dark.png');
+  background-image: url('/wallpapers/wallpaper-dark.jpg');
   background-size: cover;
   background-position: center;
 }
@@ -198,8 +198,8 @@
 
 
 
-.fp-hero-stage > *:not(.fp-section-visual-wallpaper):not(.shelf-win):not(.mc-window):not(.mc-bubble):not(.fp-tags-magnify),
-.fp-section-visual > *:not(.fp-section-visual-wallpaper):not(.shelf-win):not(.mc-window):not(.mc-bubble):not(.fp-tags-magnify) {
+.fp-hero-stage > *:not(.fp-section-visual-wallpaper):not(.shelf-win):not(.mc-window):not(.mc-bubble):not(.fp-tags-magnify):not(.rec-win):not(.mc-win-map),
+.fp-section-visual > *:not(.fp-section-visual-wallpaper):not(.shelf-win):not(.mc-window):not(.mc-bubble):not(.fp-tags-magnify):not(.rec-win):not(.mc-win-map) {
   position: relative !important;
   top: auto !important;
   left: auto !important;
@@ -2267,14 +2267,40 @@
 
 /* Magicast page renders the window + bubble directly into the hero stage
    (bare mode) so the stage's wallpaper backdrop is the only one. Cap the
-   window at the homepage's 420px so it doesn't stretch to 10 columns. */
-.fp-page[data-slug="magicast"] .fp-hero-stage .mc-win,
+   window at the homepage's 420px so it doesn't stretch to 10 columns.
+   Hero is right-pinned at 56px, matching the PiP bubble. The effects
+   section stays centered, including while the pane width animates. */
+.fp-page[data-slug="magicast"] .fp-hero-stage:has(.mc-win) {
+  justify-content: flex-end;
+}
+.fp-page[data-slug="magicast"] .fp-section-visual:has(.mc-win) {
+  justify-content: center;
+}
+.fp-page[data-slug="magicast"] .fp-hero-stage .mc-win {
+  width: 420px !important;
+  max-width: 420px !important;
+  height: auto !important;
+  margin-left: 0 !important;
+  margin-right: 56px !important;
+}
 .fp-page[data-slug="magicast"] .fp-section-visual .mc-win {
   width: 420px !important;
   max-width: 420px !important;
   height: auto !important;
   margin-left: auto !important;
   margin-right: auto !important;
+  transition: width 400ms ease-in-out, max-width 400ms ease-in-out;
+}
+
+/* After the title bar is dragged, slide the window from its pinned
+   spot. Translate keeps it in flow so the visual frame doesn't
+   collapse. Specificity has to beat the direct-child reset
+   (transform: none !important). Desktop only — mobile keeps scale. */
+@media (min-width: 769px) {
+  .fp-page[data-slug="magicast"] .fp-hero-stage > .mc-win.mc-win-free:not(.fp-section-visual-wallpaper):not(.shelf-win):not(.mc-window):not(.mc-bubble):not(.fp-tags-magnify),
+  .fp-page[data-slug="magicast"] .fp-section-visual > .mc-win.mc-win-free:not(.fp-section-visual-wallpaper):not(.shelf-win):not(.mc-window):not(.mc-bubble):not(.fp-tags-magnify) {
+    transform: translate(var(--mc-free-x), var(--mc-free-y)) !important;
+  }
 }
 
 /* When the Effects pane is open, the window doubles in width. */
@@ -2286,6 +2312,7 @@
 
 /* ===== Magicast viewer window (Trim Your Magicast section) ===== */
 .fp-mv-win {
+  position: relative;
   width: calc(((100% - 11 * var(--grid-gutter)) / 12) * 10 + 9 * var(--grid-gutter));
   max-width: 100%;
   aspect-ratio: 1133 / 720;
@@ -2293,7 +2320,7 @@
   backdrop-filter: blur(30px);
   -webkit-backdrop-filter: blur(30px);
   border: 0.5px solid var(--border);
-  border-radius: var(--radius-2xl);
+  border-radius: var(--radius-xl);
   corner-shape: superellipse(1.6);
   overflow: hidden;
   display: flex;
@@ -2308,12 +2335,26 @@
   background: rgba(255, 255, 255, 0.3);
 }
 
+/* Trim visual matches the Effects visual above it. That window is a
+   fixed 544px tall (420px preview column); with the shared 72px
+   section padding both frames land at 688px. Width follows the
+   viewer aspect ratio so the chrome scales instead of squashing. */
+@media (min-width: 769px) {
+  #trim-your-magicast .fp-mv-win {
+    height: 544px;
+    width: auto;
+  }
+}
+
 .fp-mv-titlebar {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 8px 16px;
+  gap: 12px;
+  height: 36px;
+  padding: 0 12px;
   flex-shrink: 0;
+  position: relative;
+  z-index: 4;
 }
 
 .fp-mv-lights {
@@ -2328,6 +2369,19 @@
   height: 12px;
   border-radius: 50%;
   display: inline-block;
+}
+
+button.fp-mv-light {
+  padding: 0;
+  border: 0;
+  cursor: pointer;
+  appearance: none;
+}
+
+button.fp-mv-light:focus,
+button.fp-mv-light:focus-visible {
+  outline: none;
+  outline-color: transparent !important;
 }
 
 .fp-mv-light-close { background: #FF5F57; }
@@ -2385,25 +2439,21 @@
 }
 
 .fp-mv-title-text {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   flex: 1;
   min-width: 0;
 }
 
 .fp-mv-title {
-  font-size: 16px;
-  font-weight: 500;
-  line-height: 24px;
-  letter-spacing: -0.32px;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
   color: var(--text-primary);
-  overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.fp-mv-subtitle {
-  font-size: 12px;
-  line-height: 16px;
-  color: var(--text-secondary);
+  pointer-events: none;
 }
 
 .fp-mv-title-actions {
@@ -2414,11 +2464,167 @@
 }
 
 .fp-mv-title-actions .fp-mv-icon-btn {
+  width: 28px;
+  height: 28px;
+  padding: 5px;
   color: inherit;
+}
+
+.fp-mv-title-actions .fp-mv-icon-glyph {
+  width: 16px;
+  height: 16px;
 }
 
 .fp-mv-title-actions .fp-mv-icon-btn:hover {
   color: var(--icon-primary);
+}
+
+.fp-mv-send {
+  position: relative;
+}
+
+.fp-mv-send-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 5;
+  width: 280px;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-surface-elevated-secondary);
+  border: 0.5px solid var(--border);
+  border-radius: 12px;
+  corner-shape: superellipse(1.6);
+  box-shadow: var(--shadow-4);
+  overflow: hidden;
+}
+
+.fp-mv-send-search {
+  display: flex;
+  align-items: center;
+  height: 48px;
+  padding: 0 16px;
+  border-bottom: 0.5px solid var(--border);
+  box-sizing: border-box;
+}
+
+.fp-mv-send-search input {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-primary);
+  caret-color: var(--text-primary);
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.fp-mv-send-search input::placeholder {
+  color: var(--text-disabled);
+}
+
+.fp-mv-send-search input:focus,
+.fp-mv-send-search input:focus-visible,
+.fp-mv-send-message:focus,
+.fp-mv-send-message:focus-visible {
+  outline: none;
+  outline-color: transparent !important;
+}
+
+.fp-mv-send-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  height: 60px;
+  margin: 0;
+  padding: 0 16px;
+  border: 0;
+  background: transparent;
+  color: var(--text-primary);
+  text-align: left;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.fp-mv-send-row:hover,
+.fp-mv-send-row[aria-pressed="true"] {
+  background: var(--background-primary);
+}
+
+.fp-mv-send-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  corner-shape: round;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.fp-mv-send-avatar-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--background-primary);
+}
+
+.fp-mv-send-link {
+  display: block;
+  width: 24px;
+  height: 24px;
+  background: var(--icon-primary);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.fp-mv-send-labels {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  flex: 1;
+}
+
+.fp-mv-send-name {
+  color: var(--text-primary);
+}
+
+.fp-mv-send-detail {
+  height: 16px;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fp-mv-send-footer {
+  border-top: 0.5px solid var(--border);
+  padding: 8px;
+  box-sizing: border-box;
+}
+
+.fp-mv-send-message {
+  width: 100%;
+  height: 44px;
+  margin: 0;
+  padding: 12px 16px;
+  box-sizing: border-box;
+  border: 0;
+  border-radius: 8px;
+  corner-shape: superellipse(1.6);
+  background: var(--background-primary);
+  color: var(--text-primary);
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.fp-mv-send-message::placeholder {
+  color: var(--text-secondary);
 }
 
 .fp-mv-body {
@@ -2442,23 +2648,26 @@
 }
 
 .fp-mv-stage-pad {
+  position: relative;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  gap: 8px;
-  padding: 16px;
+  justify-content: flex-start;
+  gap: 0;
+  padding: 16px 16px 0;
   flex: 1;
   min-height: 0;
 }
 
 .fp-mv-stage {
   position: relative;
+  order: 1;
   border-radius: 8px;
   overflow: hidden;
   background: #000;
-  aspect-ratio: 16 / 9;
   width: 100%;
-  flex-shrink: 0;
+  flex: 1 1 auto;
+  min-height: 0;
+  margin-bottom: 16px;
 }
 
 .fp-mv-video {
@@ -2470,14 +2679,385 @@
   display: block;
 }
 
-.fp-mv-stage-fade {
+.fp-mv-dock {
+  order: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  flex-shrink: 0;
+  width: calc(100% + 32px);
+  margin-left: -16px;
+  margin-right: -16px;
+}
+
+.fp-mv-trim-collapse {
+  order: 4;
+}
+
+.fp-mv-dock-bar {
+  padding: 0 16px;
+}
+
+.fp-mv-dock-track {
+  position: relative;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--background-primary);
+  cursor: pointer;
+}
+
+.fp-mv-dock-track::before {
+  content: '';
   position: absolute;
   left: 0;
   right: 0;
+  top: -6px;
+  bottom: -8px;
+}
+
+.fp-mv-dock-track-fill {
+  height: 2px;
+  border-radius: 2px;
+  background: var(--text-primary);
+}
+
+.fp-mv-dock-marks {
+  position: relative;
+  height: 16px;
+}
+
+.fp-mv-dock-mark {
+  position: absolute;
   bottom: 0;
-  height: 80px;
-  background: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.7) 100%);
+  width: 12px;
+  height: 12px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  corner-shape: round;
+  background: transparent;
+  transform: translateX(-50%);
+  cursor: pointer;
+  overflow: visible;
+  z-index: 1;
+}
+
+.fp-mv-dock-mark:hover,
+.fp-mv-dock-mark:focus-visible,
+.fp-mv-dock-mark.is-active {
+  z-index: 4;
+}
+
+.fp-mv-dock-mark > img {
+  display: block;
+  width: 12px;
+  height: 12px;
+  object-fit: cover;
+  border-radius: 999px;
+  corner-shape: round;
+}
+
+.fp-mv-mark-tip {
+  display: none;
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 6px);
+  transform: translateX(-50%);
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  background: var(--bg-surface-elevated-secondary);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  corner-shape: superellipse(1.6);
+  white-space: nowrap;
   pointer-events: none;
+  box-shadow: var(--shadow-2);
+}
+
+.fp-mv-dock-mark:hover .fp-mv-mark-tip,
+.fp-mv-dock-mark:focus-visible .fp-mv-mark-tip {
+  display: flex;
+}
+
+.fp-mv-mark-tip img {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  corner-shape: round;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.fp-mv-dock-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+}
+
+.fp-mv-dock-time,
+.fp-mv-dock-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.fp-mv-dock-btn {
+  display: flex;
+  align-items: flex-start;
+  margin: 0;
+  padding: 2px;
+  border: 0;
+  border-radius: 6px;
+  corner-shape: superellipse(1.6);
+  background: transparent;
+  cursor: pointer;
+}
+
+.fp-mv-dock-btn img {
+  display: block;
+  width: 16px;
+  height: 16px;
+}
+
+.fp-mv-dock-btn.is-on {
+  background: var(--background-primary);
+}
+
+.fp-mv-dock-clock {
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.fp-mv-dock-clock-rest {
+  color: var(--text-secondary);
+}
+
+.fp-mv-reactions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  margin: 0;
+  padding: 12px 8px;
+  border-top: 0.5px solid var(--border);
+  background: transparent;
+  box-sizing: border-box;
+}
+
+.fp-mv-reaction {
+  margin: 0;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  font-family: var(--font-family-primary);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 24px;
+  letter-spacing: -0.32px;
+}
+
+.fp-mv-emoji-panel {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg-surface-elevated-secondary);
+  border: 0.5px solid var(--border);
+  border-radius: 12px;
+  corner-shape: superellipse(1.6);
+  box-shadow: var(--shadow-2);
+}
+
+.fp-mv-emoji-search {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  height: 44px;
+  margin: 0;
+  padding: 0 8px;
+}
+
+.fp-mv-emoji-search-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  background: var(--icon-secondary);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.fp-mv-emoji-search input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-primary);
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.fp-mv-emoji-search input::placeholder {
+  color: var(--text-disabled);
+}
+
+.fp-mv-emoji-search input::-webkit-search-cancel-button {
+  appearance: none;
+}
+
+.fp-mv-emoji-search input:focus,
+.fp-mv-emoji-search input:focus-visible {
+  outline: none;
+  outline-color: transparent !important;
+}
+
+.fp-mv-emoji-cats {
+  flex-shrink: 0;
+  padding: 0 4px 4px;
+}
+
+.fp-mv-emoji-cat-track {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px;
+  border: 0.5px solid var(--border);
+  border-radius: 999px;
+  corner-shape: round;
+  background: var(--graphite-500);
+}
+
+.fp-mv-emoji-cat {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  corner-shape: round;
+  background: transparent;
+  cursor: pointer;
+}
+
+.fp-mv-emoji-cat.is-on {
+  background: var(--background-primary);
+}
+
+.fp-mv-emoji-cat span {
+  display: block;
+  width: 16px;
+  height: 16px;
+  background: var(--icon-secondary);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.fp-mv-emoji-cat.is-on span {
+  background: var(--icon-primary, var(--text-primary));
+}
+
+.fp-mv-emoji-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  padding-bottom: 8px;
+}
+
+.fp-mv-emoji-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.fp-mv-emoji-heading {
+  margin: 0;
+  padding: 12px 8px 4px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.fp-mv-emoji-grid {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  row-gap: 4px;
+  padding: 0 4px 4px;
+}
+
+.fp-mv-emoji-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-xs);
+  corner-shape: superellipse(1.6);
+  background: transparent;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.fp-mv-emoji-cell:hover {
+  background: var(--background-primary);
+}
+
+.fp-mv-emoji-empty {
+  margin: 0;
+  padding: 0 8px 12px;
+  color: var(--text-disabled);
+}
+
+.fp-mv-emoji-cat:focus,
+.fp-mv-emoji-cat:focus-visible,
+.fp-mv-emoji-cell:focus,
+.fp-mv-emoji-cell:focus-visible {
+  outline: none;
+  outline-color: transparent !important;
+}
+
+.fp-mv-reaction:focus,
+.fp-mv-reaction:focus-visible,
+.fp-mv-dock-btn:focus,
+.fp-mv-dock-btn:focus-visible,
+.fp-mv-dock-mark:focus,
+.fp-mv-dock-mark:focus-visible,
+.fp-mv-dock-track:focus,
+.fp-mv-dock-track:focus-visible {
+  outline: none;
+  outline-color: transparent !important;
 }
 
 .fp-mv-stage-play-overlay {
@@ -2535,6 +3115,32 @@
   display: block;
 }
 
+.fp-mv-caption {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  z-index: 3;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.fp-mv-caption span {
+  max-width: 100%;
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  corner-shape: superellipse(1.6);
+  background: #000;
+  color: #fff;
+  font-family: var(--font-family-primary);
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 22px;
+  letter-spacing: -0.15px;
+  text-align: center;
+}
+
 .fp-mv-controls {
   position: absolute;
   left: 0;
@@ -2585,7 +3191,7 @@
 }
 
 .fp-mv-trim-collapse .fp-mv-trim-track {
-  margin-top: 8px;
+  margin-top: 0;
   opacity: 0;
   transform: translateY(-4px);
   transition: opacity 220ms ease, transform 280ms cubic-bezier(0.22, 1, 0.36, 1);
@@ -2654,7 +3260,7 @@
   position: absolute;
   top: 0;
   height: 100%;
-  width: 24px;
+  width: 12px;
   padding: 0;
   background: #2C80FF;
   border: 0;
@@ -2677,13 +3283,13 @@
 .fp-mv-trim-handle-start {
   /* anchor right edge at trimStart + 2px to overlap the 2px selection border */
   transform: translateX(calc(-100% + 2px));
-  border-radius: 8px 0 0 8px;
+  border-radius: 6px 0 0 6px;
 }
 
 .fp-mv-trim-handle-end {
   /* anchor left edge at trimEnd - 2px to overlap the 2px selection border */
   transform: translateX(-2px);
-  border-radius: 0 8px 8px 0;
+  border-radius: 0 6px 6px 0;
 }
 
 /* Bottom action row */
@@ -2692,7 +3298,6 @@
   align-items: center;
   gap: 8px;
   padding: 16px;
-  border-top: 0.5px solid var(--border);
   background: var(--bg-surface-elevated-primary);
   flex-shrink: 0;
 }
@@ -2817,6 +3422,12 @@
   align-items: flex-start;
   gap: 8px;
   padding: 8px;
+  border-radius: var(--radius-md);
+  corner-shape: superellipse(1.6);
+}
+
+.fp-mv-comment.is-active {
+  background: var(--background-primary);
 }
 
 .fp-mv-comment-avatar {
@@ -3003,7 +3614,7 @@
 .fp-mv-composer-toolbar {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
   padding: 8px 14px 0;
 }
 
@@ -3024,7 +3635,8 @@
   transition: background 120ms ease, color 120ms ease;
 }
 
-.fp-mv-composer-btn:hover {
+.fp-mv-composer-btn:hover,
+.fp-mv-composer-btn[aria-expanded="true"] {
   background: var(--background-primary);
   color: var(--icon-primary);
 }
@@ -3068,6 +3680,8 @@
   background: transparent;
   border: 0;
   outline: none;
+  appearance: none;
+  -webkit-appearance: none;
   padding: 0;
   font-family: var(--font-family-primary);
   font-size: 14px;
@@ -3078,6 +3692,12 @@
 
 .fp-mv-composer-field::placeholder {
   color: var(--text-disabled, rgba(255, 255, 255, 0.3));
+}
+
+.fp-mv-composer-field:focus,
+.fp-mv-composer-field:focus-visible {
+  outline: none;
+  outline-color: transparent !important;
 }
 
 .fp-mv-composer-send {
@@ -4313,13 +4933,20 @@
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-  background-image: url('/wallpapers/wallpaper-dark.png');
+  background-image: url('/wallpapers/wallpaper-dark.jpg');
   background-size: cover;
   background-position: center;
 }
 
 [data-theme="light"] .fp-section-visual {
   background-image: url('/wallpapers/wallpaper-light.png');
+}
+
+/* Celebrations — birthday card on surface-raised, not the map wallpaper.
+   The token flips with the theme (graphite-800 dark, solid white light). */
+#celebrations .fp-section-visual {
+  background-image: none;
+  background-color: var(--bg-surface-raised);
 }
 
 .fp-section-visual-wallpaper {
@@ -4742,6 +5369,34 @@
   z-index: 20;
 }
 
+/* Recordings opened from a map toolbar is portaled onto the visual
+   so the map's overflow doesn't crop it. Sits above the map window. */
+.fp-section-visual > .rec-win,
+.fp-hero-stage > .rec-win {
+  position: absolute;
+  z-index: 30;
+  margin: 0;
+}
+
+/* Magicast opened from a map toolbar is portaled onto the visual so it
+   sits on the wallpaper (32px from the top-left) and can be dragged.
+   Inline left/top from the window manager supply the position. */
+.fp-section-visual > .mc-win.mc-win-map,
+.fp-hero-stage > .mc-win.mc-win-map {
+  position: absolute !important;
+  top: var(--mc-y, 32px) !important;
+  left: var(--mc-x, 32px) !important;
+  right: auto !important;
+  bottom: auto !important;
+  transform: none !important;
+  width: 420px !important;
+  max-width: calc(100% - 64px) !important;
+  height: auto !important;
+  margin: 0 !important;
+  z-index: 30;
+  pointer-events: auto;
+}
+
 .fp-map-preview .sc-room-card,
 .fp-map-preview .sc-room-card .big-meeting-card-inner,
 .fp-map-preview .sc-room-card .meeting-room-card,
@@ -4989,6 +5644,40 @@
 .fp-map-preview .sc-cta-section,
 .fp-map-preview .sc-sidebar {
   display: none !important;
+}
+
+/* Toolbar Magicast opens the recorder over the map. The homepage
+   recording frame is a fixed yellow inset on the whole viewport —
+   keep that off the feature-page map and show the window instead. */
+.fp-map-preview .mc-recording-border {
+  display: none !important;
+}
+
+.fp-map-preview .mc-win {
+  display: flex !important;
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  right: auto !important;
+  bottom: auto !important;
+  width: 420px !important;
+  max-width: calc(100% - 64px) !important;
+  height: auto !important;
+  margin: 0 !important;
+  transform: translate(-50%, -54%) !important;
+  translate: none !important;
+  z-index: 40 !important;
+}
+
+.fp-map-preview .mc-bubble {
+  left: auto !important;
+  top: auto !important;
+  right: 24px !important;
+  bottom: 72px !important;
+  width: 148px !important;
+  height: 148px !important;
+  translate: none !important;
+  z-index: 41 !important;
 }
 
 .fp-map-preview-with-sidebar .sc-sidebar {
@@ -5278,6 +5967,16 @@
   .fp-section-visual[data-interactive="true"] *,
   .fp-hero-stage[data-interactive="true"],
   .fp-hero-stage[data-interactive="true"] * {
+    pointer-events: auto !important;
+  }
+  /* The W!N coin and the people it drops on stay usable on every map,
+     including sections that otherwise ignore touch so the page can scroll. */
+  .fp-section-visual .sc-win-anchor,
+  .fp-section-visual .sc-win-anchor *,
+  .fp-hero-stage .sc-win-anchor,
+  .fp-hero-stage .sc-win-anchor *,
+  .fp-section-visual [data-win-person],
+  .fp-hero-stage [data-win-person] {
     pointer-events: auto !important;
   }
 
@@ -5594,8 +6293,8 @@
     transform: scale(0.75);
     transform-origin: top left;
   }
-  .fp-section-visual .mc-win,
-  .fp-hero-stage .mc-win {
+  .fp-section-visual .mc-win:not(.mc-win-map),
+  .fp-hero-stage .mc-win:not(.mc-win-map) {
     width: 100% !important;
     max-width: 100% !important;
     height: auto !important;
@@ -6198,242 +6897,6 @@
   color: var(--text-primary);
   margin: 0;
   text-wrap: pretty;
-}
-
-/* ——— Floating portrait CTA pinned to viewport bottom ——— */
-.fp-floating-cta {
-  position: fixed;
-  right: 24px;
-  /* Rest above the bottom news ticker instead of overlapping it. */
-  bottom: calc(24px + var(--rw-ticker-height, 0px));
-  width: 220px;
-  padding: 20px 18px 18px;
-  box-sizing: border-box;
-  background: var(--bg-surface-raised);
-  border: 0.5px solid var(--border);
-  border-radius: var(--radius-xl);
-  corner-shape: superellipse(1.6);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: 10px;
-  opacity: 0;
-  transform: translateY(16px) scale(0.92);
-  transform-origin: bottom right;
-  pointer-events: none;
-  transition: opacity 320ms ease, transform 320ms cubic-bezier(0.4, 0, 0.6, 1);
-  will-change: opacity, transform;
-  z-index: 2000001;
-}
-
-.fp-floating-cta.is-visible {
-  opacity: 1;
-  transform: translateY(0) scale(1);
-  pointer-events: auto;
-  animation: fp-floating-in 420ms cubic-bezier(0.2, 0.9, 0.3, 1) both;
-}
-
-.fp-floating-cta.is-leaving {
-  opacity: 0;
-  transform: translateY(8px) scale(0.94);
-  transform-origin: bottom right;
-  pointer-events: none;
-  animation: fp-floating-leave 320ms cubic-bezier(0.4, 0, 0.6, 1) both;
-}
-
-.fp-floating-cta.is-dismissing {
-  opacity: 0;
-  transform: translateY(0) scale(0.88);
-  transform-origin: bottom right;
-  pointer-events: none;
-  animation: fp-floating-out 300ms ease-in both;
-}
-
-@keyframes fp-floating-leave {
-  from {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-  to {
-    opacity: 0;
-    transform: translateY(8px) scale(0.94);
-  }
-}
-
-@keyframes fp-floating-in {
-  from {
-    opacity: 0;
-    transform: translateY(16px) scale(0.92);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-@keyframes fp-floating-out {
-  from {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-  to {
-    opacity: 0;
-    transform: translateY(0) scale(0.88);
-  }
-}
-
-.fp-floating-cta-icon {
-  width: 48px;
-  height: 48px;
-  object-fit: contain;
-  display: block;
-}
-
-.fp-floating-cta-dismiss {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  border: none;
-  padding: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.06);
-  color: var(--text-primary);
-  cursor: pointer;
-  transition: background 160ms ease, opacity 160ms ease;
-}
-
-.fp-floating-cta-dismiss:hover {
-  background: rgba(0, 0, 0, 0.12);
-}
-
-[data-theme="dark"] .fp-floating-cta .fp-floating-cta-dismiss {
-  background: rgba(0, 0, 0, 0.06);
-  color: #1D1D1F;
-}
-
-[data-theme="dark"] .fp-floating-cta .fp-floating-cta-dismiss:hover {
-  background: rgba(0, 0, 0, 0.12);
-}
-
-[data-theme="light"] .fp-floating-cta .fp-floating-cta-dismiss {
-  background: rgba(255, 255, 255, 0.1);
-  color: #FFFFFF;
-}
-
-[data-theme="light"] .fp-floating-cta .fp-floating-cta-dismiss:hover {
-  background: rgba(255, 255, 255, 0.18);
-}
-
-.fp-floating-cta-text {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 0;
-}
-
-.fp-floating-cta-title {
-  font-family: 'Possibility', serif;
-  font-size: 16px;
-  font-weight: 700;
-  line-height: 1.15;
-  letter-spacing: -0.3px;
-  color: var(--text-primary);
-  margin: 0;
-  text-transform: uppercase;
-  text-wrap: balance;
-}
-
-.fp-floating-cta-sub {
-  font-size: 12.5px;
-  line-height: 1.35;
-  color: var(--text-secondary);
-  margin: 0;
-  text-wrap: balance;
-}
-
-.fp-floating-cta-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  width: 100%;
-}
-
-.fp-floating-cta-btn {
-  flex: 1;
-  padding: 8px 10px;
-  font-size: 12.5px;
-  border-radius: var(--radius-md);
-  corner-shape: superellipse(1.6);
-}
-
-.fp-floating-cta-btn-ghost {
-  background: rgba(0, 0, 0, 0.05);
-  color: var(--text-primary);
-  border: none;
-  box-shadow: inset 0 0.5px 0 0 rgba(0, 0, 0, 0.1);
-}
-
-[data-theme="dark"] .fp-floating-cta {
-  background: #FFFFFF;
-  border-color: rgba(0, 0, 0, 0.1);
-}
-
-[data-theme="dark"] .fp-floating-cta .fp-floating-cta-title {
-  color: #1D1D1F;
-}
-
-[data-theme="dark"] .fp-floating-cta .fp-floating-cta-sub {
-  color: rgba(0, 0, 0, 0.5);
-}
-
-[data-theme="dark"] .fp-floating-cta .fp-floating-cta-btn {
-  background: #1D1D1F;
-  color: #FFFFFF;
-}
-
-[data-theme="dark"] .fp-floating-cta .fp-floating-cta-btn-ghost {
-  background: rgba(0, 0, 0, 0.05);
-  color: #1D1D1F;
-  border: none;
-  box-shadow: inset 0 0.5px 0 0 rgba(0, 0, 0, 0.1);
-}
-
-[data-theme="light"] .fp-floating-cta {
-  background: #1D1D1F;
-  border-color: rgba(255, 255, 255, 0.08);
-}
-
-[data-theme="light"] .fp-floating-cta .fp-floating-cta-title {
-  color: #FFFFFF;
-}
-
-[data-theme="light"] .fp-floating-cta .fp-floating-cta-sub {
-  color: rgba(255, 255, 255, 0.6);
-}
-
-[data-theme="light"] .fp-floating-cta .fp-floating-cta-btn {
-  background: #FFFFFF;
-  color: #1D1D1F;
-}
-
-[data-theme="light"] .fp-floating-cta .fp-floating-cta-btn-ghost {
-  background: var(--bg-on-surface-primary);
-  color: #FFFFFF;
-  border: none;
-  box-shadow: inset 0 0.5px 0 0 rgba(255, 255, 255, 0.1);
-}
-
-@media (max-width: 520px) {
-  .fp-floating-cta {
-    width: calc(100vw - 32px);
-    bottom: 16px;
-  }
 }
 
 /* ---- Compare section: Legacy vs Roam Super Bundle ---- */
@@ -10432,7 +10895,7 @@ button.fp-lbk-day {
      Use a fixed visual height that fits the larger of the two
      scaled outputs — 360px = 32 + 296 + 32. Effects-open sections
      stay left-pinned (window is 400 wide scaled, overflows mobile);
-     the bare hero centers since the 210-wide scaled output fits. */
+     the bare hero pins 56px from the right. */
   .fp-page[data-slug="magicast"] .fp-section-visual:has(.mc-win),
   .fp-page[data-slug="magicast"] .fp-hero-stage:has(.mc-win) {
     height: 360px !important;
@@ -10441,19 +10904,15 @@ button.fp-lbk-day {
     justify-content: flex-start !important;
     overflow: hidden !important;
   }
-  /* Hero centers the (non-effects-open) mc-win — 420 wide × 0.5
-     scale = 210 visible, fits comfortably centered on mobile.
-     Transform-origin needs to be `top center` (not top-left) so
-     the scaled output sits at the unscaled-box's center, otherwise
-     `justify-content: center` centers the unscaled 420-wide box
-     and the scaled output anchors at its left edge — visually
-     offset 105px to the left of true center. */
+  /* Hero pins the (non-effects-open) mc-win 56px from the right.
+     Scale from top-right so the visible edge — not the unscaled
+     420px layout box — lands on that inset. */
   .fp-page[data-slug="magicast"] .fp-hero-stage:has(.mc-win):not(:has(.mc-win-effects-open)) {
-    padding: 32px !important;
-    justify-content: center !important;
+    padding: 32px 56px 32px 0 !important;
+    justify-content: flex-end !important;
   }
   .fp-page[data-slug="magicast"] .fp-hero-stage:has(.mc-win):not(:has(.mc-win-effects-open)) .mc-win:not(.fp-section-visual-wallpaper):not(.shelf-win):not(.mc-window):not(.mc-bubble):not(.fp-tags-magnify) {
-    transform-origin: top center !important;
+    transform-origin: top right !important;
   }
   .fp-page[data-slug="magicast"] .fp-section-visual .mc-win:not(.fp-section-visual-wallpaper):not(.shelf-win):not(.mc-window):not(.mc-bubble):not(.fp-tags-magnify),
   .fp-page[data-slug="magicast"] .fp-hero-stage .mc-win:not(.fp-section-visual-wallpaper):not(.shelf-win):not(.mc-window):not(.mc-bubble):not(.fp-tags-magnify) {
@@ -11628,4 +12087,430 @@ button.fp-lbk-day {
 
   /* Currency price cards stack on mobile. */
   .fp-price-cards-grid { grid-template-columns: 1fr !important; }
+
+  .fp-section-visual:has(.fp-freeform) {
+    height: 560px;
+    padding: 0;
+  }
+  .fp-section-visual:has(.fp-freeform) .fp-freeform-rect,
+  .fp-section-visual:has(.fp-freeform) .fp-freeform-handle,
+  .fp-section-visual:has(.fp-freeform) .fp-freeform-prompt,
+  .fp-section-visual:has(.fp-freeform) .fp-freeform-prompt * {
+    pointer-events: auto !important;
+  }
+}
+
+/* Freeform selection — crop frame only, no app window behind it. */
+.fp-section-visual:has(.fp-freeform) {
+  height: 720px;
+  padding: 0;
+}
+.fp-section-visual > .fp-freeform:not(.fp-section-visual-wallpaper):not(.shelf-win):not(.mc-window):not(.mc-bubble):not(.fp-tags-magnify) {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: auto !important;
+  height: auto !important;
+  transform: none !important;
+  overflow: hidden;
+}
+.fp-freeform-rect {
+  position: absolute;
+  border-radius: 8px;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.7);
+  pointer-events: auto;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+.fp-freeform-rect:active {
+  cursor: grabbing;
+}
+.fp-freeform-handle {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3;
+  touch-action: none;
+  pointer-events: auto;
+}
+.fp-freeform-handle svg {
+  overflow: visible;
+  pointer-events: none;
+}
+.fp-freeform-handle-nw { left: -4px; top: -4px; transform: none; }
+.fp-freeform-handle-ne { right: -4px; top: -4px; transform: none; }
+.fp-freeform-handle-se { right: -4px; bottom: -4px; transform: none; }
+.fp-freeform-handle-sw { left: -4px; bottom: -4px; transform: none; }
+.fp-freeform-handle-n { left: 50%; top: 0; transform: translate(-50%, -50%); }
+.fp-freeform-handle-s { left: 50%; bottom: 0; transform: translate(-50%, 50%); }
+.fp-freeform-handle-e { right: 0; top: 50%; transform: translate(50%, -50%); }
+.fp-freeform-handle-w { left: 0; top: 50%; transform: translate(-50%, -50%); }
+.fp-freeform-prompt {
+  position: absolute;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 44px;
+  max-width: calc(100% - 24px);
+  padding: 4px 4px 4px 16px;
+  box-sizing: border-box;
+  border-radius: 12px;
+  corner-shape: superellipse(1.6);
+  background: rgba(27, 27, 27, 0.7);
+  border: 0.5px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.fp-freeform-label {
+  font-family: var(--font-family-primary);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 24px;
+  letter-spacing: -0.32px;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  margin-right: 8px;
+}
+.fp-freeform-divider {
+  width: 1px;
+  height: 23px;
+  flex: 0 0 1px;
+  background: rgba(255, 255, 255, 0.1);
+}
+.fp-freeform-picker-wrap {
+  position: relative;
+  flex-shrink: 0;
+  pointer-events: none;
+}
+.fp-freeform-picker {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin: 0;
+  padding: 6px;
+  border: 0;
+  background: transparent;
+  border-radius: 8px;
+  corner-shape: superellipse(1.6);
+  cursor: pointer;
+}
+.fp-freeform-ratio {
+  position: absolute;
+  right: -8.5px;
+  top: 0;
+  z-index: 2;
+  transform: translateY(calc(-50% - 4px));
+  pointer-events: auto;
+  margin: 0;
+  padding: 4px 8px;
+  border: 0.5px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  corner-shape: round;
+  background: rgba(27, 27, 27, 0.7);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  color: #fff;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.fp-freeform-picker:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+.fp-freeform-chevron-wrap {
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.fp-freeform-menu {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  z-index: 5;
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  margin: 0;
+  padding: 4px 0;
+  border-radius: 8px;
+  corner-shape: superellipse(1.6);
+  background: rgba(27, 27, 27, 0.7);
+  border: 0.5px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+}
+.fp-freeform-option {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  margin: 0;
+  padding: 2px 8px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  color: #fff;
+  font-family: var(--font-family-primary);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  letter-spacing: -0.15px;
+  white-space: nowrap;
+  text-align: left;
+}
+.fp-freeform-option:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+.fp-freeform-check {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 12px;
+  display: flex;
+}
+.fp-freeform-check img {
+  opacity: 0;
+}
+.fp-freeform-check.is-on img {
+  opacity: 1;
+}
+.fp-freeform-sep {
+  height: 8px;
+  display: flex;
+  align-items: center;
+}
+.fp-freeform-sep::before {
+  content: '';
+  width: 100%;
+  border-top: 0.5px solid rgba(255, 255, 255, 0.1);
+}
+
+.fp-section-visual > .fp-live:not(.fp-section-visual-wallpaper):not(.shelf-win):not(.mc-window):not(.mc-bubble):not(.fp-tags-magnify) {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: auto !important;
+  height: auto !important;
+  transform: none !important;
+  overflow: hidden;
+}
+.fp-section-visual:has(.fp-live) {
+  height: 720px;
+  padding: 0;
+}
+.fp-live {
+  pointer-events: none;
+}
+.fp-live-window {
+  position: absolute;
+  z-index: 1;
+  cursor: grab;
+  touch-action: none;
+  pointer-events: auto;
+}
+.fp-live-window:active {
+  cursor: grabbing;
+}
+.fp-live-window img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  user-select: none;
+}
+.fp-live-dim {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: rgba(0, 0, 0, 0.7);
+  pointer-events: none;
+}
+.fp-live-controls {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  z-index: 5;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 12px;
+  corner-shape: superellipse(1.6);
+  background: #0c0c0e;
+  border: 0.5px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3), 0 6px 10px 4px rgba(0, 0, 0, 0.2);
+  pointer-events: none;
+}
+.fp-live-controls.is-recording {
+  background: #1d1e20;
+}
+.fp-live-controls.is-placed {
+  transform: none;
+}
+.fp-live-grabber {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  flex-shrink: 0;
+  cursor: grab;
+  touch-action: none;
+  pointer-events: auto;
+}
+.fp-live-grabber:active {
+  cursor: grabbing;
+}
+.fp-live-grabber img {
+  width: 16px;
+  height: 16px;
+  display: block;
+  pointer-events: none;
+}
+.fp-live-icon {
+  display: flex;
+  align-items: center;
+  padding: 6px;
+  border-radius: 8px;
+  corner-shape: superellipse(1.6);
+}
+.fp-live-record {
+  margin: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+  pointer-events: auto;
+}
+.fp-live-record img {
+  pointer-events: none;
+}
+.fp-live-timer {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 6px;
+  border-radius: 8px;
+  corner-shape: superellipse(1.6);
+  background: #ef5350;
+  color: #fff;
+  font-family: var(--font-family-primary);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  letter-spacing: -0.15px;
+  white-space: nowrap;
+  cursor: pointer;
+  pointer-events: auto;
+}
+.fp-live-count {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 4;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  pointer-events: none;
+}
+.fp-live-count-num {
+  width: 160px;
+  height: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #fff;
+  color: #000;
+  font-family: var(--font-family-primary);
+  font-size: 80px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.32px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 6px 5px rgba(0, 0, 0, 0.2);
+}
+.fp-live-skip {
+  margin: 0;
+  padding: 16px 32px;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  font-family: var(--font-family-primary);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 24px;
+  letter-spacing: -0.32px;
+  cursor: pointer;
+  pointer-events: auto;
+}
+.fp-live .mc-bubble {
+  z-index: 6;
+  /* .fp-live is pointer-events: none, and that value inherits.
+     The bubble has to opt back in so hover, drag, resize, and
+     the shape toolbar work the same way they do on the hero. */
+  pointer-events: auto;
+}
+
+@media (max-width: 768px) {
+  .fp-section-visual:has(.fp-freeform) {
+    height: 560px;
+  }
+  .fp-section-visual:has(.fp-live) {
+    height: 560px;
+  }
+  .fp-page[data-slug="magicast"] .fp-section-visual:has(.fp-live) .mc-bubble {
+    display: block !important;
+  }
+  .fp-section-visual:has(.fp-live) .fp-live-window,
+  .fp-section-visual:has(.fp-live) .fp-live-grabber,
+  .fp-section-visual:has(.fp-live) .fp-live-record,
+  .fp-section-visual:has(.fp-live) .fp-live-timer,
+  .fp-section-visual:has(.fp-live) .fp-live-timer *,
+  .fp-section-visual:has(.fp-live) .mc-bubble,
+  .fp-section-visual:has(.fp-live) .mc-bubble-hover-visible,
+  .fp-section-visual:has(.fp-live) .mc-bubble-hover-visible .mc-bubble-corner,
+  .fp-section-visual:has(.fp-live) .mc-bubble-hover-visible .mc-bubble-shape,
+  .fp-section-visual:has(.fp-live) .fp-live-skip {
+    pointer-events: auto !important;
+  }
+  .fp-page[data-slug="magicast"] .fp-section-visual .ainbox-magicast-embed,
+  .fp-page[data-slug="magicast"] .fp-section-visual .ainbox-magicast-player,
+  .fp-page[data-slug="magicast"] .fp-section-visual .ainbox-magicast-player * {
+    pointer-events: auto !important;
+  }
+  .fp-page[data-slug="magicast"] .fp-section-visual .ainbox-magicast-player .fp-mv-win:not(.fp-section-visual-wallpaper):not(.shelf-win):not(.mc-window):not(.mc-bubble):not(.fp-tags-magnify) {
+    position: relative !important;
+    width: 100% !important;
+    max-width: none !important;
+    height: 100% !important;
+    aspect-ratio: auto !important;
+    transform: none !important;
+  }
 }

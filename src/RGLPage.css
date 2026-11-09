@@ -634,7 +634,6 @@
 .rgl-map-window-host .sc-footer,
 .rgl-map-window-host .sc-cta-section,
 .rgl-map-window-host .sc-sidebar,
-.rgl-map-window-host .FloatingCTA,
 .rgl-map-window-host .fp-footer-cta {
   display: none !important;
 }

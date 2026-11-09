@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import ViewportVideo from './ViewportVideo';
 import './MeetingWindow.css';
 import './TheaterWindow.css';
 
@@ -284,7 +285,7 @@ export default function TheaterWindow({ win, onDrag, speakers: rawSpeakers = [],
             <div className="theater-win-backstage-tiles">
               {backstage.slice(0, 2).map((person, i) => (
                 <div key={(person.name || 'b') + i} className="theater-win-backstage-tile">
-                  <video src={person.video} autoPlay loop muted playsInline />
+                  <ViewportVideo src={person.video} />
                   <div className="theater-win-backstage-name">{person.name}</div>
                 </div>
               ))}
@@ -298,7 +299,7 @@ export default function TheaterWindow({ win, onDrag, speakers: rawSpeakers = [],
             return (
               <div key={(person.name || 'x') + i} className="theater-win-tile">
                 {videoSrc ? (
-                  <video src={videoSrc} autoPlay loop muted playsInline />
+                  <ViewportVideo src={videoSrc} />
                 ) : (
                   <img src={person.avatar} alt="" className="theater-win-tile-avatar" />
                 )}

@@ -20,7 +20,6 @@ import { WindowManagerProvider, useWindow } from './WindowManager';
 import StoryViewer from './StoryViewer';
 import ShareDialog from './ShareDialog';
 import Footer from './Footer';
-import FloatingCTA from './FloatingCTA';
 import FooterCTA from './FooterCTA';
 import AgentSquircle from './AgentSquircle';
 import AgentGlyph from './AgentGlyph';
@@ -28,6 +27,9 @@ import SoftBlurText from './SoftBlurText';
 import LoadReveal from './LoadReveal';
 import MapTicker from './MapTicker';
 import BirthdayGlow, { BIRTHDAY_GOLD } from './BirthdayGlow';
+import ViewportVideo from './ViewportVideo';
+import WinCoin, { winPersonAttrs } from './WinCoin';
+import { TrophyRoomVisual } from './WinPage';
 import { birthdayCssVars, paletteColorsFor } from './rgl/materials';
 import { SIGN_CARD_TITLE, CARD_PEOPLE, birthdayChipLabel } from './rgl/cardLook';
 import './ShowcaseMap.css';
@@ -479,7 +481,7 @@ function SimpleStoryBubble({ image, delay = 0, onClick }) {
       <div className="sc-story-circle">
         <div className="sc-story-photo">
           {/\.(mp4|webm|mov)$/i.test(image) ? (
-            <video className="sc-story-thumb" src={`${image}#t=0.1`} muted playsInline preload="metadata" />
+            <img className="sc-story-thumb" src={image.replace(/^(.*\/)([^/]+)\.(mp4|webm|mov)$/i, '$1posters/$2.jpg')} alt="" />
           ) : (
             <img className="sc-story-thumb" src={image} alt="" />
           )}
@@ -931,7 +933,7 @@ function PrivateRoomCard({ room, storyBubble, onPersonClick, onRoomClick, spotif
             <div className="private-office-seat">
               <div className="seat-row seat-row-hovered">
                 {room.people.map((person, i) => (
-                  <div key={person.name + i} className={`seat-assigned sc-private-person ${person.isJoining ? 'sc-joining' : ''}`} onClick={(e) => { e.stopPropagation(); onPersonClick && onPersonClick(person, e); }} style={{ cursor: getChatIdForAvatar(person.avatar) ? 'pointer' : 'default' }}>
+                  <div key={person.name + i} className={`seat-assigned sc-private-person ${person.isJoining ? 'sc-joining' : ''}`} {...winPersonAttrs(person)} onClick={(e) => { e.stopPropagation(); onPersonClick && onPersonClick(person, e); }} style={{ cursor: getChatIdForAvatar(person.avatar) ? 'pointer' : 'default' }}>
                     <img className="seat-avatar" src={person.avatar} alt={person.name} />
                     <span className="seat-nametag">{person.name}</span>
                     {hasTalk && <div className={`sc-private-talk-ring ${talking[person.name] ? 'sc-talking' : ''}`} />}
@@ -1017,6 +1019,7 @@ function AgentRoomCard({ room, onAgentClick, onPersonClick, glowAgentRoomId = nu
                 <div
                   key={person.name + i}
                   className="sc-agentroom-visitor"
+                  {...winPersonAttrs(person)}
                   onClick={(e) => { e.stopPropagation(); onPersonClick && onPersonClick(person, e); }}
                   style={{ cursor: getChatIdForAvatar(person.avatar) ? 'pointer' : 'default' }}
                 >
@@ -1210,7 +1213,7 @@ function MeetingRoomCardShowcase({ room, onPersonClick, onRoomClick, showPhysica
           </div>
           <div className="meeting-room-people">
             {room.people.filter(p => p?.video).map((person, i) => (
-              <div key={person.name + i} className={`person meeting-room-person ${person._new ? 'sc-person-arriving' : ''} ${person.isJoining ? 'sc-joining' : ''}`} onClick={(e) => { e.stopPropagation(); onPersonClick && onPersonClick(person, e); }} style={{ cursor: getChatIdForAvatar(person.avatar) ? 'pointer' : 'default' }}>
+              <div key={person.name + i} className={`person meeting-room-person ${person._new ? 'sc-person-arriving' : ''} ${person.isJoining ? 'sc-joining' : ''}`} {...winPersonAttrs(person)} onClick={(e) => { e.stopPropagation(); onPersonClick && onPersonClick(person, e); }} style={{ cursor: getChatIdForAvatar(person.avatar) ? 'pointer' : 'default' }}>
                 <img className="avatar" src={person.avatar} alt={person.name} />
                 <div className={`avatar-inner-glow ${talking[person.name] ? 'sc-talking' : 'glow-off'}`} />
                 {showPhysicalTags && getCityForPerson(person) && (
@@ -1374,6 +1377,7 @@ function GameHex({ person, rank, small = false, colorIndex = 0, talking = false,
   return (
     <div
       className={`game-hex ${colorClass} ${small ? 'game-hex-small' : ''} ${talking ? 'game-hex-talking' : ''}`}
+      {...winPersonAttrs(person)}
       onClick={onClick}
       onMouseEnter={hover ? () => setHovered(true) : undefined}
       onMouseLeave={hover ? () => setHovered(false) : undefined}
@@ -1562,7 +1566,7 @@ const MAGICAST_SHAPES = [
   { id: 'square', mask: '/magicast/squareMask.svg' },
 ];
 
-function MagicastBubble({ onPositionChange, closing, initialSize = 260, initialPos = { x: 820, y: 340 }, anchor, shape, onShapeChange }) {
+export function MagicastBubble({ onPositionChange, closing, initialSize = 260, initialPos = { x: 820, y: 340 }, anchor, shape, onShapeChange }) {
   const [size, setSize] = useState(initialSize);
   const [pos, setPos] = useState(null);
   const setShape = onShapeChange;
@@ -1614,36 +1618,38 @@ function MagicastBubble({ onPositionChange, closing, initialSize = 260, initialP
   }, [pos, size, onPositionChange]);
 
   const defaultPos = initialPos;
+  const readPos = () => {
+    if (pos) return pos;
+    if (bubbleRef.current && bubbleRef.current.offsetParent) {
+      const rect = bubbleRef.current.getBoundingClientRect();
+      const parentRect = bubbleRef.current.offsetParent.getBoundingClientRect();
+      return { x: rect.left - parentRect.left, y: rect.top - parentRect.top };
+    }
+    return defaultPos;
+  };
   const startDrag = (e) => {
     if (resizing.current) return;
     e.preventDefault();
-    let currentPos = pos;
-    if (!currentPos) {
-      // If anchored (right/bottom-pinned), capture the rendered pixel
-      // position so subsequent drags continue from where the bubble sits.
-      if (anchor && bubbleRef.current && bubbleRef.current.offsetParent) {
-        const rect = bubbleRef.current.getBoundingClientRect();
-        const parentRect = bubbleRef.current.offsetParent.getBoundingClientRect();
-        currentPos = { x: rect.left - parentRect.left, y: rect.top - parentRect.top };
-      } else {
-        currentPos = defaultPos;
-      }
-      setPos(currentPos);
-    }
+    const currentPos = readPos();
+    if (!pos) setPos(currentPos);
     dragging.current = { startX: currentPos.x, startY: currentPos.y, mouseX: e.clientX, mouseY: e.clientY };
   };
 
   const startResize = (e, corner) => {
     e.preventDefault();
     e.stopPropagation();
-    resizing.current = { mouseX: e.clientX, mouseY: e.clientY, startSize: size, startPosX: pos.x, startPosY: pos.y, corner };
+    const currentPos = readPos();
+    if (!pos) setPos(currentPos);
+    resizing.current = { mouseX: e.clientX, mouseY: e.clientY, startSize: size, startPosX: currentPos.x, startPosY: currentPos.y, corner };
   };
 
   const bubbleStyle = pos
     ? { left: pos.x, top: pos.y, width: size, height: size }
     : anchor === 'bottom-right'
       ? { right: 56, bottom: 56, width: size, height: size }
-      : { left: defaultPos.x, top: defaultPos.y, width: size, height: size };
+      : anchor === 'bottom-left'
+        ? { left: 32, bottom: 32, width: size, height: size }
+        : { left: defaultPos.x, top: defaultPos.y, width: size, height: size };
 
   return (
     <div
@@ -1658,7 +1664,7 @@ function MagicastBubble({ onPositionChange, closing, initialSize = 260, initialP
         className={`mc-bubble-masked ${shape === 'square' ? 'mc-bubble-masked-square' : ''}`}
         style={shape !== 'square' ? { WebkitMaskImage: `url(${maskUrl})`, maskImage: `url(${maskUrl})` } : undefined}
       >
-        <video className="mc-bubble-video" src="/videos/Female/sophia_ramirez.mp4" autoPlay loop muted playsInline />
+        <ViewportVideo className="mc-bubble-video" src="/videos/Female/sophia_ramirez.mp4" />
       </div>
       <div className={`mc-bubble-hover-ui ${hovered ? 'mc-bubble-hover-visible' : ''}`}>
         <img className="mc-bubble-outline" src="/magicast/outline.svg" alt="" />
@@ -1689,40 +1695,33 @@ function MagicastBubble({ onPositionChange, closing, initialSize = 260, initialP
 
 function MagicastSlider({ value, onChange }) {
   const trackRef = useRef(null);
-  const draggingRef = useRef(false);
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
 
   const setFromClientX = (clientX) => {
     const track = trackRef.current;
     if (!track) return;
     const rect = track.getBoundingClientRect();
+    if (!rect.width) return;
     const next = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
-    onChange(next);
+    onChangeRef.current(next);
   };
 
-  useEffect(() => {
-    const onMove = (e) => {
-      if (!draggingRef.current) return;
-      const x = e.touches ? e.touches[0].clientX : e.clientX;
-      setFromClientX(x);
-    };
-    const onUp = () => { draggingRef.current = false; };
-    window.addEventListener('mousemove', onMove);
-    window.addEventListener('mouseup', onUp);
-    window.addEventListener('touchmove', onMove, { passive: true });
-    window.addEventListener('touchend', onUp);
-    return () => {
-      window.removeEventListener('mousemove', onMove);
-      window.removeEventListener('mouseup', onUp);
-      window.removeEventListener('touchmove', onMove);
-      window.removeEventListener('touchend', onUp);
-    };
-  }, []);
-
-  const onDown = (e) => {
+  const onPointerDown = (e) => {
+    if (e.button !== 0 && e.pointerType === 'mouse') return;
     e.stopPropagation();
-    draggingRef.current = true;
-    const x = e.touches ? e.touches[0].clientX : e.clientX;
-    setFromClientX(x);
+    e.preventDefault();
+    e.currentTarget.setPointerCapture(e.pointerId);
+    setFromClientX(e.clientX);
+  };
+  const onPointerMove = (e) => {
+    if (!e.currentTarget.hasPointerCapture?.(e.pointerId)) return;
+    setFromClientX(e.clientX);
+  };
+  const onPointerUp = (e) => {
+    if (e.currentTarget.hasPointerCapture?.(e.pointerId)) {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    }
   };
 
   const pct = `${value * 100}%`;
@@ -1730,8 +1729,10 @@ function MagicastSlider({ value, onChange }) {
     <div
       ref={trackRef}
       className="mc-eff-slider"
-      onMouseDown={onDown}
-      onTouchStart={onDown}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onPointerCancel={onPointerUp}
     >
       <div className="mc-eff-slider-fill" style={{ width: pct }} />
       <div className="mc-eff-slider-knob" style={{ left: pct }} />
@@ -1739,7 +1740,7 @@ function MagicastSlider({ value, onChange }) {
   );
 }
 
-function MagicastEffectsPane({ shape, onShapeChange }) {
+function MagicastEffectsPane({ shape, onShapeChange, quiet = false, previewVideo = '/videos/Female/sophia_ramirez.mp4' }) {
   const [vbg, setVbg] = useState('none');
   const [showSelf, setShowSelf] = useState(false);
   const [mirror, setMirror] = useState(false);
@@ -1754,7 +1755,8 @@ function MagicastEffectsPane({ shape, onShapeChange }) {
     { id: 'circleScalloped', mask: '/magicast/circleScallopedMask.svg', render: () => <path d={SURROUND_SCALLOPED_D} stroke="currentColor" strokeWidth="2" fill="none" strokeLinejoin="round" /> },
   ];
   return (
-    <div className="mc-eff">
+    <div className={`mc-eff${quiet ? ' is-quiet' : ''}`}>
+      <div className="mc-eff-clip">
       <div className="mc-eff-section">
         <div className="mc-eff-label">Surround</div>
         <div className="mc-eff-shapes">
@@ -1770,7 +1772,7 @@ function MagicastEffectsPane({ shape, onShapeChange }) {
                   className="mc-eff-shape-fill"
                   style={{ WebkitMaskImage: `url(${s.mask})`, maskImage: `url(${s.mask})` }}
                 >
-                  <video src="/videos/Female/sophia_ramirez.mp4" autoPlay loop muted playsInline />
+                  <ViewportVideo src={previewVideo} />
                 </span>
               ) : (
                 <svg className="mc-eff-shape-svg" width="64" height="64" viewBox="-2 -2 68 68" aria-hidden="true">
@@ -1845,13 +1847,115 @@ function MagicastEffectsPane({ shape, onShapeChange }) {
           <span className="mc-eff-toggle-knob" />
         </span>
       </button>
+      </div>
     </div>
   );
 }
 
-function MagicastWindow({ win, onDrag, pipPos, shape = 'circle', onShapeChange, effectsOpen = false }) {
+const MAGICAST_SCREENS = [
+  { id: 'entire', name: 'Entire Screen', shot: '/magicast/screens/entire.png', fill: true },
+  { id: 'arc', name: 'Arc', shot: '/magicast/screens/arc.png', icon: '/magicast/screens/arc-icon.png' },
+  { id: 'spotify', name: 'Spotify', shot: '/magicast/screens/spotify.png', icon: '/magicast/screens/spotify-icon.png' },
+  { id: 'roam', name: 'Roam', shot: '/magicast/screens/roam.png', icon: '/magicast/screens/roam-icon.png' },
+  { id: 'notes', name: 'Notes', shot: '/magicast/screens/notes.png', icon: '/magicast/screens/notes-icon.png' },
+];
+
+function MagicastScreensPane({ selectedId, onSelect, quiet }) {
+  const [query, setQuery] = useState('');
+  const [systemAudio, setSystemAudio] = useState(true);
+  const searchRef = useRef(null);
+  const q = query.trim().toLowerCase();
+  const items = MAGICAST_SCREENS.filter((item) => !q || item.name.toLowerCase().includes(q));
+
+  useEffect(() => {
+    if (quiet) return undefined;
+    const frame = requestAnimationFrame(() => searchRef.current?.focus());
+    return () => cancelAnimationFrame(frame);
+  }, [quiet]);
+
+  return (
+    <div className={`mc-eff mc-screens${quiet ? ' is-quiet' : ''}`}>
+      <label className="mc-screens-search">
+        <input
+          ref={searchRef}
+          className="text-subheadline"
+          type="text"
+          value={query}
+          placeholder="Search"
+          aria-label="Search"
+          onChange={(e) => setQuery(e.target.value)}
+          onMouseDown={(e) => e.stopPropagation()}
+        />
+      </label>
+      <div className="mc-screens-grid">
+        {items.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            className={`mc-screens-card${selectedId === item.id ? ' is-selected' : ''}`}
+            aria-pressed={selectedId === item.id}
+            onClick={(e) => { e.stopPropagation(); onSelect(item.id); }}
+          >
+            <span className={`mc-screens-shot${item.fill ? ' is-fill' : ''}`}>
+              <img src={item.shot} alt="" />
+            </span>
+            <span className={`mc-screens-name ${item.icon ? 'text-caption' : 'text-subheadline'}`}>
+              {item.icon ? <img src={item.icon} alt="" width="16" height="16" /> : null}
+              {item.name}
+            </span>
+          </button>
+        ))}
+      </div>
+      <button
+        type="button"
+        className="mc-screens-audio"
+        aria-pressed={systemAudio}
+        onClick={(e) => { e.stopPropagation(); setSystemAudio((on) => !on); }}
+      >
+        <span className="text-subheadline">Record System Audio</span>
+        {systemAudio ? <img src="/magicast/screens/check.svg" alt="" width="24" height="24" /> : <span className="mc-screens-check-off" aria-hidden="true" />}
+      </button>
+    </div>
+  );
+}
+
+const MAGICAST_CAMERAS = ['Logi 4K Pro', 'FaceTime HD', 'MacBook Pro Camera', 'Continuity Camera'];
+const MAGICAST_MICS = ['Default', 'MacBook Pro Microphone', 'Logi 4K Pro', 'AirPods Pro'];
+
+function MagicastPicker({ label, value, options, onChange }) {
+  return (
+    <label className="mc-win-picker">
+      <span className="mc-win-picker-sizer" aria-hidden="true">{value}</span>
+      <select
+        aria-label={label}
+        value={value}
+        onChange={(e) => { e.stopPropagation(); onChange(e.target.value); }}
+        onMouseDown={(e) => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {options.map((option) => (
+          <option key={option} value={option}>{option}</option>
+        ))}
+      </select>
+      <span className="mc-win-picker-chevron" aria-hidden="true" />
+    </label>
+  );
+}
+
+function MagicastWindow({ win, onDrag, pipPos, shape = 'circle', onShapeChange, effectsOpen = false, effectsInteractive = false, freePos = null, mapOverlay = false, previewVideo = '/videos/Female/sophia_ramirez.mp4' }) {
   const maskUrl = MAGICAST_SHAPES.find(s => s.id === shape)?.mask || MAGICAST_SHAPES[0].mask;
   const [closing, setClosing] = useState(false);
+  const [cameraId, setCameraId] = useState(MAGICAST_CAMERAS[0]);
+  const [micId, setMicId] = useState(MAGICAST_MICS[0]);
+  const [pane, setPane] = useState(effectsOpen ? 'effects' : null);
+  const [screenId, setScreenId] = useState('entire');
+  const paneRef = useRef(pane);
+  if (pane) paneRef.current = pane;
+  const open = effectsInteractive ? pane != null : effectsOpen;
+  const shownPane = pane || paneRef.current || 'effects';
+  const screen = MAGICAST_SCREENS.find((item) => item.id === screenId);
+  const screenName = screen?.name || 'Entire Screen';
+  const previewSrc = effectsInteractive && screen ? screen.shot : '/magicast/preview.jpg';
   const handleClose = () => {
     setClosing(true);
     setTimeout(() => win.close(), 180);
@@ -1859,10 +1963,20 @@ function MagicastWindow({ win, onDrag, pipPos, shape = 'circle', onShapeChange, 
   useEffect(() => {
     if (win.closeRequestId) handleClose();
   }, [win.closeRequestId]);
+  const togglePane = (next) => (e) => {
+    e.stopPropagation();
+    setPane((current) => (current === next ? null : next));
+  };
   return (
     <div
-      className={`mc-win ${effectsOpen ? 'mc-win-effects-open' : ''} ${!win.isFocused ? 'mc-win-unfocused' : ''} ${closing ? 'mc-win-closing' : ''}`}
-      style={{ left: win.position.x, top: win.position.y, zIndex: win.zIndex }}
+      className={`mc-win ${open ? 'mc-win-effects-open' : ''} ${effectsInteractive ? 'mc-win-effects' : ''} ${!win.isFocused ? 'mc-win-unfocused' : ''} ${closing ? 'mc-win-closing' : ''} ${freePos ? 'mc-win-free' : ''} ${mapOverlay ? 'mc-win-map' : ''}`}
+      style={{
+        left: win.position.x,
+        top: win.position.y,
+        zIndex: win.zIndex,
+        ...(mapOverlay ? { '--mc-x': `${win.position.x}px`, '--mc-y': `${win.position.y}px` } : {}),
+        ...(freePos ? { '--mc-free-x': `${freePos.x}px`, '--mc-free-y': `${freePos.y}px` } : {}),
+      }}
       onMouseDown={() => win.focus()}
     >
       <div className="mc-win-titlebar" onMouseDown={onDrag}>
@@ -1882,33 +1996,51 @@ function MagicastWindow({ win, onDrag, pipPos, shape = 'circle', onShapeChange, 
       <div className="mc-win-body">
         <div className="mc-win-left">
         <div className="mc-win-preview">
-          <img className="mc-win-preview-bg" src="/magicast/preview.png" alt="" />
+          <img className={`mc-win-preview-bg${screen?.fill ? ' is-fill' : ''}`} src={previewSrc} alt="" />
           <div className="mc-win-preview-overlay" />
-          <video className={`mc-win-preview-avatar ${shape === 'square' ? 'mc-win-preview-avatar-square' : ''}`} src="/videos/Female/sophia_ramirez.mp4" autoPlay loop muted playsInline style={{ ...(pipPos ? { left: `${pipPos.x * 100}%`, top: `${pipPos.y * 100}%` } : {}), ...(shape !== 'square' ? { WebkitMaskImage: `url(${maskUrl})`, maskImage: `url(${maskUrl})`, WebkitMaskRepeat: 'no-repeat', maskRepeat: 'no-repeat', WebkitMaskPosition: 'center', maskPosition: 'center', WebkitMaskSize: '100%', maskSize: '100%' } : {}) }} />
+          <ViewportVideo className={`mc-win-preview-avatar ${shape === 'square' ? 'mc-win-preview-avatar-square' : ''}`} src={previewVideo} style={{ ...(pipPos ? { left: `${pipPos.x * 100}%`, top: `${pipPos.y * 100}%` } : {}), ...(shape !== 'square' ? { WebkitMaskImage: `url(${maskUrl})`, maskImage: `url(${maskUrl})`, WebkitMaskRepeat: 'no-repeat', maskRepeat: 'no-repeat', WebkitMaskPosition: 'center', maskPosition: 'center', WebkitMaskSize: '100%', maskSize: '100%' } : {}) }} />
         </div>
         <div className="mc-win-row">
           <span className="mc-win-row-icon" style={{ WebkitMaskImage: 'url(/magicast/video.svg)', maskImage: 'url(/magicast/video.svg)' }} />
           <span className="mc-win-row-label">Camera</span>
-          <span className="mc-win-row-value">Logi 4K Pro</span>
-          <div className="mc-win-row-chevron">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 5L8 9L12 5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-          </div>
+          <MagicastPicker label="Camera" value={cameraId} options={MAGICAST_CAMERAS} onChange={setCameraId} />
         </div>
         <div className="mc-win-row">
           <span className="mc-win-row-icon" style={{ WebkitMaskImage: 'url(/magicast/microphone.svg)', maskImage: 'url(/magicast/microphone.svg)' }} />
           <span className="mc-win-row-label">Microphone</span>
-          <span className="mc-win-row-value">Default</span>
-          <div className="mc-win-row-chevron">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 5L8 9L12 5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-          </div>
+          <MagicastPicker label="Microphone" value={micId} options={MAGICAST_MICS} onChange={setMicId} />
         </div>
-        <div className="mc-win-row">
+        <div
+          className={`mc-win-row ${effectsInteractive && pane === 'screens' ? 'mc-win-row-active' : ''} ${effectsInteractive ? 'mc-win-row-toggle' : ''}`}
+          role={effectsInteractive ? 'button' : undefined}
+          tabIndex={effectsInteractive ? 0 : undefined}
+          aria-expanded={effectsInteractive ? pane === 'screens' : undefined}
+          onClick={effectsInteractive ? togglePane('screens') : undefined}
+          onKeyDown={effectsInteractive ? (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              togglePane('screens')(e);
+            }
+          } : undefined}
+        >
           <span className="mc-win-row-icon" style={{ WebkitMaskImage: 'url(/magicast/monitor.svg)', maskImage: 'url(/magicast/monitor.svg)' }} />
           <span className="mc-win-row-label">Screens</span>
-          <span className="mc-win-row-value">Entire Screen</span>
+          <span className="mc-win-row-value">{effectsInteractive ? screenName : 'Entire Screen'}</span>
           <svg className="mc-win-row-chev-right" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 4L10 8L6 12" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
         </div>
-        <div className={`mc-win-row ${effectsOpen ? 'mc-win-row-active' : ''}`}>
+        <div
+          className={`mc-win-row ${(effectsInteractive ? pane === 'effects' : open) ? 'mc-win-row-active' : ''} ${effectsInteractive ? 'mc-win-row-toggle' : ''}`}
+          role={effectsInteractive ? 'button' : undefined}
+          tabIndex={effectsInteractive ? 0 : undefined}
+          aria-expanded={effectsInteractive ? pane === 'effects' : undefined}
+          onClick={effectsInteractive ? togglePane('effects') : undefined}
+          onKeyDown={effectsInteractive ? (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              togglePane('effects')(e);
+            }
+          } : undefined}
+        >
           <span className="mc-win-row-icon" style={{ WebkitMaskImage: 'url(/magicast/effects.svg)', maskImage: 'url(/magicast/effects.svg)' }} />
           <span className="mc-win-row-label">Effects</span>
           <span className="mc-win-row-value">Background Blur</span>
@@ -1916,7 +2048,12 @@ function MagicastWindow({ win, onDrag, pipPos, shape = 'circle', onShapeChange, 
         </div>
         <button className="mc-win-record">Start Recording</button>
         </div>
-        {effectsOpen && <MagicastEffectsPane shape={shape} onShapeChange={onShapeChange} />}
+        {(effectsInteractive || open) && (
+          <MagicastEffectsPane shape={shape} onShapeChange={onShapeChange} quiet={shownPane !== 'effects'} previewVideo={previewVideo} />
+        )}
+        {effectsInteractive && (
+          <MagicastScreensPane selectedId={screenId} onSelect={setScreenId} quiet={shownPane !== 'screens'} />
+        )}
       </div>
     </div>
   );
@@ -2040,7 +2177,7 @@ function MapFeatureVisual({ theme, className }) {
     <div className={`sc-feature-visual sc-feature-visual-left sc-feature-visual-map${className ? ' ' + className : ''}`}>
       <div className="sc-feature-wallpaper sc-feature-wallpaper-map" style={{ backgroundImage: `url(/wallpapers/wallpaper-${theme}.png)` }}>
         <LazyVisible className="sc-map-feature-window-host">
-          <ShowcaseMap embedded initialFloor="Homepage" />
+          <ShowcaseMap embedded initialFloor="Homepage" birthdayCta="office" />
         </LazyVisible>
       </div>
     </div>
@@ -2052,7 +2189,7 @@ function DropInFeatureVisual({ theme, className }) {
     <div className={`sc-feature-visual sc-feature-visual-map${className ? ' ' + className : ''}`}>
       <div className="sc-feature-wallpaper sc-feature-wallpaper-map" style={{ backgroundImage: `url(/wallpapers/wallpaper-${theme}.png)` }}>
         <LazyVisible className="sc-map-feature-window-host">
-          <ShowcaseMap embedded autoKnock initialFloor="DropIn" />
+          <ShowcaseMap embedded autoKnock initialFloor="DropIn" birthdayEnabled={false} />
         </LazyVisible>
       </div>
     </div>
@@ -2212,7 +2349,7 @@ export function HomepageReviews({ limit } = {}) {
               )}
               <p className="sc-review-quote">&ldquo;{r.quote}&rdquo;</p>
               <div className="sc-review-meta">
-                <img src={r.avatar} alt="" className="sc-review-avatar" />
+                <img src={r.avatar} alt="" className="sc-review-avatar" loading="lazy" decoding="async" />
                 <div className="sc-review-person">
                   <div className="sc-review-name">{r.name}</div>
                   <div className="sc-review-title">{r.title}, {r.company}</div>
@@ -2226,12 +2363,64 @@ export function HomepageReviews({ limit } = {}) {
   );
 }
 
-export function MagicastFeatureVisual({ theme, className, anchor, bare = false, effectsOpen = false, hideBubble = false }) {
+const MAGICAST_PREVIEW_WIN = { position: { x: 0, y: 0 }, zIndex: 1, isFocused: true, focus: () => {}, close: () => {}, open: () => {} };
+
+export function MagicastFeatureVisual({ theme, className, anchor, bare = false, effectsOpen = false, effectsInteractive = false, hideBubble = false, previewVideo = '/videos/Female/sophia_ramirez.mp4' }) {
   const [shape, setShape] = useState('circle');
+  const [freePos, setFreePos] = useState(null);
+  const freePosRef = useRef(null);
+  freePosRef.current = freePos;
+
+  const onDrag = useCallback((e) => {
+    if (e.button !== 0) return;
+    if (e.target.closest('button')) return;
+    e.preventDefault();
+    const node = e.currentTarget.closest('.mc-win');
+    const parent = node?.offsetParent;
+    if (!node || !parent) return;
+    const parentRect = parent.getBoundingClientRect();
+    const rect = node.getBoundingClientRect();
+    const origin = freePosRef.current || { x: 0, y: 0 };
+    const baseLeft = rect.left - origin.x;
+    const baseTop = rect.top - origin.y;
+    const minX = parentRect.left - baseLeft;
+    const maxX = parentRect.right - rect.width - baseLeft;
+    const minY = parentRect.top - baseTop;
+    const maxY = parentRect.bottom - rect.height - baseTop;
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const clamp = (v, min, max) => (max < min ? min : Math.min(max, Math.max(min, v)));
+    const place = (ev) => {
+      setFreePos({
+        x: clamp(origin.x + ev.clientX - startX, minX, maxX),
+        y: clamp(origin.y + ev.clientY - startY, minY, maxY),
+      });
+    };
+    const onUp = () => {
+      window.removeEventListener('mousemove', place);
+      window.removeEventListener('mouseup', onUp);
+    };
+    window.addEventListener('mousemove', place);
+    window.addEventListener('mouseup', onUp);
+    setFreePos(origin);
+  }, []);
+
+  const windowEl = (
+    <MagicastWindow
+      win={MAGICAST_PREVIEW_WIN}
+      onDrag={effectsInteractive ? undefined : onDrag}
+      shape={shape}
+      onShapeChange={setShape}
+      effectsOpen={effectsOpen}
+      effectsInteractive={effectsInteractive}
+      freePos={effectsInteractive ? null : freePos}
+      previewVideo={previewVideo}
+    />
+  );
   if (bare) {
     return (
       <>
-        <MagicastWindow win={{ position: { x: 0, y: 0 }, zIndex: 1, isFocused: true, focus: () => {}, close: () => {}, open: () => {} }} onDrag={() => {}} shape={shape} onShapeChange={setShape} effectsOpen={effectsOpen} />
+        {windowEl}
         {!hideBubble && <MagicastBubble initialSize={240} initialPos={{ x: 530, y: 420 }} anchor={anchor} shape={shape} onShapeChange={setShape} />}
       </>
     );
@@ -2239,9 +2428,13 @@ export function MagicastFeatureVisual({ theme, className, anchor, bare = false, 
   return (
     <div className={`sc-feature-visual${className ? ' ' + className : ''}`} style={{ position: 'relative' }}>
       <div className="sc-feature-wallpaper" style={{ backgroundImage: `url(/wallpapers/wallpaper-${theme}.png)` }}>
-        <MagicastWindow win={{ position: { x: 0, y: 0 }, zIndex: 1, isFocused: true, focus: () => {}, close: () => {}, open: () => {} }} onDrag={() => {}} shape={shape} onShapeChange={setShape} effectsOpen={effectsOpen} />
+        <LazyVisible rootMargin="240px 0px">{windowEl}</LazyVisible>
       </div>
-      {!hideBubble && <MagicastBubble initialSize={240} initialPos={{ x: 530, y: 420 }} anchor={anchor} shape={shape} onShapeChange={setShape} />}
+      {!hideBubble && (
+        <LazyVisible rootMargin="240px 0px">
+          <MagicastBubble initialSize={240} initialPos={{ x: 530, y: 420 }} anchor={anchor} shape={shape} onShapeChange={setShape} />
+        </LazyVisible>
+      )}
     </div>
   );
 }
@@ -2334,11 +2527,11 @@ function resolveBirthdayPerson(person) {
 }
 
 // Main showcase component
-export default function ShowcaseMap({ initialFloor = 'R&D', embedded = false, autoKnock = false, spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, hideOnIt = false, onItAutoOpen = false, shelfAutoOpen = false, shareAutoOpen = false, theme, autoCycleFloors = false, autoCycleDms = false, showPhysicalTags = false, onAirOverride = null, agentsRoom = null, officeAgents = null, workrooms = null, peopleOverrides = null, peopleLimits = null, vibeOverride = false, hideElevator = false, hiddenRooms = null, extraRooms = null, editable = false, allowWindowOpens = false, defaultLayout = null, onPersonalAgentsClick = null, showTicker = undefined, birthdayPaletteId = 'crimson', birthdayEnabled = true, birthdayPerson = null, birthdayCta = 'toolbar', tickerEmpty = false } = {}) {
+export default function ShowcaseMap({ initialFloor = 'R&D', embedded = false, autoKnock = false, spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, hideOnIt = false, onItAutoOpen = false, shelfAutoOpen = false, recordingsAutoOpen = false, shareAutoOpen = false, theme, autoCycleFloors = false, autoCycleDms = false, showPhysicalTags = false, onAirOverride = null, agentsRoom = null, officeAgents = null, workrooms = null, peopleOverrides = null, peopleLimits = null, vibeOverride = false, hideElevator = false, hiddenRooms = null, extraRooms = null, editable = false, allowWindowOpens = false, defaultLayout = null, onPersonalAgentsClick = null, showTicker = undefined, birthdayPaletteId = 'crimson', birthdayEnabled = true, birthdayPerson = null, birthdayCta = 'toolbar', tickerEmpty = false, winCoinDefaultOpen = false } = {}) {
   return (
     <ChatProvider>
       <WindowManagerProvider initialWindows={INITIAL_WINDOWS}>
-        <ShowcaseMapInner initialFloor={initialFloor} embedded={embedded} autoKnock={autoKnock} spotifyAlwaysOpen={spotifyAlwaysOpen} githubAlwaysOpen={githubAlwaysOpen} figmaAlwaysOpen={figmaAlwaysOpen} hideOnIt={hideOnIt} onItAutoOpen={onItAutoOpen} shelfAutoOpen={shelfAutoOpen} shareAutoOpen={shareAutoOpen} themeOverride={theme} autoCycleFloors={autoCycleFloors} autoCycleDms={autoCycleDms} showPhysicalTags={showPhysicalTags} onAirOverride={onAirOverride} agentsRoom={agentsRoom} officeAgents={officeAgents} workrooms={workrooms} peopleOverrides={peopleOverrides} peopleLimits={peopleLimits} vibeOverride={vibeOverride} hideElevator={hideElevator} hiddenRooms={hiddenRooms} extraRooms={extraRooms} editable={editable} allowWindowOpens={allowWindowOpens} defaultLayout={defaultLayout} onPersonalAgentsClick={onPersonalAgentsClick} showTicker={showTicker} birthdayPaletteId={birthdayPaletteId} birthdayEnabled={birthdayEnabled} birthdayPerson={birthdayPerson} birthdayCta={birthdayCta} tickerEmpty={tickerEmpty} />
+        <ShowcaseMapInner initialFloor={initialFloor} embedded={embedded} autoKnock={autoKnock} spotifyAlwaysOpen={spotifyAlwaysOpen} githubAlwaysOpen={githubAlwaysOpen} figmaAlwaysOpen={figmaAlwaysOpen} hideOnIt={hideOnIt} onItAutoOpen={onItAutoOpen} shelfAutoOpen={shelfAutoOpen} recordingsAutoOpen={recordingsAutoOpen} shareAutoOpen={shareAutoOpen} themeOverride={theme} autoCycleFloors={autoCycleFloors} autoCycleDms={autoCycleDms} showPhysicalTags={showPhysicalTags} onAirOverride={onAirOverride} agentsRoom={agentsRoom} officeAgents={officeAgents} workrooms={workrooms} peopleOverrides={peopleOverrides} peopleLimits={peopleLimits} vibeOverride={vibeOverride} hideElevator={hideElevator} hiddenRooms={hiddenRooms} extraRooms={extraRooms} editable={editable} allowWindowOpens={allowWindowOpens} defaultLayout={defaultLayout} onPersonalAgentsClick={onPersonalAgentsClick} showTicker={showTicker} birthdayPaletteId={birthdayPaletteId} birthdayEnabled={birthdayEnabled} birthdayPerson={birthdayPerson} birthdayCta={birthdayCta} tickerEmpty={tickerEmpty} winCoinDefaultOpen={winCoinDefaultOpen} />
       </WindowManagerProvider>
     </ChatProvider>
   );
@@ -2502,7 +2695,7 @@ function useTargetHintStyle(targetRef, active, offset = { top: -30, left: 'cente
   return style;
 }
 
-function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = false, spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, hideOnIt = false, onItAutoOpen = false, shelfAutoOpen = false, shareAutoOpen = false, themeOverride = null, autoCycleFloors = false, autoCycleDms = false, showPhysicalTags = false, onAirOverride = null, agentsRoom = null, officeAgents = null, workrooms = null, peopleOverrides = null, peopleLimits = null, vibeOverride = false, hideElevator = false, hiddenRooms = null, extraRooms = null, editable = false, allowWindowOpens = false, defaultLayout = null, onPersonalAgentsClick = null, showTicker: showTickerProp, birthdayPaletteId = 'crimson', birthdayEnabled = true, birthdayPerson = null, birthdayCta = 'toolbar', tickerEmpty = false }) {
+function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = false, spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, hideOnIt = false, onItAutoOpen = false, shelfAutoOpen = false, recordingsAutoOpen = false, shareAutoOpen = false, themeOverride = null, autoCycleFloors = false, autoCycleDms = false, showPhysicalTags = false, onAirOverride = null, agentsRoom = null, officeAgents = null, workrooms = null, peopleOverrides = null, peopleLimits = null, vibeOverride = false, hideElevator = false, hiddenRooms = null, extraRooms = null, editable = false, allowWindowOpens = false, defaultLayout = null, onPersonalAgentsClick = null, showTicker: showTickerProp, birthdayPaletteId = 'crimson', birthdayEnabled = true, birthdayPerson = null, birthdayCta = 'toolbar', tickerEmpty = false, winCoinDefaultOpen = false }) {
   const [themeState, setThemeState] = useState('dark');
   const theme = themeOverride || themeState;
   const setTheme = themeOverride ? () => {} : setThemeState;
@@ -2510,8 +2703,8 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
   const birthdayVars = birthdayCssVars(theme, birthdayPaletteId);
   const chipPerson = resolveBirthdayPerson(birthdayPerson);
   const birthdayOfficeName = birthdayPerson ? chipPerson.officeName : null;
-  // Company News ticker — on for the live homepage map; opt-in for embeds (e.g. RGL).
-  const showTicker = showTickerProp ?? !embedded;
+  // Company News ticker — opt-in only (RGL sandbox). Off on the homepage.
+  const showTicker = !!showTickerProp;
   /** Birthday card celebration from ticker click — Klas + active palette. */
   const [birthdayGift, setBirthdayGift] = useState({ open: false, playKey: 0 });
   const openBirthdayGift = useCallback((giftName = chipPerson.first) => {
@@ -3287,6 +3480,13 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
   const magicastWin = useWindow('magicast');
   const magicminutesWin = useWindow('magicminutes');
   const recordingsWin = useWindow('recordings');
+  useEffect(() => {
+    if (!recordingsAutoOpen) return;
+    recordingsWin.move({ x: 32, y: 32 });
+    recordingsWin.open();
+    // Open once for this embed. recordingsWin identity changes every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recordingsAutoOpen]);
   const calendarWin = useWindow('calendar');
   const lobbyWin = useWindow('lobby');
   const mobileWin = useWindow('mobile');
@@ -3375,11 +3575,11 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
     dark.decoding = 'async';
     const onDarkReady = () => reveal(setWallpaperDarkLoaded);
     if (typeof dark.decode === 'function') {
-      dark.src = '/wallpapers/wallpaper-dark.png';
+      dark.src = '/wallpapers/wallpaper-dark.jpg';
       dark.decode().then(onDarkReady).catch(onDarkReady);
     } else {
       dark.onload = onDarkReady;
-      dark.src = '/wallpapers/wallpaper-dark.png';
+      dark.src = '/wallpapers/wallpaper-dark.jpg';
     }
     const light = new Image();
     light.decoding = 'async';
@@ -4070,7 +4270,7 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
                     style={{ cursor: 'pointer' }}
                     onClick={() => openShelfPhoto(idx)}
                   >
-                    <img src={`/shelf/photos/photo-${idx}.png`} alt="" />
+                    <img src={`/shelf/photos/photo-${idx}.png`} alt="" decoding="async" />
                   </div>
                 ))}
               </div>
@@ -4122,7 +4322,7 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
                                 style={{ width: w, height: h, cursor: 'pointer' }}
                                 onClick={(e) => { e.stopPropagation(); openShelfPhoto(photoIdx); }}
                               >
-                                <img src={`/shelf/photos/photo-${photoIdx}.png`} alt="" />
+                                <img src={`/shelf/photos/photo-${photoIdx}.png`} alt="" loading="lazy" decoding="async" />
                                 {itemViewers.length > 0 && (
                                   <div className="sc-shelf-open-viewers">
                                     {itemViewers.map(v => (
@@ -4228,6 +4428,7 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
           {/* Right group */}
           <div className="sc-toolbar-group">
             <div className="sc-toolbar-pill-group">
+              <WinCoin defaultOpen={winCoinDefaultOpen} />
               <div className="sc-toolbar-pill" data-tooltip="Story" onClick={() => {
                 if (allStoriesData.length > 0) {
                   const viewed = {};
@@ -4238,10 +4439,16 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
               }}>
                 <img src="/icons/story.svg" width="16" height="16" alt="" />
               </div>
-              <div className="sc-toolbar-pill" data-tooltip="Magicast" onClick={() => magicastWin.open()}>
+              <div className="sc-toolbar-pill" data-tooltip="Magicast" onClick={() => {
+                if (embedded && !magicastWin.isOpen) magicastWin.move({ x: 32, y: 32 });
+                magicastWin.open();
+              }}>
                 <img src="/icons/magicast.svg" width="16" height="16" alt="" />
               </div>
-              <div className="sc-toolbar-pill" data-tooltip="Recordings" onClick={() => recordingsWin.open()}>
+              <div className="sc-toolbar-pill" data-tooltip="Recordings" onClick={() => {
+                if (embedded) recordingsWin.move({ x: 32, y: 32 });
+                recordingsWin.open();
+              }}>
                 <img src="/icons/recordings.svg" width="16" height="16" alt="" />
               </div>
               <div className="sc-toolbar-pill" data-tooltip="Lobby" onClick={() => lobbyWin.open()}>
@@ -4325,11 +4532,25 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
             )
           : <ShelfWindow win={shelfWin} onDrag={makeDragHandler(shelfWin)} photoIdx={shelfPhotoIdx} direction={shelfDir} onPrev={prevShelfPhoto} onNext={nextShelfPhoto} />
       )}
-      {magicastWin.isOpen && <MagicastWindow win={magicastWin} onDrag={makeDragHandler(magicastWin)} pipPos={pipPos} shape={magicastShape} />}
+      {magicastWin.isOpen && (
+        embedded && shelfWinHost
+          ? ReactDOM.createPortal(
+              <MagicastWindow win={magicastWin} onDrag={makeDragHandler(magicastWin)} pipPos={pipPos} shape={magicastShape} mapOverlay />,
+              shelfWinHost
+            )
+          : <MagicastWindow win={magicastWin} onDrag={makeDragHandler(magicastWin)} pipPos={pipPos} shape={magicastShape} />
+      )}
       {magicastWin.isOpen && <MagicastBubble onPositionChange={setPipPos} shape={magicastShape} onShapeChange={setMagicastShape} />}
-      {magicastWin.isOpen && <div className="mc-recording-border" />}
+      {magicastWin.isOpen && !embedded && <div className="mc-recording-border" />}
       {magicminutesWin.isOpen && <MagicMinutes win={magicminutesWin} onDrag={makeDragHandler(magicminutesWin)} />}
-      {recordingsWin.isOpen && <Recordings win={recordingsWin} onDrag={makeDragHandler(recordingsWin)} />}
+      {recordingsWin.isOpen && (
+        embedded && shelfWinHost
+          ? ReactDOM.createPortal(
+              <Recordings win={recordingsWin} onDrag={makeDragHandler(recordingsWin)} initialTab={recordingsAutoOpen ? 'Magicasts' : 'Meetings'} />,
+              shelfWinHost
+            )
+          : <Recordings win={recordingsWin} onDrag={makeDragHandler(recordingsWin)} initialTab={recordingsAutoOpen ? 'Magicasts' : 'Meetings'} />
+      )}
       {calendarWin.isOpen && <Calendar win={calendarWin} onDrag={makeDragHandler(calendarWin)} />}
       {lobbyWin.isOpen && <Lobby win={lobbyWin} onDrag={makeDragHandler(lobbyWin)} />}
       {mobileWin.isOpen && <MobileWindow win={mobileWin} onDrag={makeDragHandler(mobileWin)} onOpenStories={() => {
@@ -4446,6 +4667,7 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
         <div className="sc-section-grid">
           <div className="sc-feature-visual sc-feature-visual-left">
             <div className="sc-feature-wallpaper" style={{ backgroundImage: `url(/wallpapers/wallpaper-${theme}.png)` }}>
+              <LazyVisible rootMargin="240px 0px">
               <MeetingWindow
                 win={{ position: { x: 0, y: 0 }, zIndex: 1, isFocused: true, focus: () => {}, close: () => {}, open: () => {} }}
                 onDrag={() => {}}
@@ -4460,6 +4682,7 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
                   p('Sarah M.'),
                 ]}
               />
+              </LazyVisible>
             </div>
           </div>
           <div className="sc-feature-text sc-feature-text-right">
@@ -4479,6 +4702,7 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
           </div>
           <div className="sc-feature-visual">
             <div className="sc-feature-wallpaper" style={{ backgroundImage: `url(/wallpapers/wallpaper-${theme}.png)` }}>
+              <LazyVisible rootMargin="240px 0px">
               <TheaterWindow
                 win={{ position: { x: 0, y: 0 }, zIndex: 1, isFocused: true, focus: () => {}, close: () => {}, open: () => {} }}
                 onDrag={() => {}}
@@ -4487,6 +4711,7 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
                 me={JOE}
                 onOpenChat={() => {}}
               />
+              </LazyVisible>
             </div>
           </div>
         </div>
@@ -4497,6 +4722,7 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
         <div className="sc-section-grid">
           <div className="sc-feature-visual sc-feature-visual-left">
             <div className="sc-feature-wallpaper" style={{ backgroundImage: `url(/wallpapers/wallpaper-${theme}.png)` }}>
+              <LazyVisible rootMargin="240px 0px">
               <AInbox
                 win={{ position: { x: 0, y: 0 }, zIndex: 1, isFocused: true, focus: () => {}, close: () => {}, open: () => {} }}
                 onDrag={() => {}}
@@ -4505,6 +4731,7 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
                 sectionsOverride={AINBOX_ENG_SECTIONS}
                 messagesOverride={AINBOX_ENG_MESSAGES}
               />
+              </LazyVisible>
             </div>
           </div>
           <div className="sc-feature-text sc-feature-text-right">
@@ -4525,10 +4752,12 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
           </div>
           <div className="sc-feature-visual">
             <div className="sc-feature-wallpaper" style={{ backgroundImage: `url(/wallpapers/wallpaper-${theme}.png)` }}>
+              <LazyVisible rootMargin="240px 0px">
               <MagicMinutes
                 win={{ position: { x: 0, y: 0 }, zIndex: 1, isFocused: true, focus: () => {}, close: () => {}, open: () => {} }}
                 onDrag={() => {}}
               />
+              </LazyVisible>
             </div>
           </div>
         </div>
@@ -4539,7 +4768,9 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
         <div className="sc-section-grid">
           <div className="sc-feature-visual sc-feature-visual-left">
             <div className="sc-feature-wallpaper" style={{ backgroundImage: `url(/wallpapers/wallpaper-${theme}.png)` }}>
-              <Lobby win={{ position: { x: 0, y: 0 }, zIndex: 1, isFocused: true, focus: () => {}, close: () => {}, open: () => {} }} onDrag={() => {}} />
+              <LazyVisible rootMargin="240px 0px">
+                <Lobby win={{ position: { x: 0, y: 0 }, zIndex: 1, isFocused: true, focus: () => {}, close: () => {}, open: () => {} }} onDrag={() => {}} />
+              </LazyVisible>
             </div>
           </div>
           <div className="sc-feature-text sc-feature-text-right">
@@ -4578,18 +4809,36 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
         </div>
       </div>
 
-      {/* Feature section — On-Air */}
+      {/* Feature section — W!N */}
       <div className="sc-feature-section">
         <div className="sc-section-grid">
           <div className="sc-feature-text">
-            <h2 className="sc-feature-title">ON-AIR</h2>
-            <p className="sc-feature-desc">Now anyone can host Immersive Events for the Creator-Era</p>
-            <a href="#/feature/on-air" className="sc-feature-link">Learn about On-Air →</a>
+            <h2 className="sc-feature-title">W!N</h2>
+            <p className="sc-feature-desc">Recognize people on the same map where the work happens. Drag a Roamcoin onto a teammate, keep awards in the case, sign a birthday card, and redeem the points in the gift store.</p>
+            <a href="#/feature/win" className="sc-feature-link">Learn about W!N →</a>
           </div>
           <div className="sc-feature-visual">
             <div className="sc-feature-wallpaper" style={{ backgroundImage: `url(/wallpapers/wallpaper-${theme}.png)` }}>
-              <OnAir win={{ position: { x: 0, y: 0 }, zIndex: 1, isFocused: true, focus: () => {}, close: () => {}, open: () => {} }} onDrag={() => {}} demo />
+              <TrophyRoomVisual />
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Feature section — On-Air */}
+      <div className="sc-feature-section sc-feature-section-reverse">
+        <div className="sc-section-grid">
+          <div className="sc-feature-visual sc-feature-visual-left">
+            <div className="sc-feature-wallpaper" style={{ backgroundImage: `url(/wallpapers/wallpaper-${theme}.png)` }}>
+              <LazyVisible rootMargin="240px 0px">
+                <OnAir win={{ position: { x: 0, y: 0 }, zIndex: 1, isFocused: true, focus: () => {}, close: () => {}, open: () => {} }} onDrag={() => {}} demo />
+              </LazyVisible>
+            </div>
+          </div>
+          <div className="sc-feature-text sc-feature-text-right">
+            <h2 className="sc-feature-title">ON-AIR</h2>
+            <p className="sc-feature-desc">Now anyone can host Immersive Events for the Creator-Era</p>
+            <a href="#/feature/on-air" className="sc-feature-link">Learn about On-Air →</a>
           </div>
         </div>
       </div>
@@ -4599,8 +4848,6 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
       <FooterCTA title="Ready to Grow Your Business?" />
 
       <Footer />
-
-      <FloatingCTA title="Ready to grow your business?" showAfter={800} />
       </>)}
 
       {/* Theme capsule + grid toggle — pinned to right side */}

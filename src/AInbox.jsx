@@ -1434,7 +1434,7 @@ export function TypingIndicator({ avatars }) {
 /* ———————————————————————————————————————
    Group message row
 ——————————————————————————————————————— */
-function GroupMessage({ msg, onThreadClick }) {
+function GroupMessage({ msg, onThreadClick, onMagicastOpen }) {
   return (
     <div className="ainbox-group-msg">
       <img className="ainbox-group-msg-avatar" src={msg.avatar} alt="" />
@@ -1444,7 +1444,7 @@ function GroupMessage({ msg, onThreadClick }) {
           <span className="ainbox-group-msg-time">{msg.time}</span>
         </div>
         {msg.text && <p className="ainbox-group-msg-text">{msg.text}</p>}
-        {msg.magicast && <MagicastShareEmbed magicast={msg.magicast} />}
+        {msg.magicast && <MagicastShareEmbed magicast={msg.magicast} onOpen={onMagicastOpen} />}
         {msg.actionItems && <OnItActionItemsCard items={msg.actionItems} />}
         {msg.thread && <ThreadIndicator thread={msg.thread} onClick={() => onThreadClick && onThreadClick(msg)} />}
       </div>
@@ -1491,9 +1491,14 @@ function OnItActionItemsCard({ items = [] }) {
   );
 }
 
-function MagicastShareEmbed({ magicast }) {
+function MagicastShareEmbed({ magicast, onOpen }) {
+  const Tag = onOpen ? 'button' : 'div';
   return (
-    <div className="ainbox-magicast-embed">
+    <Tag
+      type={onOpen ? 'button' : undefined}
+      className="ainbox-magicast-embed"
+      onClick={onOpen ? (e) => { e.stopPropagation(); onOpen(magicast); } : undefined}
+    >
       <div className="ainbox-magicast-embed-header">
         <div className="ainbox-magicast-embed-icon">
           <span className="ainbox-magicast-embed-glyph" aria-hidden="true" />
@@ -1511,7 +1516,7 @@ function MagicastShareEmbed({ magicast }) {
           </svg>
         </div>
       </div>
-    </div>
+    </Tag>
   );
 }
 
@@ -2003,7 +2008,7 @@ function ActionItemsView() {
   );
 }
 
-export default function AInbox({ win, onDrag, onOpenMagicMinutes, initialThreadView = null, initialChatId = null, initialSearchActive = false, initialSearchQuery = '', sidebarScrollToBottom = false, staticMode = false, autoAddFolders = false, favoritesOverride = null, sectionsOverride = null, messagesOverride = null, mmAutoPrompt = false, mmPrompts = null, initialSidebarView = 'inbox', initialCollapsedSections = null }) {
+export default function AInbox({ win, onDrag, onOpenMagicMinutes, initialThreadView = null, initialChatId = null, initialSearchActive = false, initialSearchQuery = '', sidebarScrollToBottom = false, staticMode = false, autoAddFolders = false, favoritesOverride = null, sectionsOverride = null, messagesOverride = null, mmAutoPrompt = false, mmPrompts = null, initialSidebarView = 'inbox', initialCollapsedSections = null, onMagicastOpen = null, magicastPlayer = null }) {
   const favorites = favoritesOverride || FAVORITES;
   const sidebarSections = sectionsOverride || SIDEBAR_SECTIONS;
   const defaultSelected = sidebarSections[0]?.items?.[0]?.id || 'design';
@@ -3345,7 +3350,7 @@ export default function AInbox({ win, onDrag, onOpenMagicMinutes, initialThreadV
               {/* Group messages */}
               <div className="ainbox-detail-messages ainbox-group-messages" ref={messagesRef}>
                 {convo.messages.map(msg => (
-                  <GroupMessage key={msg.id} msg={msg} onThreadClick={(m) => openThread(selectedChat, m.id)} />
+                  <GroupMessage key={msg.id} msg={msg} onThreadClick={(m) => openThread(selectedChat, m.id)} onMagicastOpen={onMagicastOpen} />
                 ))}
               </div>
             </>
@@ -3425,6 +3430,7 @@ export default function AInbox({ win, onDrag, onOpenMagicMinutes, initialThreadV
           onChangeTab={setSearchActiveTab}
         />
       )}
+      {magicastPlayer}
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import ViewportVideo from './ViewportVideo';
 import './MagicMinutes.css';
 
 const VIDEO_PEOPLE = [
@@ -683,14 +684,10 @@ export function MagicMinutesBody({ meeting }) {
                 <div className="mm-video-grid" data-count={gridVideos.length}>
                   {gridVideos.map((p, k) => (
                     <div key={k} className="mm-video-grid-cell">
-                      <video
+                      <ViewportVideo
                         ref={(el) => { videoRefs.current[k] = el; }}
                         src={p.video}
                         poster={p.poster}
-                        muted
-                        loop
-                        playsInline
-                        autoPlay
                       />
                     </div>
                   ))}

@@ -170,7 +170,9 @@ export default function StoryViewer({ stories, initialIndex = 0, onClose }) {
                 <video
                   ref={isCurrent ? activeVideoRef : undefined}
                   className="sv-image"
-                  src={story.image}
+                  src={isCurrent ? story.image : undefined}
+                  poster={story.image.replace(/^(.*\/)([^/]+)\.(mp4|webm|mov)$/i, '$1posters/$2.jpg')}
+                  preload={isCurrent ? 'auto' : 'none'}
                   autoPlay={isCurrent}
                   muted={isCurrent ? muted : true}
                   playsInline

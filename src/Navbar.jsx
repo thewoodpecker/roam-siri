@@ -15,6 +15,7 @@ const productsMenu = [
       { title: "On-It", description: "Your AI Assistant", href: "#/feature/on-it" },
       { title: "On-Air", description: "Immersive Events", href: "#/feature/on-air" },
       { title: "Mobile", description: "Roam While You Roam", href: "#/feature/mobile" },
+      { title: "W!N", description: "Rewards & Recognition", href: "#/feature/win" },
     ],
   },
 ];

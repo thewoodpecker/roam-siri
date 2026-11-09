@@ -2,7 +2,6 @@ import React, { useEffect, useState, useRef, useMemo, useCallback, lazy, Suspens
 import SiriGlow from './SiriGlow';
 import { offices as officeData, meetingRooms } from './data';
 import ShowcaseMap from './ShowcaseMap';
-import RemoteWorkTicker from './RemoteWorkTicker';
 import AgentMapView from './AgentMap';
 import AgentGarageView from './AgentGarage';
 import ActivityGlowPreview from './ActivityGlowPreview';
@@ -455,7 +454,12 @@ function DraggableBubble({ text, onDismiss }) {
   );
 }
 
-const STATIC_STATUSES = {};
+const STATIC_STATUSES = {
+  4: 'In a meeting',
+  10: 'Back at 3',
+  14: 'On a call',
+  20: 'Lunch',
+};
 
 const DEV_ACTIVITIES = [
   'Brewing', 'Cascading', 'Deploying', 'Debugging', 'Refactoring', 'Testing',
@@ -473,9 +477,9 @@ function SmallCard({ office, isActive, glowColor, onStatusEdit, provider, border
   const setStatusEditing = (v) => onStatusEdit?.(v);
   const intervalRef = useRef(null);
   const activityRef = useRef(null);
-  const hasColorBubble = false;
   const [dismissed, setDismissed] = useState({});
   const staticStatus = !dismissed[office.id] && STATIC_STATUSES[office.id];
+  const hasColorBubble = office.id === JOE_ID && !staticStatus;
 
   useEffect(() => {
     if (isActive) {
@@ -1462,8 +1466,8 @@ function ClaudeMaxView() {
   const [provider, setProvider] = useState('claude');
   const glowColor = provider === 'codex' ? CODEX : CLAUDE;
 
-  const small = officeData.filter(o => o.size === 'small');
-  const sidebarRooms = meetingRooms.filter(r => r.id !== 'walt-disney' && r.id !== 'alan-kay');
+  const cols = 5;
+  const small = officeData.filter(o => o.size === 'small').slice(0, cols * 3);
 
   // Activate offices based on percentage
   useEffect(() => {
@@ -1475,7 +1479,6 @@ function ClaudeMaxView() {
     setActiveMap(active);
   }, [vibePercent, small.length, glowColor]);
 
-  const cols = 5;
   const rows = [];
   for (let i = 0; i < small.length; i += cols) {
     rows.push(small.slice(i, i + cols));
@@ -3621,9 +3624,6 @@ export default function App() {
           {activeTab === 'showcase' && <ShowcaseMap />}
         </div>
       )}
-      {/* Pinned to the bottom of every page; stays mounted across route
-          changes so it animates seamlessly through transitions. */}
-      {!isRgl && <RemoteWorkTicker />}
     </>
   );
 }

@@ -1,6 +1,6 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import ReactDOM from 'react-dom';
-import ShowcaseMap, { HomepageReviews, OnItFeatureChat, MagicastFeatureVisual } from './ShowcaseMap';
+import ShowcaseMap, { HomepageReviews, OnItFeatureChat, MagicastFeatureVisual, MagicastBubble } from './ShowcaseMap';
 import { EditMapView } from './App';
 
 function RightControls({ theme, onToggleTheme, showGrid, onToggleGrid }) {
@@ -42,7 +42,6 @@ function RightControls({ theme, onToggleTheme, showGrid, onToggleGrid }) {
 }
 import Navbar from './Navbar';
 import Footer from './Footer';
-import FloatingCTA from './FloatingCTA';
 import FooterCTA from './FooterCTA';
 import AInbox, { TypingIndicator } from './AInbox';
 import MeetingWindow from './MeetingWindow';
@@ -57,6 +56,7 @@ import MobileWindow from './MobileWindow';
 import { WindowManagerProvider } from './WindowManager';
 import { ChatProvider } from './ChatContext';
 import './FeaturePage.css';
+import { CelebrationsVisual, AwardsCabinetVisual, GiftStoreVisual } from './WinPage';
 
 const JOE = { name: 'Joe W.', fullName: 'Joe Woodward', avatar: '/headshots/joe-woodward.jpg' };
 
@@ -570,7 +570,7 @@ const ONAIR_EVENTS = [
     location: 'Roam Stage, NYC HQ',
     posterLocation: 'A virtual event in Roam',
     color: 4,
-    curtainLandscape: '/on-air/on-air-blue-landscape.png',
+    curtainLandscape: '/on-air/opt/on-air-blue-landscape.jpg',
     hostOrg: 'Roam HQ',
     hosts: [
       { name: 'Howard Lerman', avatar: '/headshots/howard-lerman.jpg' },
@@ -601,7 +601,7 @@ const ONAIR_EVENTS = [
       title: 'Roam World Tour 2026 — Live from NYC',
       subtitle: 'Howard Lerman & Jon Brod',
       when: 'Today · 7:00 pm',
-      thumb: '/on-air/on-air-blue-landscape.png',
+      thumb: '/on-air/opt/on-air-blue-landscape.jpg',
       avatars: ['/headshots/howard-lerman.jpg', '/headshots/jon-brod.jpg'],
     },
     producerChat: {
@@ -669,7 +669,7 @@ const ONAIR_EVENTS = [
     location: 'Roam Amphitheater',
     posterLocation: 'A virtual event in Roam',
     color: 5,
-    curtainLandscape: '/on-air/static-landscape-purple.png',
+    curtainLandscape: '/on-air/opt/static-landscape-purple.jpg',
     hostOrg: 'Roam HQ',
     hosts: [
       { name: 'Peter Lerman', avatar: '/headshots/peter-lerman.jpg' },
@@ -699,7 +699,7 @@ const ONAIR_EVENTS = [
       title: 'Roam Sessions — Live Acoustic Showcase',
       subtitle: 'Peter Lerman & Chelsea Turbin',
       when: 'Today · 8:00 pm',
-      thumb: '/on-air/static-landscape-purple.png',
+      thumb: '/on-air/opt/static-landscape-purple.jpg',
       avatars: ['/headshots/peter-lerman.jpg', '/headshots/chelsea-turbin.jpg'],
     },
     producerChat: {
@@ -767,7 +767,7 @@ const ONAIR_EVENTS = [
     location: 'Roam Studio Theater',
     posterLocation: 'A virtual event in Roam',
     color: 2,
-    curtainLandscape: '/on-air/static-landscape-orange.png',
+    curtainLandscape: '/on-air/opt/static-landscape-orange.jpg',
     hostOrg: 'Roam HQ',
     hosts: [
       { name: 'Klas Leino', avatar: '/headshots/klas-leino.jpg' },
@@ -797,7 +797,7 @@ const ONAIR_EVENTS = [
       title: 'An Evening with Walt — The Florida Project Reimagined',
       subtitle: 'Klas Leino & Joe Woodward',
       when: 'Today · 7:30 pm',
-      thumb: '/on-air/static-landscape-orange.png',
+      thumb: '/on-air/opt/static-landscape-orange.jpg',
       avatars: ['/headshots/klas-leino.jpg', '/headshots/joe-woodward.jpg'],
     },
     producerChat: {
@@ -1536,7 +1536,7 @@ function MagicMinutesThreadPreview() {
   );
 }
 
-function AInboxPreview({ overrides = false, view = 'thread', chatId = null, mmAutoPrompt = false, threadView = null, mmPrompts = null, initialSidebarView = 'inbox', messagesOverride = null, favoritesOverride = null, sectionsOverride = null, initialCollapsedSections = null } = {}) {
+function AInboxPreview({ overrides = false, view = 'thread', chatId = null, mmAutoPrompt = false, threadView = null, mmPrompts = null, initialSidebarView = 'inbox', messagesOverride = null, favoritesOverride = null, sectionsOverride = null, initialCollapsedSections = null, onMagicastOpen = null, magicastPlayer = null } = {}) {
   if (overrides) {
     const dmChatId =
       view === 'dm' ? (chatId || 'howard')
@@ -1559,10 +1559,39 @@ function AInboxPreview({ overrides = false, view = 'thread', chatId = null, mmAu
         mmPrompts={mmPrompts}
         initialSidebarView={initialSidebarView}
         initialCollapsedSections={initialCollapsedSections}
+        onMagicastOpen={onMagicastOpen}
+        magicastPlayer={magicastPlayer}
       />
     );
   }
   return <AInbox win={noopWin('ainbox')} onDrag={() => {}} initialSidebarView={initialSidebarView} />;
+}
+
+/* Hero-only wrapper that drives the internal chat scrollTop from page scroll,
+   so the messages glide upward as the visitor scrolls past the hero. */
+function MagicastAInboxShare() {
+  const [playerOpen, setPlayerOpen] = useState(false);
+  useEffect(() => {
+    if (!playerOpen) return undefined;
+    const onKey = (e) => { if (e.key === 'Escape') setPlayerOpen(false); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [playerOpen]);
+  return (
+    <AInboxPreview
+      overrides
+      view="chat"
+      chatId="all-hands"
+      messagesOverride={MAGICAST_SHARE_AH_MESSAGES}
+      initialCollapsedSections={{ meetings: true }}
+      onMagicastOpen={() => setPlayerOpen(true)}
+      magicastPlayer={playerOpen ? (
+        <div className="ainbox-magicast-player">
+          <MagicastViewerWindow initialTrimOpen={false} onClose={() => setPlayerOpen(false)} />
+        </div>
+      ) : null}
+    />
+  );
 }
 
 /* Hero-only wrapper that drives the internal chat scrollTop from page scroll,
@@ -2676,7 +2705,7 @@ function ChevronDown12() {
 function LobbyShelfPreview() {
   const items = [
     { src: '/shelf/wonka.avif',             alt: 'Movie poster' },
-    { src: '/shelf/walt.webp',              alt: 'Walt Disney portrait' },
+    { src: '/shelf/walt.jpg',              alt: 'Walt Disney portrait' },
     { src: '/shelf/ready-player-one.jpeg',  alt: 'Movie poster' },
     { src: '/shelf/epcot.jpg',              alt: 'Spaceship Earth' },
   ];
@@ -3567,6 +3596,7 @@ const MAGICAST_COMMENTS = [
     name: 'Howard Lerman',
     avatar: '/headshots/howard-lerman.jpg',
     time: '00:14',
+    sec: 14,
     body: 'Strong opener — let’s lead the next call with this same hook 🔥',
   },
   {
@@ -3574,6 +3604,7 @@ const MAGICAST_COMMENTS = [
     name: 'Rob Figueiredo',
     avatar: '/headshots/rob-figueiredo.jpg',
     time: '00:42',
+    sec: 42,
     body: 'Pause here a beat so the ARR number lands.',
   },
   {
@@ -3581,13 +3612,180 @@ const MAGICAST_COMMENTS = [
     name: 'Jeff Grossman',
     avatar: '/headshots/jeff-grossman.jpg',
     time: '01:18',
+    sec: 78,
     body: 'Trim the umm at 1:22, otherwise this is ready to send.',
+  },
+  {
+    id: 4,
+    name: 'Klas Leino',
+    avatar: '/headshots/klas-leino.jpg',
+    time: '01:44',
+    sec: 104,
+    body: 'The retention chart is the slide to linger on. Don’t rush past Q3.',
+  },
+  {
+    id: 5,
+    name: 'Sean MacIsaac',
+    avatar: '/headshots/sean-macisaac.jpg',
+    time: '02:06',
+    sec: 126,
+    body: 'Can we call out the enterprise logos here? That’s the proof point.',
+  },
+  {
+    id: 6,
+    name: 'Chelsea Turbin',
+    avatar: '/headshots/chelsea-turbin.jpg',
+    time: '02:28',
+    sec: 148,
+    body: 'Love this. Send it to the board channel as soon as it’s trimmed.',
+  },
+  {
+    id: 7,
+    name: 'Ava Lee',
+    avatar: '/headshots/ava-lee.jpg',
+    time: '02:51',
+    sec: 171,
+    body: 'Net dollar retention should be on screen a beat longer. 💯',
+  },
+  {
+    id: 8,
+    name: 'Thomas Grapperon',
+    avatar: '/headshots/thomas-grapperon.jpg',
+    time: '03:12',
+    sec: 192,
+    body: 'Drop the aside about the office move. It breaks the rhythm.',
+  },
+  {
+    id: 9,
+    name: 'Lexi Bohonnon',
+    avatar: '/headshots/lexi-bohonnon.jpg',
+    time: '03:34',
+    sec: 214,
+    body: 'This is the version I want in the investor update email.',
+  },
+  {
+    id: 10,
+    name: 'Will Hou',
+    avatar: '/headshots/will-hou.jpg',
+    time: '03:58',
+    sec: 238,
+    body: 'Add a line on hiring before the close. People will ask.',
+  },
+  {
+    id: 11,
+    name: 'Peter Lerman',
+    avatar: '/headshots/peter-lerman.jpg',
+    time: '04:16',
+    sec: 256,
+    body: 'Nice landing. End it right here and cut the thank-you tail.',
   },
 ];
 
 const MV_VIDEO_SRC = '/magicast/march-investor-update.mp4';
 const MV_THUMB_COUNT = 8;
 const MV_MIN_GAP = 0.04;
+const MV_REACTIONS = ['👍', '❤️', '🤣', '👊', '🤪', '🤩', '💯', '🎉', '🤗'];
+
+const MV_EMOJI_CATALOG = [
+  { id: 'frequent', label: 'Frequently Used', icon: '/magicast/emoji/clock.svg', items: [['👍', 'thumbsup'], ['❤️', 'heart'], ['🤣', 'rofl'], ['👊', 'punch'], ['🤪', 'zany'], ['🤩', 'starstruck'], ['💯', '100'], ['🎉', 'tada'], ['🤗', 'hug'], ['🔥', 'fire'], ['😂', 'joy'], ['😍', 'hearteyes'], ['👋', 'wave'], ['😅', 'sweat'], ['👌', 'ok'], ['😘', 'kiss'], ['😁', 'beaming'], ['😳', 'flushed']] },
+  { id: 'people', label: 'Smileys & People', icon: '/magicast/emoji/smile.svg', items: [['😀', 'grinning'], ['😃', 'smiley'], ['😄', 'smile'], ['😁', 'beaming'], ['😆', 'laughing'], ['😅', 'sweat'], ['😂', 'joy'], ['🤣', 'rofl'], ['😊', 'blush'], ['😇', 'innocent'], ['🙂', 'slight'], ['😉', 'wink'], ['😍', 'hearteyes'], ['🥰', 'love'], ['😘', 'kiss'], ['😋', 'yum'], ['😜', 'winktongue'], ['🤪', 'zany'], ['🤗', 'hug'], ['🤔', 'thinking'], ['😐', 'neutral'], ['😏', 'smirk'], ['😒', 'unamused'], ['😬', 'grimace'], ['😮', 'open'], ['🥺', 'pleading'], ['😢', 'cry'], ['😭', 'sob'], ['😱', 'scream'], ['😡', 'rage'], ['👍', 'thumbsup'], ['👎', 'thumbsdown'], ['👏', 'clap'], ['🙌', 'raisedhands'], ['🙏', 'pray'], ['💪', 'muscle']] },
+  { id: 'nature', label: 'Animals & Nature', icon: '/magicast/emoji/bear.svg', items: [['🐶', 'dog'], ['🐱', 'cat'], ['🐭', 'mouse'], ['🐹', 'hamster'], ['🐰', 'rabbit'], ['🦊', 'fox'], ['🐻', 'bear'], ['🐼', 'panda'], ['🐨', 'koala'], ['🐯', 'tiger'], ['🦁', 'lion'], ['🐮', 'cow'], ['🐷', 'pig'], ['🐸', 'frog'], ['🐵', 'monkey'], ['🐔', 'chicken'], ['🐧', 'penguin'], ['🐦', 'bird'], ['🦄', 'unicorn'], ['🐝', 'bee'], ['🦋', 'butterfly'], ['🌸', 'blossom'], ['🌺', 'hibiscus'], ['🌻', 'sunflower'], ['🌹', 'rose'], ['🍀', 'clover'], ['🍁', 'maple'], ['🌙', 'moon'], ['⭐', 'star'], ['☀️', 'sun'], ['🌈', 'rainbow'], ['🔥', 'fire'], ['💧', 'droplet']] },
+  { id: 'foods', label: 'Food & Drink', icon: '/magicast/emoji/mug.svg', items: [['🍏', 'apple'], ['🍎', 'redapple'], ['🍊', 'orange'], ['🍋', 'lemon'], ['🍌', 'banana'], ['🍉', 'watermelon'], ['🍇', 'grapes'], ['🍓', 'strawberry'], ['🍒', 'cherries'], ['🍑', 'peach'], ['🍍', 'pineapple'], ['🥑', 'avocado'], ['🍕', 'pizza'], ['🍔', 'burger'], ['🍟', 'fries'], ['🌮', 'taco'], ['🍣', 'sushi'], ['🍩', 'donut'], ['🍪', 'cookie'], ['🎂', 'cake'], ['🍰', 'shortcake'], ['☕', 'coffee'], ['🍵', 'tea'], ['🍺', 'beer'], ['🍷', 'wine'], ['🥂', 'cheers'], ['🧊', 'ice']] },
+  { id: 'activity', label: 'Activities', icon: '/magicast/emoji/ball.svg', items: [['⚽', 'soccer'], ['🏀', 'basketball'], ['🏈', 'football'], ['⚾', 'baseball'], ['🎾', 'tennis'], ['🏐', 'volleyball'], ['🎱', '8ball'], ['🏓', 'pingpong'], ['🥊', 'boxing'], ['🏆', 'trophy'], ['🎯', 'target'], ['🎮', 'game'], ['🎲', 'dice'], ['🎸', 'guitar'], ['🎹', 'piano'], ['🎺', 'trumpet'], ['🎤', 'mic'], ['🎧', 'headphones'], ['🎨', 'art'], ['🎬', 'clapper'], ['🎭', 'theater'], ['🎪', 'circus']] },
+  { id: 'places', label: 'Travel & Places', icon: '/magicast/emoji/car.svg', items: [['🚗', 'car'], ['🚕', 'taxi'], ['🚌', 'bus'], ['🚎', 'trolley'], ['🏎️', 'racecar'], ['🚓', 'police'], ['🚑', 'ambulance'], ['🚒', 'firetruck'], ['✈️', 'airplane'], ['🚀', 'rocket'], ['🚁', 'helicopter'], ['⛵', 'sailboat'], ['🚢', 'ship'], ['🏠', 'house'], ['🏢', 'office'], ['🏥', 'hospital'], ['🏫', 'school'], ['🗽', 'statue'], ['🗼', 'tower'], ['🗻', 'mountain'], ['🏖️', 'beach'], ['🗽', 'liberty'], ['🗺️', 'map'], ['🗽', 'nyc']] },
+  { id: 'objects', label: 'Objects', icon: '/magicast/emoji/bulb.svg', items: [['💡', 'bulb'], ['📱', 'phone'], ['💻', 'laptop'], ['⌨️', 'keyboard'], ['🖥️', 'desktop'], ['📷', 'camera'], ['🎥', 'video'], ['📺', 'tv'], ['📻', 'radio'], ['⏰', 'alarm'], ['⌛', 'hourglass'], ['🔑', 'key'], ['🔒', 'lock'], ['✉️', 'email'], ['📦', 'package'], ['📌', 'pin'], ['✂️', 'scissors'], ['📎', 'paperclip'], ['✏️', 'pencil'], ['📝', 'memo'], ['📚', 'books'], ['💼', 'briefcase'], ['💰', 'money'], ['💎', 'gem']] },
+  { id: 'symbols', label: 'Symbols', icon: '/magicast/emoji/hash.svg', items: [['❤️', 'heart'], ['🧡', 'orangeheart'], ['💛', 'yellowheart'], ['💚', 'greenheart'], ['💙', 'blueheart'], ['💜', 'purpleheart'], ['🖤', 'blackheart'], ['💔', 'broken'], ['❣️', 'exclamationheart'], ['💕', 'twohearts'], ['💯', '100'], ['💢', 'anger'], ['💥', 'boom'], ['💫', 'dizzy'], ['💬', 'speech'], ['✅', 'check'], ['❌', 'cross'], ['❓', 'question'], ['❗', 'exclamation'], ['♻️', 'recycle'], ['⚠️', 'warning'], ['🚫', 'no'], ['🎵', 'note'], ['🎶', 'notes']] },
+  { id: 'flags', label: 'Flags', icon: '/magicast/emoji/flag.svg', items: [['🏁', 'checkered'], ['🚩', 'flag'], ['🎌', 'crossedflags'], ['🏴', 'blackflag'], ['🏳️', 'whiteflag'], ['🏳️‍🌈', 'pride'], ['🇺🇸', 'us'], ['🇬🇧', 'uk'], ['🇨🇦', 'canada'], ['🇫🇷', 'france'], ['🇩🇪', 'germany'], ['🇯🇵', 'japan'], ['🇰🇷', 'korea'], ['🇧🇷', 'brazil'], ['🇦🇺', 'australia'], ['🇮🇳', 'india'], ['🇲🇽', 'mexico'], ['🇮🇹', 'italy']] },
+];
+
+function MagicastEmojiPicker({ onSelect }) {
+  const [query, setQuery] = useState('');
+  const [category, setCategory] = useState('frequent');
+  const scrollRef = useRef(null);
+  const q = query.trim().toLowerCase();
+  const matches = q
+    ? MV_EMOJI_CATALOG.flatMap((cat) => cat.items.filter((item) => item[1].includes(q))).filter((item, index, all) => all.findIndex((other) => other[0] === item[0]) === index)
+    : null;
+
+  const jump = (id) => {
+    setCategory(id);
+    scrollRef.current?.querySelector(`[data-cat="${id}"]`)?.scrollIntoView({ block: 'start' });
+  };
+
+  return (
+    <div className="fp-mv-emoji-panel" role="dialog" aria-label="Emoji">
+      <label className="fp-mv-emoji-search">
+        <span className="fp-mv-emoji-search-icon" style={mvMask('/magicast/emoji/search.svg')} aria-hidden="true" />
+        <input
+          className="text-caption"
+          type="search"
+          value={query}
+          placeholder="Search Emoji"
+          aria-label="Search Emoji"
+          autoFocus
+          onChange={(e) => setQuery(e.target.value)}
+          onMouseDown={(e) => e.stopPropagation()}
+        />
+      </label>
+      {!matches && (
+        <div className="fp-mv-emoji-cats">
+          <div className="fp-mv-emoji-cat-track">
+            {MV_EMOJI_CATALOG.map((cat) => (
+              <button
+                key={cat.id}
+                type="button"
+                className={`fp-mv-emoji-cat${category === cat.id ? ' is-on' : ''}`}
+                aria-label={cat.label}
+                aria-pressed={category === cat.id}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => jump(cat.id)}
+              >
+                <span style={mvMask(cat.icon)} aria-hidden="true" />
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+      <div className="fp-mv-emoji-scroll" ref={scrollRef}>
+        {matches ? (
+          matches.length === 0 ? (
+            <p className="fp-mv-emoji-empty text-caption">No results</p>
+          ) : (
+            <div className="fp-mv-emoji-grid">
+              {matches.map((item) => (
+                <button key={item[1] + item[0]} type="button" className="fp-mv-emoji-cell" aria-label={item[1]} onClick={() => onSelect(item[0])}>{item[0]}</button>
+              ))}
+            </div>
+          )
+        ) : MV_EMOJI_CATALOG.map((cat) => (
+          <section key={cat.id} data-cat={cat.id}>
+            <h3 className="fp-mv-emoji-heading text-caption">{cat.label}</h3>
+            <div className="fp-mv-emoji-grid">
+              {cat.items.map((item) => (
+                <button key={cat.id + item[1]} type="button" className="fp-mv-emoji-cell" aria-label={item[1]} onClick={() => onSelect(item[0])}>{item[0]}</button>
+              ))}
+            </div>
+          </section>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+const MV_TIMELINE_MARKS = MAGICAST_COMMENTS.map((c) => ({
+  id: `mark-${c.id}`,
+  commentId: c.id,
+  name: c.name,
+  avatar: c.avatar,
+  sec: c.sec,
+}));
+
+const MV_SEND_TARGETS = [
+  { id: 'john', name: 'John Snow', detail: 'Roam HQ', avatar: '/magicast/send/john-snow.png' },
+  { id: 'jane', name: 'Jane Tillsbury', detail: 'Roam HQ', avatar: '/magicast/send/jane-tillsbury.png' },
+  { id: 'design', name: 'Design', detail: '', avatar: '/magicast/send/design.png' },
+  { id: 'jade', name: 'Jade Jilly', detail: 'Nike', avatar: '/magicast/send/jade-jilly.png' },
+];
 
 const mvFmt = (sec, padMin = false) => {
   const safe = Math.max(0, Math.floor(sec));
@@ -3614,10 +3812,11 @@ const mvHighlight = (text, q) => {
   return out;
 };
 
-function MagicastViewerWindow({ initialTrimOpen = true, initialSideTab = 'comments', searchAnimationTerms = null } = {}) {
+function MagicastViewerWindow({ initialTrimOpen = true, initialSideTab = 'comments', searchAnimationTerms = null, onClose = null } = {}) {
   const videoRef = useRef(null);
   const trackRef = useRef(null);
   const transcriptListRef = useRef(null);
+  const commentListRef = useRef(null);
   const draggingRef = useRef(null);
 
   // Trim state
@@ -3633,10 +3832,81 @@ function MagicastViewerWindow({ initialTrimOpen = true, initialSideTab = 'commen
   const [muted, setMuted] = useState(true);
 
   // Sidebar state
+  const [captionsOn, setCaptionsOn] = useState(false);
   const [sideTab, setSideTab] = useState(initialSideTab);
   const [transcriptQuery, setTranscriptQuery] = useState('');
   const [comments, setComments] = useState(MAGICAST_COMMENTS);
   const [draft, setDraft] = useState('');
+  const [timelineMarks, setTimelineMarks] = useState(MV_TIMELINE_MARKS);
+  const [activeCommentId, setActiveCommentId] = useState(null);
+  const [sendOpen, setSendOpen] = useState(false);
+  const [sendQuery, setSendQuery] = useState('');
+  const [sendMessage, setSendMessage] = useState('');
+  const [sendTarget, setSendTarget] = useState(null);
+  const [linkCopied, setLinkCopied] = useState(false);
+  const sendWrapRef = useRef(null);
+  const sendSearchRef = useRef(null);
+  const [emojiOpen, setEmojiOpen] = useState(false);
+  const [emojiBox, setEmojiBox] = useState(null);
+  const [emojiSource, setEmojiSource] = useState(null);
+  const emojiBtnRef = useRef(null);
+  const emojiPanelRef = useRef(null);
+  const composerFieldRef = useRef(null);
+
+  useEffect(() => {
+    if (!emojiOpen) return undefined;
+    const onKey = (e) => { if (e.key === 'Escape') setEmojiOpen(false); };
+    const onPointer = (e) => {
+      if (emojiPanelRef.current?.contains(e.target) || e.target.closest?.('[data-emoji-anchor]')) return;
+      setEmojiOpen(false);
+    };
+    document.addEventListener('keydown', onKey);
+    document.addEventListener('pointerdown', onPointer);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.removeEventListener('pointerdown', onPointer);
+    };
+  }, [emojiOpen]);
+
+  useEffect(() => {
+    if (trimOpen && emojiSource === 'reaction') setEmojiOpen(false);
+  }, [trimOpen, emojiSource]);
+
+  const toggleEmojiPicker = (e, source) => {
+    e.stopPropagation();
+    if (emojiOpen && emojiSource === source) { setEmojiOpen(false); return; }
+    const btn = e.currentTarget;
+    const host = btn?.closest('.fp-mv-win');
+    if (btn && host) {
+      const br = btn.getBoundingClientRect();
+      const hr = host.getBoundingClientRect();
+      const width = Math.min(334, hr.width - 16);
+      let left = br.left + br.width / 2 - hr.left - width / 2;
+      left = Math.max(8, Math.min(left, hr.width - width - 8));
+      const space = br.top - hr.top - 8;
+      setEmojiBox({
+        left,
+        width,
+        height: Math.max(220, Math.min(360, space)),
+        bottom: hr.bottom - br.top + 8,
+      });
+    }
+    setEmojiSource(source);
+    setEmojiOpen(true);
+  };
+
+  const insertEmoji = (emoji) => {
+    const field = composerFieldRef.current;
+    const start = field?.selectionStart ?? draft.length;
+    const end = field?.selectionEnd ?? draft.length;
+    const next = draft.slice(0, start) + emoji + draft.slice(end);
+    setDraft(next);
+    const caret = start + emoji.length;
+    requestAnimationFrame(() => {
+      field?.focus();
+      field?.setSelectionRange(caret, caret);
+    });
+  };
 
   // ——— Search demo: type → hold → delete → loop ———
   useEffect(() => {
@@ -3801,45 +4071,208 @@ function MagicastViewerWindow({ initialTrimOpen = true, initialSideTab = 'commen
   };
 
   // ——— Comments composer ———
-  const submitComment = () => {
-    const text = draft.trim();
-    if (!text) return;
+  const placeComment = (body) => {
+    const id = Date.now();
+    const sec = playhead * duration;
+    setSideTab('comments');
+    setActiveCommentId(id);
+    setTimelineMarks((prev) => [
+      ...prev,
+      {
+        id: `mark-${id}`,
+        commentId: id,
+        name: 'You',
+        avatar: '/headshots/joe-woodward.jpg',
+        sec,
+      },
+    ]);
     setComments((prev) => [
       ...prev,
       {
-        id: Date.now(),
+        id,
         name: 'You',
         avatar: '/headshots/joe-woodward.jpg',
-        time: mvFmt(playhead * duration, true),
-        body: text,
+        time: mvFmt(sec, true),
+        sec,
+        body,
       },
     ]);
+  };
+
+  const submitComment = () => {
+    const text = draft.trim();
+    if (!text) return;
+    placeComment(text);
     setDraft('');
   };
+
+  const addReaction = (emoji) => {
+    placeComment(emoji);
+  };
+
+  const focusComment = (id) => {
+    const comment = comments.find((c) => c.id === id);
+    setSideTab('comments');
+    setActiveCommentId(id);
+    if (comment?.sec != null) seekTo(comment.sec);
+  };
+
+  const placeMarkTip = (e) => {
+    const tip = e.currentTarget.querySelector('.fp-mv-mark-tip');
+    const bounds = e.currentTarget.closest('.fp-mv-body')?.getBoundingClientRect();
+    if (!tip || !bounds) return;
+    tip.style.display = 'flex';
+    tip.style.transform = 'translateX(-50%)';
+    const rect = tip.getBoundingClientRect();
+    tip.style.display = '';
+    const pad = 8;
+    let shift = 0;
+    if (rect.left < bounds.left + pad) shift = bounds.left + pad - rect.left;
+    else if (rect.right > bounds.right - pad) shift = bounds.right - pad - rect.right;
+    if (shift) tip.style.transform = `translateX(calc(-50% + ${shift}px))`;
+  };
+
+  const onTrackPointer = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    if (!rect.width) return;
+    const ratio = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+    const v = videoRef.current;
+    const dur = v?.duration || duration;
+    if (v && dur) v.currentTime = ratio * dur;
+    setPlayhead(ratio);
+  };
+
+  useEffect(() => {
+    if (sideTab !== 'comments' || activeCommentId == null) return;
+    const el = commentListRef.current?.querySelector(`[data-comment-id="${activeCommentId}"]`);
+    el?.scrollIntoView({ block: 'nearest' });
+  }, [sideTab, activeCommentId, comments]);
+
+  useEffect(() => {
+    if (!sendOpen) return undefined;
+    const frame = requestAnimationFrame(() => sendSearchRef.current?.focus());
+    const onKey = (e) => {
+      if (e.key === 'Escape') setSendOpen(false);
+    };
+    const onPointer = (e) => {
+      if (sendWrapRef.current?.contains(e.target)) return;
+      setSendOpen(false);
+    };
+    document.addEventListener('keydown', onKey);
+    document.addEventListener('pointerdown', onPointer);
+    return () => {
+      cancelAnimationFrame(frame);
+      document.removeEventListener('keydown', onKey);
+      document.removeEventListener('pointerdown', onPointer);
+    };
+  }, [sendOpen]);
+
+  const sendQueryNorm = sendQuery.trim().toLowerCase();
+  const sendTargets = MV_SEND_TARGETS.filter((item) => {
+    if (!sendQueryNorm) return true;
+    return item.name.toLowerCase().includes(sendQueryNorm)
+      || item.detail.toLowerCase().includes(sendQueryNorm);
+  });
+  const showCopyLink = !sendQueryNorm || 'copy link'.includes(sendQueryNorm);
 
   return (
     <div className="fp-mv-win">
       <div className="fp-mv-titlebar">
-        <div className="fp-mv-lights" aria-hidden="true">
-          <span className="fp-mv-light fp-mv-light-close" />
+        <div className="fp-mv-lights" aria-hidden={onClose ? undefined : true}>
+          {onClose ? (
+            <button type="button" className="fp-mv-light fp-mv-light-close" aria-label="Close" onClick={onClose} />
+          ) : (
+            <span className="fp-mv-light fp-mv-light-close" />
+          )}
           <span className="fp-mv-light fp-mv-light-min" />
           <span className="fp-mv-light fp-mv-light-max" />
         </div>
         <div className="fp-mv-title-text">
-          <div className="fp-mv-title">March Investor Update</div>
-          <div className="fp-mv-subtitle">Howard Lerman · April 11, 5:02 PM</div>
+          <div className="fp-mv-title text-subheadline-emphasis">March Investor Update</div>
         </div>
         <div className="fp-mv-title-actions">
           {[
             { label: 'Download', icon: '/icons/magicast-titlebar/download.svg' },
-            { label: 'Closed captions', icon: '/icons/magicast-titlebar/closed-captions.svg' },
             { label: 'Copy link', icon: '/icons/magicast-titlebar/link.svg' },
-            { label: 'Send to', icon: '/icons/mm-send-btn.svg' },
           ].map(({ label, icon }) => (
             <button key={label} type="button" className="fp-mv-icon-btn" aria-label={label}>
               <span className="fp-mv-icon-glyph" style={mvMask(icon)} aria-hidden="true" />
             </button>
           ))}
+          <div className="fp-mv-send" ref={sendWrapRef}>
+            <button
+              type="button"
+              className={`fp-mv-icon-btn${sendOpen ? ' fp-mv-icon-btn-active' : ''}`}
+              aria-label="Send to"
+              aria-haspopup="dialog"
+              aria-expanded={sendOpen}
+              onClick={() => setSendOpen((open) => {
+                if (open) return false;
+                setSendQuery('');
+                setLinkCopied(false);
+                return true;
+              })}
+            >
+              <span className="fp-mv-icon-glyph" style={mvMask('/icons/mm-send-btn.svg')} aria-hidden="true" />
+            </button>
+            {sendOpen && (
+              <div className="fp-mv-send-menu" role="dialog" aria-label="Send to">
+                <label className="fp-mv-send-search">
+                  <input
+                    ref={sendSearchRef}
+                    className="text-subheadline"
+                    type="text"
+                    value={sendQuery}
+                    placeholder="Search Groups or Contacts"
+                    aria-label="Search Groups or Contacts"
+                    onChange={(e) => setSendQuery(e.target.value)}
+                  />
+                </label>
+                {showCopyLink && (
+                  <button
+                    type="button"
+                    className="fp-mv-send-row"
+                    onClick={() => {
+                      navigator.clipboard?.writeText('https://ro.am/magicast/march-investor-update').catch(() => {});
+                      setLinkCopied(true);
+                    }}
+                  >
+                    <span className="fp-mv-send-avatar fp-mv-send-avatar-link">
+                      <span className="fp-mv-send-link" style={mvMask('/magicast/send/link.svg')} aria-hidden="true" />
+                    </span>
+                    <span className="fp-mv-send-labels">
+                      <span className="fp-mv-send-name text-subheadline">{linkCopied ? 'Copied' : 'Copy Link'}</span>
+                    </span>
+                  </button>
+                )}
+                {sendTargets.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    className="fp-mv-send-row"
+                    aria-pressed={sendTarget === item.id}
+                    onClick={() => setSendTarget(item.id)}
+                  >
+                    <img className="fp-mv-send-avatar" src={item.avatar} alt="" width="40" height="40" />
+                    <span className="fp-mv-send-labels">
+                      <span className="fp-mv-send-name text-subheadline">{item.name}</span>
+                      {item.detail ? <span className="fp-mv-send-detail text-caption">{item.detail}</span> : null}
+                    </span>
+                  </button>
+                ))}
+                <div className="fp-mv-send-footer">
+                  <input
+                    className="fp-mv-send-message text-subheadline"
+                    type="text"
+                    value={sendMessage}
+                    placeholder="Add Message"
+                    aria-label="Add Message"
+                    onChange={(e) => setSendMessage(e.target.value)}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
       <div className="fp-mv-body">
@@ -3868,42 +4301,115 @@ function MagicastViewerWindow({ initialTrimOpen = true, initialSideTab = 'commen
                   </svg>
                 </button>
               )}
-              <div className="fp-mv-stage-fade" />
-              <div className="fp-mv-controls">
-                <span className="fp-mv-time">
-                  <span>{mvFmt(playhead * duration)}</span>
-                  <span className="fp-mv-time-sep">/</span>
-                  <span>{mvFmt(duration)}</span>
-                </span>
-                <div className="fp-mv-controls-spacer" />
-                <button type="button" className="fp-mv-icon-btn fp-mv-icon-btn-light" aria-label="Set cover">
-                  <span className="fp-mv-icon-glyph" style={mvMask('/magicast/player-image.svg')} aria-hidden="true" />
-                </button>
-                <button
-                  type="button"
-                  className={`fp-mv-icon-btn fp-mv-icon-btn-light ${trimOpen ? 'fp-mv-icon-btn-active' : ''}`}
-                  aria-label="Trim"
-                  aria-pressed={trimOpen}
-                  onClick={() => setTrimOpen((v) => !v)}
+              {captionsOn && (
+                <div className="fp-mv-caption">
+                  <span>{MAGICAST_TRANSCRIPT[activeTranscriptIdx]?.text}</span>
+                </div>
+              )}
+            </div>
+            <div className="fp-mv-dock">
+              {!trimOpen && (
+              <div className="fp-mv-dock-bar">
+                <div
+                  className="fp-mv-dock-track"
+                  onPointerDown={onTrackPointer}
+                  role="slider"
+                  aria-label="Playback"
+                  aria-valuemin={0}
+                  aria-valuemax={duration}
+                  aria-valuenow={Math.round(playhead * duration)}
                 >
-                  <span className="fp-mv-icon-glyph" style={mvMask('/magicast/player-trim.svg')} aria-hidden="true" />
-                </button>
-                <button
-                  type="button"
-                  className="fp-mv-icon-btn fp-mv-icon-btn-light"
-                  aria-label={muted ? 'Unmute' : 'Mute'}
-                  onClick={toggleMute}
-                >
-                  <span
-                    className="fp-mv-icon-glyph"
-                    style={mvMask(muted ? '/magicast/player-muted.svg' : '/magicast/player-volume.svg')}
-                    aria-hidden="true"
-                  />
-                </button>
-                <button type="button" className="fp-mv-icon-btn fp-mv-icon-btn-light" aria-label="Fullscreen">
-                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M3 6.75V3h3.75M11.25 3H15v3.75M15 11.25V15h-3.75M6.75 15H3v-3.75" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                </button>
+                  <div className="fp-mv-dock-track-fill" style={{ width: `${playhead * 100}%` }} />
+                </div>
+                <div className="fp-mv-dock-marks">
+                  {timelineMarks.map((mark) => (
+                    <button
+                      key={mark.id}
+                      type="button"
+                      className={`fp-mv-dock-mark${activeCommentId === mark.commentId ? ' is-active' : ''}`}
+                      style={{ left: `${duration ? Math.min(100, (mark.sec / duration) * 100) : 0}%` }}
+                      aria-label={mark.name}
+                      onMouseEnter={placeMarkTip}
+                      onFocus={placeMarkTip}
+                      onClick={(e) => { e.stopPropagation(); focusComment(mark.commentId); }}
+                    >
+                      <img src={mark.avatar} alt="" width="12" height="12" />
+                      <span className="fp-mv-mark-tip">
+                        <img src={mark.avatar} alt="" width="24" height="24" />
+                        <span className="text-body-emphasis">{mark.name}</span>
+                      </span>
+                    </button>
+                  ))}
+                </div>
               </div>
+              )}
+              <div className="fp-mv-dock-controls">
+                <div className="fp-mv-dock-time">
+                  <button
+                    type="button"
+                    className="fp-mv-dock-btn"
+                    aria-label={playing ? 'Pause' : 'Play'}
+                    onClick={togglePlay}
+                  >
+                    <img src="/magicast/reactions/play.svg" alt="" width="16" height="16" />
+                  </button>
+                  <span className="fp-mv-dock-clock text-caption">
+                    <span>{mvFmt(playhead * duration)}</span>
+                    <span className="fp-mv-dock-clock-rest">{` / ${mvFmt(duration)}`}</span>
+                  </span>
+                </div>
+                <div className="fp-mv-dock-actions">
+                  <button
+                    type="button"
+                    className={`fp-mv-dock-btn${trimOpen ? ' is-on' : ''}`}
+                    aria-label="Trim"
+                    aria-pressed={trimOpen}
+                    onClick={() => setTrimOpen((v) => !v)}
+                  >
+                    <img src="/magicast/reactions/trim.svg" alt="" width="16" height="16" />
+                  </button>
+                  <button
+                    type="button"
+                    className="fp-mv-dock-btn"
+                    aria-label={muted ? 'Unmute' : 'Mute'}
+                    onClick={toggleMute}
+                  >
+                    <img src="/magicast/reactions/volume.svg" alt="" width="16" height="16" />
+                  </button>
+                  <button type="button" className="fp-mv-dock-btn" aria-label="Stopwatch">
+                    <img src="/magicast/reactions/stopwatch.svg" alt="" width="16" height="16" />
+                  </button>
+                  <button type="button" className="fp-mv-dock-btn" aria-label="Fullscreen">
+                    <img src="/magicast/reactions/fullscreen.svg" alt="" width="16" height="16" />
+                  </button>
+                </div>
+              </div>
+              {!trimOpen && (
+                <div className="fp-mv-reactions" role="toolbar" aria-label="Reactions">
+                  {MV_REACTIONS.map((emoji) => (
+                    <button
+                      key={emoji}
+                      type="button"
+                      className="fp-mv-reaction"
+                      aria-label={emoji}
+                      onClick={(e) => { e.stopPropagation(); addReaction(emoji); }}
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                  <button
+                    ref={emojiBtnRef}
+                    type="button"
+                    className={`fp-mv-dock-btn${emojiOpen && emojiSource === 'reaction' ? ' is-on' : ''}`}
+                    aria-label="More reactions"
+                    aria-expanded={emojiOpen && emojiSource === 'reaction'}
+                    data-emoji-anchor=""
+                    onClick={(e) => toggleEmojiPicker(e, 'reaction')}
+                  >
+                    <img src="/magicast/reactions/emoji.svg" alt="" width="16" height="16" />
+                  </button>
+                </div>
+              )}
             </div>
             <div
               className={`fp-mv-trim-collapse ${trimOpen ? 'fp-mv-trim-collapse-open' : ''}`}
@@ -4024,9 +4530,9 @@ function MagicastViewerWindow({ initialTrimOpen = true, initialSideTab = 'commen
           )}
           {sideTab === 'comments' && (
             <>
-          <div className="fp-mv-side-body">
+          <div className="fp-mv-side-body" ref={commentListRef}>
             {comments.map((c) => (
-              <div key={c.id} className="fp-mv-comment">
+              <div key={c.id} className={`fp-mv-comment${activeCommentId === c.id ? ' is-active' : ''}`} data-comment-id={c.id}>
                 <img className="fp-mv-comment-avatar" src={c.avatar} alt="" />
                 <div className="fp-mv-comment-content">
                   <div className="fp-mv-comment-name">{c.name}</div>
@@ -4043,13 +4549,21 @@ function MagicastViewerWindow({ initialTrimOpen = true, initialSideTab = 'commen
               <button type="button" className="fp-mv-composer-btn fp-mv-composer-btn-tempo" aria-label="Timecode">
                 <span className="fp-mv-composer-glyph" style={mvMask('/magicast/composer-clock-stop.svg')} aria-hidden="true" />
               </button>
-              <button type="button" className="fp-mv-composer-btn" aria-label="Emoji">
+              <button
+                type="button"
+                className="fp-mv-composer-btn"
+                aria-label="Emoji"
+                aria-expanded={emojiOpen && emojiSource === 'composer'}
+                data-emoji-anchor=""
+                onClick={(e) => toggleEmojiPicker(e, 'composer')}
+              >
                 <span className="fp-mv-composer-glyph" style={mvMask('/magicast/composer-emoji.svg')} aria-hidden="true" />
               </button>
             </div>
             <div className="fp-mv-composer-input">
               <span className="fp-mv-time-pill">{mvFmt(playhead * duration, true)}</span>
               <input
+                ref={composerFieldRef}
                 className="fp-mv-composer-field"
                 type="text"
                 placeholder="Leave Your Comment…"
@@ -4072,6 +4586,15 @@ function MagicastViewerWindow({ initialTrimOpen = true, initialSideTab = 'commen
           )}
         </div>
       </div>
+      {emojiOpen && emojiBox && (
+        <div ref={emojiPanelRef} style={{ position: 'absolute', left: emojiBox.left, bottom: emojiBox.bottom, width: emojiBox.width, height: emojiBox.height, zIndex: 8 }}>
+          <MagicastEmojiPicker onSelect={(emoji) => {
+            if (emojiSource === 'composer') insertEmoji(emoji);
+            else addReaction(emoji);
+            setEmojiOpen(false);
+          }} />
+        </div>
+      )}
     </div>
   );
 }
@@ -4140,6 +4663,559 @@ function MagicastShareSection() {
   );
 }
 
+
+const FREEFORM_PRESETS = [
+  { id: 'freeform', label: 'Freeform', ratio: null },
+  { id: '1-1', label: '1 : 1 (Square)', ratio: 1 },
+  { id: '5-4', label: '5 : 4 (10 : 8)', ratio: 5 / 4 },
+  { id: '4-3', label: '4 : 3', ratio: 4 / 3 },
+  { id: '7-5', label: '7 : 5', ratio: 7 / 5 },
+  { id: '3-2', label: '3 : 2 (6 : 4)', ratio: 3 / 2 },
+  { id: '16-10', label: '16 : 10', ratio: 16 / 10 },
+  { id: '185', label: '1.85 : 1', ratio: 1.85 },
+  { id: '235', label: '2.35 : 1', ratio: 2.35 },
+  { id: 'sep', separator: true },
+  { id: '2-3', label: '2 : 3', ratio: 2 / 3 },
+  { id: '9-16', label: '9 : 16', ratio: 9 / 16 },
+];
+
+const FREEFORM_HANDLES = [
+  { edge: 'nw', cursor: 'nwse-resize', label: 'Resize from the top left', axis: 'corner' },
+  { edge: 'n', cursor: 'ns-resize', label: 'Resize from the top', axis: 'x' },
+  { edge: 'ne', cursor: 'nesw-resize', label: 'Resize from the top right', axis: 'corner' },
+  { edge: 'e', cursor: 'ew-resize', label: 'Resize from the right', axis: 'y' },
+  { edge: 'se', cursor: 'nwse-resize', label: 'Resize from the bottom right', axis: 'corner' },
+  { edge: 's', cursor: 'ns-resize', label: 'Resize from the bottom', axis: 'x' },
+  { edge: 'sw', cursor: 'nesw-resize', label: 'Resize from the bottom left', axis: 'corner' },
+  { edge: 'w', cursor: 'ew-resize', label: 'Resize from the left', axis: 'y' },
+];
+
+const FREEFORM_CORNER_PATH = {
+  nw: 'M24 4H12C7.58172 4 4 7.58172 4 12V24',
+  ne: 'M4 4H16C20.4183 4 24 7.58172 24 12V24',
+  se: 'M4 24H16C20.4183 24 24 20.4183 24 16V4',
+  sw: 'M24 24H12C7.58172 24 4 20.4183 4 16V4',
+};
+
+function clampNum(n, min, max) {
+  return Math.max(min, Math.min(max, n));
+}
+
+function resizeFreeform(start, dx, dy, edge, ratio, bounds) {
+  const min = 72;
+  const inset = 16;
+  const maxW = Math.max(min, bounds.w - inset * 2);
+  const maxH = Math.max(min, bounds.h - inset * 2);
+  const anchorRight = edge.includes('w');
+  const anchorBottom = edge.includes('n');
+  const anchorX = anchorRight ? start.x + start.w : start.x;
+  const anchorY = anchorBottom ? start.y + start.h : start.y;
+  const side = edge.length === 1;
+
+  let w = start.w;
+  let h = start.h;
+  if (edge.includes('e')) w = start.w + dx;
+  if (edge.includes('w')) w = start.w - dx;
+  if (edge.includes('s')) h = start.h + dy;
+  if (edge.includes('n')) h = start.h - dy;
+
+  if (ratio) {
+    if (side && (edge === 'e' || edge === 'w')) {
+      w = Math.max(min, w);
+      h = w / ratio;
+    } else if (side) {
+      h = Math.max(min, h);
+      w = h * ratio;
+    } else {
+      const nextW = Math.max(min, w);
+      const nextH = Math.max(min, h);
+      const widthDriven = Math.abs(nextW - start.w) / start.w >= Math.abs(nextH - start.h) / start.h;
+      if (widthDriven) {
+        w = nextW;
+        h = w / ratio;
+      } else {
+        h = nextH;
+        w = h * ratio;
+      }
+    }
+  }
+
+  if (ratio) {
+    if (w < min || h < min) {
+      const scale = Math.max(min / Math.max(w, 1), min / Math.max(h, 1));
+      w *= scale;
+      h *= scale;
+    }
+  } else {
+    w = Math.max(min, w);
+    h = Math.max(min, h);
+  }
+  if (ratio && (w > maxW || h > maxH)) {
+    const scale = Math.min(maxW / w, maxH / h, 1);
+    w *= scale;
+    h *= scale;
+  } else {
+    w = Math.min(w, maxW);
+    h = Math.min(h, maxH);
+  }
+
+  let x = anchorRight ? anchorX - w : anchorX;
+  let y = anchorBottom ? anchorY - h : anchorY;
+  if (ratio && side && (edge === 'e' || edge === 'w')) {
+    y = start.y + (start.h - h) / 2;
+    x = anchorRight ? anchorX - w : start.x;
+  }
+  if (ratio && side && (edge === 'n' || edge === 's')) {
+    x = start.x + (start.w - w) / 2;
+    y = anchorBottom ? anchorY - h : start.y;
+  }
+
+  x = clampNum(x, inset, Math.max(inset, bounds.w - w - inset));
+  y = clampNum(y, inset, Math.max(inset, bounds.h - h - inset));
+  return { x, y, w, h };
+}
+
+function MagicastFreeformPreview() {
+  const stageRef = useRef(null);
+  const promptRef = useRef(null);
+  const dragRef = useRef(null);
+  const [rect, setRect] = useState(null);
+  const [presetId, setPresetId] = useState('freeform');
+  const [menuOpen, setMenuOpen] = useState(false);
+  const rectRef = useRef(null);
+  const presetRef = useRef('freeform');
+  rectRef.current = rect;
+  presetRef.current = presetId;
+
+  useLayoutEffect(() => {
+    const stage = stageRef.current;
+    if (!stage) return undefined;
+    const place = (reset) => {
+      const box = stage.getBoundingClientRect();
+      if (box.width < 80 || box.height < 80) return;
+      const bounds = { w: box.width, h: box.height };
+      setRect((prev) => {
+        if (prev && !reset) {
+          return resizeFreeform(prev, 0, 0, 'se', null, bounds);
+        }
+        const w = Math.min(640, Math.max(280, box.width * 0.56));
+        const h = w * (500 / 889);
+        const next = { x: (box.width - w) / 2, y: (box.height - h) / 2, w, h };
+        return resizeFreeform(next, 0, 0, 'se', null, bounds);
+      });
+    };
+    place(true);
+    const ro = new ResizeObserver(() => place(false));
+    ro.observe(stage);
+    return () => ro.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!menuOpen) return undefined;
+    const onKey = (e) => {
+      if (e.key === 'Escape') setMenuOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [menuOpen]);
+
+  const onHandleDown = (edge, e) => {
+    if (e.button != null && e.button !== 0) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const stage = stageRef.current?.getBoundingClientRect();
+    if (!stage || !rectRef.current) return;
+    const preset = FREEFORM_PRESETS.find((p) => p.id === presetRef.current);
+    dragRef.current = {
+      edge,
+      x: e.clientX,
+      y: e.clientY,
+      rect: rectRef.current,
+      ratio: preset?.ratio ?? null,
+      bounds: { w: stage.width, h: stage.height },
+    };
+    e.currentTarget.setPointerCapture(e.pointerId);
+    setMenuOpen(false);
+  };
+
+  const onRectDown = (e) => {
+    if (e.button != null && e.button !== 0) return;
+    if (e.target.closest('.fp-freeform-handle')) return;
+    e.preventDefault();
+    const stage = stageRef.current?.getBoundingClientRect();
+    if (!stage || !rectRef.current) return;
+    dragRef.current = {
+      edge: 'move',
+      x: e.clientX,
+      y: e.clientY,
+      rect: rectRef.current,
+      bounds: { w: stage.width, h: stage.height },
+    };
+    e.currentTarget.setPointerCapture(e.pointerId);
+    setMenuOpen(false);
+  };
+
+  const onHandleMove = (e) => {
+    const drag = dragRef.current;
+    if (!drag) return;
+    if (drag.edge === 'move') {
+      const inset = 16;
+      const { w, h } = drag.rect;
+      setRect({
+        x: clampNum(drag.rect.x + (e.clientX - drag.x), inset, Math.max(inset, drag.bounds.w - w - inset)),
+        y: clampNum(drag.rect.y + (e.clientY - drag.y), inset, Math.max(inset, drag.bounds.h - h - inset)),
+        w,
+        h,
+      });
+      return;
+    }
+    setRect(resizeFreeform(
+      drag.rect,
+      e.clientX - drag.x,
+      e.clientY - drag.y,
+      drag.edge,
+      drag.ratio,
+      drag.bounds,
+    ));
+  };
+
+  const onHandleUp = () => {
+    dragRef.current = null;
+  };
+
+  const selectPreset = (item) => {
+    setPresetId(item.id);
+    setMenuOpen(false);
+    const stage = stageRef.current?.getBoundingClientRect();
+    const cur = rectRef.current;
+    if (!item.ratio || !stage || !cur) return;
+    const bounds = { w: stage.width, h: stage.height };
+    const cx = cur.x + cur.w / 2;
+    const cy = cur.y + cur.h / 2;
+    let w = cur.w;
+    let h = w / item.ratio;
+    const maxW = bounds.w - 32;
+    const maxH = bounds.h - 32;
+    if (w > maxW || h > maxH) {
+      const scale = Math.min(maxW / w, maxH / h);
+      w *= scale;
+      h *= scale;
+    }
+    const x = clampNum(cx - w / 2, 16, Math.max(16, bounds.w - w - 16));
+    const y = clampNum(cy - h / 2, 16, Math.max(16, bounds.h - h - 16));
+    setRect({ x, y, w, h });
+  };
+
+  const promptCenter = (() => {
+    if (!rect || !stageRef.current) return null;
+    const stage = stageRef.current.getBoundingClientRect();
+    const prompt = promptRef.current?.getBoundingClientRect();
+    const halfW = (prompt?.width || 360) / 2;
+    const halfH = (prompt?.height || 44) / 2;
+    let x = rect.x + rect.w / 2;
+    let y = rect.y + rect.h / 2;
+    x = clampNum(x, halfW + 12, Math.max(halfW + 12, stage.width - halfW - 12));
+    if (menuOpen) {
+      const menuBottom = (y - halfH) + 340;
+      if (menuBottom > stage.height - 8) y -= menuBottom - (stage.height - 8);
+    }
+    const chipLift = presetId === 'freeform' ? 0 : 12;
+    y = clampNum(y, halfH + 12 + chipLift, Math.max(halfH + 12 + chipLift, stage.height - halfH - 12));
+    return { x, y };
+  })();
+
+  return (
+    <div className="fp-freeform" ref={stageRef}>
+      {rect && (
+        <div
+          className="fp-freeform-rect"
+          style={{ left: rect.x, top: rect.y, width: rect.w, height: rect.h }}
+          onPointerDown={onRectDown}
+          onPointerMove={onHandleMove}
+          onPointerUp={onHandleUp}
+          onPointerCancel={onHandleUp}
+        >
+          {FREEFORM_HANDLES.map((handle) => (
+            <button
+              key={handle.edge}
+              type="button"
+              className={`fp-freeform-handle fp-freeform-handle-${handle.edge}`}
+              style={{ cursor: handle.cursor }}
+              aria-label={handle.label}
+              onPointerDown={(e) => onHandleDown(handle.edge, e)}
+              onPointerMove={onHandleMove}
+              onPointerUp={onHandleUp}
+              onPointerCancel={onHandleUp}
+            >
+              {handle.axis === 'corner' ? (
+                <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
+                  <path d={FREEFORM_CORNER_PATH[handle.edge]} stroke="black" strokeOpacity="0.15" strokeWidth="8" strokeLinecap="round" />
+                  <path d={FREEFORM_CORNER_PATH[handle.edge]} stroke="white" strokeWidth="6" strokeLinecap="round" />
+                </svg>
+              ) : handle.axis === 'y' ? (
+                <svg width="8" height="28" viewBox="0 0 8 28" fill="none" aria-hidden="true">
+                  <path d="M4 4V24" stroke="black" strokeOpacity="0.15" strokeWidth="8" strokeLinecap="round" />
+                  <path d="M4 4V24" stroke="white" strokeWidth="6" strokeLinecap="round" />
+                </svg>
+              ) : (
+                <svg width="28" height="8" viewBox="0 0 28 8" fill="none" aria-hidden="true">
+                  <path d="M4 4H24" stroke="black" strokeOpacity="0.15" strokeWidth="8" strokeLinecap="round" />
+                  <path d="M4 4H24" stroke="white" strokeWidth="6" strokeLinecap="round" />
+                </svg>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+      <div
+        className="fp-freeform-prompt"
+        ref={promptRef}
+        style={promptCenter ? { left: promptCenter.x, top: promptCenter.y } : { left: '50%', top: '50%' }}
+      >
+        <span className="fp-freeform-label">Drag to record part of your screen</span>
+        <span className="fp-freeform-divider" aria-hidden="true" />
+        <span className="fp-freeform-picker-wrap">
+          <button
+            type="button"
+            className="fp-freeform-picker"
+            aria-haspopup="menu"
+            aria-expanded={menuOpen}
+            aria-label="Aspect ratio presets"
+            onClick={(e) => {
+              e.stopPropagation();
+              setMenuOpen((open) => !open);
+            }}
+          >
+            <img src="/icons/magicast-freeform/crop.svg" alt="" />
+            <span className="fp-freeform-chevron-wrap">
+              <img src="/icons/magicast-freeform/chevron.svg" alt="" />
+            </span>
+          </button>
+          {presetId !== 'freeform' && !menuOpen && (
+            <button
+              type="button"
+              className="fp-freeform-ratio text-caption-2"
+              onClick={(e) => {
+                e.stopPropagation();
+                selectPreset(FREEFORM_PRESETS[0]);
+              }}
+            >
+              {FREEFORM_PRESETS.find((p) => p.id === presetId)?.label.replace(/\s*\([^)]*\)/g, '')}
+            </button>
+          )}
+        </span>
+        {menuOpen && (
+          <div className="fp-freeform-menu" role="menu" aria-label="Aspect ratio presets">
+            {FREEFORM_PRESETS.map((item) => (
+              item.separator ? (
+                <div key={item.id} className="fp-freeform-sep" role="separator" />
+              ) : (
+                <button
+                  key={item.id}
+                  type="button"
+                  role="menuitemradio"
+                  aria-checked={presetId === item.id}
+                  className="fp-freeform-option"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    selectPreset(item);
+                  }}
+                >
+                  <span className={`fp-freeform-check ${presetId === item.id ? 'is-on' : ''}`}>
+                    <img src="/icons/magicast-freeform/check.svg" alt="" />
+                  </span>
+                  {item.label}
+                </button>
+              )
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+const LIVE_WIN_ASPECT = 3048 / 2108;
+
+function liveClock(seconds) {
+  const safe = Math.max(0, seconds);
+  return `${Math.floor(safe / 60)}:${String(safe % 60).padStart(2, '0')}`;
+}
+
+function MagicastLivePreview() {
+  const stageRef = useRef(null);
+  const controlsRef = useRef(null);
+  const dragRef = useRef(null);
+  const [win, setWin] = useState(null);
+  const [controlsPos, setControlsPos] = useState(null);
+  const [shape, setShape] = useState('circle');
+  const [count, setCount] = useState(5);
+  const [armed, setArmed] = useState(false);
+  const [recording, setRecording] = useState(false);
+  const [elapsed, setElapsed] = useState(0);
+
+  useLayoutEffect(() => {
+    const stage = stageRef.current;
+    if (!stage) return undefined;
+    const place = (reset) => {
+      const box = stage.getBoundingClientRect();
+      if (box.width < 80 || box.height < 80) return;
+      const maxW = Math.max(160, box.width - 48);
+      const maxH = Math.max(120, box.height - 48);
+      let w = maxW;
+      let h = w / LIVE_WIN_ASPECT;
+      if (h > maxH) {
+        h = maxH;
+        w = h * LIVE_WIN_ASPECT;
+      }
+      setWin((prev) => {
+        if (prev && !reset) {
+          return {
+            ...prev,
+            x: Math.min(Math.max(prev.x, -prev.w + 80), box.width - 80),
+            y: Math.min(Math.max(prev.y, -prev.h + 80), box.height - 80),
+          };
+        }
+        return { x: (box.width - w) / 2, y: (box.height - h) / 2, w, h };
+      });
+    };
+    place(true);
+    const ro = new ResizeObserver(() => place(false));
+    ro.observe(stage);
+    return () => ro.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!armed || recording || count <= 0) return undefined;
+    const timer = setTimeout(() => setCount((n) => n - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [armed, count, recording]);
+
+  useEffect(() => {
+    if (count > 0 || recording) return undefined;
+    setRecording(true);
+    return undefined;
+  }, [count, recording]);
+
+  useEffect(() => {
+    if (!recording) return undefined;
+    const timer = setInterval(() => {
+      if (document.hidden) return;
+      setElapsed((s) => s + 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [recording]);
+
+  const startCountdown = (e) => {
+    e.stopPropagation();
+    if (armed || recording) return;
+    setArmed(true);
+  };
+
+  const skipCountdown = (e) => {
+    e.stopPropagation();
+    setCount(0);
+    setRecording(true);
+  };
+
+  const onGrabberDown = (e) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const stage = stageRef.current?.getBoundingClientRect();
+    const bar = controlsRef.current?.getBoundingClientRect();
+    if (!stage || !bar) return;
+    const origin = controlsPos || { x: bar.left - stage.left, y: bar.top - stage.top };
+    if (!controlsPos) setControlsPos(origin);
+    const start = { x: e.clientX, y: e.clientY, ox: origin.x, oy: origin.y };
+    const onMove = (ev) => {
+      setControlsPos({
+        x: start.ox + ev.clientX - start.x,
+        y: start.oy + ev.clientY - start.y,
+      });
+    };
+    const onUp = () => {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+    };
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+  };
+
+  const onWindowDown = (e) => {
+    if (e.button !== 0 || !win) return;
+    e.preventDefault();
+    dragRef.current = { x: e.clientX, y: e.clientY, ox: win.x, oy: win.y };
+    const onMove = (ev) => {
+      const drag = dragRef.current;
+      if (!drag) return;
+      setWin((cur) => (cur ? { ...cur, x: drag.ox + ev.clientX - drag.x, y: drag.oy + ev.clientY - drag.y } : cur));
+    };
+    const onUp = () => {
+      dragRef.current = null;
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+    };
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+  };
+
+  return (
+    <div className="fp-live" ref={stageRef}>
+      {win && (
+        <div
+          className="fp-live-window"
+          style={{ left: win.x, top: win.y, width: win.w, height: win.h }}
+          onPointerDown={onWindowDown}
+        >
+          <img src="/icons/magicast-live/nike.png" alt="" draggable="false" />
+        </div>
+      )}
+      {armed && !recording && <div className="fp-live-dim" />}
+      <div
+        ref={controlsRef}
+        className={`fp-live-controls ${recording ? 'is-recording' : ''} ${controlsPos ? 'is-placed' : ''}`}
+        style={controlsPos ? { left: controlsPos.x, top: controlsPos.y } : undefined}
+      >
+        <button
+          type="button"
+          className="fp-live-grabber"
+          aria-label="Move recording controls"
+          onPointerDown={onGrabberDown}
+        >
+          <img src="/icons/magicast-live/grabber.svg" alt="" />
+        </button>
+        {recording ? (
+          <>
+            <span className="fp-live-timer">
+              <img src="/icons/magicast-live/pause.svg" alt="" />
+              <span>{liveClock(elapsed)}</span>
+            </span>
+            <span className="fp-live-icon">
+              <img src="/icons/magicast-live/stop.svg" alt="" />
+            </span>
+          </>
+        ) : (
+          <>
+            <span className="fp-live-icon"><img src="/icons/magicast-live/count-pause.svg" alt="" /></span>
+            <button type="button" className="fp-live-icon fp-live-record" aria-label="Start countdown" onClick={startCountdown}>
+              <img src="/icons/magicast-live/record.svg" alt="" />
+            </button>
+            <span className="fp-live-icon"><img src="/icons/magicast-live/refresh.svg" alt="" /></span>
+            <span className="fp-live-icon"><img src="/icons/magicast-live/delete.svg" alt="" /></span>
+          </>
+        )}
+      </div>
+      {armed && !recording && count > 0 && (
+        <div className="fp-live-count">
+          <div className="fp-live-count-num">{count}</div>
+          <button type="button" className="fp-live-skip" onClick={skipCountdown}>Skip</button>
+        </div>
+      )}
+      <MagicastBubble anchor="bottom-left" initialSize={180} shape={shape} onShapeChange={setShape} />
+    </div>
+  );
+}
 
 function FlashCard({ supertitle, title, media, back }) {
   const isVideo = media?.type === 'video';
@@ -4223,7 +5299,7 @@ function FlashCard({ supertitle, title, media, back }) {
 const MAGNIFY_TARGET_PERSON = 'Michael W.';
 const MAGNIFY_TARGET_CITY = 'MIA';
 
-function MapPreview({ spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, hideOnIt = false, onItAutoOpen = false, autoKnock = false, shelfAutoOpen = false, shareAutoOpen = false, initialFloor = 'Preview', showSidebar = false, autoCycleFloors = false, autoCycleDms = false, showPhysicalTags = false, spotlightSearch = false, onAirOverride = null, children = null } = {}) {
+function MapPreview({ spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, hideOnIt = false, onItAutoOpen = false, autoKnock = false, shelfAutoOpen = false, recordingsAutoOpen = false, shareAutoOpen = false, initialFloor = 'Preview', showSidebar = false, autoCycleFloors = false, autoCycleDms = false, showPhysicalTags = false, spotlightSearch = false, onAirOverride = null, winCoinDefaultOpen = false, children = null } = {}) {
   const [pageTheme, setPageTheme] = useState(() =>
     typeof document !== 'undefined' ? document.documentElement.getAttribute('data-theme') || 'dark' : 'dark'
   );
@@ -4302,7 +5378,7 @@ function MapPreview({ spotifyAlwaysOpen = false, githubAlwaysOpen = false, figma
   ].filter(Boolean).join(' ');
   return (
     <div ref={wrapRef} className={className}>
-      <ShowcaseMap embedded autoKnock={autoKnock} initialFloor={initialFloor} spotifyAlwaysOpen={spotifyAlwaysOpen} githubAlwaysOpen={githubAlwaysOpen} figmaAlwaysOpen={figmaAlwaysOpen} hideOnIt={hideOnIt} onItAutoOpen={onItAutoOpen} shelfAutoOpen={shelfAutoOpen} shareAutoOpen={shareAutoOpen} theme={pageTheme} autoCycleFloors={autoCycleFloors} autoCycleDms={autoCycleDms} showPhysicalTags={showPhysicalTags} onAirOverride={onAirOverride} />
+      <ShowcaseMap embedded autoKnock={autoKnock} initialFloor={initialFloor} spotifyAlwaysOpen={spotifyAlwaysOpen} githubAlwaysOpen={githubAlwaysOpen} figmaAlwaysOpen={figmaAlwaysOpen} hideOnIt={hideOnIt} onItAutoOpen={onItAutoOpen} shelfAutoOpen={shelfAutoOpen} recordingsAutoOpen={recordingsAutoOpen} shareAutoOpen={shareAutoOpen} theme={pageTheme} autoCycleFloors={autoCycleFloors} autoCycleDms={autoCycleDms} showPhysicalTags={showPhysicalTags} onAirOverride={onAirOverride} birthdayEnabled={false} winCoinDefaultOpen={winCoinDefaultOpen} />
       {children}
       {spotlightSearch && spotlightHost && ReactDOM.createPortal(
         <>
@@ -4505,7 +5581,7 @@ function MagicastPreview() {
         style={{
           position: 'absolute',
           inset: 0,
-          backgroundImage: 'url(/magicast/preview.png)',
+          backgroundImage: 'url(/magicast/preview.jpg)',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
         }}
@@ -6414,7 +7490,7 @@ export const FEATURES = {
       {
         title: 'Full Company Visualization',
         desc: 'Visualize the whole company as people enter and exit video rooms. Instantly see who is meeting with who and who is talking — just as if you were in a real office.',
-        visual: <MapPreview initialFloor="VirtualOffice" />,
+        visual: <MapPreview initialFloor="VirtualOffice" recordingsAutoOpen />,
       },
       {
         title: 'Feel the Office Buzz',
@@ -7328,9 +8404,20 @@ export const FEATURES = {
     visual: <MagicastFeatureVisual theme="dark" anchor="bottom-right" bare />,
     sections: [
       {
+        title: 'Record Any Part of Your Screen',
+        desc: 'Grab a side or corner to resize the frame. Open the menu to lock a preset aspect ratio.',
+        visual: <MagicastFreeformPreview />,
+      },
+      {
+        title: 'Count In and Record',
+        desc: 'Click record for a five-second countdown. Drag the window and the camera, and change the camera mask from the hover controls.',
+        visual: <MagicastLivePreview />,
+      },
+      {
         title: 'Perfect Your Appearance with Magicast Effects',
         desc: 'Touch up your face, add background blur, or swap in a virtual background. Look ready even if the room behind you isn’t.',
-        visual: <MagicastFeatureVisual theme="dark" bare effectsOpen hideBubble />,
+        visual: <MagicastFeatureVisual theme="dark" bare effectsOpen effectsInteractive hideBubble previewVideo="/videos/Female/grace_thompson.mp4" />,
+        interactive: true,
       },
       {
         title: 'Trim Your Magicast',
@@ -7340,15 +8427,7 @@ export const FEATURES = {
       {
         title: 'Integrated with AInbox',
         desc: 'Share your Magicast recordings natively with groups and DMs through AInbox. The recording lives where the conversation happens.',
-        visual: (
-          <AInboxPreview
-            overrides
-            view="chat"
-            chatId="all-hands"
-            messagesOverride={MAGICAST_SHARE_AH_MESSAGES}
-            initialCollapsedSections={{ meetings: true }}
-          />
-        ),
+        visual: <MagicastAInboxShare />,
       },
       {
         title: 'Share Your Magicast',
@@ -8218,6 +9297,46 @@ export const FEATURES = {
       },
     ],
   },
+  win: {
+    eyebrow: 'W!N',
+    title: 'Recognize people where the work happens',
+    hero: <>Give a Roamcoin without leaving the map. Keep the trophies, the birthdays, and the gift cards in the same office as the work.<br /><br />Open the coin on the toolbar. Drag it onto someone.</>,
+    visual: <MapPreview initialFloor="R&D" />,
+    heroInteractive: true,
+    seo: {
+      title: 'W!N — Rewards & Recognition | Roam',
+      description: 'Give Roamcoins on the map, keep awards in the Award Case, celebrate birthdays, and redeem gifts in the store.',
+    },
+    sections: [
+      {
+        title: 'Celebrations',
+        desc: 'Birthdays and work anniversaries show up on the map. The office signs a card, a song plays, and a cake can be on its way. Upcoming celebrations stay in W!N, so the day doesn’t depend on someone remembering a calendar.',
+        visual: <CelebrationsVisual />,
+        interactive: true,
+      },
+      {
+        title: 'Awards Cabinet',
+        desc: 'Every award the company gives lives in the Award Case. A trophy, the person who earned it, and why. Operators create awards and give them. Everyone else can open the case and see who won.',
+        visual: <AwardsCabinetVisual />,
+        interactive: true,
+      },
+      {
+        title: 'Peer-to-Peer Point Gifting',
+        desc: 'Each person gets Roamcoins to give. Open the coin, or drag it straight onto a teammate. One, five, ten, fifteen, or a number you type. The gift lands on the map, on the person, while the work is still in front of you.',
+        visual: <MapPreview initialFloor="R&D" winCoinDefaultOpen />,
+        interactive: true,
+        mapAlign: 'center',
+      },
+      {
+        title: 'Gift Store',
+        desc: 'Points people receive turn into gifts. Redeem a card for yourself, or send one to someone else. The balance only moves when a gift is actually bought.',
+        visual: <GiftStoreVisual />,
+        interactive: true,
+      },
+      { variant: 'reviews' },
+      STANDARD_PRICING_COMPARE,
+    ],
+  },
 };
 
 export const FEATURE_ORDER = [
@@ -8974,9 +10093,8 @@ function FeatureQuote({ quote, author, role }) {
 
 // Sticky bottom CTA for the pricing page — fades in after the user scrolls
 // past the hero, fades out once the in-page FooterCTA banner is visible
-// so the two CTAs never compete for attention. Mirrors FloatingCTA's
-// visible + leaving pattern: a separate `leaving` state keeps the exit
-// animation class mounted for its full duration.
+// so the two CTAs never compete for attention. A separate `leaving`
+// state keeps the exit animation class mounted for its full duration.
 function PricingStickyCTA() {
   const [visible, setVisible] = useState(false);
   const [leaving, setLeaving] = useState(false);
@@ -9158,7 +10276,7 @@ function FeaturePageInner({ slug }) {
 
       {feature.visual ? (
       <div className="fp-hero-visual">
-        <div className="fp-hero-stage" data-map-align={feature.heroMapAlign || undefined}>{feature.visual}</div>
+        <div className="fp-hero-stage" data-map-align={feature.heroMapAlign || undefined} data-interactive={feature.heroInteractive ? 'true' : undefined}>{feature.visual}</div>
       </div>
       ) : null}
 
@@ -9173,8 +10291,6 @@ function FeaturePageInner({ slug }) {
       <FooterCTA title="Ready to meet Roam?" />
 
       <Footer />
-
-      {slug !== 'pricing' && <FloatingCTA />}
 
       {slug === 'pricing' && <PricingStickyCTA />}
     </div>

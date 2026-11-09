@@ -14,6 +14,7 @@ const sections = [
       { title: 'On-It', href: '/on-it' },
       { title: 'On-Air', href: '/on-air' },
       { title: 'Mobile', href: '/mobile' },
+      { title: 'W!N', href: '#/feature/win' },
     ],
   },
   {

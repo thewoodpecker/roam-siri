@@ -1,0 +1,10 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Grabber">
+<circle id="Ellipse 337" cx="5.5" cy="12.5" r="1.5" fill="white" fill-opacity="0.3"/>
+<circle id="Ellipse 340" cx="10.5" cy="12.5" r="1.5" fill="white" fill-opacity="0.3"/>
+<path id="Ellipse 338" d="M7 8C7 8.82843 6.32843 9.5 5.5 9.5C4.67157 9.5 4 8.82843 4 8C4 7.17157 4.67157 6.5 5.5 6.5C6.32843 6.5 7 7.17157 7 8Z" fill="white" fill-opacity="0.3"/>
+<path id="Ellipse 341" d="M12 8C12 8.82843 11.3284 9.5 10.5 9.5C9.67157 9.5 9 8.82843 9 8C9 7.17157 9.67157 6.5 10.5 6.5C11.3284 6.5 12 7.17157 12 8Z" fill="white" fill-opacity="0.3"/>
+<circle id="Ellipse 339" cx="5.5" cy="3.5" r="1.5" fill="white" fill-opacity="0.3"/>
+<circle id="Ellipse 342" cx="10.5" cy="3.5" r="1.5" fill="white" fill-opacity="0.3"/>
+</g>
+</svg>

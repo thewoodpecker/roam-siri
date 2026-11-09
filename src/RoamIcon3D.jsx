@@ -284,7 +284,18 @@ export default function RoamIcon3D({
   const angularVel = useRef(SPIN_SPEED);
   const spinBurst = useRef(null);
   const [canvasReady, setCanvasReady] = useState(false);
+  const [onScreen, setOnScreen] = useState(true);
   const visible = canvasReady && reveal;
+
+  useEffect(() => {
+    const el = hostRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') return undefined;
+    const io = new IntersectionObserver(([entry]) => {
+      setOnScreen(entry.isIntersecting);
+    }, { rootMargin: '80px 0px' });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
 
   useEffect(() => () => {
     unbindDragRef.current?.();
@@ -396,7 +407,7 @@ export default function RoamIcon3D({
     >
       <Canvas
         className="sc-roam-icon-canvas"
-        dpr={[1, 2]}
+        dpr={[1, 1.5]}
         gl={{
           antialias: true,
           alpha: true,
@@ -405,7 +416,7 @@ export default function RoamIcon3D({
         orthographic
         camera={{ position: [0, 0, 10], near: 0.1, far: 40 }}
         style={{ background: 'transparent', width: '100%', height: '100%' }}
-        frameloop="always"
+        frameloop={onScreen ? 'always' : 'never'}
         onCreated={({ gl }) => {
           gl.setClearColor(0x000000, 0);
           requestAnimationFrame(() => setCanvasReady(true));

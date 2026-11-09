@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import ViewportVideo from './ViewportVideo';
 import { FLOORS } from './ShowcaseMap';
 import AgentGlyph from './AgentGlyph';
 import './MobileWindow.css';
@@ -545,13 +546,10 @@ export default function MobileWindow({ win, onDrag, onOpenStories, initialTab = 
             {!lockscreen && !theaterOpen && !magicMinutesChat && !onItChat && !agents && activeTab === 'camera' && (
               <div className="mw-content mw-camera">
                 <div className="mw-camera-viewfinder">
-                  <video
+                  <ViewportVideo
                     className="mw-camera-video"
                     src="/mobile/disney-world.mp4"
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
+                    quality="full"
                     aria-hidden="true"
                   />
                 </div>
@@ -711,7 +709,7 @@ function TheaterView({ onClose, platform }) {
       <div className="mw-theater-stage">
         {MW_THEATER_VIDEO_SPEAKERS.map((s) => (
           <div key={s.name} className="mw-theater-feed">
-            <video src={s.video} autoPlay loop muted playsInline />
+            <ViewportVideo src={s.video} />
           </div>
         ))}
       </div>
