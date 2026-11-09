@@ -369,6 +369,15 @@ export default function RGLPage() {
 
   // Reselecting an item (or first mount) plays the slide-up entrance.
   useEffect(() => {
+    const skipCard =
+      typeof window !== 'undefined' &&
+      (new URLSearchParams(window.location.search).has('nocard') ||
+        /(?:^|[?&#])nocard(?:[=&]|$)/.test(window.location.hash));
+    if (skipCard) {
+      setGiftOpen(false);
+      setEntering(false);
+      return undefined;
+    }
     const cancel = runEnter();
     return typeof cancel === 'function' ? cancel : undefined;
   }, [runEnter]);
