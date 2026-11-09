@@ -670,7 +670,7 @@
 
 .win-gift-shop {
   width: min(900px, 100%);
-  height: 560px;
+  height: auto;
   display: flex;
   overflow: hidden;
   border-radius: 24px;
@@ -784,12 +784,11 @@
 
 .win-gift-body {
   flex: 1;
-  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 16px;
   padding: 16px;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .win-gift-search {
@@ -856,9 +855,7 @@
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 16px;
-  flex: 1;
-  min-height: 0;
-  overflow: auto;
+  overflow: visible;
 }
 
 .win-brand-card {
