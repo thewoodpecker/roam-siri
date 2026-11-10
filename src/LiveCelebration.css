@@ -255,10 +255,11 @@
   }
 }
 
-/* Full layout width, 3:2, so the map window grows with the section
-   instead of a scaled canvas. The celebration card stays 222px. */
+/* Same frame as the trophy cabinet and gift shop: 10 of 12 columns, 3:2
+   (about 929×620 on desktop). The window fills this box — no scale
+   transform — so the celebration card stays inside it. */
 #live-celebration .fp-map-preview {
-  width: 100%;
+  width: calc(((100% - 11 * var(--grid-gutter)) / 12) * 10 + 9 * var(--grid-gutter));
   max-width: 100%;
   height: auto;
   aspect-ratio: 3 / 2;
@@ -270,12 +271,11 @@
   }
 
   #live-celebration .fp-map-preview {
-    width: 100% !important;
+    width: calc(((100% - 11 * var(--grid-gutter)) / 12) * 10 + 9 * var(--grid-gutter)) !important;
+    max-width: 100% !important;
     height: auto !important;
     aspect-ratio: 3 / 2 !important;
-    /* 3:2 of a phone width is shorter than the card. Keep a real
-       minimum so the 222px card stays inside the window. */
-    min-height: 520px !important;
+    min-height: 0 !important;
     padding: 0 !important;
   }
 
@@ -304,5 +304,17 @@
 
   #live-celebration .sc-window > .win-live {
     transform: none;
+  }
+}
+
+@media (max-width: 600px) {
+  /* Same phone frame as the trophy cabinet: full width, tall enough
+     that the celebration card stays inside the window. */
+  #live-celebration .fp-map-preview {
+    width: 100% !important;
+    max-width: 100% !important;
+    aspect-ratio: auto !important;
+    height: auto !important;
+    min-height: 460px !important;
   }
 }
