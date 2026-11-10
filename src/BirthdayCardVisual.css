@@ -1,0 +1,12 @@
+/* Opacity crossfade only. The out phase is set in script (250ms ease-in). */
+.win-bday-stage {
+  transition: opacity 250ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .win-bday-stage {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}

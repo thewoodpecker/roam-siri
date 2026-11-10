@@ -848,6 +848,18 @@
   box-shadow: 0 0 0 0.5px var(--border);
 }
 
+/* Homepage W!N window uses the feature-page cabinet. That component sizes
+   itself to 10 of 12 feature-page columns; here it fills this frame. */
+.sc-feature-wallpaper > .win-case-room {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  aspect-ratio: auto;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+}
+
 /* Disable internal sidebar scrolling in marketing AInbox instance */
 .sc-feature-wallpaper .ainbox-sections {
   overflow-y: hidden;
@@ -3353,7 +3365,8 @@
   width: 40px;
   height: auto;
   aspect-ratio: 1;
-  transition: transform 200ms ease-in-out, opacity 300ms ease;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0);
+  transition: transform 200ms ease-in-out, opacity 300ms ease, box-shadow 200ms ease-in-out;
 }
 
 .sc-room-card .seat-assigned:hover:not(:has(.sc-story-bubble:hover)) .seat-avatar {
@@ -3364,7 +3377,8 @@
   width: 40px !important;
   height: auto !important;
   aspect-ratio: 1 !important;
-  transition: transform 400ms ease-in-out !important;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0);
+  transition: transform 400ms ease-in-out, box-shadow 400ms ease-in-out !important;
 }
 
 /* Unify private + meeting room avatar layout */
@@ -3881,7 +3895,7 @@
   box-shadow: none;
   border-radius: 16px;
   height: 32px;
-  padding: 0 8px 0 8px;
+  padding: 0 12px 0 6px;
 }
 
 .sc-toolbar-pill-group > .sc-win-anchor .sc-win-coin.is-open,
@@ -3915,9 +3929,33 @@
   cursor: grabbing;
 }
 
-.sc-win-hot {
-  box-shadow: 0 0 0 2px #e4b23c, 0 0 16px rgba(228, 178, 60, 0.45);
-  border-radius: 12px;
+/* Coin-in-hand only. Scale the circular avatar and fade a 2px white ring
+   with it. Resting map hover stays the existing avatar scale, with no ring.
+   The transparent shadow is the fade-out target so the ring eases back when
+   the pointer leaves. */
+.sc-viewport.sc-win-dragging [data-win-person] :is(.seat-avatar, .avatar) {
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0);
+  transition: transform 180ms ease, box-shadow 180ms ease !important;
+}
+
+.sc-viewport.sc-win-dragging .game-hex {
+  transition: transform 180ms ease;
+}
+
+.sc-viewport.sc-win-dragging .sc-win-hot {
+  z-index: 4;
+}
+
+.sc-viewport.sc-win-dragging .sc-room-card .seat-assigned.sc-win-hot .seat-avatar,
+.sc-viewport.sc-win-dragging .sc-room-card .meeting-room-person.sc-win-hot .avatar,
+.sc-viewport.sc-win-dragging .sc-agentroom-visitor.sc-win-hot .avatar {
+  transform: scale(1.18);
+  box-shadow: 0 0 0 2px #fff;
+}
+
+.sc-viewport.sc-win-dragging .sc-win-hot.game-hex {
+  transform: scale(1.18);
+  transition: transform 180ms ease;
 }
 
 /* Give Roamcoins — same tray as the product PointsGivingPanel. */
@@ -3931,7 +3969,7 @@
   flex-direction: column;
   align-items: center;
   gap: 1.5rem;
-  width: 15.5rem;
+  width: 20rem;
   max-width: calc(100vw - 2rem);
   max-height: calc(100dvh - 2rem);
   padding: 1rem;
@@ -4133,154 +4171,99 @@
   max-height: 8rem;
 }
 
-/* Same send as roam-awards `.award-success-coin` (3.4s):
-   rise from below, ease to center, hold bright, then the coin drops and fades. */
-@keyframes sc-win-award-stage {
+/* Success coin on a person. The stage does not slide. It fades in by
+   24% of SEND_DURATION (3.4s) while the 3D coin scales up, holds, then
+   the coin scales back down and fades out in place from 78%. The stage
+   itself fades 92–100%. A CSS scale on this box makes the WebGL canvas
+   measure its transformed size and stick to the corner, so scale lives
+   on the mesh.
+   The coin sits ~11.3% below the canvas center (camera is raised, mesh is
+   lowered), so the stage is shifted up by that amount and the coin lands
+   on the avatar. */
+@keyframes award-success-coin {
   0% {
-    transform: translate(-50%, calc(-50% + var(--success-rise)));
+    transform: translate(-50%, calc(-50% - 11.3%));
     opacity: 0;
     animation-timing-function: ease-out;
   }
-  7% {
-    opacity: 1;
-    transform: translate(-50%, calc(-50% + var(--success-rise)));
-    animation-timing-function: ease-out;
-  }
   24% {
-    transform: translate(-50%, -50%);
+    transform: translate(-50%, calc(-50% - 11.3%));
+    opacity: 1;
     animation-timing-function: linear;
   }
+  /* Hold — coin exits in 3D, stage stays put */
   78% {
-    transform: translate(-50%, -50%);
+    transform: translate(-50%, calc(-50% - 11.3%));
     filter: brightness(1.35);
     animation-timing-function: ease-in;
   }
   92% {
-    transform: translate(-50%, -50%);
+    transform: translate(-50%, calc(-50% - 11.3%));
     opacity: 1;
     filter: brightness(1);
     animation-timing-function: ease-in;
   }
   100% {
-    transform: translate(-50%, -50%);
+    transform: translate(-50%, calc(-50% - 11.3%));
     opacity: 0;
     filter: none;
   }
 }
 
-@keyframes sc-win-award-coin {
-  0% { transform: translateY(0) scale(1); }
-  12% { transform: translateY(0) scale(1.125); animation-timing-function: ease-out; }
-  30% { transform: translateY(0) scale(1.5); animation-timing-function: ease-out; }
-  40% { transform: translateY(0) scale(1.0125); animation-timing-function: ease-in-out; }
-  48% { transform: translateY(0) scale(1.125); animation-timing-function: ease-out; }
-  78% { transform: translateY(0) scale(1.125); opacity: 1; animation-timing-function: ease-in; }
-  100% { transform: translateY(110px) scale(1); opacity: 0; }
-}
-
-@keyframes sc-win-award-spin {
-  0% { transform: rotate(0deg); }
-  24% { transform: rotate(680deg); animation-timing-function: linear; }
-  78% { transform: rotate(860deg); animation-timing-function: ease-in; }
-  100% { transform: rotate(980deg); }
-}
-
-@keyframes sc-win-award-plus {
-  0%, 35.76% {
-    opacity: 0;
-    transform: translate(-50%, 10px);
-  }
-  53.76% {
-    opacity: 1;
-    transform: translate(-50%, -86px);
-    animation-timing-function: linear;
-  }
-  74% {
-    opacity: 1;
-    transform: translate(-50%, -86px);
-  }
-  82%, 100% {
-    opacity: 0;
-    transform: translate(-50%, -86px);
-  }
-}
-
-@keyframes sc-win-award-spark {
-  0%, 34% { opacity: 0; transform: rotate(var(--spark-a)) translateY(0) scale(0.4); }
-  46% { opacity: 1; animation-timing-function: ease-out; }
-  78% { opacity: 0; transform: rotate(var(--spark-a)) translateY(calc(var(--spark-d) * -1)) scale(1); }
-  100% { opacity: 0; }
-}
-
 .sc-win-award {
   position: absolute;
+  inset: 0;
   z-index: 40;
-  width: 0;
-  height: 0;
+  overflow: hidden;
   pointer-events: none;
+  container-type: size;
 }
 
 .sc-win-award-stage {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: min(320px, 70vw);
-  height: min(420px, 70vh);
-  --success-rise: min(380px, 42vh);
-  animation: sc-win-award-stage 3.4s forwards;
-  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 78%, rgba(0, 0, 0, 0.55) 90%, transparent 100%);
-  mask-image: linear-gradient(to bottom, #000 0%, #000 78%, rgba(0, 0, 0, 0.55) 90%, transparent 100%);
+  width: min(320px, 96cqw);
+  height: min(420px, 92cqh);
+  transform-origin: center center;
+  animation: award-success-coin 3.4s forwards;
+  /* Soft bottom edge left from the old drop. The coin now shrinks in place. */
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    #000 0%,
+    #000 78%,
+    rgba(0, 0, 0, 0.55) 90%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    #000 0%,
+    #000 78%,
+    rgba(0, 0, 0, 0.55) 90%,
+    transparent 100%
+  );
 }
 
-.sc-win-award-coin {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  margin: -56px 0 0 -56px;
-  width: 112px;
-  height: 112px;
-  animation: sc-win-award-coin 3.4s forwards;
-}
-
-.sc-win-award-coin img {
-  width: 112px;
-  height: 112px;
-  filter: brightness(1.5);
-  animation: sc-win-award-spin 3.4s forwards;
-}
-
-.sc-win-award-plus {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  font-family: var(--font-family-primary);
-  font-size: 28px;
-  font-weight: 700;
-  letter-spacing: -0.4px;
-  color: #f6e2a4;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
-  animation: sc-win-award-plus 3.4s forwards;
-}
-
-.sc-win-award-spark {
-  position: absolute;
-  left: 50%;
-  top: calc(50% - 70px);
-  width: 6px;
-  height: 6px;
-  margin: -3px 0 0 -3px;
-  border-radius: 50%;
-  background: radial-gradient(circle, #fff 0%, #f6e2a4 45%, transparent 72%);
-  animation: sc-win-award-spark 3.4s var(--spark-delay, 0ms) forwards;
+.sc-win-award-canvas,
+.sc-win-award-canvas canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .sc-win-award-stage,
-  .sc-win-award-coin,
-  .sc-win-award-coin img,
-  .sc-win-award-plus,
-  .sc-win-award-spark {
+  .sc-win-award-stage {
     animation-duration: 0.01ms;
+  }
+
+  .sc-viewport.sc-win-dragging [data-win-person] :is(.seat-avatar, .avatar),
+  .sc-viewport.sc-win-dragging .sc-win-hot.game-hex {
+    transition: none !important;
+  }
+
+  .sc-viewport.sc-win-dragging .sc-room-card .seat-assigned.sc-win-hot .seat-avatar,
+  .sc-viewport.sc-win-dragging .sc-room-card .meeting-room-person.sc-win-hot .avatar,
+  .sc-viewport.sc-win-dragging .sc-agentroom-visitor.sc-win-hot .avatar,
+  .sc-viewport.sc-win-dragging .sc-win-hot.game-hex {
+    transform: none !important;
   }
 }
 
@@ -6890,6 +6873,20 @@
   .dev-settings-wrap {
     display: none !important;
   }
+
+  /* W!N hero coin tray. The phone crop shows the right side of the
+     window, so the tray stays 8px inside that edge (via
+     --sc-win-panel-right) and just above the dock. The anchor has to
+     stay the positioning context — a static anchor would measure the
+     offset from the toolbar instead of the coin. */
+  .fp-page[data-slug="win"] .fp-hero-stage .sc-toolbar-pill-group:has(.sc-win-anchor),
+  .fp-page[data-slug="win"] .fp-hero-stage .sc-win-anchor {
+    position: relative;
+  }
+  .fp-page[data-slug="win"] .fp-hero-stage .sc-toolbar > .sc-toolbar-group:last-child .sc-win-panel {
+    left: auto;
+    right: var(--sc-win-panel-right, 0px);
+  }
 }
 
 /* ──────────────────────────────────────────────────────────────────────
@@ -7052,6 +7049,8 @@
   border-radius: 50%;
   object-fit: cover;
   border: 1px solid var(--border);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0);
+  transition: transform 180ms ease, box-shadow 180ms ease;
 }
 
 .sc-agentroom-rack {

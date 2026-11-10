@@ -366,6 +366,15 @@ export const CARD_SEED_NOTES = [
   { id: 'chelsea', page: 'left', spread: 0, col: 0, row: 0, ...zoneNoteUv(0, 0), rotate: -6, name: 'Chelsea', text: 'Hope it’s a good one — save me a slice.' },
   { id: 'howard', page: 'left', spread: 0, col: 2, row: 3, ...zoneNoteUv(2, 3), rotate: 4, name: 'Howard', text: 'Another trip around the sun.' },
   { id: 'rob', page: 'left', spread: 0, col: 0, row: 6, ...zoneNoteUv(0, 6), rotate: -3, name: 'Rob', text: 'Get after it, Klas.' },
+  { id: 'howard-candles', page: 'left', spread: 0, col: 2, row: 0, ...zoneNoteUv(2, 0), rotate: 3, name: 'Howard', text: 'Wish big — I’ll handle the candles.' },
+  { id: 'cleo', page: 'left', spread: 0, col: 2, row: 6, ...zoneNoteUv(2, 6), rotate: 3, name: 'Cleo', text: 'Encore.' },
+  { id: 'petra', page: 'right', spread: 0, col: 0, row: 0, ...zoneNoteUv(0, 0), rotate: -5, name: 'Petra', text: 'Big day.' },
+  { id: 'wes', page: 'right', spread: 0, col: 3, row: 0, ...zoneNoteUv(3, 0), rotate: 4, name: 'Wes', text: 'Best year.' },
+  { id: 'felix', page: 'right', spread: 0, col: 1, row: 6, ...zoneNoteUv(1, 6), rotate: -3, name: 'Felix', text: 'Cake me.' },
+  { id: 'amira', page: 'right', spread: 0, col: 3, row: 6, ...zoneNoteUv(3, 6), rotate: 2, name: 'Amira', text: 'Go shine.' },
+  { id: 'jonah', page: 'right', spread: 0, col: 0, row: 6, ...zoneNoteUv(0, 6), rotate: -4, name: 'Jonah', text: 'Nice lap.' },
+  { id: 'sable', page: 'right', spread: 0, col: 2, row: 0, ...zoneNoteUv(2, 0), rotate: 5, name: 'Sable', text: 'Stay gold.' },
+  { id: 'jeff', page: 'right', spread: 0, col: 2, row: 6, ...zoneNoteUv(2, 6), rotate: -2, name: 'Jeff', text: 'Cheers.' },
 ];
 
 export function cardSeedNotesFor(name = 'Klas') {
@@ -1492,6 +1501,7 @@ function SignZoneOverlay({ page, hoverRef, notesRef, draftRef, active, onRemoveN
   const dismissRef = useRef(null);
   const dismissHot = useRef(false);
   const pinned = useRef(null);
+  const frameKey = useRef('');
   const geo = useMemo(
     () => new THREE.PlaneGeometry(ZONE_CELL_W, ZONE_CELL_H),
     [],
@@ -1517,6 +1527,8 @@ function SignZoneOverlay({ page, hoverRef, notesRef, draftRef, active, onRemoveN
     const dismiss = dismissRef.current;
     const group = groupRef.current;
     if (!active) {
+      if (frameKey.current === 'off') return;
+      frameKey.current = 'off';
       for (let i = 0; i < list.length; i++) {
         if (list[i]) list[i].visible = false;
       }
@@ -1528,6 +1540,14 @@ function SignZoneOverlay({ page, hoverRef, notesRef, draftRef, active, onRemoveN
     const hover = hoverRef.current;
     const notes = notesRef.current || [];
     const draft = draftRef?.current;
+    let stamp = notes.length;
+    for (let n = 0; n < notes.length; n += 1) {
+      const note = notes[n];
+      if (!note) continue;
+      stamp += (note.col || 0) + (note.row || 0) * 17 + ((note.text && note.text.length) || 0) * 131;
+    }
+    const key = `${page}:${spread}:${stamp}:${dismissHot.current ? 1 : 0}:${hover ? `${hover.page}.${hover.col}.${hover.row}` : ''}:${draft ? `${draft.page}.${draft.col}.${draft.row}.${draft.spread ?? ''}.${draft.noteId || ''}` : ''}`;
+    if (key === frameKey.current) return;
     const taken = occupiedZoneKeys(notes, null, spread);
     const marked = markedZoneKeys(notes, spread);
     const canSign = !hasOwnMessage(notes);
@@ -1613,6 +1633,7 @@ function SignZoneOverlay({ page, hoverRef, notesRef, draftRef, active, onRemoveN
     if (!showDismiss) {
       if (!dismissHot.current && !hoveredOwn) pinned.current = null;
       if (dismiss) dismiss.visible = false;
+      frameKey.current = key;
       return;
     }
     if (!dismiss) return;
@@ -1625,6 +1646,7 @@ function SignZoneOverlay({ page, hoverRef, notesRef, draftRef, active, onRemoveN
       (0.5 - (dismissRow + 0.5) / ZONE_ROWS) * NOTES_H + ZONE_CELL_H / 2 - ZONE_DISMISS_SIZE * 0.62,
       0.004,
     );
+    frameKey.current = key;
   });
 
   const cells = [];
@@ -2155,21 +2177,43 @@ function OpenCardLights({ amountRef }) {
   const openLightsRef = useRef(openLights);
   openLightsRef.current = openLights;
   const studioBase = useRef(new Map());
+  const studioLights = useRef(null);
+  const lastOpen = useRef(-1);
+  const scanFrames = useRef(0);
   const { scene } = useThree();
   useFrame(() => {
     const a = amountRef.current;
+    const own = rig.current;
+    let justFound = false;
+    if (!studioLights.current && scanFrames.current < 180) {
+      scanFrames.current += 1;
+      const found = [];
+      scene.traverse((obj) => {
+        if (!obj.isLight) return;
+        for (const id of Object.keys(own)) {
+          if (own[id] === obj) return;
+        }
+        if (!studioBase.current.has(obj)) studioBase.current.set(obj, obj.intensity);
+        found.push(obj);
+      });
+      if (found.length) {
+        studioLights.current = found;
+        justFound = true;
+      }
+    }
+    if (!justFound && studioLights.current && Math.abs(a - lastOpen.current) < 0.0004) return;
+    lastOpen.current = a;
     scene.environmentIntensity =
       ENV_INTENSITY_CLOSED + (ENV_INTENSITY_OPEN - ENV_INTENSITY_CLOSED) * a;
-    const own = rig.current;
-    scene.traverse((obj) => {
-      if (!obj.isLight) return;
-      for (const id of Object.keys(own)) {
-        if (own[id] === obj) return;
+    const factor = 1 - (1 - STUDIO_LIGHT_OPEN) * a;
+    const lights = studioLights.current;
+    if (lights) {
+      for (let i = 0; i < lights.length; i += 1) {
+        const obj = lights[i];
+        const base = studioBase.current.get(obj);
+        if (base != null) obj.intensity = base * factor;
       }
-      if (!studioBase.current.has(obj)) studioBase.current.set(obj, obj.intensity);
-      const base = studioBase.current.get(obj);
-      obj.intensity = base * (1 - (1 - STUDIO_LIGHT_OPEN) * a);
-    });
+    }
     for (const light of openLightsRef.current) {
       const node = own[light.id];
       if (!node) continue;
@@ -2184,6 +2228,8 @@ function OpenCardLights({ amountRef }) {
         if (obj) obj.intensity = base;
       });
       studioBase.current.clear();
+      studioLights.current = null;
+      lastOpen.current = -1;
     },
     [scene],
   );

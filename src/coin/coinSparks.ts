@@ -4,8 +4,10 @@ import * as THREE from "three";
 const BURST_COUNT = 168;
 /** Later clicks fill free slots, so earlier sparks keep flying. */
 const SPARK_COUNT = BURST_COUNT * 12;
-/** Outer reach in coin radii. Twice the previous burst. */
-const MAX_RADIUS = 2.92;
+/** Outer reach of the wide halo, in coin radii. Twice the previous burst. */
+const HALO_MAX_RADIUS = 2.92;
+/** Glitter stays a short hop past the rim instead of filling the stage. */
+const GLITTER_MAX_RADIUS = 1.36;
 
 const easeInCubic = (t: number) => t * t * t;
 const easeOutCubic = (t: number) => 1 - (1 - t) ** 3;
@@ -75,8 +77,18 @@ export interface CoinSparks {
   dispose: () => void;
 }
 
+export interface CoinSparkOptions {
+  /**
+   * `halo` is the wide award burst.
+   * `glitter` is the coinery click: small sparks that stay on the coin.
+   */
+  spread?: "halo" | "glitter";
+}
+
 /** Small hard sparks. Crisp glints, not streaks or soft sprites. */
-export const createCoinSparks = (): CoinSparks => {
+export const createCoinSparks = (options: CoinSparkOptions = {}): CoinSparks => {
+  const glitter = options.spread === "glitter";
+  const maxRadius = glitter ? GLITTER_MAX_RADIUS : HALO_MAX_RADIUS;
   const geometry = sparkGeometry();
   const material = sparkMaterial();
   const mesh = new THREE.InstancedMesh(geometry, material, SPARK_COUNT);
@@ -128,16 +140,25 @@ export const createCoinSparks = (): CoinSparks => {
       const glint = Math.random() < 0.18;
       const near = Math.random() < 0.4;
       angle[i] = Math.random() * Math.PI * 2;
-      drift[i] = (Math.random() - 0.5) * 0.9;
-      endR[i] = near ? 1.76 + Math.random() * 0.56 : 2.2 + Math.random() * 0.72;
-      startR[i] = 0.55 + Math.random() * 0.4;
-      if ((startR[i] ?? 0) > (endR[i] ?? 0)) startR[i] = (endR[i] ?? 1) * 0.75;
-      side[i] = (Math.random() - 0.5) * 1.1;
+      drift[i] = (Math.random() - 0.5) * (glitter ? 0.35 : 0.9);
+      if (glitter) {
+        // Born on the rim and hop a short way out, so they read as glitter
+        // on the coin. The halo burst flies several radii and fills the stage.
+        startR[i] = 1.02 + Math.random() * 0.08;
+        endR[i] = (startR[i] ?? 1) + 0.08 + Math.random() * 0.18;
+        side[i] = (Math.random() - 0.5) * 0.16;
+        // Stored scale before the life pulse (×0.55–1.55). Halo body is
+        // 0.30–0.48 and glints are 0.55–0.83 (~36–99px on this stage).
+        size[i] = glint ? 0.07 + Math.random() * 0.03 : 0.042 + Math.random() * 0.025;
+      } else {
+        endR[i] = near ? 1.76 + Math.random() * 0.56 : 2.2 + Math.random() * 0.72;
+        startR[i] = 0.55 + Math.random() * 0.4;
+        if ((startR[i] ?? 0) > (endR[i] ?? 0)) startR[i] = (endR[i] ?? 1) * 0.75;
+        side[i] = (Math.random() - 0.5) * 1.1;
+        size[i] = glint ? 0.55 + Math.random() * 0.28 : 0.3 + Math.random() * 0.18;
+      }
       startAt[i] = elapsed + Math.random() * 0.32;
       lifeDur[i] = 0.7 + Math.random() * 0.8;
-      // Coinery glints are ~0.016–0.08, about a pixel on this pulled-back
-      // 280px canvas. Draw the same shape large enough to read as a halo.
-      size[i] = glint ? 0.55 + Math.random() * 0.28 : 0.3 + Math.random() * 0.18;
       spin[i] = Math.random() * Math.PI * 2;
       spinSpeed[i] = (Math.random() - 0.5) * 3.2;
       tint[i * 3] = color.r;
@@ -177,9 +198,9 @@ export const createCoinSparks = (): CoinSparks => {
       let x = Math.cos(theta) * radius - Math.sin(theta) * slip;
       let y = Math.sin(theta) * radius + Math.cos(theta) * slip;
       const dist = Math.hypot(x, y);
-      if (dist > MAX_RADIUS) {
-        x *= MAX_RADIUS / dist;
-        y *= MAX_RADIUS / dist;
+      if (dist > maxRadius) {
+        x *= maxRadius / dist;
+        y *= maxRadius / dist;
       }
       dummy.position.set(x, y, -0.22);
       dummy.rotation.set(0, 0, (spin[i] ?? 0) + local * (spinSpeed[i] ?? 0));

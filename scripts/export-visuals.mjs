@@ -281,7 +281,6 @@ async function main() {
 
     await fs.mkdir(OUT_ROOT, { recursive: true });
     await fs.mkdir(TMP_DIR, { recursive: true });
-    await fs.rm(path.join(OUT_ROOT, '07 Pizza'), { recursive: true, force: true });
     await fs.writeFile(path.join(OUT_ROOT, 'README.md'), writeReadme(catalog));
     await fs.writeFile(path.join(OUT_ROOT, 'manifest.json'), JSON.stringify(catalog, null, 2));
 

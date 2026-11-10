@@ -17,7 +17,6 @@ const EXPORT_WINDOWS = [
   { id: 'theater', isOpen: true, position: { x: 0, y: 0 }, zIndex: 1 },
   { id: 'magicminutes', isOpen: true, position: { x: 0, y: 0 }, zIndex: 1 },
   { id: 'lobby', isOpen: true, position: { x: 0, y: 0 }, zIndex: 1 },
-  { id: 'pizza', isOpen: true, position: { x: 0, y: 0 }, zIndex: 1 },
   { id: 'onair', isOpen: true, position: { x: 0, y: 0 }, zIndex: 1 },
   { id: 'map', isOpen: true, position: { x: 0, y: 0 }, zIndex: 1 },
 ];
@@ -83,7 +82,6 @@ const CLIP_SELECTORS = [
   '.theater-win',
   '.mm-win',
   '.lb-win',
-  '.pz-win',
   '.mc-win',
   '.mc-window',
   '.onair-window',

@@ -1,5 +1,7 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import ReactDOM from 'react-dom';
+import { AwardCoinCanvas } from './awardCoin/AwardCoinCanvas';
+import { metalForAwardAmount } from './awardCoin/types';
 
 const COIN = '/win/coin.webp';
 /** Product default until a roam sets its own: 100 per month. */
@@ -284,30 +286,24 @@ export default function WinCoin({ defaultOpen = false }) {
         document.body,
       )}
       {award && ReactDOM.createPortal(
-        <div className="sc-win-award" style={{ left: award.x, top: award.y }} aria-hidden="true">
+        <div className="sc-win-award" aria-hidden="true">
           <div
+            key={award.id}
             className="sc-win-award-stage"
+            style={{ left: award.x, top: award.y }}
             onAnimationEnd={(event) => {
               if (event.target !== event.currentTarget) return;
-              if (event.animationName !== 'sc-win-award-stage') return;
+              if (event.animationName !== 'award-success-coin') return;
               setAward(null);
             }}
           >
-            <div className="sc-win-award-coin">
-              <img src={COIN} alt="" />
-            </div>
-            <div className="sc-win-award-plus">+{award.amount}</div>
-            {Array.from({ length: 16 }, (_, i) => (
-              <i
-                key={i}
-                className="sc-win-award-spark"
-                style={{
-                  '--spark-a': `${(i / 16) * 360}deg`,
-                  '--spark-d': `${28 + (i % 5) * 10}px`,
-                  '--spark-delay': `${i % 4 * 40}ms`,
-                }}
-              />
-            ))}
+            <AwardCoinCanvas
+              value={award.amount}
+              metal={metalForAwardAmount(award.amount)}
+              hovered
+              sending
+              index={0}
+            />
           </div>
         </div>,
         award.root || document.body,

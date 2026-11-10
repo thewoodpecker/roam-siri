@@ -2244,7 +2244,6 @@
 .fp-hero-stage .ainbox-window,
 .fp-hero-stage .mm-win,
 .fp-hero-stage .lb-win,
-.fp-hero-stage .pz-win,
 .fp-hero-stage .mc-win,
 .fp-hero-stage .onair-window,
 .fp-section-visual .meeting-win,
@@ -2252,7 +2251,6 @@
 .fp-section-visual .ainbox-window,
 .fp-section-visual .mm-win,
 .fp-section-visual .lb-win,
-.fp-section-visual .pz-win,
 .fp-section-visual .mc-win,
 .fp-section-visual .onair-window {
   position: relative !important;
@@ -4949,6 +4947,9 @@ button.fp-mv-light:focus-visible {
 #celebrations .fp-section-visual {
   background-image: none;
   background-color: var(--bg-surface-raised);
+  /* Clip the hover trail to this frame. The sparkle canvas is larger than
+     the card so glitter can leave the card, but not this container. */
+  overflow: hidden;
 }
 
 .fp-section-visual-wallpaper {
@@ -5635,7 +5636,6 @@ button.fp-mv-light:focus-visible {
 .fp-map-preview .ainbox-window,
 .fp-map-preview .mm-win,
 .fp-map-preview .lb-win,
-.fp-map-preview .pz-win,
 .fp-map-preview .mc-win,
 .fp-map-preview .mc-window,
 .fp-map-preview .onair-window,
@@ -5993,7 +5993,6 @@ button.fp-mv-light:focus-visible {
   .fp-section-visual:has(.ainbox-window),
   .fp-section-visual:has(.mm-win),
   .fp-section-visual:has(.lb-win),
-  .fp-section-visual:has(.pz-win),
   .fp-section-visual:has(.fp-knock-frame),
   .fp-section-visual:has(.fp-lock-frame),
   .fp-section-visual:has(.fp-krisp-frame),
@@ -6002,7 +6001,6 @@ button.fp-mv-light:focus-visible {
   .fp-hero-stage:has(.ainbox-window),
   .fp-hero-stage:has(.mm-win),
   .fp-hero-stage:has(.lb-win),
-  .fp-hero-stage:has(.pz-win),
   .fp-hero-stage:has(.fp-knock-frame),
   .fp-hero-stage:has(.fp-lock-frame),
   .fp-hero-stage:has(.fp-krisp-frame) {
@@ -6289,10 +6287,8 @@ button.fp-mv-light:focus-visible {
     transform-origin: top center;
   }
   .fp-section-visual .lb-win,
-  .fp-section-visual .pz-win,
   .fp-section-visual .ainbox-window,
   .fp-hero-stage .lb-win,
-  .fp-hero-stage .pz-win,
   .fp-hero-stage .ainbox-window {
     width: 780px !important;
     height: 580px !important;
@@ -6494,6 +6490,24 @@ button.fp-mv-light:focus-visible {
   }
   .fp-section-visual[data-map-align="right"] .fp-map-preview .sc-window,
   .fp-hero-stage[data-map-align="right"] .fp-map-preview .sc-window {
+    left: auto !important;
+    right: 0 !important;
+    transform-origin: top right !important;
+  }
+  /* W!N hero — the 1120×630 window stays scaled at 0.75, but the crop
+     shows its right edge (roam logo, right side of the floor). Same
+     anchor as data-map-align="right": 32px from the visual's right,
+     scale from the top-right, left side overflows and crops. */
+  .fp-page[data-slug="win"] .fp-hero-stage .fp-map-preview {
+    padding: 32px 32px 32px 0 !important;
+  }
+  .fp-page[data-slug="win"] .fp-hero-stage .fp-map-preview .miniRoamOS {
+    top: 32px !important;
+    left: 0 !important;
+    right: 32px !important;
+    bottom: 32px !important;
+  }
+  .fp-page[data-slug="win"] .fp-hero-stage .fp-map-preview .sc-window {
     left: auto !important;
     right: 0 !important;
     transform-origin: top right !important;
@@ -6913,6 +6927,16 @@ button.fp-mv-light:focus-visible {
   padding-top: 0;
 }
 
+/* Same Legacy vs Super Bundle columns, placed under a section lead. */
+.fp-embedded-compare {
+  grid-column: 1 / -1;
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(var(--grid-columns), 1fr);
+  gap: var(--grid-gutter);
+  align-items: stretch;
+}
+
 /* Magicast vs Loom — single-table compare with check/cross marks */
 .fp-section-compare-table {
   grid-column: 1 / -1;
@@ -7053,6 +7077,51 @@ button.fp-mv-light:focus-visible {
   .fp-cmp-head-cell,
   .fp-cmp-cell {
     padding: 16px 20px;
+  }
+}
+
+/* Provider price list (W!N). The title matches the section heading
+   above it (Possibility, same weight and setting). Column, rows,
+   hairlines, and positive total stay the pricing compare. */
+.fp-rewards-table {
+  grid-column: 1 / span 8;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.fp-rewards-table .fp-cmp-title {
+  font-family: 'Possibility', 'Inter', serif;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.fp-rewards-table .fp-compare-col {
+  grid-column: auto;
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .fp-rewards-table {
+    grid-column: 1 / -1;
+  }
+  .fp-rewards-table .fp-cmp-title {
+    font-size: 16px;
+    line-height: 1.15;
+    letter-spacing: -0.4px;
+  }
+  .fp-rewards-table .fp-compare-row,
+  .fp-rewards-table .fp-compare-row-total {
+    height: auto;
+    min-height: 56px;
+  }
+  .fp-rewards-table .fp-compare-row-price {
+    white-space: normal;
+    text-align: right;
   }
 }
 
@@ -10579,9 +10648,7 @@ button.fp-lbk-day {
   .fp-section-visual:has(.ainbox-window),
   .fp-hero-stage:has(.ainbox-window),
   .fp-section-visual:has(.lb-win),
-  .fp-hero-stage:has(.lb-win),
-  .fp-section-visual:has(.pz-win),
-  .fp-hero-stage:has(.pz-win) {
+  .fp-hero-stage:has(.lb-win) {
     justify-content: flex-start !important;
     padding-left: 32px !important;
   }
@@ -10593,9 +10660,7 @@ button.fp-lbk-day {
      existing `.fp-section-visual:has(.lb-win)` left-pin rule
      (justify-content + padding-left) already applies. */
   .fp-page[data-slug="lobby"] .fp-section-visual .lb-win:not(.fp-section-visual-wallpaper):not(.shelf-win):not(.mc-window):not(.mc-bubble):not(.fp-tags-magnify),
-  .fp-page[data-slug="lobby"] .fp-hero-stage .lb-win:not(.fp-section-visual-wallpaper):not(.shelf-win):not(.mc-window):not(.mc-bubble):not(.fp-tags-magnify),
-  .fp-page[data-slug="pizza"] .fp-section-visual .pz-win:not(.fp-section-visual-wallpaper):not(.shelf-win):not(.mc-window):not(.mc-bubble):not(.fp-tags-magnify),
-  .fp-page[data-slug="pizza"] .fp-hero-stage .pz-win:not(.fp-section-visual-wallpaper):not(.shelf-win):not(.mc-window):not(.mc-bubble):not(.fp-tags-magnify) {
+  .fp-page[data-slug="lobby"] .fp-hero-stage .lb-win:not(.fp-section-visual-wallpaper):not(.shelf-win):not(.mc-window):not(.mc-bubble):not(.fp-tags-magnify) {
     transform: scale(0.75) !important;
     transform-origin: top left !important;
   }

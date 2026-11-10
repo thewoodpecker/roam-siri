@@ -1,16 +1,100 @@
+.win-bday {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: min(1040px, 100%);
+  flex-shrink: 0;
+  position: relative;
+  isolation: isolate;
+  overflow: visible;
+}
+
 .win-bday-stage {
   position: relative;
   width: min(1040px, 100%);
   aspect-ratio: 14 / 11;
   height: auto;
   flex-shrink: 0;
+  overflow: visible;
+}
+
+.win-bday-look {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px 16px;
+  width: max-content;
+  max-width: 100%;
+  margin-top: 14px;
+  padding: 8px 12px;
+  box-sizing: border-box;
+  border: 0.5px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg-surface-raised);
+  color: var(--text-primary);
+}
+
+.win-bday-colors {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.win-bday-swatches {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.win-bday-swatch {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  box-sizing: border-box;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.win-bday-swatch.is-on {
+  box-shadow: 0 0 0 1.5px var(--bg-surface-raised), 0 0 0 3px var(--text-primary);
+}
+
+.win-bday-swatch:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+}
+
+[data-theme="light"] .win-bday-look,
+[data-theme="light"] .win-bday-swatch {
+  border-color: rgba(0, 0, 0, 0.12);
 }
 
 .win-bday-canvas {
   position: absolute;
   inset: 0;
+  z-index: 1;
   width: 100%;
   height: 100%;
+}
+
+/* Wonder BirthdayGlow — hover glitter trail, painted over the card.
+   The bitmap is larger than the 1040×817 stage so the trail is not cut
+   off at the card canvas. Coordinates stay in stage space. */
+.win-bday-sparkle {
+  position: absolute;
+  z-index: 2;
+  pointer-events: none;
+  --sparkle-bleed: 150px;
+  left: calc(var(--sparkle-bleed) * -1);
+  top: calc(var(--sparkle-bleed) * -1);
+  width: calc(100% + var(--sparkle-bleed) * 2);
+  height: calc(100% + var(--sparkle-bleed) * 2);
 }
 
 .win-window {
@@ -606,7 +690,7 @@
   align-items: center;
   justify-content: center;
   gap: 18px;
-  padding: 24px 28px;
+  padding: 24px 16px;
   overflow: hidden;
 }
 
@@ -628,16 +712,20 @@
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  gap: 8px;
+  gap: 16px;
   width: 100%;
   margin-bottom: -7px;
 }
 
-.win-shelf-items img {
-  height: 56px;
-  width: auto;
-  max-width: 56px;
-  object-fit: contain;
+.win-shelf-piece {
+  position: relative;
+  height: 76px;
+  flex: none;
+}
+
+.win-shelf-piece img {
+  position: absolute;
+  max-width: none;
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3)) drop-shadow(0 3px 6px rgba(0, 0, 0, 0.1));
 }
 
@@ -647,34 +735,18 @@
   object-fit: fill;
 }
 
-.win-trophy-people {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 12px 16px;
-  border-top: 0.5px solid rgba(255, 255, 255, 0.1);
-  background: #1e1d20;
-  overflow: hidden;
-}
-
-.win-trophy-people img,
-.win-trophy-people span {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  object-fit: cover;
-  background: rgba(255, 255, 255, 0.08);
-}
-
 .win-gift-shop {
-  width: min(900px, 100%);
+  /* Same frame as the trophy cabinet (.win-case-room): 10 of 12 columns, 3:2. */
+  width: calc(((100% - 11 * var(--grid-gutter)) / 12) * 10 + 9 * var(--grid-gutter));
+  max-width: 100%;
   height: auto;
+  aspect-ratio: 3 / 2;
+  flex-shrink: 0;
   display: flex;
   overflow: hidden;
   border-radius: 24px;
-  background: #0c0c0e;
+  /* Opaque fill here would sit behind the sidebar and hide its blur. */
+  background: transparent;
   color: #fff;
   text-align: left;
 }
@@ -684,7 +756,9 @@
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  background: #131415;
+  background: rgba(27, 27, 27, 0.7);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
   border-right: 0.5px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -719,6 +793,10 @@
   font-size: 14px;
   letter-spacing: -0.15px;
   text-align: left;
+  cursor: default;
+}
+
+button.win-gift-nav {
   cursor: pointer;
 }
 
@@ -756,6 +834,7 @@
 .win-gift-main {
   flex: 1;
   min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   background: #1d1e20;
@@ -768,6 +847,7 @@
   height: 62px;
   padding: 0 16px;
   border-bottom: 0.5px solid rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
 }
 
 .win-gift-head img {
@@ -784,86 +864,47 @@
 
 .win-gift-body {
   flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 16px;
   padding: 16px;
-  overflow: visible;
-}
-
-.win-gift-search {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  height: 36px;
-  padding: 0 12px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.win-gift-search img {
-  width: 16px;
-  height: 16px;
-}
-
-.win-gift-search input {
-  flex: 1;
-  min-width: 0;
-  border: 0;
-  background: transparent;
-  color: #fff;
-  font: inherit;
-  font-size: 14px;
-  outline: none;
-}
-
-.win-gift-search input::placeholder {
-  color: rgba(255, 255, 255, 0.5);
-}
-
-.win-gift-filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.win-gift-chip {
-  height: 25px;
-  padding: 0 12px;
-  border-radius: 999px;
-  border: 0.5px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.05);
-  color: rgba(255, 255, 255, 0.5);
-  font: inherit;
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-}
-
-.win-gift-chip.is-on {
-  background: #f2f1f2;
-  color: #000;
-  border-color: transparent;
+  overflow: hidden;
 }
 
 .win-gift-grid {
   list-style: none;
   box-sizing: border-box;
+  flex: 1 1 auto;
+  min-height: 0;
   width: calc(100% + 12px);
   margin: -6px -6px 0;
   padding: 6px;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 16px;
-  overflow: visible;
+  grid-auto-rows: minmax(0, 1fr);
+  column-gap: 16px;
+  row-gap: 8px;
+  align-content: stretch;
+  overflow: hidden;
+}
+
+.win-gift-grid > li {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .win-brand-card {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  justify-content: flex-start;
   gap: 8px;
   width: 100%;
+  min-height: 0;
+  flex: 1 1 auto;
   padding: 0;
   border: 0;
   background: transparent;
@@ -883,25 +924,37 @@
   align-items: center;
   justify-content: center;
   width: 100%;
-  height: 80px;
+  flex: 1 1 auto;
+  min-height: 0;
+  height: auto;
   border-radius: 12px;
+  container-type: size;
 }
 
 .win-brand-face img {
-  width: 30px;
-  height: 30px;
+  width: min(30px, 70cqh);
+  height: min(30px, 70cqh);
+}
+
+.win-brand-name,
+.win-brand-from {
+  flex-shrink: 0;
 }
 
 .win-brand-name {
+  margin-top: 2.5px;
   padding: 0 4px;
   font-size: 14px;
   font-weight: 500;
+  line-height: 16px;
   color: #f2f1f2;
 }
 
 .win-brand-from {
+  margin-top: -6px;
   padding: 0 4px;
   font-size: 12px;
+  line-height: 14px;
   color: rgba(255, 255, 255, 0.5);
 }
 
@@ -946,29 +999,98 @@
   font-size: 14px;
 }
 
-@media (max-width: 800px) {
+@media (max-width: 900px) {
   .win-gift-shop {
-    height: auto;
-    flex-direction: column;
-  }
-
-  .win-gift-side {
     width: 100%;
   }
+}
 
-  .win-gift-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+.win-visual-stack {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 72px;
+}
 
-  .win-trophy-people {
-    gap: 8px;
-  }
+.win-story-frame {
+  /* Same frame as the trophy cabinet (.win-case-room): 10 of 12 columns, 3:2.
+     No trophy sidebar — the story viewer fills the window. */
+  position: relative;
+  width: calc(((100% - 11 * var(--grid-gutter)) / 12) * 10 + 9 * var(--grid-gutter));
+  max-width: 100%;
+  height: auto;
+  aspect-ratio: 3 / 2;
+  flex-shrink: 0;
+  overflow: hidden;
+  border: 0.5px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  background: #1e1d20;
+}
 
-  .win-trophy-people img,
-  .win-trophy-people span {
-    width: 28px;
-    height: 28px;
-  }
+/* Homepage office map (R&D, the floor stories open on) sits behind the
+   story overlay. The viewer keeps the homepage scrim, rgba(0, 0, 0, 0.85). */
+.win-story-map {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.win-story-map .sc-viewport {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+  background: transparent !important;
+  display: block !important;
+}
+
+.win-story-map .miniRoamOS {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  min-width: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+  background: transparent !important;
+  display: block !important;
+  transform: none !important;
+}
+
+.win-story-map .sc-navbar-wrap,
+.win-story-map .sc-right-controls,
+.win-story-map .sc-grid-debug,
+.win-story-map .sc-wallpaper,
+.win-story-map .sc-products-bar,
+.win-story-map .sc-hint,
+.win-story-map .sc-bottom-bar,
+.win-story-map .sc-dock,
+.win-story-map .miniRoamOS::after {
+  display: none !important;
+}
+
+.win-story-map .sc-window {
+  position: absolute !important;
+  width: 1120px !important;
+  height: 630px !important;
+  max-width: none !important;
+  max-height: none !important;
+  aspect-ratio: auto !important;
+  left: 50% !important;
+  top: 50% !important;
+  margin: 0 !important;
+  animation: none !important;
+  transform: translate(-50%, -50%) scale(var(--win-story-map-scale, 1)) !important;
+  transform-origin: center center !important;
 }
 
 .win-case-room {
@@ -993,7 +1115,14 @@
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
   border-right: 0.5px solid rgba(255, 255, 255, 0.1);
+}
+
+.win-case-room-list {
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .win-case-room-lights {
@@ -1031,12 +1160,41 @@
   letter-spacing: -0.15px;
   text-align: left;
   cursor: default;
+  flex-shrink: 0;
 }
 
 .win-case-room-item.is-on {
   background: rgba(255, 255, 255, 0.05);
   color: #fff;
   font-weight: 500;
+}
+
+.win-case-room-side-gap {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.win-case-room-create {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 8px;
+  width: 100%;
+  margin-top: 0;
+  padding: 16px 16px 20px;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  letter-spacing: -0.15px;
+  cursor: default;
+}
+
+.win-case-room-plus {
+  width: 14px;
+  font-size: 16px;
+  line-height: 1;
+  text-align: center;
 }
 
 .win-case-room-main {
@@ -1125,8 +1283,9 @@
   top: -47px;
   z-index: 2;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
+  gap: 10px;
   padding: 4px 6px;
   border: 0.5px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
@@ -1136,12 +1295,29 @@
   font-weight: 500;
   line-height: 12px;
   letter-spacing: 0.12px;
-  text-align: center;
+  text-align: left;
   white-space: nowrap;
   pointer-events: none;
   opacity: 0;
   transform: translateX(-50%) translateY(4px);
   transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.win-case-room .win-case-tip img {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.win-case-tip-copy {
+  display: flex;
+  flex-direction: column;
+}
+
+.win-case-tip-copy span + span {
+  color: rgba(255, 255, 255, 0.5);
 }
 
 .win-case-room .win-case-piece:hover .win-case-tip,
@@ -1163,7 +1339,8 @@
 }
 
 @media (max-width: 900px) {
-  .win-case-room {
+  .win-case-room,
+  .win-story-frame {
     width: 100%;
   }
 
@@ -1177,5 +1354,180 @@
 
   .win-case-shelf {
     transform: scale(0.78);
+  }
+}
+
+/* W!N feature page, phones and small tablets.
+   The playbook (virtual-offices/CLAUDE.md) keeps map windows at
+   1120×630 scaled 0.75. These frames are the 10-column 3:2 windows.
+   On mobile the trophy and gift sidebars are hidden so the shelves
+   and cards use the full window. Below 600px the gift shop keeps a
+   capped height instead of growing with the card grid. */
+@media (max-width: 768px) {
+  #celebrations .fp-section-visual {
+    overflow: hidden;
+  }
+
+  .win-bday,
+  .win-bday-stage {
+    width: min(1040px, 100%);
+    max-width: 100%;
+  }
+
+  .win-bday-look,
+  .win-bday-swatches {
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 100%;
+  }
+
+  /* The coin tray is anchored to the right dock, which the 0.75 crop
+     cuts off. Park it on the visible left edge, just above the dock,
+     so Sign Card and Give Roamcoins are both on screen. The pill group
+     stays the positioning context unless it is static — then the
+     full-width toolbar is, and left: 12px is the window's left edge. */
+  .fp-page[data-slug="win"] .fp-hero-stage .sc-toolbar-pill-group:has(.sc-win-anchor),
+  .fp-page[data-slug="win"] .fp-hero-stage .sc-win-anchor {
+    position: static;
+  }
+
+  /* Beat `.sc-toolbar > .sc-toolbar-group:last-child .sc-win-panel`
+     (the :last-child makes that rule 0,4,0 and it is declared later). */
+  .fp-page[data-slug="win"] .fp-hero-stage .sc-toolbar .sc-win-panel {
+    left: 12px;
+    right: auto;
+    top: auto;
+    bottom: calc(100% + 8px);
+    width: min(20rem, calc((100vw - 72px) / 0.75));
+    max-width: calc((100vw - 72px) / 0.75);
+    max-height: calc(630px - 130px);
+  }
+
+  .fp-page[data-slug="win"] .fp-rewards-table,
+  .fp-page[data-slug="win"] .fp-embedded-compare,
+  .fp-page[data-slug="win"] .sc-reviews-section,
+  .fp-page[data-slug="win"] .sc-reviews-container {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .fp-page[data-slug="win"] .fp-embedded-compare .fp-compare-row,
+  .fp-page[data-slug="win"] .fp-embedded-compare .fp-compare-row-total,
+  .fp-page[data-slug="win"] .fp-rewards-table .fp-compare-row,
+  .fp-page[data-slug="win"] .fp-rewards-table .fp-compare-row-total {
+    height: auto;
+    min-height: 56px;
+    min-width: 0;
+  }
+
+  .fp-page[data-slug="win"] .fp-compare-row-name,
+  .fp-page[data-slug="win"] .fp-compare-row-price,
+  .fp-page[data-slug="win"] .fp-compare-row-note {
+    min-width: 0;
+  }
+
+  .fp-page[data-slug="win"] .fp-embedded-compare .fp-compare-row-price,
+  .fp-page[data-slug="win"] .fp-rewards-table .fp-compare-row-price {
+    white-space: normal;
+  }
+
+  .fp-page[data-slug="win"] .sc-review-card {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  /* Phone: drop both left panes. Shelves and the gift grid use the
+     full window. Desktop (and the homepage cabinet) keep the sidebar. */
+  .fp-page[data-slug="win"] .win-case-room-side,
+  .fp-page[data-slug="win"] .win-gift-side {
+    display: none;
+  }
+
+  .fp-page[data-slug="win"] .win-case-room-main,
+  .fp-page[data-slug="win"] .win-gift-main {
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
+  }
+
+  /* Side inset only. Vertical padding stays on the shared visual rule. */
+  #trophy-cabinet .fp-section-visual {
+    padding-left: 32px;
+    padding-right: 32px;
+  }
+
+  #gift-shop .fp-section-visual {
+    padding-left: 32px;
+    padding-right: 32px;
+  }
+
+  /* Phone header has no back arrow. Hiding the image drops the 16px gap. */
+  #gift-shop .win-gift-head img {
+    display: none;
+  }
+
+  /* Three columns, and drop the last row. The cards stay in the list for desktop. */
+  #gift-shop .win-gift-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  #gift-shop .win-gift-grid > li:nth-last-child(-n + 4) {
+    display: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .fp-page[data-slug="win"] .win-case-room,
+  .fp-page[data-slug="win"] .win-story-frame,
+  .fp-page[data-slug="win"] .win-gift-shop {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .fp-page[data-slug="win"] .win-case-room,
+  .fp-page[data-slug="win"] .win-story-frame {
+    aspect-ratio: auto;
+    height: auto;
+    min-height: 460px;
+  }
+
+  /* Keep the gift window in the same height band as desktop (~620),
+     not the full height of 16 stacked cards. */
+  .fp-page[data-slug="win"] .win-gift-shop {
+    aspect-ratio: auto;
+    height: 560px;
+    max-height: 620px;
+  }
+
+  .fp-page[data-slug="win"] .win-case-room-stage {
+    padding: 8px 16px;
+    overflow: hidden;
+  }
+
+  .fp-page[data-slug="win"] .win-case-shelf {
+    transform: none;
+  }
+
+  .fp-page[data-slug="win"] .win-gift-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .fp-page[data-slug="win"] .win-gift-grid {
+    flex: 1 1 auto;
+    height: auto;
+    min-height: 0;
+    overflow: hidden;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-auto-rows: minmax(0, 1fr);
+    align-content: stretch;
+  }
+
+  .fp-page[data-slug="win"] .win-brand-card,
+  .fp-page[data-slug="win"] .win-brand-face {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: auto;
   }
 }

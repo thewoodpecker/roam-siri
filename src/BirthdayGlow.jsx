@@ -178,19 +178,22 @@ uniform vec2  u_mouse;
 uniform float u_mouse_on;
 uniform vec2  u_trail[12];
 uniform float u_trail_len;
+uniform vec2  u_origin;
+uniform vec2  u_stage;
 
 ${NOISE_GLSL}
 
 void main() {
   vec2 frag = gl_FragCoord.xy;
-  vec2 halfRes = u_res * 0.5;
-  /* Match cursor space: -1..1 across full canvas (not a circular disc). */
-  vec2 p = (frag - halfRes) / halfRes;
+  /* Cursor space stays -1..1 across the stage. A larger canvas can paint past it. */
+  vec2 stageSize = max(u_stage, vec2(1.0));
+  vec2 p = ((frag - u_origin) / stageSize - 0.5) * 2.0;
 
-  /* Soft screen vignette only — field fills the stage. */
+  /* Vignette follows the canvas edge, so a bleed margin is not faded at the stage. */
+  vec2 uv = frag / max(u_res, vec2(1.0));
   float edge = min(
-    smoothstep(0.0, 0.08, (p.x + 1.0) * 0.5) * smoothstep(1.0, 0.92, (p.x + 1.0) * 0.5),
-    smoothstep(0.0, 0.08, (p.y + 1.0) * 0.5) * smoothstep(1.0, 0.92, (p.y + 1.0) * 0.5)
+    smoothstep(0.0, 0.08, uv.x) * smoothstep(1.0, 0.92, uv.x),
+    smoothstep(0.0, 0.08, uv.y) * smoothstep(1.0, 0.92, uv.y)
   );
   float field = mix(0.85, 1.0, edge);
 
@@ -236,6 +239,51 @@ void main() {
 
 const TRAIL_LEN = 12;
 
+/** Stage box when the canvas is bled larger; otherwise the canvas itself. */
+function pointerRect(canvas) {
+  const canvasRect = canvas.getBoundingClientRect();
+  const stage = canvas.parentElement;
+  if (!stage) return canvasRect;
+  const stageRect = stage.getBoundingClientRect();
+  const bled =
+    canvasRect.width > stageRect.width + 1 ||
+    canvasRect.height > stageRect.height + 1;
+  return bled ? stageRect : canvasRect;
+}
+
+/**
+ * Stage rectangle in framebuffer pixels (origin is bottom-left, like gl_FragCoord).
+ * A canvas that fills its parent maps 1:1, so other BirthdayGlow uses stay put.
+ */
+function stageSpace(canvas, bufferW, bufferH) {
+  const stage = canvas.offsetParent || canvas.parentElement;
+  const canvasW = Math.max(canvas.clientWidth, 1);
+  const canvasH = Math.max(canvas.clientHeight, 1);
+  const scaleX = bufferW / canvasW;
+  const scaleY = bufferH / canvasH;
+  if (!stage || stage === canvas) {
+    return { originX: 0, originY: 0, stageW: bufferW, stageH: bufferH };
+  }
+  const originLeft = -canvas.offsetLeft;
+  const originTop = -canvas.offsetTop;
+  const stageW = stage.clientWidth * scaleX;
+  const stageH = stage.clientHeight * scaleY;
+  const same =
+    Math.abs(originLeft) < 1 &&
+    Math.abs(originTop) < 1 &&
+    Math.abs(stage.clientWidth - canvas.clientWidth) < 1 &&
+    Math.abs(stage.clientHeight - canvas.clientHeight) < 1;
+  if (same) {
+    return { originX: 0, originY: 0, stageW: bufferW, stageH: bufferH };
+  }
+  return {
+    originX: originLeft * scaleX,
+    originY: bufferH - (originTop + stage.clientHeight) * scaleY,
+    stageW,
+    stageH,
+  };
+}
+
 function parseHex(hex) {
   const h = hex.replace('#', '');
   return [
@@ -275,6 +323,8 @@ export default function BirthdayGlow({
   const startRef = useRef(0);
   const glRef = useRef(null);
   const uColorRef = useRef(null);
+  const kickRef = useRef(() => {});
+  const hitRectRef = useRef(null);
   const mouseRef = useRef({
     x: 0,
     y: 0,
@@ -289,7 +339,7 @@ export default function BirthdayGlow({
     const onMove = (e) => {
       const canvas = canvasRef.current;
       if (!canvas) return;
-      const rect = canvas.getBoundingClientRect();
+      const rect = hitRectRef.current || pointerRect(canvas);
       if (rect.width <= 0 || rect.height <= 0) return;
       const pad = 64;
       const inside =
@@ -303,6 +353,7 @@ export default function BirthdayGlow({
       m.x = x;
       m.y = y;
       m.targetOn = inside ? 1 : 0;
+      if (inside || m.on > 0 || m.trail.length) kickRef.current();
       if (!inside) return;
 
       const head = m.trail[0];
@@ -389,6 +440,8 @@ export default function BirthdayGlow({
     gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
 
     const uRes = gl.getUniformLocation(prog, 'u_res');
+    const uOrigin = gl.getUniformLocation(prog, 'u_origin');
+    const uStage = gl.getUniformLocation(prog, 'u_stage');
     const uTime = gl.getUniformLocation(prog, 'u_time');
     const uColor = gl.getUniformLocation(prog, 'u_color');
     const uRadius = gl.getUniformLocation(prog, 'u_radius');
@@ -412,9 +465,17 @@ export default function BirthdayGlow({
     }
 
     const reduceMq = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const syncReduce = () => gl.uniform1f(uReduce, reduceMq.matches ? 1 : 0);
+    let reduce = reduceMq.matches;
+    const syncReduce = () => {
+      reduce = reduceMq.matches;
+      gl.uniform1f(uReduce, reduce ? 1 : 0);
+    };
+    const onReduce = () => {
+      syncReduce();
+      kickRef.current();
+    };
     syncReduce();
-    reduceMq.addEventListener?.('change', syncReduce);
+    reduceMq.addEventListener?.('change', onReduce);
 
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
@@ -432,6 +493,11 @@ export default function BirthdayGlow({
       }
       gl.viewport(0, 0, bw, bh);
       gl.uniform2f(uRes, bw, bh);
+      if (uOrigin && uStage) {
+        const space = stageSpace(canvas, bw, bh);
+        gl.uniform2f(uOrigin, space.originX, space.originY);
+        gl.uniform2f(uStage, space.stageW, space.stageH);
+      }
       gl.uniform1f(uRadius, borderRadius * dpr);
     };
 
@@ -439,11 +505,29 @@ export default function BirthdayGlow({
     ro.observe(canvas);
     resize();
 
+    let visible = true;
+    let pausedAt = 0;
+    const radial = variant === 'radial';
+    const refreshRect = () => {
+      hitRectRef.current = pointerRect(canvas);
+    };
+    refreshRect();
+    const rectRo = new ResizeObserver(refreshRect);
+    rectRo.observe(canvas);
+    if (canvas.parentElement) rectRo.observe(canvas.parentElement);
+    window.addEventListener('scroll', refreshRect, true);
+    window.addEventListener('resize', refreshRect);
+
     let lastTrailTrim = 0;
     const frame = (t) => {
-      if (document.hidden) {
-        rafRef.current = requestAnimationFrame(frame);
+      rafRef.current = 0;
+      if (document.hidden || !visible) {
+        pausedAt = t;
         return;
+      }
+      if (pausedAt) {
+        if (startRef.current) startRef.current += t - pausedAt;
+        pausedAt = 0;
       }
       if (!startRef.current) startRef.current = t;
       const elapsed = (t - startRef.current) / 1000;
@@ -475,16 +559,41 @@ export default function BirthdayGlow({
       gl.uniform1f(uTime, elapsed);
       gl.clear(gl.COLOR_BUFFER_BIT);
       gl.drawArrays(gl.TRIANGLES, 0, 6);
+      // Radial glitter is hover-only. A static reduced-motion frame is enough.
+      const idleRadial = radial && m.on === 0 && m.targetOn < 0.5 && m.trail.length === 0;
+      if (reduce || idleRadial) return;
       rafRef.current = requestAnimationFrame(frame);
     };
-    rafRef.current = requestAnimationFrame(frame);
+    const kick = () => {
+      if (rafRef.current) return;
+      rafRef.current = requestAnimationFrame(frame);
+    };
+    kickRef.current = kick;
+
+    const io = new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting;
+      if (visible) kick();
+    }, { rootMargin: '180px 0px' });
+    io.observe(canvas);
+    const onPage = () => {
+      if (!document.hidden) kick();
+    };
+    document.addEventListener('visibilitychange', onPage);
+    kick();
 
     return () => {
       cancelAnimationFrame(rafRef.current);
       rafRef.current = 0;
+      kickRef.current = () => {};
       startRef.current = 0;
+      hitRectRef.current = null;
       ro.disconnect();
-      reduceMq.removeEventListener?.('change', syncReduce);
+      rectRo.disconnect();
+      io.disconnect();
+      window.removeEventListener('scroll', refreshRect, true);
+      window.removeEventListener('resize', refreshRect);
+      document.removeEventListener('visibilitychange', onPage);
+      reduceMq.removeEventListener?.('change', onReduce);
       gl.deleteBuffer(buf);
       gl.deleteProgram(prog);
       glRef.current = null;
@@ -497,6 +606,7 @@ export default function BirthdayGlow({
     const uColor = uColorRef.current;
     if (!gl || !uColor || !active) return;
     gl.uniform3fv(uColor, parseHex(color));
+    kickRef.current();
   }, [active, color]);
 
   if (!active) return null;

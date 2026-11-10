@@ -3,7 +3,11 @@ import './StoryViewer.css';
 
 const isVideoSrc = (src) => /\.(mp4|webm|mov)$/i.test(src);
 
-export default function StoryViewer({ stories, initialIndex = 0, onClose }) {
+const prefersReducedMotion = () => (
+  typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+);
+
+export default function StoryViewer({ stories, initialIndex = 0, onClose, embedded = false }) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [progress, setProgress] = useState(0);
   const containerRef = useRef(null);
@@ -13,8 +17,11 @@ export default function StoryViewer({ stories, initialIndex = 0, onClose }) {
   const [closing, setClosing] = useState(false);
   const [muted, setMuted] = useState(true);
   const [paused, setPaused] = useState(false);
+  const [reduceMotion, setReduceMotion] = useState(prefersReducedMotion);
+  const holdEmbedded = embedded && reduceMotion;
 
   const handleClose = () => {
+    if (embedded || !onClose) return;
     setClosing(true);
     setTimeout(onClose, 250);
   };
@@ -40,29 +47,50 @@ export default function StoryViewer({ stories, initialIndex = 0, onClose }) {
   // Active card width = height * 9/16 at 100% container height
   // Use a simple calculation instead of DOM measurement
   useLayoutEffect(() => {
-    const gap = 16;
     const containerEl = containerRef.current;
     if (!containerEl) return;
-    const containerH = containerEl.offsetHeight;
-    const activeW = containerH * (9 / 16);
-    const peekW = containerH * 0.75 * (9 / 16);
+    const measure = () => {
+      const gap = 16;
+      const containerH = containerEl.offsetHeight;
+      if (!containerH) return;
+      const activeW = containerH * (9 / 16);
+      const peekW = containerH * 0.75 * (9 / 16);
 
-    let totalOffset = 0;
-    for (let i = 0; i < currentIndex; i++) {
-      totalOffset += peekW + gap;
-    }
-    totalOffset += activeW / 2;
-    setOffset(-totalOffset);
+      let totalOffset = 0;
+      for (let i = 0; i < currentIndex; i++) {
+        totalOffset += peekW + gap;
+      }
+      totalOffset += activeW / 2;
+      setOffset(-totalOffset);
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(containerEl);
+    return () => ro.disconnect();
   }, [currentIndex]);
 
   const current = stories[currentIndex];
 
-  // Auto-advance progress bar. Videos drive their own progress via
-  // timeupdate/ended; images use a fixed 5s timer.
   useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const sync = () => setReduceMotion(mq.matches);
+    sync();
+    mq.addEventListener('change', sync);
+    return () => mq.removeEventListener('change', sync);
+  }, []);
+
+  // Auto-advance progress bar. Videos drive their own progress via
+  // timeupdate/ended; images use a fixed 5s timer. The embedded trophy
+  // viewer uses the same timer and wraps to the first story. Reduced
+  // motion holds the embedded viewer on the current story.
+  useEffect(() => {
+    if (holdEmbedded) {
+      setProgress(0);
+      return undefined;
+    }
     setProgress(0);
-    if (!current) return;
-    if (isVideoSrc(current.image)) return; // video effect handles progress
+    if (!current) return undefined;
+    if (isVideoSrc(current.image)) return undefined; // video effect handles progress
     const duration = 5000;
     let elapsed = 0;
     let lastFrame = Date.now();
@@ -74,22 +102,25 @@ export default function StoryViewer({ stories, initialIndex = 0, onClose }) {
       setProgress(p);
       if (p < 1) {
         rafId = requestAnimationFrame(tick);
+      } else if (currentIndex < stories.length - 1) {
+        setCurrentIndex(i => i + 1);
+      } else if (embedded) {
+        setCurrentIndex(0);
       } else {
-        if (currentIndex < stories.length - 1) setCurrentIndex(i => i + 1);
-        else handleClose();
+        handleClose();
       }
     };
     let rafId = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(rafId);
-  }, [currentIndex, stories.length, current?.image, paused]);
+  }, [currentIndex, stories.length, current?.image, paused, embedded, holdEmbedded]);
 
   // Wire up video progress for the active video story. Browser `timeupdate`
   // events fire ~4× per second which feels steppy, so we sample currentTime
   // on every animation frame instead for a silky progress bar.
   useEffect(() => {
-    if (!current || !isVideoSrc(current.image)) return;
+    if (holdEmbedded || !current || !isVideoSrc(current.image)) return undefined;
     const video = activeVideoRef.current;
-    if (!video) return;
+    if (!video) return undefined;
     let rafId;
     const tick = () => {
       const d = video.duration;
@@ -99,6 +130,7 @@ export default function StoryViewer({ stories, initialIndex = 0, onClose }) {
     const onEnded = () => {
       setProgress(1);
       if (currentIndex < stories.length - 1) setCurrentIndex(i => i + 1);
+      else if (embedded) setCurrentIndex(0);
       else handleClose();
     };
     video.addEventListener('ended', onEnded);
@@ -109,7 +141,7 @@ export default function StoryViewer({ stories, initialIndex = 0, onClose }) {
       cancelAnimationFrame(rafId);
       video.removeEventListener('ended', onEnded);
     };
-  }, [currentIndex, current?.image]);
+  }, [currentIndex, current?.image, embedded, holdEmbedded, stories.length]);
 
   // Pause/resume the active video without restarting it. Kept separate
   // from the init effect above so toggling `paused` doesn't reset
@@ -118,12 +150,13 @@ export default function StoryViewer({ stories, initialIndex = 0, onClose }) {
     if (!current || !isVideoSrc(current.image)) return;
     const video = activeVideoRef.current;
     if (!video) return;
-    if (paused) video.pause?.();
+    if (holdEmbedded || paused) video.pause?.();
     else video.play?.().catch(() => {});
-  }, [paused, current?.image]);
+  }, [paused, current?.image, holdEmbedded]);
 
   const goNext = () => {
     if (currentIndex < stories.length - 1) setCurrentIndex(i => i + 1);
+    else if (embedded) setCurrentIndex(0);
     else handleClose();
   };
 
@@ -133,6 +166,7 @@ export default function StoryViewer({ stories, initialIndex = 0, onClose }) {
 
   // Keyboard shortcuts: Space toggles pause/play; arrows navigate.
   useEffect(() => {
+    if (embedded) return undefined;
     const onKey = (e) => {
       if (e.code === 'Space') {
         e.preventDefault();
@@ -149,31 +183,45 @@ export default function StoryViewer({ stories, initialIndex = 0, onClose }) {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [currentIndex, stories.length]);
+  }, [currentIndex, stories.length, embedded]);
 
   return (
     <div
-      className={`sv-overlay ${loaded ? 'sv-loaded' : 'sv-loading'} ${closing ? 'sv-closing' : ''}`}
-      onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}
+      className={`sv-overlay${embedded ? ' sv-embedded' : ''} ${loaded ? 'sv-loaded' : 'sv-loading'} ${closing ? 'sv-closing' : ''}`}
+      onClick={(e) => { if (!embedded && e.target === e.currentTarget) handleClose(); }}
     >
       <div className="sv-container" ref={containerRef} style={{ transform: `translate(${offset}px, -50%)` }}>
         {stories.map((story, i) => {
           const isCurrent = i === currentIndex;
           return (
             <div
-              key={story.image}
-              className={`sv-card ${isCurrent ? 'sv-card-active' : 'sv-card-peek'}`}
+              key={story.id || story.image}
+              className={`sv-card ${isCurrent ? 'sv-card-active' : 'sv-card-peek'}${story.award ? ' sv-card-award' : ''}`}
               style={{ animationDelay: `${i * 80}ms` }}
               onClick={isCurrent ? undefined : () => setCurrentIndex(i)}
             >
-              {isVideoSrc(story.image) ? (
+              {story.award ? (
+                <div className="sv-award">
+                  <div className="sv-award-photo">
+                    <img src={story.award.image} alt="" />
+                  </div>
+                  {isCurrent && (
+                    <div className="sv-award-copy">
+                      <p className="sv-award-title">{story.award.title}</p>
+                      <img className="sv-award-rule" src={story.award.rule} alt="" />
+                      <p className="sv-award-who">{story.award.who}</p>
+                      <p className="sv-award-when">{story.award.when}</p>
+                    </div>
+                  )}
+                </div>
+              ) : isVideoSrc(story.image) ? (
                 <video
                   ref={isCurrent ? activeVideoRef : undefined}
                   className="sv-image"
                   src={isCurrent ? story.image : undefined}
                   poster={story.image.replace(/^(.*\/)([^/]+)\.(mp4|webm|mov)$/i, '$1posters/$2.jpg')}
                   preload={isCurrent ? 'auto' : 'none'}
-                  autoPlay={isCurrent}
+                  autoPlay={isCurrent && !holdEmbedded}
                   muted={isCurrent ? muted : true}
                   playsInline
                 />
@@ -219,11 +267,13 @@ export default function StoryViewer({ stories, initialIndex = 0, onClose }) {
                         )}
                       </button>
                     )}
+                    {!embedded && (
                     <button type="button" aria-label="Close story" className="sv-close" onClick={handleClose}>
                       <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                         <path d="M4 4L12 12M12 4L4 12" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
                       </svg>
                     </button>
+                    )}
                   </div>
                   <button type="button" aria-label="Previous story" className="unbutton sv-click-prev" onClick={goPrev} />
                   <button type="button" aria-label="Next story" className="unbutton sv-click-next" onClick={goNext} />

@@ -50,15 +50,14 @@ import MagicMinutes from './MagicMinutes';
 import Recordings from './Recordings';
 import Calendar from './Calendar';
 import Lobby from './Lobby';
-import Pizza from './Pizza';
-import { ROAM_HQ } from './pizzaData';
 import Magnify from './Magnify';
 import OnAir from './OnAir';
 import MobileWindow from './MobileWindow';
 import { WindowManagerProvider } from './WindowManager';
 import { ChatProvider } from './ChatContext';
 import './FeaturePage.css';
-import { CelebrationsVisual, AwardsCabinetVisual, GiftStoreVisual } from './WinPage';
+import { CelebrationsVisual, AwardsCabinetVisual, TrophyStoryVisual, GiftStoreVisual } from './WinPage';
+import { CoineryDialog } from './CoineryDialog';
 
 const JOE = { name: 'Joe W.', fullName: 'Joe Woodward', avatar: '/headshots/joe-woodward.jpg' };
 
@@ -93,7 +92,6 @@ const INITIAL_WINDOWS = [
   { id: 'theater', isOpen: true, position: { x: 0, y: 0 }, zIndex: 1 },
   { id: 'magicminutes', isOpen: true, position: { x: 0, y: 0 }, zIndex: 1 },
   { id: 'lobby', isOpen: true, position: { x: 0, y: 0 }, zIndex: 1 },
-  { id: 'pizza', isOpen: true, position: { x: 0, y: 0 }, zIndex: 1 },
   { id: 'onair', isOpen: true, position: { x: 0, y: 0 }, zIndex: 1 },
 ];
 
@@ -2225,24 +2223,6 @@ function LobbyPreview({ initialNav, initialSelectedLinkId, initialDetailSection,
       initialDetailSection={initialDetailSection}
       initialLinks={initialLinks}
       scrollDetailToBottom={scrollDetailToBottom}
-    />
-  );
-}
-
-const PIZZA_CART_PREVIEW = [
-  { itemId: 'itm_pepperoni_sq', shopId: 'shp_prince', name: 'Pepperoni Square', priceCents: 600, image: 'square', qty: 4 },
-  { itemId: 'itm_knots', shopId: 'shp_prince', name: 'Garlic Knots', priceCents: 650, image: 'knots', qty: 2 },
-];
-
-function PizzaPreview({ initialNav, initialShopId, initialCart, initialAddress } = {}) {
-  return (
-    <Pizza
-      win={noopWin('pizza')}
-      onDrag={() => {}}
-      initialNav={initialNav}
-      initialShopId={initialShopId}
-      initialCart={initialCart}
-      initialAddress={initialAddress}
     />
   );
 }
@@ -5321,7 +5301,7 @@ function FlashCard({ supertitle, title, media, back }) {
 const MAGNIFY_TARGET_PERSON = 'Michael W.';
 const MAGNIFY_TARGET_CITY = 'MIA';
 
-function MapPreview({ spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, hideOnIt = false, onItAutoOpen = false, autoKnock = false, shelfAutoOpen = false, recordingsAutoOpen = false, shareAutoOpen = false, initialFloor = 'Preview', showSidebar = false, autoCycleFloors = false, autoCycleDms = false, showPhysicalTags = false, spotlightSearch = false, onAirOverride = null, winCoinDefaultOpen = false, children = null } = {}) {
+function MapPreview({ spotifyAlwaysOpen = false, githubAlwaysOpen = false, figmaAlwaysOpen = false, hideOnIt = false, onItAutoOpen = false, autoKnock = false, shelfAutoOpen = false, recordingsAutoOpen = false, shareAutoOpen = false, initialFloor = 'Preview', showSidebar = false, autoCycleFloors = false, autoCycleDms = false, showPhysicalTags = false, spotlightSearch = false, onAirOverride = null, winCoinDefaultOpen = false, birthdayEnabled = false, children = null } = {}) {
   const [pageTheme, setPageTheme] = useState(() =>
     typeof document !== 'undefined' ? document.documentElement.getAttribute('data-theme') || 'dark' : 'dark'
   );
@@ -5400,7 +5380,7 @@ function MapPreview({ spotifyAlwaysOpen = false, githubAlwaysOpen = false, figma
   ].filter(Boolean).join(' ');
   return (
     <div ref={wrapRef} className={className}>
-      <ShowcaseMap embedded autoKnock={autoKnock} initialFloor={initialFloor} spotifyAlwaysOpen={spotifyAlwaysOpen} githubAlwaysOpen={githubAlwaysOpen} figmaAlwaysOpen={figmaAlwaysOpen} hideOnIt={hideOnIt} onItAutoOpen={onItAutoOpen} shelfAutoOpen={shelfAutoOpen} recordingsAutoOpen={recordingsAutoOpen} shareAutoOpen={shareAutoOpen} theme={pageTheme} autoCycleFloors={autoCycleFloors} autoCycleDms={autoCycleDms} showPhysicalTags={showPhysicalTags} onAirOverride={onAirOverride} birthdayEnabled={false} winCoinDefaultOpen={winCoinDefaultOpen} />
+      <ShowcaseMap embedded autoKnock={autoKnock} initialFloor={initialFloor} spotifyAlwaysOpen={spotifyAlwaysOpen} githubAlwaysOpen={githubAlwaysOpen} figmaAlwaysOpen={figmaAlwaysOpen} hideOnIt={hideOnIt} onItAutoOpen={onItAutoOpen} shelfAutoOpen={shelfAutoOpen} recordingsAutoOpen={recordingsAutoOpen} shareAutoOpen={shareAutoOpen} theme={pageTheme} autoCycleFloors={autoCycleFloors} autoCycleDms={autoCycleDms} showPhysicalTags={showPhysicalTags} onAirOverride={onAirOverride} birthdayEnabled={birthdayEnabled} winCoinDefaultOpen={winCoinDefaultOpen} />
       {children}
       {spotlightSearch && spotlightHost && ReactDOM.createPortal(
         <>
@@ -7467,7 +7447,7 @@ const STANDARD_PRICING_COMPARE = {
   variant: 'compare',
   left: {
     title: 'Legacy Work',
-    subtitle: 'Manual, Not Integrated, $282/month',
+    subtitle: 'Manual, Not Integrated, $1,289/month',
     rows: [
       { name: 'Zoom', value: '$27/month', note: 'Endless 30-minute meetings' },
       { name: 'Hopin', value: '$25/month', note: 'Outside your office' },
@@ -7478,8 +7458,9 @@ const STANDARD_PRICING_COMPARE = {
       { name: 'Standalone AI Assistant', value: '$50/month', note: 'No office awareness' },
       { name: 'Zoom Webinars', value: '$83/month', note: 'Yahoo-era webinars' },
       { name: 'Cubicle', value: '$1,000/month', note: 'Commute, manual' },
+      { name: 'Workhuman', value: '$7/month + 33%', note: 'Takes a cut of the rewards' },
     ],
-    total: { label: 'Total', value: '$282/month', tone: 'negative' },
+    total: { label: 'Total', value: '$1,289/month', tone: 'negative' },
   },
   right: {
     featured: true,
@@ -7496,8 +7477,9 @@ const STANDARD_PRICING_COMPARE = {
       { name: 'On-It', href: '#/feature/on-it', value: 'Included', note: 'Office-aware AI' },
       { name: 'On-Air', href: '#/feature/on-air', value: 'Included', note: 'Creator-era events' },
       { name: 'Virtual Office', href: '#/feature/virtual-office', value: 'Included', note: 'Whole company, no commute' },
+      { name: 'W!N', href: '#/feature/win', value: 'Included', note: 'Recognition and rewards' },
     ],
-    total: { label: '9 products for the price of 1', value: '$19.50/month', tone: 'positive' },
+    total: { label: '10 products for the price of 1', value: '$19.50/month', tone: 'positive' },
   },
 };
 
@@ -7627,7 +7609,7 @@ export const FEATURES = {
       {
         variant: 'explore',
         title: 'Explore our Virtual Office Platform',
-        desc: '9 products for the price of one:',
+        desc: '10 products for the price of one:',
         items: [
           'Company Visualization with the Virtual Office',
           'Virtual Meeting Room with Drop-In Meetings',
@@ -7638,6 +7620,7 @@ export const FEATURES = {
           'AI Meeting Summarization with Magic Minutes',
           'Your AI Assistant is On-It',
           'Immersive Events with On-Air',
+          'Recognition and Rewards with W!N',
         ],
       },
       { variant: 'reviews' },
@@ -7791,7 +7774,7 @@ export const FEATURES = {
       {
         variant: 'explore',
         title: 'Explore our Virtual Office Platform',
-        desc: '9 products for the price of one:',
+        desc: '10 products for the price of one:',
         items: [
           'Company Visualization with the Virtual Office',
           'Virtual Meeting Room with Drop-In Meetings',
@@ -7802,6 +7785,7 @@ export const FEATURES = {
           'AI Meeting Summarization with Magic Minutes',
           'Your AI Assistant is On-It',
           'Immersive Events with On-Air',
+          'Recognition and Rewards with W!N',
         ],
       },
       {
@@ -7961,7 +7945,7 @@ export const FEATURES = {
       {
         variant: 'explore',
         title: 'Explore our Virtual Office Platform',
-        desc: '9 products for the price of one:',
+        desc: '10 products for the price of one:',
         items: [
           'Company Visualization with the Virtual Office',
           'Virtual Meeting Room with Drop-In Meetings',
@@ -7972,6 +7956,7 @@ export const FEATURES = {
           'AI Meeting Summarization with Magic Minutes',
           'Your AI Assistant is On-It',
           'Immersive Events with On-Air',
+          'Recognition and Rewards with W!N',
         ],
       },
       { variant: 'reviews' },
@@ -8293,7 +8278,7 @@ export const FEATURES = {
       {
         variant: 'explore',
         title: 'Explore our Virtual Office Platform',
-        desc: '9 products for the price of one:',
+        desc: '10 products for the price of one:',
         items: [
           'Company Visualization with the Virtual Office',
           'Virtual Meeting Room with Drop-In Meetings',
@@ -8304,6 +8289,7 @@ export const FEATURES = {
           'AI Meeting Summarization with Magic Minutes',
           'Your AI Assistant is On-It',
           'Immersive Events with On-Air',
+          'Recognition and Rewards with W!N',
         ],
       },
       { variant: 'reviews' },
@@ -8396,13 +8382,13 @@ export const FEATURES = {
           'Drop-in meetings — Roam is the only scheduler where guests can walk in the second you’re free.',
           'Native to your Virtual HQ — bookings land in your office, not a random video link.',
           'Overflow-aware — your Lobby knows when you’re actually slammed and adjusts.',
-          'Cost — Roam Lobby is included in $19.50/month per active member, alongside 8 other products. Calendly is $16/month for scheduling alone.',
+          'Cost — Roam Lobby is included in $19.50/month per active member, alongside 9 other products. Calendly is $16/month for scheduling alone.',
         ],
       },
       {
         variant: 'explore',
         title: 'Explore our Virtual Office Platform',
-        desc: '9 products for the price of one:',
+        desc: '10 products for the price of one:',
         items: [
           'Company Visualization with the Virtual Office',
           'Virtual Meeting Room with Drop-In Meetings',
@@ -8413,43 +8399,11 @@ export const FEATURES = {
           'AI Meeting Summarization with Magic Minutes',
           'Your AI Assistant is On-It',
           'Immersive Events with On-Air',
+          'Recognition and Rewards with W!N',
         ],
       },
       { variant: 'reviews' },
       STANDARD_PRICING_COMPARE,
-    ],
-  },
-  'pizza': {
-    eyebrow: 'Pizza',
-    title: 'Pizza for the office.',
-    hero: 'Nearby Slice shops, a shared cart, and live order tracking — without leaving Roam.',
-    visual: <PizzaPreview />,
-    heroInteractive: true,
-    sections: [
-      {
-        title: 'Nearby shops',
-        desc: 'Slice’s shop directory, scored for the office. Rating, delivery time, and whether they’re open — same list chrome as Lobby.',
-        visual: <PizzaPreview initialAddress={ROAM_HQ} />,
-        interactive: true,
-      },
-      {
-        title: 'The menu',
-        desc: 'Tap a shop and the list becomes the menu. Same rows, same chrome. Add slices without leaving the window.',
-        visual: <PizzaPreview initialNav="menu" initialShopId="shp_prince" />,
-        interactive: true,
-      },
-      {
-        title: 'A shared cart',
-        desc: 'Build the order in Roam, then checkout as a single Slice order. Quantities bump in place.',
-        visual: <PizzaPreview initialNav="cart" initialCart={PIZZA_CART_PREVIEW} />,
-        interactive: true,
-      },
-      {
-        title: 'Orders',
-        desc: 'Preparing, on the way, delivered. Same card layout, status where the badges go.',
-        visual: <PizzaPreview initialNav="orders" />,
-        interactive: true,
-      },
     ],
   },
   'magicast': {
@@ -8563,7 +8517,7 @@ export const FEATURES = {
           'Native AInbox integration — share into any group or DM in one click.',
           'Interactive transcripts you can search and click to scrub.',
           'AI Assistant can share Magicasts on your behalf.',
-          'Just $19.50/month per active member, bundled with 8 other products. Loom alone is $20/month.',
+          'Just $19.50/month per active member, bundled with 9 other products. Loom alone is $20/month.',
         ],
       },
       {
@@ -8582,7 +8536,7 @@ export const FEATURES = {
       {
         variant: 'explore',
         title: 'Explore our Virtual Office Platform',
-        desc: '9 products for the price of one:',
+        desc: '10 products for the price of one:',
         items: [
           'Company Visualization with the Virtual Office',
           'Virtual Meeting Room with Drop-In Meetings',
@@ -8593,6 +8547,7 @@ export const FEATURES = {
           'AI Meeting Summarization with Magic Minutes',
           'Your AI Assistant is On-It',
           'Immersive Events with On-Air',
+          'Recognition and Rewards with W!N',
         ],
       },
       { variant: 'reviews' },
@@ -8793,7 +8748,7 @@ export const FEATURES = {
           'Native to Roam — no separate app, no copy-pasting transcripts.',
           'Promptable across meetings, chats, and Magicasts.',
           'Picks up unowned action items and reports back in the group chat.',
-          'Just $19.50/month per active member, bundled with 8 other products. A standalone AI assistant runs $50/month.',
+          'Just $19.50/month per active member, bundled with 9 other products. A standalone AI assistant runs $50/month.',
         ],
       },
       {
@@ -8812,7 +8767,7 @@ export const FEATURES = {
       {
         variant: 'explore',
         title: 'Explore our Virtual Office Platform',
-        desc: '9 products for the price of one:',
+        desc: '10 products for the price of one:',
         items: [
           'Company Visualization with the Virtual Office',
           'Virtual Meeting Room with Drop-In Meetings',
@@ -8823,6 +8778,7 @@ export const FEATURES = {
           'AI Meeting Summarization with Magic Minutes',
           'Your AI Assistant is On-It',
           'Immersive Events with On-Air',
+          'Recognition and Rewards with W!N',
         ],
       },
       {
@@ -8995,7 +8951,7 @@ export const FEATURES = {
           'Stadium Mode scales to 2,500 attendees without the thumbnail grid.',
           'Stereo claps, whisper rows, and Q&A mic give the audience a voice.',
           'Lives in your Virtual HQ — events show up on the map, so everyone feels the energy.',
-          'Just $19.50/month per active member, bundled with 8 other products.',
+          'Just $19.50/month per active member, bundled with 9 other products.',
         ],
       },
       {
@@ -9014,7 +8970,7 @@ export const FEATURES = {
       {
         variant: 'explore',
         title: 'Explore our Virtual Office Platform',
-        desc: '9 products for the price of one:',
+        desc: '10 products for the price of one:',
         items: [
           'Company Visualization with the Virtual Office',
           'Virtual Meeting Room with Drop-In Meetings',
@@ -9025,6 +8981,7 @@ export const FEATURES = {
           'AI Meeting Summarization with Magic Minutes',
           'Your AI Assistant is On-It',
           'Immersive Events with On-Air',
+          'Recognition and Rewards with W!N',
         ],
       },
       {
@@ -9161,7 +9118,7 @@ export const FEATURES = {
       {
         variant: 'explore',
         title: 'Explore our Virtual Office Platform',
-        desc: '9 products for the price of one:',
+        desc: '10 products for the price of one:',
         items: [
           'Company Visualization with the Virtual Office',
           'Virtual Meeting Room with Drop-In Meetings',
@@ -9172,6 +9129,7 @@ export const FEATURES = {
           'AI Meeting Summarization with Magic Minutes',
           'Your AI Assistant is On-It',
           'Immersive Events with On-Air',
+          'Recognition and Rewards with W!N',
         ],
       },
       { variant: 'reviews' },
@@ -9180,7 +9138,7 @@ export const FEATURES = {
   },
   'pricing': {
     eyebrow: 'Pricing',
-    title: 'Save 93% With Our 9 for 1 Bundle',
+    title: 'Save 93% With Our 10 for 1 Bundle',
     hero: (
       <>
         <span className="fp-pricing-hero-lead">Customer-Friendly Everyday Low Prices:</span>
@@ -9216,12 +9174,12 @@ export const FEATURES = {
       {
         variant: 'explore',
         title: 'Why Bundle?',
-        desc: 'Nine products in one Virtual Office Super Bundle, designed to work together from day one.',
+        desc: 'Ten products in one Virtual Office Super Bundle, designed to work together from day one.',
         itemMarker: 'bullet',
         items: [
-          'One bill, one vendor, one identity, one office — instead of nine SaaS subscriptions to chase.',
+          'One bill, one vendor, one identity, one office — instead of ten SaaS subscriptions to chase.',
           'Every product is integrated by default. Magic Minutes shows up in AInbox, your On-It assistant knows your office, Drop-In Meetings live on the same map as your Theater.',
-          'Procurement, security review, and onboarding happen once — not nine times.',
+          'Procurement, security review, and onboarding happen once — not ten times.',
           'AI is built into every surface from day one. No “AI add-on” SKU at $50/month.',
           'Bring guests in for free — your customers, prospects, and partners can join you in Roam without a paid seat.',
         ],
@@ -9354,42 +9312,70 @@ export const FEATURES = {
   },
   win: {
     eyebrow: 'W!N',
-    title: 'Recognize people where the work happens',
-    hero: <>Give a Roamcoin without leaving the map. Keep the trophies, the birthdays, and the gift cards in the same office as the work.<br /><br />Open the coin on the toolbar. Drag it onto someone.</>,
-    visual: <MapPreview initialFloor="R&D" />,
+    title: 'Winning Culture. Winning Company.',
+    hero: <>W!N is Roam's breakthrough new Recognition and Rewards invention. More Rewarding. Immersive Recognition.<br /><br />An office isn't just about the rooms that drive productivity. It's also about the moments between people that drive culture. The best companies establish a winning culture. This starts in the office and had never been possible in a virtual environment until Roam W!N.</>,
+    visual: <MapPreview initialFloor="R&D" winCoinDefaultOpen birthdayEnabled />,
     heroInteractive: true,
     seo: {
-      title: 'W!N — Rewards & Recognition | Roam',
-      description: 'Give Roamcoins on the map, keep awards in the Award Case, celebrate birthdays, and redeem gifts in the store.',
+      title: 'W!N — Recognition and Rewards | Roam',
+      description: 'W!N is Roam’s breakthrough Recognition and Rewards invention. Celebrations, a trophy cabinet, peer-to-peer coins, and gift cards from 100 retailers.',
     },
     sections: [
       {
         title: 'Celebrations',
-        desc: 'Birthdays and work anniversaries show up on the map. The office signs a card, a song plays, and a cake can be on its way. Upcoming celebrations stay in W!N, so the day doesn’t depend on someone remembering a calendar.',
+        desc: 'Glowing on the map. Card. Cake + Song. Celebration.',
         visual: <CelebrationsVisual />,
         interactive: true,
       },
       {
-        title: 'Awards Cabinet',
-        desc: 'Every award the company gives lives in the Award Case. A trophy, the person who earned it, and why. Operators create awards and give them. Everyone else can open the case and see who won.',
-        visual: <AwardsCabinetVisual />,
+        title: 'Trophy Cabinet',
+        desc: 'Put a trophy in the cabinet that people will still see a year from now.',
+        visual: (
+          <div className="win-visual-stack">
+            <AwardsCabinetVisual />
+            <TrophyStoryVisual />
+          </div>
+        ),
         interactive: true,
       },
       {
-        title: 'Peer-to-Peer Point Gifting',
-        desc: 'Each person gets Roamcoins to give. Open the coin, or drag it straight onto a teammate. One, five, ten, fifteen, or a number you type. The gift lands on the map, on the person, while the work is still in front of you.',
-        visual: <MapPreview initialFloor="R&D" winCoinDefaultOpen />,
+        title: 'Peer-to-Peer Points',
+        desc: 'Make your coin. Drag the coins on the map. Give out a coin in a meeting.',
+        visual: (
+          <div className="fp-win-peer">
+            <CoineryDialog />
+          </div>
+        ),
         interactive: true,
         mapAlign: 'center',
       },
       {
-        title: 'Gift Store',
-        desc: 'Points people receive turn into gifts. Redeem a card for yourself, or send one to someone else. The balance only moves when a gift is actually bought.',
+        title: 'Gift Shop',
+        desc: "100 retailers' gift cards. Throw someone a party. Put a trophy in the cabinet that people will still see a year from now. And when a teammate comes through for you, you can thank them on the spot.",
         visual: <GiftStoreVisual />,
         interactive: true,
       },
+      {
+        title: 'Providers eat the Rewards',
+        table: {
+          title: 'Providers eat the Rewards',
+          rows: [
+            { name: 'Workhuman', value: '$7/month + 33% take on spend' },
+            { name: 'AwardCo', value: '$5/month + take on spend' },
+            { name: 'Kudos', value: '$7/month + take on spend' },
+            { name: 'Worktango', value: '$8/month + take on spend' },
+            { name: 'Bonusly', value: '$5/month + take on spend' },
+            { name: 'OC Tanner', value: 'Expensive' },
+          ],
+          closing: { name: 'W!N', value: 'Free + No Markup' },
+        },
+      },
       { variant: 'reviews' },
-      STANDARD_PRICING_COMPARE,
+      {
+        title: 'Pricing & Availability',
+        desc: "Roam's W!N is included in the all-in-one Virtual Office Super Bundle as the 10th app.",
+        embedPricing: true,
+      },
     ],
   },
 };
@@ -9416,7 +9402,6 @@ export const EXPORT_FEATURE_FOLDERS = [
   { slug: 'theater', folder: '04 Theater' },
   { slug: 'ainbox', folder: '05 AInbox' },
   { slug: 'lobby', folder: '06 Lobby' },
-  { slug: 'pizza', folder: '07 Pizza' },
   { slug: 'magicast', folder: '08 Magicast' },
   { slug: 'magic-minutes', folder: '09 Magic Minutes' },
   { slug: 'on-it', folder: '10 On-It' },
@@ -9424,7 +9409,6 @@ export const EXPORT_FEATURE_FOLDERS = [
   { slug: 'mobile', folder: '12 Mobile' },
 ];
 
-const EXPORT_SKIP_FEATURES = new Set(['pizza']);
 const EXPORT_SKIP_TITLES = new Set([
   'Apple Watch',
   'CarPlay',
@@ -9516,7 +9500,7 @@ export function getFeatureExportVisual(featureSlug, sectionKey) {
 export function getVisualExportCatalog() {
   const items = [];
   for (const { slug, folder } of EXPORT_FEATURE_FOLDERS) {
-    if (slug === 'homepage' || EXPORT_SKIP_FEATURES.has(slug)) continue;
+    if (slug === 'homepage') continue;
     const feat = FEATURES[slug];
     if (!feat) continue;
     let index = 0;
@@ -9768,7 +9752,7 @@ function CurrencyPriceCards({ cards }) {
   );
 }
 
-function FeatureSection({ eyebrow, title, subtitle, titleImage, desc, visual, icons, variant, cards, bullets, left, right, columns, columnsStyle, leadContent, items, itemMarker, flashcards, featureSlug, rows, body, subBullets, footer, mapAlign, interactive, eager, offer, plans, footnote, ctas, trust, price, priceMeta, reviews }) {
+function FeatureSection({ eyebrow, title, subtitle, titleImage, desc, visual, icons, variant, cards, bullets, left, right, columns, columnsStyle, leadContent, items, itemMarker, flashcards, featureSlug, rows, body, subBullets, footer, mapAlign, interactive, eager, offer, plans, footnote, ctas, trust, price, priceMeta, reviews, table, embedPricing }) {
   if (variant === 'reviews') {
     return <HomepageReviews limit={items?.length || 6} />;
   }
@@ -10147,11 +10131,15 @@ function FeatureSection({ eyebrow, title, subtitle, titleImage, desc, visual, ic
       </section>
     );
   }
-  const slug = title ? sectionSlug(title) : null;
+  // When the table title is the section title, it stays the visible heading
+  // (`.fp-cmp-title` inside `.fp-rewards-table`) and still owns the section id.
+  const tableOwnsTitle = Boolean(table?.title && title && String(table.title) === String(title));
+  const slug = title ? sectionSlug(title) : (table?.title ? sectionSlug(table.title) : null);
+  const showSectionTitle = Boolean(title) && !tableOwnsTitle;
   const hasText = Boolean(
     eyebrow ||
     titleImage ||
-    title ||
+    showSectionTitle ||
     subtitle ||
     (desc != null && desc !== '') ||
     (subBullets && subBullets.length > 0) ||
@@ -10167,7 +10155,7 @@ function FeatureSection({ eyebrow, title, subtitle, titleImage, desc, visual, ic
       <div className="fp-section-text">
         {eyebrow && <div className="fp-section-eyebrow text-caption-strong">{eyebrow}</div>}
         {titleImage && <img className="fp-section-title-image" src={titleImage.src} alt={titleImage.alt || ''} />}
-        {title && (
+        {showSectionTitle && (
           <h2 className="fp-section-title">
             <span className="fp-section-title-text">{title}</span>
             <SectionLinkButton featureSlug={featureSlug} slug={slug} />
@@ -10210,6 +10198,44 @@ function FeatureSection({ eyebrow, title, subtitle, titleImage, desc, visual, ic
         )}
       </div>
       ) : null}
+      {embedPricing && (
+        <div className="fp-embedded-compare">
+          <CompareColumn side="left" data={STANDARD_PRICING_COMPARE.left} />
+          <CompareColumn side="right" data={STANDARD_PRICING_COMPARE.right} />
+        </div>
+      )}
+      {table && table.rows && table.rows.length > 0 && (
+        <div className="fp-rewards-table">
+          {table.title && (
+            tableOwnsTitle ? (
+              <h2 className="fp-cmp-title fp-section-title">
+                <span className="fp-section-title-text">{table.title}</span>
+                <SectionLinkButton featureSlug={featureSlug} slug={slug} />
+              </h2>
+            ) : (
+              <h3 className="fp-cmp-title">{table.title}</h3>
+            )
+          )}
+          <div className="fp-compare-col">
+            <ul className="fp-compare-rows">
+              {table.rows.map((r) => (
+                <li key={r.name} className="fp-compare-row">
+                  <span className="fp-compare-row-name">{r.name}</span>
+                  <span className="fp-compare-row-value">
+                    <span className="fp-compare-row-price">{r.value}</span>
+                  </span>
+                </li>
+              ))}
+              {table.closing && (
+                <li className="fp-compare-row fp-compare-row-total fp-compare-row-positive">
+                  <span className="fp-compare-row-name">{table.closing.name}</span>
+                  <span className="fp-compare-row-price">{table.closing.value}</span>
+                </li>
+              )}
+            </ul>
+          </div>
+        </div>
+      )}
       {visual && (
         <div className="fp-section-visual" data-map-align={mapAlign || undefined} data-interactive={interactive ? 'true' : undefined}>
           {eager ? visual : <LazyVisualMount>{visual}</LazyVisualMount>}
@@ -10292,7 +10318,7 @@ function PricingStickyCTA() {
         <div className="fp-sticky-cta-lead">
           <div className="fp-sticky-cta-text">
             <div className="fp-sticky-cta-title">
-              <span className="fp-sticky-cta-price">$19.50</span> per active member · all 9 products included · save 93%
+              <span className="fp-sticky-cta-price">$19.50</span> per active member · all 10 products included · save 93%
             </div>
             <div className="fp-sticky-cta-sub">14-day free trial · no credit card · cancel anytime</div>
           </div>

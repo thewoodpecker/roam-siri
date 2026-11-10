@@ -1,0 +1,558 @@
+/* Nebula Coinery dialog. Dark tokens from wonder/roam/client/styles. */
+
+.coinery-dialog {
+  width: min(26.5rem, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem;
+  box-sizing: border-box;
+  background: #1d1e20;
+  color: rgba(255, 255, 255, 0.5);
+  border: 0.03125rem solid rgba(255, 255, 255, 0.1);
+  border-radius: 1.5rem;
+  overflow: hidden;
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  line-height: 1.25;
+}
+
+.coinery-stage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  height: 17.5rem;
+  margin-top: -1rem;
+  margin-inline: -1rem;
+  padding-top: 2.5rem;
+  background-color: transparent;
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0.0625rem, transparent 0.0625rem);
+  background-size: 1.125rem 1.125rem;
+}
+
+.coinery-dialog .coinery-preview {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% calc(50% + 1.25rem);
+  transition: opacity 250ms ease-out, transform 250ms ease-out;
+}
+
+.coinery-dialog .coinery-preview.is-out {
+  opacity: 0;
+  transform: scale(0.82);
+  transition-duration: 250ms;
+  transition-timing-function: ease-in;
+}
+
+.coinery-dialog .coinery-preview.is-enter {
+  opacity: 0;
+  transform: scale(0.82);
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .coinery-dialog .coinery-preview,
+  .coinery-dialog .coinery-preview.is-out,
+  .coinery-dialog .coinery-preview.is-enter {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+.coinery-stage-host {
+  position: absolute;
+  inset: 0;
+  cursor: grab;
+  touch-action: none;
+}
+
+.coinery-stage-host:active {
+  cursor: grabbing;
+}
+
+.coinery-stage-fallback {
+  width: 8rem;
+  height: 8rem;
+  margin: 3.5rem auto;
+  border-radius: 1rem;
+}
+
+.coinery-header {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  color: #fff;
+}
+
+.coinery-header-slot {
+  display: flex;
+}
+
+.coinery-header-slot:last-child {
+  justify-content: flex-end;
+}
+
+.coinery-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  pointer-events: none;
+}
+
+.coinery-brand-mark-wrap {
+  display: flex;
+  flex-direction: column;
+  width: 2.125rem;
+  padding-top: 0.25rem;
+  flex-shrink: 0;
+}
+
+.coinery-brand-mark {
+  width: 2.125rem;
+  height: 1.0625rem;
+  display: block;
+  fill: currentcolor;
+  color: #fff;
+}
+
+.coinery-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+  letter-spacing: -0.01em;
+  color: rgba(255, 255, 255, 0.5);
+  white-space: nowrap;
+}
+
+.coinery-dismiss {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  border: 0;
+  border-radius: 1000rem;
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  cursor: pointer;
+  box-shadow: inset 0 0.03125rem 0 0 rgba(255, 255, 255, 0.1);
+}
+
+.coinery-dismiss:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.coinery-dismiss svg {
+  width: 1rem;
+  height: 1rem;
+  display: block;
+}
+
+.coinery-name {
+  display: block;
+  margin-top: -0.5rem;
+  margin-inline: -1rem;
+  border-top: 0.03125rem solid rgba(255, 255, 255, 0.1);
+  border-bottom: 0.03125rem solid rgba(255, 255, 255, 0.1);
+}
+
+.coinery-name.is-reserved {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.coinery-name input {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 1rem;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #fff;
+  font: 400 14px/20px Inter, system-ui, sans-serif;
+}
+
+.coinery-name input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.coinery-name input:focus {
+  outline: 0;
+  background: transparent;
+}
+
+.coinery-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.coinery-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.coinery-label {
+  font-size: 14px;
+  line-height: 20px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.coinery-chips {
+  display: flex;
+  gap: 0.375rem;
+}
+
+.coinery-option {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 1.75rem;
+  padding: 0;
+  border: 0;
+  border-radius: 0.25rem;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+}
+
+.coinery-option:hover {
+  color: #fff;
+}
+
+.coinery-option.is-selected {
+  background: #fff;
+  color: #000;
+}
+
+.coinery-option.is-selected:hover {
+  color: #000;
+}
+
+.coinery-option:focus-visible,
+.coinery-swatch:focus-visible,
+.coinery-play:focus-visible,
+.coinery-dismiss:focus-visible,
+.coinery-mint:focus-visible,
+.coinery-emoji-cell:focus-visible {
+  outline: 0.125rem solid #fff;
+  outline-offset: 0.125rem;
+}
+
+.coinery-chip {
+  flex: 1;
+  min-width: 0;
+}
+
+.coinery-chip svg {
+  width: 1rem;
+  height: 1rem;
+  display: block;
+  fill: currentcolor;
+}
+
+.coinery-icons {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.25rem;
+}
+
+.coinery-icon {
+  width: 100%;
+}
+
+.coinery-mark {
+  display: block;
+  fill: currentcolor;
+}
+
+.coinery-mark-word {
+  width: 1.4rem;
+  height: auto;
+}
+
+.coinery-mark-compact {
+  width: 0.7rem;
+  height: 0.7rem;
+}
+
+.coinery-mark-default {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+.coinery-mark [stroke] {
+  fill: none;
+  stroke: currentcolor;
+}
+
+.coinery-emoji-glyph {
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+  font-size: 16px;
+  line-height: 1;
+  color: #fff;
+}
+
+.coinery-sound {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.coinery-sound-label {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.coinery-play {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  padding: 0;
+  border: 0;
+  border-radius: 1000rem;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+}
+
+.coinery-play:hover:not(:disabled) {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.coinery-play:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.coinery-play svg {
+  width: 1rem;
+  height: 1rem;
+  display: block;
+}
+
+.coinery-picker-sizer {
+  position: absolute;
+  visibility: hidden;
+  white-space: nowrap;
+  pointer-events: none;
+  font: 400 14px/20px Inter, system-ui, sans-serif;
+  padding: 0.125rem 1.875rem 0.125rem 0.375rem;
+}
+
+.coinery-picker {
+  appearance: none;
+  background-color: transparent;
+  background-image: url("data:image/svg+xml,%3csvg fill='none' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='m0 6.4c0-2.24021 0-3.36031.435974-4.21596.383493-.75265.995416-1.364573 1.748066-1.748066.85565-.435974 1.97575-.435974 4.21596-.435974h7.2c2.2402 0 3.3603 0 4.216.435974.7526.383493 1.3645.995416 1.748 1.748066.436.85565.436 1.97575.436 4.21596v7.2c0 2.2402 0 3.3603-.436 4.216-.3835.7526-.9954 1.3645-1.748 1.748-.8557.436-1.9758.436-4.216.436h-7.2c-2.24021 0-3.36031 0-4.21596-.436-.75265-.3835-1.364573-.9954-1.748066-1.748-.435974-.8557-.435974-1.9758-.435974-4.216z' fill='%23ffffff' fill-opacity='0.05'/%3E%3Cg fill='%23ffffff' fill-opacity='0.5'%3E%3Cpath d='m10.3536 4.14645c-.1953-.19527-.51189-.19527-.70715 0l-4 4c-.19527.19526-.19527.51184 0 .7071.19526.19527.51184.19527.7071 0l3.64645-3.64644 3.6464 3.64644c.1953.19527.5119.19527.7072 0 .1952-.19526.1952-.51184 0-.7071z'/%3E%3Cpath d='m9.64645 15.8536c.09376.0937.22094.1464.35355.1464.1326 0 .2598-.0527.3536-.1464l4-4c.1952-.1953.1952-.5119 0-.7072-.1953-.1952-.5119-.1952-.7072 0l-3.6464 3.6465-3.64645-3.6465c-.19526-.1952-.51184-.1952-.7071 0-.19527.1953-.19527.5119 0 .7072z'/%3E%3C/g%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.125rem center;
+  background-size: 1.25rem 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  border: 0;
+  outline: 0;
+  margin: 0;
+  padding: 0.125rem 1.875rem 0.125rem 0.375rem;
+  border-radius: 0.375rem;
+  font: 400 14px/20px Inter, system-ui, sans-serif;
+  color: #fff;
+  cursor: pointer;
+}
+
+.coinery-picker:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.coinery-picker option {
+  background: #1d1e20;
+  color: #fff;
+}
+
+.coinery-swatches {
+  display: grid;
+  grid-template-columns: repeat(14, minmax(0, 1fr));
+  gap: 0.375rem;
+}
+
+.coinery-swatch {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 1;
+  padding: 0;
+  border: 0;
+  border-radius: 1000rem;
+  cursor: pointer;
+  box-shadow: inset 0 0 0 0.03125rem rgba(255, 255, 255, 0.1);
+}
+
+.coinery-swatch svg {
+  width: 0.75rem;
+  height: 0.75rem;
+  display: block;
+}
+
+.coinery-create {
+  margin-top: 0.5rem;
+}
+
+.coinery-mint {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  border: 0;
+  border-radius: 0.5rem;
+  background: #fff;
+  color: #000;
+  font: 400 14px/20px Inter, system-ui, sans-serif;
+  cursor: pointer;
+}
+
+.coinery-mint:hover {
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.coinery-emoji {
+  position: fixed;
+  z-index: 100002;
+  display: flex;
+  width: min(20.875rem, calc(100vw - 16px));
+  box-sizing: border-box;
+  flex-direction: column;
+  overflow: hidden;
+  background: #27282b;
+  border: 0.03125rem solid rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 3px 6px 2px rgba(0, 0, 0, 0.1);
+  font-family: Inter, system-ui, sans-serif;
+}
+
+.coinery-emoji-search {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.25rem;
+  height: 2.75rem;
+  padding: 0 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.coinery-emoji-search.is-bordered {
+  border-bottom: 0.03125rem solid rgba(255, 255, 255, 0.1);
+}
+
+.coinery-emoji-search svg {
+  width: 1rem;
+  height: 1rem;
+  display: block;
+  flex-shrink: 0;
+}
+
+.coinery-emoji-search input {
+  height: 100%;
+  min-width: 0;
+  flex: 1;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  font: 400 12px/16px Inter, system-ui, sans-serif;
+  outline: none;
+}
+
+.coinery-emoji-search input::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.coinery-emoji-grid {
+  display: grid;
+  grid-template-columns: repeat(9, minmax(0, 1fr));
+  align-content: start;
+  row-gap: 0.25rem;
+  padding: 0 0.25rem 0.25rem;
+  overflow: auto;
+  min-height: 0;
+  flex: 1;
+}
+
+.coinery-emoji-cell {
+  appearance: none;
+  display: flex;
+  aspect-ratio: 1;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0.5rem;
+  background: transparent;
+  cursor: pointer;
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+  font-size: 1.375rem;
+  line-height: 1;
+}
+
+.coinery-emoji-cell:hover,
+.coinery-emoji-cell.is-selected {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.fp-win-peer {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+}
+
+/* Fit the phone viewport. The reserved coin-name row stays
+   visibility:hidden (not removed) so the dialog height does not jump. */
+@media (max-width: 768px) {
+  .fp-win-peer {
+    max-width: 100%;
+  }
+
+  .fp-win-peer .coinery-dialog {
+    width: min(26.5rem, 100%);
+    max-width: 100%;
+    max-height: calc(100dvh - 32px);
+  }
+
+  .fp-win-peer .coinery-stage {
+    height: min(17.5rem, max(9rem, calc(100dvh - 28rem)));
+  }
+
+  .fp-win-peer .coinery-name.is-reserved {
+    visibility: hidden;
+    display: block;
+  }
+}

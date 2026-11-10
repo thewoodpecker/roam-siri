@@ -174,6 +174,23 @@ export default function RGLStage({
   const reduceMotion = usePrefersReducedMotion();
   const { studio } = useLightRig();
   const hostRef = useRef(null);
+  const [near, setNear] = useState(true);
+  const [pageOn, setPageOn] = useState(() => typeof document === 'undefined' || !document.hidden);
+  const [interacting, setInteracting] = useState(false);
+  useEffect(() => {
+    const el = hostRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') return undefined;
+    const obs = new IntersectionObserver(([entry]) => {
+      setNear((prev) => (prev === entry.isIntersecting ? prev : entry.isIntersecting));
+    }, { rootMargin: '180px 0px' });
+    obs.observe(el);
+    const onPage = () => setPageOn(!document.hidden);
+    document.addEventListener('visibilitychange', onPage);
+    return () => {
+      obs.disconnect();
+      document.removeEventListener('visibilitychange', onPage);
+    };
+  }, []);
   const unbindDragRef = useRef(null);
   const drag = useRef({
     active: false,
@@ -248,6 +265,7 @@ export default function RGLStage({
   const endDrag = useCallback((e) => {
     if (!dragEnabled || !drag.current.active) return;
     drag.current.active = false;
+    if (reduceMotion) setInteracting(false);
     unbindDragRef.current?.();
     unbindDragRef.current = null;
 
@@ -270,10 +288,11 @@ export default function RGLStage({
     if (pid != null && host?.hasPointerCapture?.(pid)) {
       host.releasePointerCapture(pid);
     }
-  }, [dragEnabled]);
+  }, [dragEnabled, reduceMotion]);
 
   const onPointerDown = useCallback((e) => {
     if (!dragEnabled) return;
+    if (reduceMotion) setInteracting(true);
     spinBurst.current = null;
     const now = performance.now();
     drag.current = {
@@ -324,7 +343,7 @@ export default function RGLStage({
       window.removeEventListener('pointerup', onUp);
       window.removeEventListener('pointercancel', onUp);
     };
-  }, [dragEnabled, endDrag]);
+  }, [dragEnabled, endDrag, reduceMotion]);
 
   const onClick = useCallback(
     (e) => {
@@ -378,7 +397,7 @@ export default function RGLStage({
         orthographic
         camera={{ position: CAMERA_POS, near: 0.1, far: 40, zoom: 1 }}
         style={{ background: 'transparent', width: '100%', height: '100%' }}
-        frameloop="always"
+        frameloop={near && pageOn && (!reduceMotion || interacting) ? 'always' : 'demand'}
         performance={{ min: 1, max: 1 }}
         onCreated={({ gl }) => {
           gl.setClearColor(0x000000, 0);

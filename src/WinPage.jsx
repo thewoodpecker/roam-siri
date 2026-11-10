@@ -1,11 +1,30 @@
-import React, { lazy, Suspense, useState } from 'react';
+import React, { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import StoryViewer from './StoryViewer';
 import './WinPage.css';
 
 const BirthdayCardVisual = lazy(() => import('./BirthdayCardVisual'));
+const OfficeMap = lazy(() => import('./ShowcaseMap'));
 
-const CASE_NAV = ['Trophy Case', 'Library', 'Bulletin Board', 'Mission Board', 'Leaderboard'];
+const CASE_AWARDS = [
+  "President's Club",
+  'The House Cup',
+  'Computer Cup',
+  'Tour De NYC',
+  'Computer Vision Award',
+  'Employee of the Month',
+];
 
 const crop = (width, height, left, top) => ({ width, height, left, top });
+
+const AWARD_FACES = [
+  '/win/trophy/avatar-joe.png',
+  '/win/trophy/face-1.png',
+  '/win/trophy/face-2.png',
+  '/win/trophy/face-3.png',
+  '/win/trophy/face-4.png',
+  '/win/trophy/face-5.png',
+  '/win/trophy/face-6.png',
+];
 
 const CASE_SHELVES = [
   [
@@ -34,11 +53,182 @@ const CASE_SHELVES = [
   ],
 ];
 
+// shelf-room.svg is 486 wide. The flat standing surface runs from x=25.5524 to
+// x=460.448; the tapered ends are not part of the shelf trophies can sit on.
+const SHELF_TOP_INSET = 25.5524 / 486;
+
+const trophyRunWidth = (widths, start, count, gap) => {
+  let total = 0;
+  for (let i = 0; i < count; i += 1) total += widths[start + i];
+  if (count > 1) total += gap * (count - 1);
+  return total;
+};
+
+// Largest centered run that fits `available`. Ends are dropped first, and a
+// shelf never shifts sideways to keep an end piece over a middle one.
+const centeredTrophyRange = (widths, available, gap) => {
+  const total = widths.length;
+  if (total === 0 || !(available > 0)) return [0, 0];
+  const ideal = (total - 1) / 2;
+  for (let count = total; count >= 1; count -= 1) {
+    let bestDist = Infinity;
+    const starts = [];
+    for (let start = 0; start <= total - count; start += 1) {
+      const dist = Math.abs(start + (count - 1) / 2 - ideal);
+      if (dist < bestDist - 1e-6) {
+        bestDist = dist;
+        starts.length = 0;
+        starts.push(start);
+      } else if (dist <= bestDist + 1e-6) {
+        starts.push(start);
+      }
+    }
+    const fit = starts.find((start) => trophyRunWidth(widths, start, count, gap) <= available + 0.5);
+    if (fit !== undefined) return [fit, fit + count];
+  }
+  return [0, 0];
+};
+
+function CaseShelf({ shelf, index }) {
+  const shelfRef = useRef(null);
+  const [range, setRange] = useState([0, shelf.length]);
+
+  useLayoutEffect(() => {
+    const el = shelfRef.current;
+    if (!el) return undefined;
+    const measure = () => {
+      const width = el.clientWidth;
+      if (width <= 0) return;
+      const items = el.querySelector('.win-case-items');
+      const gap = items ? parseFloat(getComputedStyle(items).columnGap) : 16;
+      const available = width * (1 - 2 * SHELF_TOP_INSET);
+      const next = centeredTrophyRange(
+        shelf.map((item) => item.w),
+        available,
+        Number.isFinite(gap) ? gap : 16,
+      );
+      setRange((current) => (
+        current[0] === next[0] && current[1] === next[1] ? current : next
+      ));
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [shelf]);
+
+  const [start, end] = range;
+
+  return (
+    <div className="win-case-shelf" ref={shelfRef}>
+      <div className="win-case-items">
+        {shelf.slice(start, end).map((item, offset) => {
+          const piece = start + offset;
+          return (
+            <span
+              className="win-case-piece"
+              key={`${index}-${piece}`}
+              tabIndex={0}
+              aria-label={`${item.who}, ${item.award}, ${item.when}`}
+            >
+              <span className="win-case-crop" style={{ width: item.w, height: item.h }}>
+                <img src={item.src} alt="" style={item.crop} />
+              </span>
+              <span className="win-case-tip" aria-hidden="true">
+                <img
+                  src={AWARD_FACES[(index * 6 + piece) % AWARD_FACES.length]}
+                  alt=""
+                  width="20"
+                  height="20"
+                />
+                <span className="win-case-tip-copy">
+                  <span>{item.who}</span>
+                  <span>{item.award}</span>
+                  <span>{item.when}</span>
+                </span>
+              </span>
+            </span>
+          );
+        })}
+      </div>
+      <img className="win-case-board" src="/win/trophy/shelf-room.svg" alt="" />
+    </div>
+  );
+}
+
 export function CelebrationsVisual() {
   return (
     <Suspense fallback={<div className="win-bday-stage" aria-hidden="true" />}>
       <BirthdayCardVisual />
     </Suspense>
+  );
+}
+
+const trophyStory = (id, name, avatar, title, when, trophy) => ({
+  id,
+  image: trophy,
+  avatar,
+  name,
+  award: {
+    image: trophy,
+    rule: '/win/story/award-rule.svg',
+    title,
+    who: name,
+    when,
+  },
+});
+
+const TROPHY_STORIES = [
+  trophyStory('chelsea-presidents-club', 'Chelsea Turbin', '/headshots/chelsea-turbin.jpg', "President's Club", 'March 2026', '/win/trophy/cup.png'),
+  trophyStory('sean-house-cup', 'Sean MacIsaac', '/headshots/sean-macisaac.jpg', 'The House Cup', 'February 2026', '/win/trophy/handled.png'),
+  trophyStory('derek-employee-of-the-month', 'Derek Cicerone', '/headshots/derek-cicerone.jpg', 'Employee of the Month', 'July 2026', '/win/story/employee-trophy.png'),
+  trophyStory('lexi-computer-cup', 'Lexi B.', '/headshots/lexi-bohonnon.jpg', 'Computer Cup', 'January 2026', '/win/trophy/chalice.png'),
+  trophyStory('grace-tour-de-nyc', 'Grace Sutherland', '/headshots/grace-sutherland.jpg', 'Tour De NYC', 'May 2026', '/win/trophy/globe.png'),
+  trophyStory('ava-computer-vision', 'Ava Lee', '/headshots/ava-lee.jpg', 'Computer Vision Award', 'April 2026', '/win/trophy/gold-cup.png'),
+];
+
+const MAP_W = 1120;
+const MAP_H = 630;
+
+export function TrophyStoryVisual() {
+  const frameRef = useRef(null);
+  const [scale, setScale] = useState(1);
+  const [theme, setTheme] = useState(() => (
+    typeof document !== 'undefined' ? document.documentElement.getAttribute('data-theme') || 'dark' : 'dark'
+  ));
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return undefined;
+    const sync = () => setTheme(document.documentElement.getAttribute('data-theme') || 'dark');
+    const obs = new MutationObserver(sync);
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    return () => obs.disconnect();
+  }, []);
+
+  useLayoutEffect(() => {
+    const el = frameRef.current;
+    if (!el) return undefined;
+    const measure = () => {
+      const { width, height } = el.getBoundingClientRect();
+      if (width <= 0 || height <= 0) return;
+      const next = Math.max(width / MAP_W, height / MAP_H);
+      setScale((prev) => (Math.abs(prev - next) < 0.01 ? prev : next));
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div className="win-story-frame" ref={frameRef}>
+      <div className="win-story-map" style={{ '--win-story-map-scale': scale }} aria-hidden="true">
+        <Suspense fallback={null}>
+          <OfficeMap embedded initialFloor="R&D" birthdayEnabled={false} theme={theme} />
+        </Suspense>
+      </div>
+      <StoryViewer stories={TROPHY_STORIES} initialIndex={2} embedded />
+    </div>
   );
 }
 
@@ -50,14 +240,17 @@ export function AwardsCabinetVisual() {
           <i /><i /><i />
         </div>
         <div className="win-case-room-list">
-          {CASE_NAV.map((item) => (
-            <span
-              key={item}
-              className={`win-case-room-item${item === 'Trophy Case' ? ' is-on' : ''}`}
-            >
+          <span className="win-case-room-item is-on">All Awards</span>
+          {CASE_AWARDS.map((item) => (
+            <span key={item} className="win-case-room-item">
               {item}
             </span>
           ))}
+        </div>
+        <div className="win-case-room-side-gap" aria-hidden="true" />
+        <div className="win-case-room-create">
+          <span className="win-case-room-plus" aria-hidden="true">+</span>
+          Create New Award
         </div>
       </aside>
       <section className="win-case-room-main">
@@ -66,28 +259,7 @@ export function AwardsCabinetVisual() {
         </header>
         <div className="win-case-room-stage">
             {CASE_SHELVES.map((shelf, index) => (
-              <div className="win-case-shelf" key={index}>
-                <div className="win-case-items">
-                  {shelf.map((item, piece) => (
-                    <span
-                      className="win-case-piece"
-                      key={`${index}-${piece}`}
-                      tabIndex={0}
-                      aria-label={`${item.who}, ${item.award}, ${item.when}`}
-                    >
-                      <span className="win-case-crop" style={{ width: item.w, height: item.h }}>
-                        <img src={item.src} alt="" style={item.crop} />
-                      </span>
-                      <span className="win-case-tip" aria-hidden="true">
-                        <span>{item.who}</span>
-                        <span>{item.award}</span>
-                        <span>{item.when}</span>
-                      </span>
-                    </span>
-                  ))}
-                </div>
-                <img className="win-case-board" src="/win/trophy/shelf-room.svg" alt="" />
-              </div>
+              <CaseShelf shelf={shelf} index={index} key={index} />
             ))}
         </div>
       </section>
@@ -96,11 +268,33 @@ export function AwardsCabinetVisual() {
 }
 
 const TROPHY_NAV = ['Trophy Case', 'Library', 'Bulletin Board', 'Mission Board', 'Leaderboard'];
-const TROPHY_TOP = ['cup', 'handled', 'small', 'orb', 'chalice', 'urn', 'globe-cup'];
-const TROPHY_BOTTOM = ['tall', 'sphere', 'plate', 'gold-cup', 'globe'];
-const TROPHY_FACES = [
-  'face-1', null, null, 'face-2', 'face-3', 'face-4',
-  null, null, null, null, 'face-5', 'face-6', null, null, null,
+const TROPHY_HEIGHT = 76;
+const trophy = (name, canvas, x, y, w, h) => ({
+  name,
+  src: `/win/trophy/${name}.png`,
+  width: TROPHY_HEIGHT * (w / h),
+  crop: {
+    width: `${(canvas / w) * 100}%`,
+    height: `${(canvas / h) * 100}%`,
+    left: `${(-x / w) * 100}%`,
+    top: `${(-y / h) * 100}%`,
+  },
+});
+const TROPHY_TOP = [
+  trophy('cup', 1024, 299, 183, 427, 682),
+  trophy('handled', 1024, 202, 150, 619, 744),
+  trophy('small', 1024, 319, 137, 386, 785),
+  trophy('orb', 1024, 284, 96, 457, 830),
+  trophy('chalice', 1024, 314, 180, 393, 708),
+  trophy('urn', 1024, 254, 171, 521, 721),
+  trophy('globe-cup', 1024, 291, 120, 441, 820),
+];
+const TROPHY_BOTTOM = [
+  trophy('tall', 1024, 304, 100, 414, 830),
+  trophy('sphere', 1024, 250, 105, 531, 811),
+  trophy('plate', 2048, 381, 0, 1667, 1800),
+  trophy('gold-cup', 1024, 314, 163, 397, 745),
+  trophy('globe', 1024, 283, 144, 449, 760),
 ];
 
 export function TrophyRoomVisual() {
@@ -131,16 +325,20 @@ export function TrophyRoomVisual() {
             <>
               <div className="win-shelf">
                 <div className="win-shelf-items">
-                  {TROPHY_TOP.map((name) => (
-                    <img key={name} src={`/win/trophy/${name}.png`} alt="" />
+                  {TROPHY_TOP.map((item) => (
+                    <span key={item.name} className="win-shelf-piece" style={{ width: item.width }}>
+                      <img src={item.src} alt="" style={item.crop} />
+                    </span>
                   ))}
                 </div>
                 <img className="win-shelf-board" src="/win/trophy/shelf.svg" alt="" />
               </div>
               <div className="win-shelf">
                 <div className="win-shelf-items">
-                  {TROPHY_BOTTOM.map((name) => (
-                    <img key={name} src={`/win/trophy/${name}.png`} alt="" />
+                  {TROPHY_BOTTOM.map((item) => (
+                    <span key={item.name} className="win-shelf-piece" style={{ width: item.width }}>
+                      <img src={item.src} alt="" style={item.crop} />
+                    </span>
                   ))}
                 </div>
                 <img className="win-shelf-board" src="/win/trophy/shelf.svg" alt="" />
@@ -151,18 +349,10 @@ export function TrophyRoomVisual() {
           )}
         </div>
       </div>
-      <div className="win-trophy-people" aria-hidden="true">
-        {TROPHY_FACES.map((face, index) => (
-          face
-            ? <img key={face} src={`/win/trophy/${face}.png`} alt="" />
-            : <span key={`empty-${index}`} />
-        ))}
-      </div>
     </div>
   );
 }
 
-const GIFT_CATEGORIES = ['All', 'Entertainment', 'Food & Drink', 'Gaming', 'Home', 'Lifestyle', 'Retail', 'Tech', 'Travel'];
 const GIFT_CARDS = [
   { id: 'starbucks', name: 'Starbucks', from: 10, color: '#006241', category: 'Food & Drink' },
   { id: 'doordash', name: 'DoorDash', from: 15, color: '#ff3008', category: 'Food & Drink' },
@@ -184,14 +374,7 @@ const GIFT_CARDS = [
 
 export function GiftStoreVisual() {
   const [pane, setPane] = useState('shop');
-  const [query, setQuery] = useState('');
-  const [category, setCategory] = useState('All');
   const [selected, setSelected] = useState(null);
-  const needle = query.trim().toLowerCase();
-  const cards = GIFT_CARDS.filter((card) => (
-    (category === 'All' || card.category === category)
-    && card.name.toLowerCase().includes(needle)
-  ));
 
   return (
     <div className="win-gift-shop">
@@ -209,15 +392,10 @@ export function GiftStoreVisual() {
             <img src="/win/gifts/gift.svg" alt="" />
             Gift Shop
           </button>
-          <button
-            type="button"
-            className={`unbutton win-gift-nav${pane === 'history' ? ' is-on' : ''}`}
-            aria-pressed={pane === 'history'}
-            onClick={() => setPane('history')}
-          >
+          <div className="win-gift-nav">
             <img src="/win/gifts/clock.svg" alt="" />
             Reward History
-          </button>
+          </div>
         </nav>
         <div className="win-gift-balance">
           <img src="/win/gifts/coin.svg" alt="" />
@@ -234,30 +412,8 @@ export function GiftStoreVisual() {
           <p className="win-gift-empty">No rewards yet.</p>
         ) : (
           <div className="win-gift-body">
-            <label className="win-gift-search">
-              <img src="/win/gifts/search.svg" alt="" />
-              <span className="sr-only">Search</span>
-              <input
-                value={query}
-                placeholder="Search"
-                onChange={(event) => setQuery(event.target.value)}
-              />
-            </label>
-            <div className="win-gift-filters" role="group" aria-label="Filter by category">
-              {GIFT_CATEGORIES.map((item) => (
-                <button
-                  key={item}
-                  type="button"
-                  className={`win-gift-chip${category === item ? ' is-on' : ''}`}
-                  aria-pressed={category === item}
-                  onClick={() => setCategory(item)}
-                >
-                  {item}
-                </button>
-              ))}
-            </div>
             <ul className="win-gift-grid">
-              {cards.map((card) => (
+              {GIFT_CARDS.map((card) => (
                 <li key={card.id}>
                   <button
                     type="button"
@@ -273,7 +429,6 @@ export function GiftStoreVisual() {
                   </button>
                 </li>
               ))}
-              {cards.length === 0 && <li className="win-gift-empty">No gift cards match that search.</li>}
             </ul>
             <div className="win-gift-actions">
               <button type="button" className="win-gift-cancel" onClick={() => setSelected(null)}>Cancel</button>

@@ -14,7 +14,14 @@ function resolveOptimized(urlPath) {
   let rel = null;
   const head = pathname.match(/^\/headshots\/([^/]+)$/);
   if (head) {
-    rel = path.join('public/headshots/sm', head[1].replace(/\.[^.]+$/, '.jpg'));
+    const stem = head[1].replace(/\.[^.]+$/, '');
+    // Prefer the PNG stand-in. Headshots are transparent cutouts; the JPEG
+    // derivatives were flattened onto white, which shows as white side
+    // slivers inside the circular crop. CSS fills the transparent area.
+    const pngRel = path.join('public/headshots/sm', `${stem}.png`);
+    rel = fs.existsSync(path.join(ROOT, pngRel))
+      ? pngRel
+      : path.join('public/headshots/sm', `${stem}.jpg`);
   }
 
   const avatar = pathname.match(/^\/videos\/(Female|Male)\/([^/]+)\.png$/);
@@ -33,10 +40,18 @@ function resolveOptimized(urlPath) {
   return file;
 }
 
+function contentTypeFor(file) {
+  switch (path.extname(file).toLowerCase()) {
+    case '.png': return 'image/png';
+    case '.webp': return 'image/webp';
+    default: return 'image/jpeg';
+  }
+}
+
 function optimizedMediaMiddleware(req, res, next) {
   const file = resolveOptimized(req.url);
   if (!file) return next();
-  res.setHeader('Content-Type', 'image/jpeg');
+  res.setHeader('Content-Type', contentTypeFor(file));
   res.setHeader('Cache-Control', 'public, max-age=86400');
   fs.createReadStream(file).pipe(res);
 }

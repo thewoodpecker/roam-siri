@@ -82,6 +82,92 @@
   opacity: 1;
 }
 
+.sv-card-award {
+  background: #1e1d20;
+}
+
+.sv-embedded {
+  border-radius: inherit;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sv-embedded,
+  .sv-embedded .sv-container,
+  .sv-embedded .sv-card,
+  .sv-embedded .sv-progress-fill {
+    transition: none;
+    animation: none;
+  }
+}
+
+.sv-award {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 72px 20px 24px;
+  box-sizing: border-box;
+  background: #1e1d20;
+}
+
+.sv-award-photo {
+  position: relative;
+  width: 108px;
+  max-width: 100%;
+  aspect-ratio: 136 / 163;
+  overflow: hidden;
+  flex: none;
+  transform: translateY(-28px);
+}
+
+.sv-award-photo img {
+  position: absolute;
+  width: 156.25%;
+  height: 132.21%;
+  left: -28.12%;
+  top: -18.99%;
+  max-width: none;
+}
+
+.sv-award-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  max-width: 280px;
+  text-align: center;
+}
+
+.sv-award-title,
+.sv-award-who,
+.sv-award-when {
+  margin: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 16px;
+  line-height: 24px;
+  letter-spacing: -0.32px;
+}
+
+.sv-award-title,
+.sv-award-who {
+  font-weight: 500;
+  color: #fff;
+}
+
+.sv-award-when {
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.sv-award-rule {
+  display: block;
+  flex: none;
+}
+
 .sv-peek-info {
   position: absolute;
   bottom: 12px;
