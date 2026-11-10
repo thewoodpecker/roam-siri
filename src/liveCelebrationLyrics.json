@@ -1,0 +1,252 @@
+{
+  "lines": [
+    {
+      "words": [
+        { "text": "Someone", "startMs": 2662, "endMs": 3022 },
+        { "text": "said", "startMs": 3022, "endMs": 3782 },
+        { "text": "it", "startMs": 3782, "endMs": 3902 },
+        { "text": "was", "startMs": 3862, "endMs": 4082 },
+        { "text": "your", "startMs": 4082, "endMs": 4282 },
+        { "text": "birthday", "startMs": 4422, "endMs": 5082, "bounceCues": [{ "offsetMs": 300 }] }
+      ]
+    },
+    {
+      "words": [
+        { "text": "So", "startMs": 5482, "endMs": 5702 },
+        { "text": "we", "startMs": 5702, "endMs": 5922 },
+        { "text": "took", "startMs": 5922, "endMs": 6102 },
+        { "text": "a", "startMs": 6102, "endMs": 6282 },
+        { "text": "little", "startMs": 6282, "endMs": 6442 },
+        { "text": "time", "startMs": 6442, "endMs": 6942 },
+        { "text": "out", "startMs": 6942, "endMs": 7242 },
+        { "text": "of", "startMs": 7242, "endMs": 7342 },
+        { "text": "the", "startMs": 7342, "endMs": 7442 },
+        {
+          "text": "workday",
+          "startMs": 7442,
+          "endMs": 8102,
+          "bounceCues": [{ "offsetMs": 260, "strength": "soft" }]
+        }
+      ]
+    },
+    {
+      "words": [
+        { "text": "To", "startMs": 8682, "endMs": 8782 },
+        {
+          "text": "celebrate",
+          "startMs": 8782,
+          "endMs": 9262,
+          "bounceCues": [{ "offsetMs": 340 }]
+        },
+        { "text": "you", "startMs": 9522, "endMs": 10002 },
+        { "text": "on", "startMs": 9762, "endMs": 10282 },
+        { "text": "the", "startMs": 10442, "endMs": 10822 },
+        { "text": "screen", "startMs": 10822, "endMs": 11122 }
+      ]
+    },
+    {
+      "words": [
+        { "text": "From", "startMs": 11622, "endMs": 11722 },
+        { "text": "all", "startMs": 11722, "endMs": 12002 },
+        { "text": "of", "startMs": 12002, "endMs": 12182 },
+        { "text": "us", "startMs": 12182, "endMs": 12362 },
+        { "text": "here", "startMs": 12362, "endMs": 12702 },
+        { "text": "on", "startMs": 12702, "endMs": 12962 },
+        { "text": "the", "startMs": 12962, "endMs": 13102 },
+        { "text": "team", "startMs": 13102, "endMs": 13482 }
+      ]
+    },
+    {
+      "words": [
+        { "text": "Happy", "startMs": 15442, "endMs": 15742 },
+        {
+          "text": "Birthday",
+          "startMs": 15742,
+          "endMs": 16342,
+          "bounceCues": [{ "offsetMs": 320 }]
+        }
+      ]
+    },
+    {
+      "words": [
+        { "text": "Happy,", "startMs": 16602, "endMs": 16962 },
+        { "text": "Happy", "startMs": 16962, "endMs": 17302 },
+        {
+          "text": "Birthday",
+          "startMs": 17302,
+          "endMs": 18002,
+          "bounceCues": [{ "offsetMs": 340 }]
+        }
+      ]
+    },
+    {
+      "words": [
+        { "text": "For", "startMs": 18582, "endMs": 18722 },
+        { "text": "every", "startMs": 18722, "endMs": 19062 },
+        { "text": "year", "startMs": 19062, "endMs": 19422 },
+        { "text": "that", "startMs": 19422, "endMs": 19682 },
+        { "text": "you’ve", "startMs": 19682, "endMs": 20182 },
+        { "text": "been", "startMs": 20182, "endMs": 20322 },
+        { "text": "on", "startMs": 20322, "endMs": 20542 },
+        { "text": "this", "startMs": 20542, "endMs": 20742 },
+        { "text": "earth", "startMs": 20742, "endMs": 21082 }
+      ]
+    },
+    {
+      "words": [
+        { "text": "Send", "startMs": 21722, "endMs": 21822 },
+        { "text": "up", "startMs": 21822, "endMs": 22582 },
+        { "text": "a", "startMs": 22582, "endMs": 22702 },
+        {
+          "text": "Roamoji",
+          "startMs": 22702,
+          "endMs": 23522,
+          "bounceCues": [{ "offsetMs": 360 }]
+        },
+        { "text": "on", "startMs": 23522, "endMs": 24102 },
+        { "text": "the", "startMs": 24102, "endMs": 24282 },
+        { "text": "screen", "startMs": 24282, "endMs": 24482 }
+      ]
+    },
+    {
+      "words": [
+        { "text": "From", "startMs": 24642, "endMs": 24682 },
+        { "text": "everyone", "startMs": 24682, "endMs": 25082 },
+        { "text": "here", "startMs": 25082, "endMs": 25662 },
+        { "text": "on", "startMs": 25662, "endMs": 25942 },
+        { "text": "the", "startMs": 25942, "endMs": 26062 },
+        { "text": "team", "startMs": 26062, "endMs": 26722 }
+      ]
+    },
+    {
+      "words": [
+        { "text": "Let’s", "startMs": 27502, "endMs": 27922 },
+        { "text": "take", "startMs": 28042, "endMs": 28482 },
+        { "text": "a", "startMs": 29062, "endMs": 29202 },
+        { "text": "little", "startMs": 29202, "endMs": 29382 },
+        { "text": "break", "startMs": 29382, "endMs": 29782 }
+      ]
+    },
+    {
+      "words": [
+        { "text": "So", "startMs": 31062, "endMs": 31202 },
+        { "text": "you", "startMs": 31202, "endMs": 31462 },
+        { "text": "can", "startMs": 31662, "endMs": 32142 },
+        { "text": "eat", "startMs": 32142, "endMs": 32342 },
+        { "text": "some", "startMs": 32262, "endMs": 32622 },
+        { "text": "cake", "startMs": 32622, "endMs": 33042 }
+      ]
+    },
+    {
+      "words": [
+        { "text": "No", "startMs": 34302, "endMs": 34462 },
+        { "text": "meeting", "startMs": 34462, "endMs": 34762 },
+        {
+          "text": "agenda,",
+          "startMs": 34762,
+          "endMs": 35842,
+          "bounceCues": [{ "offsetMs": 500 }, { "offsetMs": 760 }]
+        },
+        { "text": "just", "startMs": 36122, "endMs": 36382 },
+        { "text": "dessert", "startMs": 36382, "endMs": 36962, "bounceCues": [{ "offsetMs": 360 }] }
+      ]
+    },
+    {
+      "words": [
+        { "text": "Blow", "startMs": 37662, "endMs": 37942 },
+        { "text": "out", "startMs": 37942, "endMs": 38282 },
+        { "text": "the", "startMs": 38282, "endMs": 38502 },
+        { "text": "candles,", "startMs": 38542, "endMs": 38942 },
+        { "text": "then", "startMs": 38942, "endMs": 39142 },
+        { "text": "it’s", "startMs": 39142, "endMs": 39342 },
+        { "text": "back", "startMs": 39382, "endMs": 39582 },
+        { "text": "to", "startMs": 39582, "endMs": 39962 },
+        { "text": "work", "startMs": 40202, "endMs": 40952 }
+      ]
+    },
+    {
+      "words": [
+        { "text": "Happy", "startMs": 41382, "endMs": 41702 },
+        {
+          "text": "Birthday",
+          "startMs": 41702,
+          "endMs": 42322,
+          "bounceCues": [{ "offsetMs": 320 }]
+        }
+      ]
+    },
+    {
+      "words": [
+        { "text": "Happy,", "startMs": 42522, "endMs": 42962 },
+        { "text": "Happy", "startMs": 42962, "endMs": 43322 },
+        {
+          "text": "Birthday",
+          "startMs": 43322,
+          "endMs": 43942,
+          "bounceCues": [{ "offsetMs": 320 }]
+        }
+      ]
+    },
+    {
+      "words": [
+        { "text": "For", "startMs": 44102, "endMs": 44802 },
+        { "text": "every", "startMs": 44702, "endMs": 45022 },
+        { "text": "year", "startMs": 45022, "endMs": 45402 },
+        { "text": "that", "startMs": 45402, "endMs": 45662 },
+        { "text": "you’ve", "startMs": 45662, "endMs": 46122 },
+        { "text": "been", "startMs": 46122, "endMs": 46302 },
+        { "text": "on", "startMs": 46302, "endMs": 46542 },
+        { "text": "this", "startMs": 46542, "endMs": 46702 },
+        { "text": "earth", "startMs": 46702, "endMs": 46982 }
+      ]
+    },
+    {
+      "words": [
+        { "text": "Hey!", "startMs": 47162, "endMs": 47482 },
+        { "text": "Send", "startMs": 47482, "endMs": 47950 },
+        { "text": "up", "startMs": 47950, "endMs": 48690 },
+        { "text": "a", "startMs": 48510, "endMs": 48730 },
+        { "text": "Roamoji", "startMs": 48730, "endMs": 49510 },
+        { "text": "on", "startMs": 49510, "endMs": 50070 },
+        { "text": "the", "startMs": 50070, "endMs": 50270 },
+        { "text": "screen", "startMs": 50270, "endMs": 50510 }
+      ]
+    },
+    {
+      "words": [
+        { "text": "From", "startMs": 50590, "endMs": 51190 },
+        {
+          "text": "everyone",
+          "startMs": 51190,
+          "endMs": 52210,
+          "bounceCues": [{ "offsetMs": 660 }]
+        },
+        { "text": "here", "startMs": 52210, "endMs": 53050 },
+        { "text": "on", "startMs": 53050, "endMs": 53790 },
+        { "text": "the", "startMs": 53790, "endMs": 54330 },
+        {
+          "text": "team!",
+          "startMs": 54330,
+          "endMs": 57300,
+          "sustain": "finale",
+          "bounceCues": [
+            { "offsetMs": 500 },
+            { "offsetMs": 1320, "strength": "soft" },
+            { "offsetMs": 2130 }
+          ]
+        }
+      ]
+    },
+    {
+      "words": [
+        { "text": "Happy", "startMs": 59195, "endMs": 59575 },
+        {
+          "text": "Birthday!",
+          "startMs": 59575,
+          "endMs": 60675,
+          "bounceCues": [{ "offsetMs": 420, "strength": "soft" }]
+        }
+      ]
+    }
+  ]
+}

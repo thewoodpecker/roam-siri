@@ -57,6 +57,7 @@ import { WindowManagerProvider } from './WindowManager';
 import { ChatProvider } from './ChatContext';
 import './FeaturePage.css';
 import { CelebrationsVisual, AwardsCabinetVisual, TrophyStoryVisual, GiftStoreVisual } from './WinPage';
+import { LiveCelebrationVisual } from './LiveCelebration';
 import { CoineryDialog } from './CoineryDialog';
 
 const JOE = { name: 'Joe W.', fullName: 'Joe Woodward', avatar: '/headshots/joe-woodward.jpg' };
@@ -9322,20 +9323,27 @@ export const FEATURES = {
     },
     sections: [
       {
-        title: 'Celebrations',
-        desc: 'Glowing on the map. Card. Cake + Song. Celebration.',
+        title: 'Live Celebration',
+        desc: 'Live on the map. Camera on. The whole office sings along.',
+        visual: <LiveCelebrationVisual />,
+        interactive: true,
+        mapAlign: 'right',
+      },
+      {
+        id: 'celebrations',
         visual: <CelebrationsVisual />,
         interactive: true,
       },
       {
         title: 'Trophy Cabinet',
         desc: 'Put a trophy in the cabinet that people will still see a year from now.',
-        visual: (
-          <div className="win-visual-stack">
-            <AwardsCabinetVisual />
-            <TrophyStoryVisual />
-          </div>
-        ),
+        visual: <AwardsCabinetVisual />,
+        interactive: true,
+      },
+      {
+        title: 'Award Stories',
+        desc: 'When someone receives a trophy, it posts as a story on the office map.',
+        visual: <TrophyStoryVisual />,
         interactive: true,
       },
       {
@@ -9752,7 +9760,7 @@ function CurrencyPriceCards({ cards }) {
   );
 }
 
-function FeatureSection({ eyebrow, title, subtitle, titleImage, desc, visual, icons, variant, cards, bullets, left, right, columns, columnsStyle, leadContent, items, itemMarker, flashcards, featureSlug, rows, body, subBullets, footer, mapAlign, interactive, eager, offer, plans, footnote, ctas, trust, price, priceMeta, reviews, table, embedPricing }) {
+function FeatureSection({ id, eyebrow, title, subtitle, titleImage, desc, visual, icons, variant, cards, bullets, left, right, columns, columnsStyle, leadContent, items, itemMarker, flashcards, featureSlug, rows, body, subBullets, footer, mapAlign, interactive, eager, offer, plans, footnote, ctas, trust, price, priceMeta, reviews, table, embedPricing }) {
   if (variant === 'reviews') {
     return <HomepageReviews limit={items?.length || 6} />;
   }
@@ -10134,7 +10142,7 @@ function FeatureSection({ eyebrow, title, subtitle, titleImage, desc, visual, ic
   // When the table title is the section title, it stays the visible heading
   // (`.fp-cmp-title` inside `.fp-rewards-table`) and still owns the section id.
   const tableOwnsTitle = Boolean(table?.title && title && String(table.title) === String(title));
-  const slug = title ? sectionSlug(title) : (table?.title ? sectionSlug(table.title) : null);
+  const slug = id || (title ? sectionSlug(title) : (table?.title ? sectionSlug(table.title) : null));
   const showSectionTitle = Boolean(title) && !tableOwnsTitle;
   const hasText = Boolean(
     eyebrow ||

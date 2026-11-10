@@ -4952,6 +4952,15 @@ button.fp-mv-light:focus-visible {
   overflow: hidden;
 }
 
+/* Birthday card has no heading of its own. It follows the live celebration
+   frame directly, so the usual section padding would be a blank band. */
+.fp-page[data-slug="win"] #live-celebration:has(+ #celebrations) {
+  padding-bottom: 0;
+}
+#celebrations:not(:has(.fp-section-text)) {
+  padding-top: 0;
+}
+
 .fp-section-visual-wallpaper {
   position: absolute;
   inset: 0;

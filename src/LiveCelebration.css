@@ -1,0 +1,308 @@
+/* Live celebration card. Chrome follows the Figma "Live" popup
+   (file qr1zW5EUZ1LwFt4ZrrZhtG, node 83831:25741). The sing-along
+   overlay follows LyricsBar: gradient at the bottom of the video,
+   active line, quieter preview line, flame on words already sung. */
+
+.win-live {
+  position: absolute;
+  z-index: 40;
+  right: 12px;
+  bottom: 68px;
+  width: 222px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 16px;
+  background: #27282b;
+  color: #fff;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  pointer-events: none;
+  text-align: center;
+}
+
+.win-live-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.win-live-close {
+  width: 24px;
+  height: 24px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.win-live-close-spacer {
+  opacity: 0;
+}
+
+.win-live-who {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: center;
+  min-width: 0;
+}
+
+.win-live-who p {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 12px;
+  letter-spacing: 0.12px;
+  white-space: nowrap;
+}
+
+.win-live-stage {
+  position: relative;
+  width: 100%;
+  height: 123px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #1c1c1e;
+}
+
+.win-live-stage video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.win-live-scrub {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 12px;
+  letter-spacing: 0.12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.win-live-track {
+  position: relative;
+  flex: 1 1 auto;
+  height: 2px;
+  border-radius: 50px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.win-live-track > span {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  border-radius: 3px;
+  background: #fff;
+}
+
+.win-live-amps {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.win-live-amp {
+  position: relative;
+  width: 62px;
+  height: 36px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  pointer-events: auto !important;
+  cursor: pointer;
+}
+
+.win-live-amp:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.win-live-amp:active {
+  opacity: 0.7;
+}
+
+.win-live-amp.roamoji-sound-shake {
+  animation: roamoji-shake 0.5s infinite;
+}
+
+.win-live-amp.roamoji-sound-shake-red {
+  animation: roamoji-shake-red 0.32s infinite;
+}
+
+.win-live-emoji {
+  position: relative;
+  z-index: 1;
+  font-size: 16px;
+  line-height: 24px;
+  letter-spacing: -0.32px;
+}
+
+.win-lyrics {
+  position: absolute;
+  z-index: 1;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 18px 6px 4px;
+  text-align: center;
+  pointer-events: none;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.72), transparent);
+  opacity: 0;
+  transition: opacity 480ms ease-out;
+}
+
+.win-lyrics.is-on {
+  opacity: 1;
+}
+
+.win-lyric-rows {
+  position: relative;
+  min-height: 0;
+  transition: height 600ms ease-out;
+}
+
+.win-lyric-row {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 16px;
+  transform-origin: bottom center;
+  animation: win-lyric-in 420ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.win-lyric-row[data-role="preview"] {
+  bottom: 0;
+  animation: none;
+}
+
+.win-lyric-text {
+  position: relative;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 16px;
+  color: #fff;
+}
+
+.win-lyric-text[data-preview="true"] {
+  overflow: hidden;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 14px;
+  color: rgba(255, 255, 255, 0.55);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.win-lyric-text [data-word] {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.win-lyric-text [data-sung="true"] {
+  color: #F3B33D;
+  transition: color 120ms linear;
+}
+
+.win-lyric-ball {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 10px;
+  height: 10px;
+  color: #F3B33D;
+  opacity: 0;
+  transform-origin: bottom center;
+}
+
+.win-lyric-ball svg {
+  position: absolute;
+  left: -2px;
+  top: -2px;
+  width: 14px;
+  height: 14px;
+}
+
+@keyframes win-lyric-in {
+  from { opacity: 0.65; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .win-lyrics,
+  .win-lyric-rows,
+  .win-lyric-text [data-sung="true"] {
+    transition: none;
+  }
+
+  .win-lyric-row {
+    animation: none;
+  }
+}
+
+/* Full layout width, 3:2, so the map window grows with the section
+   instead of a scaled canvas. The celebration card stays 222px. */
+#live-celebration .fp-map-preview {
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  aspect-ratio: 3 / 2;
+}
+
+@media (max-width: 768px) {
+  #live-celebration .fp-section-visual {
+    height: auto;
+  }
+
+  #live-celebration .fp-map-preview {
+    width: 100% !important;
+    height: auto !important;
+    aspect-ratio: 3 / 2 !important;
+    /* 3:2 of a phone width is shorter than the card. Keep a real
+       minimum so the 222px card stays inside the window. */
+    min-height: 520px !important;
+    padding: 0 !important;
+  }
+
+  #live-celebration .fp-map-preview .miniRoamOS {
+    top: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  #live-celebration .fp-map-preview .sc-window,
+  #live-celebration .fp-section-visual[data-map-align="right"] .fp-map-preview .sc-window {
+    top: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: none !important;
+    max-height: none !important;
+    aspect-ratio: auto !important;
+    transform: none !important;
+  }
+
+  #live-celebration .sc-window > .win-live {
+    transform: none;
+  }
+}

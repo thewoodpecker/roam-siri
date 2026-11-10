@@ -1005,14 +1005,6 @@ button.win-gift-nav {
   }
 }
 
-.win-visual-stack {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 72px;
-}
-
 .win-story-frame {
   /* Same frame as the trophy cabinet (.win-case-room): 10 of 12 columns, 3:2.
      No trophy sidebar — the story viewer fills the window. */
@@ -1451,7 +1443,8 @@ button.win-gift-nav {
   }
 
   /* Side inset only. Vertical padding stays on the shared visual rule. */
-  #trophy-cabinet .fp-section-visual {
+  #trophy-cabinet .fp-section-visual,
+  #award-stories .fp-section-visual {
     padding-left: 32px;
     padding-right: 32px;
   }
