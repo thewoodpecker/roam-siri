@@ -30,8 +30,8 @@ const LEAF_T = 0.004;
 const NOTES_W = LEAF_W * 0.92;
 const NOTES_H = LEAF_H * 0.92;
 const CORNER = 0.036;
-/** Cover fold when open — 115°, not 180°. The left leaf stays standing. */
-const OPEN_ANGLE = (115 * Math.PI) / 180;
+/** Cover fold when open — 75°, not 180°. The left leaf stays standing. */
+const OPEN_ANGLE = (75 * Math.PI) / 180;
 /** No bisector yaw — that squared the tent to the camera and read as a flat book. */
 const OPEN_YAW = 0;
 /** Outer metal rim sitting proud of the tray — unused on the flat card. */
@@ -366,14 +366,14 @@ export const CARD_SEED_NOTES = [
   { id: 'chelsea', page: 'left', spread: 0, col: 0, row: 0, ...zoneNoteUv(0, 0), rotate: -6, name: 'Chelsea', text: 'Hope it’s a good one — save me a slice.' },
   { id: 'howard', page: 'left', spread: 0, col: 2, row: 3, ...zoneNoteUv(2, 3), rotate: 4, name: 'Howard', text: 'Another trip around the sun.' },
   { id: 'rob', page: 'left', spread: 0, col: 0, row: 6, ...zoneNoteUv(0, 6), rotate: -3, name: 'Rob', text: 'Get after it, Klas.' },
-  { id: 'howard-candles', page: 'left', spread: 0, col: 2, row: 0, ...zoneNoteUv(2, 0), rotate: 3, name: 'Howard', text: 'Wish big — I’ll handle the candles.' },
-  { id: 'cleo', page: 'left', spread: 0, col: 2, row: 6, ...zoneNoteUv(2, 6), rotate: 3, name: 'Cleo', text: 'Encore.' },
-  { id: 'petra', page: 'right', spread: 0, col: 0, row: 0, ...zoneNoteUv(0, 0), rotate: -5, name: 'Petra', text: 'Big day.' },
-  { id: 'wes', page: 'right', spread: 0, col: 3, row: 0, ...zoneNoteUv(3, 0), rotate: 4, name: 'Wes', text: 'Best year.' },
-  { id: 'felix', page: 'right', spread: 0, col: 1, row: 6, ...zoneNoteUv(1, 6), rotate: -3, name: 'Felix', text: 'Cake me.' },
-  { id: 'amira', page: 'right', spread: 0, col: 3, row: 6, ...zoneNoteUv(3, 6), rotate: 2, name: 'Amira', text: 'Go shine.' },
-  { id: 'jonah', page: 'right', spread: 0, col: 0, row: 6, ...zoneNoteUv(0, 6), rotate: -4, name: 'Jonah', text: 'Nice lap.' },
-  { id: 'sable', page: 'right', spread: 0, col: 2, row: 0, ...zoneNoteUv(2, 0), rotate: 5, name: 'Sable', text: 'Stay gold.' },
+  { id: 'mattias', page: 'left', spread: 0, col: 2, row: 0, ...zoneNoteUv(2, 0), rotate: 3, name: 'Mattias', text: 'Wish big — I’ll handle the candles.' },
+  { id: 'derek', page: 'left', spread: 0, col: 2, row: 6, ...zoneNoteUv(2, 6), rotate: 3, name: 'Derek', text: 'Encore.' },
+  { id: 'klas', page: 'right', spread: 0, col: 0, row: 0, ...zoneNoteUv(0, 0), rotate: -5, name: 'Klas', text: 'Big day.' },
+  { id: 'peter', page: 'right', spread: 0, col: 3, row: 0, ...zoneNoteUv(3, 0), rotate: 4, name: 'Peter', text: 'Best year.' },
+  { id: 'grace', page: 'right', spread: 0, col: 1, row: 6, ...zoneNoteUv(1, 6), rotate: -3, name: 'Grace', text: 'Cake me.' },
+  { id: 'keegan', page: 'right', spread: 0, col: 3, row: 6, ...zoneNoteUv(3, 6), rotate: 2, name: 'Keegan', text: 'Go shine.' },
+  { id: 'jon', page: 'right', spread: 0, col: 0, row: 6, ...zoneNoteUv(0, 6), rotate: -4, name: 'Jon', text: 'Nice lap.' },
+  { id: 'sean', page: 'right', spread: 0, col: 2, row: 0, ...zoneNoteUv(2, 0), rotate: 5, name: 'Sean', text: 'Stay gold.' },
   { id: 'jeff', page: 'right', spread: 0, col: 2, row: 6, ...zoneNoteUv(2, 6), rotate: -2, name: 'Jeff', text: 'Cheers.' },
 ];
 

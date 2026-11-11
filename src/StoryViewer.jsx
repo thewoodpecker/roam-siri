@@ -3,12 +3,19 @@ import './StoryViewer.css';
 
 const isVideoSrc = (src) => /\.(mp4|webm|mov)$/i.test(src);
 
+const storyFrames = (story) => {
+  if (!story) return [];
+  if (Array.isArray(story.frames) && story.frames.length) return story.frames;
+  return [{ image: story.image, caption: story.caption }];
+};
+
 const prefersReducedMotion = () => (
   typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
 );
 
 export default function StoryViewer({ stories, initialIndex = 0, onClose, embedded = false }) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
+  const [frameIndex, setFrameIndex] = useState(0);
   const [progress, setProgress] = useState(0);
   const containerRef = useRef(null);
   const activeVideoRef = useRef(null);
@@ -29,12 +36,13 @@ export default function StoryViewer({ stories, initialIndex = 0, onClose, embedd
   // Preload all story images before showing (video sources skip image preload)
   useEffect(() => {
     let cancelled = false;
-    const promises = stories.map(s => new Promise(resolve => {
-      if (/\.(mp4|webm|mov)$/i.test(s.image)) { resolve(); return; }
+    const sources = stories.flatMap(s => storyFrames(s).map(frame => frame.image || frame.award?.image).filter(Boolean));
+    const promises = sources.map(src => new Promise(resolve => {
+      if (/\.(mp4|webm|mov)$/i.test(src)) { resolve(); return; }
       const img = new Image();
       img.onload = resolve;
       img.onerror = resolve;
-      img.src = s.image;
+      img.src = src;
     }));
     Promise.all(promises).then(() => {
       if (!cancelled) setLoaded(true);
@@ -102,9 +110,13 @@ export default function StoryViewer({ stories, initialIndex = 0, onClose, embedd
       setProgress(p);
       if (p < 1) {
         rafId = requestAnimationFrame(tick);
+      } else if (frameIndex < storyFrames(current).length - 1) {
+        setFrameIndex(i => i + 1);
       } else if (currentIndex < stories.length - 1) {
+        setFrameIndex(0);
         setCurrentIndex(i => i + 1);
       } else if (embedded) {
+        setFrameIndex(0);
         setCurrentIndex(0);
       } else {
         handleClose();
@@ -112,7 +124,7 @@ export default function StoryViewer({ stories, initialIndex = 0, onClose, embedd
     };
     let rafId = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(rafId);
-  }, [currentIndex, stories.length, current?.image, paused, embedded, holdEmbedded]);
+  }, [currentIndex, frameIndex, stories.length, current?.image, paused, embedded, holdEmbedded]);
 
   // Wire up video progress for the active video story. Browser `timeupdate`
   // events fire ~4× per second which feels steppy, so we sample currentTime
@@ -155,13 +167,25 @@ export default function StoryViewer({ stories, initialIndex = 0, onClose, embedd
   }, [paused, current?.image, holdEmbedded]);
 
   const goNext = () => {
+    if (frameIndex < storyFrames(current).length - 1) {
+      setFrameIndex(i => i + 1);
+      return;
+    }
+    setFrameIndex(0);
     if (currentIndex < stories.length - 1) setCurrentIndex(i => i + 1);
     else if (embedded) setCurrentIndex(0);
     else handleClose();
   };
 
   const goPrev = () => {
-    if (currentIndex > 0) setCurrentIndex(i => i - 1);
+    if (frameIndex > 0) {
+      setFrameIndex(i => i - 1);
+      return;
+    }
+    if (currentIndex > 0) {
+      setFrameIndex(storyFrames(stories[currentIndex - 1]).length - 1);
+      setCurrentIndex(i => i - 1);
+    }
   };
 
   // Keyboard shortcuts: Space toggles pause/play; arrows navigate.
@@ -193,24 +217,29 @@ export default function StoryViewer({ stories, initialIndex = 0, onClose, embedd
       <div className="sv-container" ref={containerRef} style={{ transform: `translate(${offset}px, -50%)` }}>
         {stories.map((story, i) => {
           const isCurrent = i === currentIndex;
+          const frames = storyFrames(story);
+          const frame = frames[isCurrent ? Math.min(frameIndex, frames.length - 1) : 0] || frames[0];
+          const caption = frame?.caption;
+          const frameAward = frame?.award || (!story.frames && story.award);
           return (
             <div
               key={story.id || story.image}
-              className={`sv-card ${isCurrent ? 'sv-card-active' : 'sv-card-peek'}${story.award ? ' sv-card-award' : ''}`}
+              className={`sv-card ${isCurrent ? 'sv-card-active' : 'sv-card-peek'}${frameAward ? ' sv-card-award' : ''}${caption && !frameAward ? ' sv-card-caption' : ''}`}
               style={{ animationDelay: `${i * 80}ms` }}
-              onClick={isCurrent ? undefined : () => setCurrentIndex(i)}
+              onClick={isCurrent ? undefined : () => { setFrameIndex(0); setCurrentIndex(i); }}
             >
-              {story.award ? (
+              {frameAward ? (
                 <div className="sv-award">
                   <div className="sv-award-photo">
-                    <img src={story.award.image} alt="" />
+                    <img src={frameAward.image} alt="" />
                   </div>
                   {isCurrent && (
                     <div className="sv-award-copy">
-                      <p className="sv-award-title">{story.award.title}</p>
-                      <img className="sv-award-rule" src={story.award.rule} alt="" />
-                      <p className="sv-award-who">{story.award.who}</p>
-                      <p className="sv-award-when">{story.award.when}</p>
+                      <p className="sv-award-title">{frameAward.title}</p>
+                      <img className="sv-award-rule" src={frameAward.rule} alt="" />
+                      <p className="sv-award-who">{frameAward.who}</p>
+                      <p className="sv-award-when">{frameAward.when}</p>
+                      {caption && <p className="sv-caption">{caption}</p>}
                     </div>
                   )}
                 </div>
@@ -226,17 +255,21 @@ export default function StoryViewer({ stories, initialIndex = 0, onClose, embedd
                   playsInline
                 />
               ) : (
-                <img className="sv-image" src={story.image} alt="" />
+                <img className="sv-image" src={frame?.image || story.image} alt="" />
               )}
               {isCurrent && (
                 <>
                   <div className="sv-progress-bar">
                     {(() => {
-                      const personStories = stories.filter(s => s.name === current.name);
-                      const personIndex = personStories.indexOf(current);
-                      return personStories.map((_, j) => (
-                        <div key={j} className="sv-progress-segment">
-                          <div className="sv-progress-fill" style={{ width: j < personIndex ? '100%' : j === personIndex ? `${progress * 100}%` : '0%' }} />
+                      const segments = [];
+                      stories.forEach((s, si) => {
+                        if (s.name !== current.name) return;
+                        storyFrames(s).forEach((_, fi) => segments.push({ si, fi }));
+                      });
+                      const activeSeg = segments.findIndex(seg => seg.si === currentIndex && seg.fi === frameIndex);
+                      return segments.map((seg, j) => (
+                        <div key={`${seg.si}-${seg.fi}`} className="sv-progress-segment">
+                          <div className="sv-progress-fill" style={{ width: j < activeSeg ? '100%' : j === activeSeg ? `${progress * 100}%` : '0%' }} />
                         </div>
                       ));
                     })()}
@@ -277,6 +310,7 @@ export default function StoryViewer({ stories, initialIndex = 0, onClose, embedd
                   </div>
                   <button type="button" aria-label="Previous story" className="unbutton sv-click-prev" onClick={goPrev} />
                   <button type="button" aria-label="Next story" className="unbutton sv-click-next" onClick={goNext} />
+                  {caption && !frameAward && <p className="sv-caption">{caption}</p>}
                 </>
               )}
               {!isCurrent && (

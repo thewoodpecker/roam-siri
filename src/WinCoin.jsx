@@ -39,8 +39,9 @@ function CoinRow({ count }) {
 }
 
 /**
- * Toolbar coin for W!N. Click opens the giving panel. Drag the coin, or a
- * stack from the panel, onto someone on the map.
+ * Toolbar coin for W!N. Drag the coin, or a stack from the panel, onto
+ * someone on the map. The panel stays up through map clicks and gifts.
+ * It hides only while a coin is dragged, then returns when the drag ends.
  */
 export default function WinCoin({ defaultOpen = false }) {
   const anchorRef = useRef(null);
@@ -67,23 +68,6 @@ export default function WinCoin({ defaultOpen = false }) {
     return () => clearTimeout(t);
   }, [award]);
 
-  useEffect(() => {
-    if (!open) return undefined;
-    const onDown = (event) => {
-      if (anchorRef.current?.contains(event.target)) return;
-      setOpen(false);
-    };
-    const onKey = (event) => {
-      if (event.key === 'Escape') setOpen(false);
-    };
-    document.addEventListener('pointerdown', onDown);
-    document.addEventListener('keydown', onKey);
-    return () => {
-      document.removeEventListener('pointerdown', onDown);
-      document.removeEventListener('keydown', onKey);
-    };
-  }, [open]);
-
   const clearHot = () => {
     document.querySelectorAll('.sc-win-hot').forEach((node) => node.classList.remove('sc-win-hot'));
   };
@@ -98,7 +82,7 @@ export default function WinCoin({ defaultOpen = false }) {
     setDrag(null);
     setDragging(false);
     if (!session?.moved) {
-      if (session?.toggle) setOpen((value) => !value);
+      if (session?.toggle) setOpen(true);
       else if (session?.select != null) setSelected(session.select);
       return;
     }
@@ -112,7 +96,6 @@ export default function WinCoin({ defaultOpen = false }) {
     const amount = session.amount;
     setBalance((value) => Math.max(0, value - amount));
     setStatus(`${person.name} received ${formatPoints(amount)}.`);
-    setOpen(false);
     const rect = person.node.getBoundingClientRect();
     const win = person.node.closest('.sc-window') || document.body;
     const winRect = win.getBoundingClientRect();
@@ -129,7 +112,7 @@ export default function WinCoin({ defaultOpen = false }) {
   const startPointer = (event, amount, { toggle = false, select = null } = {}) => {
     if (event.button != null && event.button !== 0) return;
     if (balance < amount) {
-      if (toggle) setOpen((value) => !value);
+      if (toggle) setOpen(true);
       return;
     }
     event.stopPropagation();
@@ -148,8 +131,7 @@ export default function WinCoin({ defaultOpen = false }) {
         if (!current.moved) {
           if (Math.hypot(ev.clientX - startX, ev.clientY - startY) < 6) return;
           current.moved = true;
-          if (current.toggle) setOpen(false);
-          else setDragging(true);
+          setDragging(true);
           viewport?.classList.add('sc-win-dragging');
         }
         setDrag({ amount, x: ev.clientX, y: ev.clientY });

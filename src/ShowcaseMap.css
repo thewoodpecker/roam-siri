@@ -3958,6 +3958,18 @@
   transition: transform 180ms ease;
 }
 
+/* Theater stage seats. Same coin-drag scale and ring as a floor avatar.
+   The ring stays transparent until the coin is over that person. */
+.sc-viewport.sc-win-dragging [data-win-person].sc-theater-speaker .sc-theater-speaker-img {
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0);
+  transition: transform 180ms ease, box-shadow 180ms ease !important;
+}
+
+.sc-viewport.sc-win-dragging .sc-room-card .sc-theater-speaker.sc-win-hot .sc-theater-speaker-img {
+  transform: scale(1.18);
+  box-shadow: 0 0 0 2px #fff;
+}
+
 /* Give Roamcoins — same tray as the product PointsGivingPanel. */
 .sc-win-panel {
   box-sizing: border-box;
@@ -4026,9 +4038,9 @@
 }
 
 .sc-win-panel-title {
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 500;
-  line-height: 24px;
+  line-height: 20px;
 }
 
 .sc-win-panel-content {
@@ -4255,6 +4267,7 @@
   }
 
   .sc-viewport.sc-win-dragging [data-win-person] :is(.seat-avatar, .avatar),
+  .sc-viewport.sc-win-dragging [data-win-person].sc-theater-speaker .sc-theater-speaker-img,
   .sc-viewport.sc-win-dragging .sc-win-hot.game-hex {
     transition: none !important;
   }
@@ -4262,6 +4275,7 @@
   .sc-viewport.sc-win-dragging .sc-room-card .seat-assigned.sc-win-hot .seat-avatar,
   .sc-viewport.sc-win-dragging .sc-room-card .meeting-room-person.sc-win-hot .avatar,
   .sc-viewport.sc-win-dragging .sc-agentroom-visitor.sc-win-hot .avatar,
+  .sc-viewport.sc-win-dragging .sc-room-card .sc-theater-speaker.sc-win-hot .sc-theater-speaker-img,
   .sc-viewport.sc-win-dragging .sc-win-hot.game-hex {
     transform: none !important;
   }

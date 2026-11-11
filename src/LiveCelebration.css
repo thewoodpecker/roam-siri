@@ -8,7 +8,8 @@
   z-index: 40;
   right: 12px;
   bottom: 68px;
-  width: 222px;
+  width: 320px;
+  height: 309px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -21,6 +22,18 @@
   font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   pointer-events: none;
   text-align: center;
+}
+
+/* Same scrim as the award-stories StoryViewer (.sv-overlay): rgba black
+   over the map window, under the celebration dialog. */
+.win-live-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  background: rgba(0, 0, 0, 0.85);
+  border-radius: var(--radius-2xl);
+  corner-shape: superellipse(1.6);
+  pointer-events: none;
 }
 
 .win-live-head {
@@ -55,17 +68,18 @@
 
 .win-live-who p {
   margin: 0;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 500;
-  line-height: 12px;
-  letter-spacing: 0.12px;
+  line-height: 16px;
+  letter-spacing: 0;
   white-space: nowrap;
 }
 
 .win-live-stage {
   position: relative;
   width: 100%;
-  height: 123px;
+  flex: 1 1 auto;
+  min-height: 0;
   border-radius: 6px;
   overflow: hidden;
   background: #1c1c1e;
@@ -76,6 +90,28 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.win-live-mute {
+  position: absolute;
+  z-index: 2;
+  top: 6px;
+  right: 6px;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 11px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.win-live-mute:hover {
+  background: rgba(0, 0, 0, 0.75);
 }
 
 .win-live-scrub {
@@ -112,13 +148,14 @@
   display: flex;
   gap: 10px;
   align-items: center;
+  align-self: stretch;
 }
 
 .win-live-amp {
   position: relative;
-  width: 62px;
+  width: auto;
   height: 36px;
-  flex: none;
+  flex: 1 1 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -159,10 +196,10 @@
   left: 0;
   right: 0;
   bottom: 0;
-  padding: 18px 6px 4px;
+  padding: 1.75rem 1rem 0.625rem;
   text-align: center;
   pointer-events: none;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.72), transparent);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
   opacity: 0;
   transition: opacity 480ms ease-out;
 }
@@ -173,7 +210,7 @@
 
 .win-lyric-rows {
   position: relative;
-  min-height: 0;
+  min-height: 2.875rem;
   transition: height 600ms ease-out;
 }
 
@@ -181,30 +218,31 @@
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 16px;
+  bottom: 1.375rem;
   transform-origin: bottom center;
-  animation: win-lyric-in 420ms cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 
 .win-lyric-row[data-role="preview"] {
   bottom: 0;
-  animation: none;
 }
 
 .win-lyric-text {
   position: relative;
-  font-size: 13px;
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", "Liberation Sans", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  font-size: 1.125rem;
   font-weight: 600;
-  line-height: 16px;
+  line-height: 1.5rem;
+  letter-spacing: 0;
   color: #fff;
 }
 
 .win-lyric-text[data-preview="true"] {
   overflow: hidden;
-  font-size: 11px;
+  font-size: 0.875rem;
   font-weight: 400;
-  line-height: 14px;
-  color: rgba(255, 255, 255, 0.55);
+  line-height: 1.25rem;
+  letter-spacing: 0;
+  color: rgba(255, 255, 255, 0.5);
   white-space: nowrap;
   text-overflow: ellipsis;
 }
@@ -212,19 +250,19 @@
 .win-lyric-text [data-word] {
   display: inline-block;
   white-space: nowrap;
+  transition: color 120ms linear;
 }
 
 .win-lyric-text [data-sung="true"] {
   color: #F3B33D;
-  transition: color 120ms linear;
 }
 
 .win-lyric-ball {
   position: absolute;
   left: 0;
   top: 0;
-  width: 10px;
-  height: 10px;
+  width: 0.75rem;
+  height: 0.75rem;
   color: #F3B33D;
   opacity: 0;
   transform-origin: bottom center;
@@ -232,89 +270,81 @@
 
 .win-lyric-ball svg {
   position: absolute;
-  left: -2px;
-  top: -2px;
-  width: 14px;
-  height: 14px;
+  left: -0.125rem;
+  top: -0.125rem;
+  width: 1rem;
+  height: 1rem;
 }
 
-@keyframes win-lyric-in {
-  from { opacity: 0.65; transform: translateY(4px); }
-  to { opacity: 1; transform: none; }
+.win-lyrics.is-still,
+.win-lyrics.is-still .win-lyric-rows,
+.win-lyrics.is-still .win-lyric-text [data-word] {
+  transition: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .win-lyrics,
   .win-lyric-rows,
-  .win-lyric-text [data-sung="true"] {
+  .win-lyric-text [data-word] {
     transition: none;
   }
-
-  .win-lyric-row {
-    animation: none;
-  }
 }
 
-/* Same frame as the trophy cabinet and gift shop: 10 of 12 columns, 3:2
-   (about 929×620 on desktop). The window fills this box — no scale
-   transform — so the celebration card stays inside it. */
-#live-celebration .fp-map-preview {
-  width: calc(((100% - 11 * var(--grid-gutter)) / 12) * 10 + 9 * var(--grid-gutter));
-  max-width: 100%;
-  height: auto;
-  aspect-ratio: 3 / 2;
-}
-
+/* Desktop (above 768px) keeps the shared `.fp-map-preview`: 10 of 12
+   columns, 3:2 (about 929×620), real size, no scale. On mobile the
+   window stays a 1120×630 stage and shrinks with scale(0.75), same as
+   the other feature-page maps. Anchor the bottom-right corner so the
+   celebration dialog stays in frame; the left and top overflow and clip.
+   32px of wallpaper stays on the visible edges (right and bottom). */
 @media (max-width: 768px) {
+  /* Shorter than the 472px scaled window so the top of the map clips.
+     32px bottom padding + the dialog (and the toolbar under it) stay
+     inside; the upper floor overflows and is cropped. */
   #live-celebration .fp-section-visual {
-    height: auto;
+    height: 400px;
+    padding: 0;
   }
 
   #live-celebration .fp-map-preview {
-    width: calc(((100% - 11 * var(--grid-gutter)) / 12) * 10 + 9 * var(--grid-gutter)) !important;
-    max-width: 100% !important;
-    height: auto !important;
-    aspect-ratio: 3 / 2 !important;
+    width: 100% !important;
+    max-width: none !important;
+    height: 100% !important;
+    aspect-ratio: auto !important;
     min-height: 0 !important;
-    padding: 0 !important;
+    border-radius: 0 !important;
+    padding: 0 32px 32px 0 !important;
+    overflow: hidden;
   }
 
   #live-celebration .fp-map-preview .miniRoamOS {
+    position: absolute !important;
     top: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
+    right: 32px !important;
+    bottom: 32px !important;
     left: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
+    width: auto !important;
+    height: auto !important;
   }
 
   #live-celebration .fp-map-preview .sc-window,
   #live-celebration .fp-section-visual[data-map-align="right"] .fp-map-preview .sc-window {
-    top: 0 !important;
+    position: absolute !important;
+    top: auto !important;
     right: 0 !important;
     bottom: 0 !important;
-    left: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
+    left: auto !important;
+    width: 1120px !important;
+    height: 630px !important;
     max-width: none !important;
     max-height: none !important;
-    aspect-ratio: auto !important;
-    transform: none !important;
+    aspect-ratio: 16 / 9;
+    margin: 0 !important;
+    flex-shrink: 0;
+    transform: scale(0.75) !important;
+    transform-origin: bottom right !important;
   }
 
   #live-celebration .sc-window > .win-live {
     transform: none;
-  }
-}
-
-@media (max-width: 600px) {
-  /* Same phone frame as the trophy cabinet: full width, tall enough
-     that the celebration card stays inside the window. */
-  #live-celebration .fp-map-preview {
-    width: 100% !important;
-    max-width: 100% !important;
-    aspect-ratio: auto !important;
-    height: auto !important;
-    min-height: 460px !important;
   }
 }

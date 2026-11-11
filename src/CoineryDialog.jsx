@@ -37,8 +37,10 @@ const SHAPES = [
   { id: 'sparkle', label: 'Sparkle' },
 ];
 
-const LEGEND_SHAPES = new Set(['circle', 'squircle', 'scallop', 'hexagon']);
 const COIN_CHANGE_MS = 250;
+const SWAP_SCALE = 0.82;
+const easeInCubic = (t) => t * t * t;
+const easeOutCubic = (t) => 1 - (1 - t) ** 3;
 
 const EMOJIS = [
   ['😀', 'grinning'], ['😃', 'smiley'], ['😄', 'smile'], ['😁', 'beaming'], ['😆', 'laughing'],
@@ -283,6 +285,7 @@ export function CoineryDialog() {
   const sizerRef = useRef(null);
   const previewRef = useRef(preview);
   const previewBoxRef = useRef(null);
+  const presentationScaleRef = useRef(1);
   const rootRef = useRef(null);
 
   useEffect(() => {
@@ -324,6 +327,7 @@ export function CoineryDialog() {
     const box = previewBoxRef.current;
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (reduce || !box) {
+      presentationScaleRef.current = 1;
       previewRef.current = next;
       setPreview(next);
       return undefined;
@@ -332,18 +336,33 @@ export function CoineryDialog() {
     let cancelled = false;
     let raf1 = 0;
     let raf2 = 0;
+    let scaleRaf = 0;
+    const animateScale = (from, to, ms, ease) => {
+      window.cancelAnimationFrame(scaleRaf);
+      const start = performance.now();
+      presentationScaleRef.current = from;
+      const step = (now) => {
+        const t = Math.min(1, (now - start) / ms);
+        presentationScaleRef.current = from + (to - from) * ease(t);
+        if (t < 1 && !cancelled) scaleRaf = window.requestAnimationFrame(step);
+      };
+      scaleRaf = window.requestAnimationFrame(step);
+    };
     const paint = (phase) => {
       if (phase === 'out') {
         box.style.transitionDuration = '250ms';
         box.style.transitionTimingFunction = 'ease-in';
         box.style.opacity = '0';
-        box.style.transform = 'scale(0.82)';
+        box.style.transform = 'none';
+        animateScale(presentationScaleRef.current, SWAP_SCALE, COIN_CHANGE_MS, easeInCubic);
         return;
       }
       if (phase === 'enter') {
         box.style.transition = 'none';
         box.style.opacity = '0';
-        box.style.transform = 'scale(0.82)';
+        box.style.transform = 'none';
+        window.cancelAnimationFrame(scaleRaf);
+        presentationScaleRef.current = SWAP_SCALE;
         return;
       }
       box.style.transition = '';
@@ -351,6 +370,7 @@ export function CoineryDialog() {
       box.style.transitionTimingFunction = '';
       box.style.opacity = '';
       box.style.transform = '';
+      animateScale(presentationScaleRef.current, 1, COIN_CHANGE_MS, easeOutCubic);
     };
 
     paint('out');
@@ -370,6 +390,7 @@ export function CoineryDialog() {
       window.clearTimeout(swap);
       window.cancelAnimationFrame(raf1);
       window.cancelAnimationFrame(raf2);
+      window.cancelAnimationFrame(scaleRaf);
     };
   }, [color, emoji, mark, shape]);
 
@@ -441,14 +462,12 @@ export function CoineryDialog() {
             name={name}
             onTap={playTapSound}
             onFling={playFlingSound}
+            presentationScaleRef={presentationScaleRef}
           />
         </div>
       </div>
 
-      <label
-        className={`coinery-name${LEGEND_SHAPES.has(shape) ? '' : ' is-reserved'}`}
-        aria-hidden={LEGEND_SHAPES.has(shape) ? undefined : true}
-      >
+      <label className="coinery-name">
         <input
           type="text"
           value={name}
@@ -458,8 +477,6 @@ export function CoineryDialog() {
           autoCorrect="off"
           spellCheck={false}
           maxLength={40}
-          tabIndex={LEGEND_SHAPES.has(shape) ? undefined : -1}
-          readOnly={!LEGEND_SHAPES.has(shape)}
           onChange={(event) => setName(event.target.value)}
         />
       </label>

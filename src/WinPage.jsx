@@ -178,12 +178,47 @@ const trophyStory = (id, name, avatar, title, when, trophy) => ({
   },
 });
 
+const cakeStory = (id, name, avatar, image, caption, frames) => ({
+  id,
+  image: frames?.[0]?.image || image,
+  avatar,
+  name,
+  caption: frames?.[0]?.caption || caption,
+  ...(frames?.length ? { frames } : {}),
+});
+
 const TROPHY_STORIES = [
   trophyStory('chelsea-presidents-club', 'Chelsea Turbin', '/headshots/chelsea-turbin.jpg', "President's Club", 'March 2026', '/win/trophy/cup.png'),
-  trophyStory('sean-house-cup', 'Sean MacIsaac', '/headshots/sean-macisaac.jpg', 'The House Cup', 'February 2026', '/win/trophy/handled.png'),
+  cakeStory('michael-walrath-cake', 'Michael Walrath', '/headshots/michael-walrath.jpg', '/win/stories/michael-walrath-cake.jpg', 'Whoooa, Pastryisart just showed up with my name on a note.'),
+  {
+    id: 'sean-macisaac',
+    image: '/win/trophy/handled.png',
+    avatar: '/headshots/sean-macisaac.jpg',
+    name: 'Sean MacIsaac',
+    frames: [
+      {
+        image: '/win/trophy/handled.png',
+        award: {
+          image: '/win/trophy/handled.png',
+          rule: '/win/story/award-rule.svg',
+          title: 'The House Cup',
+          who: 'Sean MacIsaac',
+          when: 'February 2026',
+        },
+      },
+      { image: '/win/stories/sean-macisaac-cake.jpg', caption: 'Opened the door and they handed me a whole cake. I yelped.' },
+      { image: '/win/stories/sean-macisaac-cake-closeup.jpg', caption: 'It says Happy Birthday Sean. I am not playing it cool.' },
+    ],
+  },
   trophyStory('derek-employee-of-the-month', 'Derek Cicerone', '/headshots/derek-cicerone.jpg', 'Employee of the Month', 'July 2026', '/win/story/employee-trophy.png'),
-  trophyStory('lexi-computer-cup', 'Lexi B.', '/headshots/lexi-bohonnon.jpg', 'Computer Cup', 'January 2026', '/win/trophy/chalice.png'),
+  cakeStory('thomas-grapperon-cake', 'Thomas Grapperon', '/headshots/thomas-grapperon.jpg', '/win/stories/thomas-grapperon-cake.jpg', 'Happy Birthday Thomas, right on top. I actually gasped.'),
   trophyStory('grace-tour-de-nyc', 'Grace Sutherland', '/headshots/grace-sutherland.jpg', 'Tour De NYC', 'May 2026', '/win/trophy/globe.png'),
+  cakeStory('mattias-leino-cake', 'Mattias Leino', '/headshots/mattias-leino.jpg', '/win/stories/mattias-leino-garage.jpg', 'Cake just landed and I am still standing in the garage.', [
+    { image: '/win/stories/mattias-leino-garage.jpg', caption: 'Cake just landed and I am still standing in the garage.' },
+    { image: '/win/stories/mattias-leino-cake.jpg', caption: 'Opened it. My name, blue icing, way too many sprinkles.' },
+  ]),
+  trophyStory('lexi-computer-cup', 'Lexi B.', '/headshots/lexi-bohonnon.jpg', 'Computer Cup', 'January 2026', '/win/trophy/chalice.png'),
+  cakeStory('grace-sutherland-cake', 'Grace Sutherland', '/headshots/grace-sutherland.jpg', '/win/stories/grace-sutherland-cake.jpg', 'Whoooa, my awesome cake arrived and it says Grace.'),
   trophyStory('ava-computer-vision', 'Ava Lee', '/headshots/ava-lee.jpg', 'Computer Vision Award', 'April 2026', '/win/trophy/gold-cup.png'),
 ];
 
@@ -227,7 +262,7 @@ export function TrophyStoryVisual() {
           <OfficeMap embedded initialFloor="R&D" birthdayEnabled={false} theme={theme} />
         </Suspense>
       </div>
-      <StoryViewer stories={TROPHY_STORIES} initialIndex={2} embedded />
+      <StoryViewer stories={TROPHY_STORIES} initialIndex={3} embedded />
     </div>
   );
 }
@@ -437,6 +472,25 @@ export function GiftStoreVisual() {
           </div>
         )}
       </section>
+      <div className="win-gift-received-overlay" />
+      <GiftReceivedDialog />
+    </div>
+  );
+}
+
+export function GiftReceivedDialog() {
+  const card = GIFT_CARDS.find((item) => item.id === 'starbucks');
+
+  return (
+    <div className="win-gift-received" role="dialog" aria-labelledby="win-gift-received-title">
+      <div className="win-gift-received-copy">
+        <p id="win-gift-received-title">Congratulations!</p>
+        <p>You received a gift card</p>
+      </div>
+      <div className="win-gift-received-card" style={{ background: card.color }}>
+        <img src={`/win/gifts/${card.id}.svg`} alt={`${card.name} gift card`} />
+      </div>
+      <button type="button" className="win-gift-received-wallet">Add to Wallet</button>
     </div>
   );
 }

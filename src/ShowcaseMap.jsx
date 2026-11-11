@@ -134,7 +134,9 @@ export const FLOORS = {
     // Row 1 — privates flanking a center theater that spans rows 1-2
     { id: 'r6', type: 'private', name: 'Grace S.', people: [p('Grace S.')], pos: { col: 0, row: 1 }, span: 1 },
     { id: 'r7', type: 'private', name: 'Michael W.', people: [p('Michael W.')], pos: { col: 1, row: 1 }, span: 1, figma: { comment: 'Can we tighten the 24px gap to 16px?', file: 'Dock v3', author: 'Ava L.' } },
-    { id: 'theater', type: 'theater', name: 'Theater', people: [], pos: { col: 2, row: 1 }, colSpan: 2, rowSpan: 2 },
+    // Stage faces stay off the Meeting Room roster below (Grace, Lexi,
+    // Ashley, Hannah, Daniel). These three already have seats on this floor.
+    { id: 'theater', type: 'theater', name: 'Theater', people: [p('Chelsea T.'), p('Keegan L.'), p('Sean M.')], pos: { col: 2, row: 1 }, colSpan: 2, rowSpan: 2 },
     { id: 'r8', type: 'private', name: 'Rob F.', people: [p('Rob F.')], pos: { col: 4, row: 1 }, span: 1 },
     { id: 'r8b', type: 'private', name: 'Chelsea T.', people: [p('Chelsea T.')], pos: { col: 5, row: 1 }, span: 1 },
     // Row 2 — privates flanking the theater
@@ -1142,6 +1144,7 @@ function TheaterRoomCard({ room, speakers = [], onPersonClick, speakerStories = 
                   <div
                     key={s.name}
                     className="sc-theater-speaker"
+                    {...winPersonAttrs(s)}
                     onClick={(e) => { e.stopPropagation(); onPersonClick && onPersonClick(s, e); }}
                     style={{ cursor: getChatIdForAvatar(s.avatar) ? 'pointer' : 'default' }}
                   >
@@ -4125,7 +4128,7 @@ function ShowcaseMapInner({ initialFloor = 'R&D', embedded = false, autoKnock = 
                     {room.type === 'theater' ? (
                       <TheaterRoomCard
                         room={room}
-                        speakers={theaterSpeakers}
+                        speakers={room.people?.length ? room.people : theaterSpeakers}
                         onPersonClick={editable ? undefined : openMiniChat}
                         onRoomClick={editable && !allowWindowOpens ? undefined : () => { pinAppWindow(theaterWin, 'right'); theaterWin.open(); }}
                         speakerStories={speakerStories}

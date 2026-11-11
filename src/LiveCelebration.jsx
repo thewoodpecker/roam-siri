@@ -2,18 +2,19 @@ import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from
 import ReactDOM from 'react-dom';
 import ShowcaseMap from './ShowcaseMap';
 import lyricsFile from './liveCelebrationLyrics.json';
+import { lyricsFrame } from './celebrationLyrics.mjs';
 import './LiveCelebration.css';
 
-// Sing-along ported from wonder/roam/client/rewards/celebration/LyricsBar.tsx
-// and helpers/lyrics.ts: a Roam mark hops the current line, sung words turn
-// flame, and the next line waits underneath. Times are the built-in
+// Sing-along from wonder/roam/client/rewards/celebration/LyricsBar.tsx
+// and helpers/lyrics.ts. The pose (hop, bounce, stretch, lean, line
+// handoff) comes from celebrationLyrics.mjs. Times are the built-in
 // happy-birthday lyrics (roam/audio/rewards/happy-birthday-roam-1min.lyrics.json).
 
 const LINES = lyricsFile.lines;
 const LEAD_MS = 1500;
 const HOLD_MS = 1500;
-const PREVIEW_GAP_MS = 3000;
-const FLAME = '#F3B33D';
+const TRANSITION_MS = 600;
+const EXIT_MS = 180;
 
 const WINDOWS = LINES.map((line, i) => {
   const start = line.words[0].startMs;
@@ -32,38 +33,6 @@ WINDOWS.forEach((window, i) => {
 
 const DURATION = WINDOWS[WINDOWS.length - 1].until + 600;
 
-const smoothStep = (value) => {
-  const t = Math.min(1, Math.max(0, value));
-  return t * t * (3 - 2 * t);
-};
-
-function frameAt(posMs) {
-  const i = WINDOWS.findIndex((w) => posMs >= w.from && posMs < w.until);
-  if (i < 0) return { line: undefined, next: undefined, reached: 0, from: 0, to: 0, t: 1 };
-  const line = LINES[i];
-  const following = LINES[i + 1];
-  const next = following && following.words[0].startMs - WINDOWS[i].end <= PREVIEW_GAP_MS ? i + 1 : undefined;
-  const reached = line.words.filter((word) => word.startMs <= posMs).length;
-  if (reached === 0) return { line: i, next, reached, from: -1, to: -1, t: 1 };
-  const from = reached - 1;
-  const word = line.words[from];
-  const upcoming = line.words[from + 1];
-  if (!word || !upcoming) return { line: i, next, reached, from, to: from, t: 1 };
-  const interval = upcoming.startMs - word.startMs;
-  const hop = Math.min(interval, Math.max(450, Math.min(700, interval * 0.75)));
-  if (hop > 0 && posMs > upcoming.startMs - hop) {
-    return {
-      line: i,
-      next,
-      reached,
-      from,
-      to: from + 1,
-      t: smoothStep((posMs - (upcoming.startMs - hop)) / hop),
-    };
-  }
-  return { line: i, next, reached, from, to: from, t: 1 };
-}
-
 function clock(ms) {
   const total = Math.max(0, Math.floor(ms / 1000));
   const minutes = Math.floor(total / 60);
@@ -81,49 +50,200 @@ function RoamMark() {
   );
 }
 
-function LyricLine({ line, role, reached, still, ballRef, onMeasure }) {
+const MIN_FONT_SCALE = 0.85;
+
+function LyricRow({
+  line,
+  index,
+  role,
+  reached,
+  still,
+  animate: shouldAnimate,
+  duration,
+  placements,
+  clock,
+  onHeight,
+}) {
+  const rowRef = useRef(null);
   const textRef = useRef(null);
+  const ballRef = useRef(null);
+  const geometry = useRef([]);
+  const previous = useRef(undefined);
+  const animRef = useRef(undefined);
+
+  const place = useCallback((ball) => {
+    const el = ballRef.current;
+    if (!el) return;
+    const at = (k, end = k) => {
+      const w = geometry.current[Math.max(0, k)];
+      const last = geometry.current[Math.max(0, end)];
+      return (
+        w &&
+        last && {
+          x: k < 0 ? w.left - w.height / 2 : w.y === last.y ? (w.left + last.right) / 2 : last.x,
+          y: k < 0 ? w.y : last.y,
+          height: w.height,
+        }
+      );
+    };
+    const a = ball && at(ball.from, ball.fromEnd);
+    const b = ball && at(ball.to, ball.toEnd);
+    if (!ball || !a || !b) {
+      el.style.opacity = '0';
+      return;
+    }
+    el.style.opacity = '1';
+    const x = a.x + (b.x - a.x) * ball.t;
+    const y = a.y + (b.y - a.y) * ball.t;
+    const distanceScale = ball.from === ball.to
+      ? 1
+      : Math.max(ball.minDistanceScale ?? 0, Math.min(1, Math.abs(b.x - a.x) / (2 * a.height)));
+    const lift = (ball.liftRem ?? 0) * distanceScale + (ball.holdRem ?? 0);
+    const stretch = ball.stretch ?? 0;
+    const lean = (ball.leanDeg ?? 0) * Math.sign(b.x - a.x);
+    el.style.transform = `translate(calc(${x}px - 50%), calc(${y}px - 100% - 0.125rem - ${lift}rem)) rotate(${lean}deg) scale(${1 / (1 + stretch)}, ${1 + stretch})`;
+  }, []);
+
+  const measure = useCallback(() => {
+    const el = textRef.current;
+    const row = rowRef.current;
+    if (!el || !row) return undefined;
+    el.style.fontSize = '';
+    el.style.whiteSpace = 'nowrap';
+    const baseSize = Number.parseFloat(getComputedStyle(el).fontSize);
+    const words = Array.from(el.querySelectorAll('[data-word]'));
+    const first = words[0];
+    const last = words[words.length - 1];
+    const naturalWidth = first && last ? last.offsetLeft + last.offsetWidth - first.offsetLeft : 0;
+    const availableWidth = Math.max(0, row.clientWidth - 2);
+    let scale = naturalWidth > availableWidth ? Math.max(MIN_FONT_SCALE, availableWidth / naturalWidth) : 1;
+    el.style.fontSize = `${baseSize * scale}px`;
+    el.style.whiteSpace = role === 'preview' ? 'nowrap' : 'normal';
+    while (
+      role !== 'preview' &&
+      first &&
+      scale > MIN_FONT_SCALE &&
+      words.some((word) => word.offsetTop !== first.offsetTop)
+    ) {
+      scale = Math.max(MIN_FONT_SCALE, scale - 0.01);
+      el.style.fontSize = `${baseSize * scale}px`;
+    }
+    geometry.current = words.map((word) => ({
+      x: word.offsetLeft + word.offsetWidth / 2,
+      y: word.offsetTop,
+      left: word.offsetLeft,
+      right: word.offsetLeft + word.offsetWidth,
+      height: word.offsetHeight,
+    }));
+    if (role === 'active') onHeight(el.offsetHeight);
+    place(!still && clock.current.line === index ? clock.current.ball : undefined);
+    return { role, fontSize: baseSize * scale };
+  }, [role, onHeight, place, still, clock, index]);
 
   useLayoutEffect(() => {
-    const el = textRef.current;
-    if (!el || role !== 'active') return undefined;
-    const fit = () => {
-      el.style.fontSize = '';
-      el.style.whiteSpace = 'nowrap';
-      const base = Number.parseFloat(getComputedStyle(el).fontSize);
-      const words = [...el.querySelectorAll('[data-word]')];
-      const first = words[0];
-      const last = words[words.length - 1];
-      const natural = first && last ? last.offsetLeft + last.offsetWidth - first.offsetLeft : 0;
-      const available = Math.max(0, el.clientWidth - 2);
-      const scale = natural > available ? Math.max(0.85, available / natural) : 1;
-      el.style.fontSize = `${base * scale}px`;
-      el.style.whiteSpace = '';
-      onMeasure(el.offsetHeight, words.map((word) => ({
-        x: word.offsetLeft + word.offsetWidth / 2,
-        y: word.offsetTop,
-        left: word.offsetLeft,
-        height: word.offsetHeight,
-      })));
+    placements.set(index, place);
+    return () => {
+      placements.delete(index);
     };
-    fit();
-    const observer = new ResizeObserver(fit);
-    observer.observe(el);
+  }, [placements, index, place]);
+
+  useLayoutEffect(() => {
+    const row = rowRef.current;
+    if (!row) return undefined;
+    const observer = new ResizeObserver(() => {
+      previous.current = measure();
+    });
+    observer.observe(row);
     return () => observer.disconnect();
-  }, [line, role, onMeasure]);
+  }, [measure]);
+
+  useLayoutEffect(() => {
+    const before = previous.current;
+    const after = measure();
+    const row = rowRef.current;
+    if (!after || !row) return undefined;
+    previous.current = after;
+    const running = animRef.current;
+    const interrupted = running?.playState === 'running' ? getComputedStyle(row) : undefined;
+    const fromTransform = interrupted?.transform ?? 'none';
+    const fromOpacity = interrupted?.opacity ?? '1';
+    running?.cancel();
+    row.style.transform = 'none';
+    row.style.opacity = role === 'outgoing' ? '0' : '1';
+    if (still || !shouldAnimate || before?.role === role) return undefined;
+    let logoFade;
+    const bind = (anim) => {
+      animRef.current = anim;
+      anim.onfinish = () => {
+        if (animRef.current !== anim) return;
+        if (row.isConnected && row.offsetParent !== null) {
+          try {
+            anim.commitStyles();
+          } catch {
+            // The row can finish detached. The fill already shows the end pose.
+          }
+        }
+        anim.cancel();
+      };
+    };
+    if (role === 'outgoing') {
+      bind(row.animate(
+        [
+          { opacity: fromOpacity, transform: fromTransform },
+          { opacity: 0, transform: 'translateY(-0.75rem)' },
+        ],
+        { duration, easing: 'ease-out', fill: 'both' },
+      ));
+    } else {
+      const promoted = before?.role === 'preview' && role === 'active';
+      const scale = promoted ? before.fontSize / after.fontSize : 1;
+      if (promoted) {
+        logoFade = ballRef.current?.querySelector('svg')?.animate(
+          [{ opacity: 0 }, { opacity: 1 }],
+          {
+            delay: duration < 300 ? 70 : EXIT_MS,
+            duration: 90,
+            easing: 'ease-out',
+            fill: 'backwards',
+          },
+        );
+      }
+      bind(row.animate(
+        [
+          {
+            opacity: promoted ? (duration <= 300 ? 1 : 0.65) : 0,
+            transform: promoted ? `translateY(1.375rem) scale(${scale})` : 'translateY(0.375rem)',
+          },
+          { opacity: 1, transform: 'none' },
+        ],
+        { duration, easing: 'cubic-bezier(0.2, 0.7, 0.2, 1)', fill: 'both' },
+      ));
+    }
+    return () => logoFade?.cancel();
+  }, [line, role, still, shouldAnimate, duration, measure]);
+
+  useEffect(() => {
+    const fonts = document.fonts;
+    if (!fonts) return undefined;
+    const refresh = () => {
+      previous.current = measure();
+    };
+    fonts.addEventListener('loadingdone', refresh);
+    return () => fonts.removeEventListener('loadingdone', refresh);
+  }, [measure]);
+
+  useEffect(() => () => animRef.current?.cancel(), []);
 
   return (
-    <div className={`win-lyric-row${still ? ' is-still' : ''}`} data-role={role}>
+    <div ref={rowRef} className="win-lyric-row" data-line={index} data-role={role}>
       <div className="win-lyric-text" ref={textRef} data-preview={role === 'preview' ? 'true' : undefined}>
-        {role === 'active' && (
-          <div className="win-lyric-ball" ref={ballRef} aria-hidden="true">
-            <RoamMark />
-          </div>
-        )}
-        {line.words.map((word, index) => (
+        <div className="win-lyric-ball" ref={ballRef} aria-hidden="true">
+          <RoamMark />
+        </div>
+        {line.words.map((word, k) => (
           <React.Fragment key={`${word.startMs}:${word.text}`}>
-            {index > 0 && ' '}
-            <span data-word="" data-sung={role === 'active' && index < reached ? 'true' : undefined}>
+            {k > 0 && ' '}
+            <span data-word="" data-sung={k < reached ? 'true' : 'false'}>
               {word.text}
             </span>
           </React.Fragment>
@@ -134,87 +254,115 @@ function LyricLine({ line, role, reached, still, ballRef, onMeasure }) {
 }
 
 function KaraokeLyrics({ posRef }) {
-  const ballRef = useRef(null);
-  const geometry = useRef([]);
-  const frameRef = useRef(frameAt(-1));
-  const [shown, setShown] = useState(() => frameAt(0));
-  const [rowHeight, setRowHeight] = useState(16);
-  const still = useRef(false);
+  const [still, setStill] = useState(() => (
+    typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  ));
+  const [shown, setShown] = useState({
+    reached: 0,
+    changedAt: 0,
+    leadMs: 0,
+    animate: false,
+  });
+  const [activeHeight, setActiveHeight] = useState(0);
+  const [placements] = useState(() => new Map());
+  const clockRef = useRef(lyricsFrame(lyricsFile, -Infinity));
 
   useEffect(() => {
-    still.current = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const media = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const onChange = () => setStill(media.matches);
+    media.addEventListener('change', onChange);
+    return () => media.removeEventListener('change', onChange);
   }, []);
 
-  const onMeasure = useRef(() => {});
-  onMeasure.current = (height, nextGeometry) => {
-    geometry.current = nextGeometry;
-    setRowHeight((current) => (Math.abs(current - height) < 1 ? current : height));
-  };
-
   useEffect(() => {
-    let raf = 0;
-    let lastKey = '';
-    const place = () => {
-      const el = ballRef.current;
-      const frame = frameRef.current;
-      const words = geometry.current;
-      if (!el) return;
-      const at = (index) => {
-        const word = words[Math.max(0, index)];
-        if (!word) return null;
-        if (index < 0) return { x: word.left - word.height / 2, y: word.y };
-        return word;
-      };
-      const a = at(frame.from);
-      const b = at(frame.to);
-      if (frame.line === undefined || !a || !b || still.current && frame.from !== frame.to) {
-        el.style.opacity = frame.line === undefined || !a ? '0' : '1';
-        if (a && still.current) {
-          el.style.transform = `translate(calc(${a.x}px - 50%), calc(${a.y}px - 100% - 0.125rem))`;
-        }
-        return;
-      }
-      const t = frame.t;
-      const x = a.x + (b.x - a.x) * t;
-      const y = a.y + (b.y - a.y) * t;
-      const lift = frame.from === frame.to ? 0 : Math.sin(Math.PI * t) * 0.4;
-      el.style.opacity = '1';
-      el.style.transform = `translate(calc(${x}px - 50%), calc(${y}px - 100% - 0.125rem - ${lift}rem))`;
-    };
+    let frame = 0;
+    let lastTick;
+    let lastPosition;
     const tick = () => {
-      const frame = frameAt(posRef.current);
-      frameRef.current = frame;
-      const key = `${frame.line ?? 'x'}:${frame.next ?? 'x'}:${frame.reached}`;
-      if (key !== lastKey) {
-        lastKey = key;
-        setShown(frame);
+      const now = Date.now();
+      const posMs = posRef.current;
+      const f = lyricsFrame(lyricsFile, posMs);
+      clockRef.current = f;
+      const continuous = lastTick !== undefined
+        && lastPosition !== undefined
+        && now >= lastTick
+        && now - lastTick < 250
+        && posMs >= lastPosition
+        && Math.abs(posMs - lastPosition - (now - lastTick)) < 250;
+      lastPosition = posMs;
+      lastTick = now;
+      setShown((prev) => {
+        if (prev.line !== f.line || prev.next !== f.next) {
+          const animate = !still
+            && continuous
+            && (f.line === undefined || prev.line === undefined || f.line === prev.next);
+          return {
+            line: f.line,
+            next: f.next,
+            outgoing: animate ? prev.line : undefined,
+            reached: f.reached,
+            changedAt: now,
+            leadMs: f.line === undefined
+              ? 0
+              : Math.max(0, (lyricsFile.lines[f.line]?.words[0]?.startMs ?? posMs) - posMs),
+            animate,
+          };
+        }
+        const outgoing = !still && now - prev.changedAt < EXIT_MS ? prev.outgoing : undefined;
+        if (prev.reached === f.reached && prev.outgoing === outgoing) return prev;
+        return { ...prev, reached: f.reached, outgoing };
+      });
+      for (const [index, place] of placements) {
+        place(!still && index === f.line ? f.ball : undefined);
       }
-      place();
-      raf = requestAnimationFrame(tick);
+      frame = requestAnimationFrame(tick);
     };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [posRef]);
+    tick();
+    return () => cancelAnimationFrame(frame);
+  }, [still, placements, posRef]);
 
   const rows = [];
+  if (shown.outgoing !== undefined && shown.outgoing !== shown.line) {
+    rows.push({ index: shown.outgoing, role: 'outgoing' });
+  }
   if (shown.line !== undefined) rows.push({ index: shown.line, role: 'active' });
   if (shown.next !== undefined) rows.push({ index: shown.next, role: 'preview' });
   const visible = rows.length > 0;
 
   return (
-    <div className={`win-lyrics${visible ? ' is-on' : ''}${still.current ? ' is-still' : ''}`} aria-hidden="true">
-      <div className="win-lyric-rows" style={{ height: visible ? rowHeight + (shown.next !== undefined ? 16 : 0) : 0 }}>
-        {rows.map(({ index, role }) => (
-          <LyricLine
-            key={`${role}-${index}`}
-            line={LINES[index]}
-            role={role}
-            reached={role === 'active' ? shown.reached : 0}
-            still={still.current}
-            ballRef={ballRef}
-            onMeasure={(height, nextGeometry) => onMeasure.current(height, nextGeometry)}
-          />
-        ))}
+    <div
+      className={`win-lyrics${visible ? ' is-on' : ''}${still ? ' is-still' : ''}`}
+      aria-hidden="true"
+      data-testid="celebration-lyrics"
+    >
+      <div className="win-lyric-rows" style={{ height: `calc(${activeHeight}px + 1.375rem)` }}>
+        {rows.map(({ index, role }) => {
+          const line = lyricsFile.lines[index];
+          if (!line) return null;
+          return (
+            <LyricRow
+              key={index}
+              line={line}
+              index={index}
+              role={role}
+              reached={role === 'active' ? shown.reached : role === 'outgoing' ? line.words.length : 0}
+              still={still}
+              animate={shown.animate}
+              duration={
+                role === 'active'
+                  ? Math.max(240, Math.min(TRANSITION_MS, shown.leadMs))
+                  : role === 'outgoing'
+                    ? shown.line !== undefined && shown.leadMs < 300
+                      ? 70
+                      : EXIT_MS
+                    : TRANSITION_MS
+              }
+              placements={placements}
+              clock={clockRef}
+              onHeight={setActiveHeight}
+            />
+          );
+        })}
       </div>
     </div>
   );
@@ -226,15 +374,65 @@ const PERSON = {
   poster: '/videos/Female/camila_torres.png',
 };
 
-// Theater sound roamojis (TheaterWindow): repeated clicks inside 3 seconds
-// raise the level, play that level's sound, and float an avatar + emoji
-// ghost up from the button. These three are the birthday set.
+// Repeated clicks inside 3 seconds raise the bar level and float an avatar
+// + emoji ghost. Audio is wonder's celebration catalog
+// (roam/client/rewards/celebration/celebrationRoamojis.ts): one variant per
+// click, at catalog gain × the default Roamoji volume (0.8).
+// 🎁 uses cha-ching1, the only file wonder bound to that emoji (later
+// removed from the live bar). ✨ has no reaction sound in wonder.
+const ROAMOJI_VOLUME = 0.8;
 const BIRTHDAY_ROAMOJIS = [
-  { emoji: '🎂', label: 'Birthday cake', levels: ['/audio/fire.mp3'] },
-  { emoji: '🎈', label: 'Balloon', levels: ['/win/live/balloon.mp3'] },
-  { emoji: '🎉', label: 'Party popper', levels: ['/win/live/popper1.mp3', '/win/live/popper2.mp3', '/win/live/popper3.mp3'] },
+  {
+    emoji: '🎂',
+    label: 'Birthday cake',
+    files: ['/win/live/fire1.mp3', '/win/live/fire2.mp3', '/win/live/fire3.mp3', '/win/live/fire4.mp3', '/win/live/fire5.mp3'],
+    gain: 0.5,
+  },
+  { emoji: '🎈', label: 'Balloon', files: ['/win/live/balloon1.mp3'], gain: 0.0625 },
+  {
+    emoji: '🎉',
+    label: 'Party popper',
+    files: ['/win/live/popper1.mp3', '/win/live/popper2.mp3', '/win/live/popper3.mp3'],
+    gain: 0.2,
+  },
+  { emoji: '🎁', label: 'Gift', files: ['/win/live/cha-ching1.mp3'], gain: 0.15 },
+  { emoji: '✨', label: 'Sparkles', files: [], gain: 0 },
 ];
-const SENDER_AVATAR = '/headshots/joe-woodward.jpg';
+// Wonder's sing-along, the same file the lyric times were built from.
+const BIRTHDAY_SONG = '/win/live/happy-birthday-roam-1min.mp3';
+// Office-map headshots. Joe Woodward is the viewer, so his face never rides a reaction.
+const ROAMOJI_FACES = [
+  '/headshots/derek-cicerone.jpg',
+  '/headshots/john-moffa.jpg',
+  '/headshots/jon-brod.jpg',
+  '/headshots/keegan-lanzillotta.jpg',
+  '/headshots/grace-sutherland.jpg',
+  '/headshots/michael-walrath.jpg',
+  '/headshots/rob-figueiredo.jpg',
+  '/headshots/chelsea-turbin.jpg',
+  '/headshots/lexi-bohonnon.jpg',
+  '/headshots/will-hou.jpg',
+  '/headshots/howard-lerman.jpg',
+  '/headshots/jeff-grossman.jpg',
+  '/headshots/peter-lerman.jpg',
+  '/headshots/sean-macisaac.jpg',
+  '/headshots/arnav-bansal.jpg',
+  '/headshots/aaron-wadhwa.jpg',
+  '/headshots/thomas-grapperon.jpg',
+  '/headshots/tom-dixon.jpg',
+  '/headshots/john-huffsmith.jpg',
+  '/headshots/mattias-leino.jpg',
+  '/headshots/klas-leino.jpg',
+  '/headshots/john-beutner.jpg',
+  '/headshots/michael-miller.jpg',
+  '/headshots/garima-kewlani.jpg',
+  '/headshots/ava-lee.jpg',
+];
+
+function pickRoamojiFace(previous) {
+  const pool = previous ? ROAMOJI_FACES.filter((src) => src !== previous) : ROAMOJI_FACES;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
 
 function soundLevelClass(level) {
   if (level >= 4) return 'roamoji-bars-l4';
@@ -260,7 +458,11 @@ function LiveCard() {
   const soundClickCounts = useRef({});
   const soundTimers = useRef({});
   const activeAudios = useRef({});
+  const variantCursor = useRef({});
   const ghostTimers = useRef([]);
+  const lastFaceRef = useRef('');
+  const songRef = useRef(null);
+  const [songMuted, setSongMuted] = useState(true);
 
   useEffect(() => {
     let raf = 0;
@@ -269,6 +471,15 @@ function LiveCard() {
     const tick = (now) => {
       const pos = (now - start) % DURATION;
       posRef.current = pos;
+      const audio = songRef.current;
+      if (audio) {
+        const length = Number.isFinite(audio.duration) ? audio.duration : 0;
+        const target = length > 0 ? Math.min(pos / 1000, Math.max(0, length - 0.05)) : 0;
+        if (length > 0 && !audio.seeking && Math.abs(audio.currentTime - target) > 0.3) {
+          try { audio.currentTime = target; } catch { /* element not ready */ }
+        }
+        if (audio.paused) audio.play().catch(() => {});
+      }
       const second = Math.floor(pos / 250);
       if (second !== lastSecond) {
         lastSecond = second;
@@ -289,6 +500,7 @@ function LiveCard() {
         audio.currentTime = 0;
       }
     });
+    songRef.current?.pause();
   }, []);
 
   const spawnGhostFromButton = useCallback((emoji, buttonEl) => {
@@ -301,7 +513,9 @@ function LiveCard() {
     const left = (btnRect.left - rootRect.left) / scaleX + btnRect.width / scaleX / 2 - 22;
     const top = (btnRect.top - rootRect.top) / scaleY - 10;
     const id = ghostIdRef.current++;
-    setGhosts((prev) => [...prev, { id, left, top, emoji }]);
+    const avatar = pickRoamojiFace(lastFaceRef.current);
+    lastFaceRef.current = avatar;
+    setGhosts((prev) => [...prev, { id, left, top, emoji, avatar }]);
     const timer = setTimeout(() => setGhosts((prev) => prev.filter((ghost) => ghost.id !== id)), 3000);
     ghostTimers.current.push(timer);
   }, []);
@@ -312,16 +526,20 @@ function LiveCard() {
     soundClickCounts.current[key] += 1;
     const clicks = soundClickCounts.current[key];
     const level = clicks <= 3 ? 0 : clicks <= 8 ? 1 : clicks <= 15 ? 2 : 3;
-    const clampedLevel = Math.min(level, soundItem.levels.length - 1);
     setSoundLevels((prev) => ({ ...prev, [key]: level }));
-    if (activeAudios.current[key]) {
-      activeAudios.current[key].pause();
-      activeAudios.current[key] = null;
+    const files = soundItem.files;
+    if (files.length > 0) {
+      if (activeAudios.current[key]) {
+        activeAudios.current[key].pause();
+        activeAudios.current[key] = null;
+      }
+      const index = variantCursor.current[key] || 0;
+      variantCursor.current[key] = (index + 1) % files.length;
+      const audio = new Audio(files[index]);
+      audio.volume = Math.min(1, ROAMOJI_VOLUME * soundItem.gain);
+      audio.play().catch(() => {});
+      activeAudios.current[key] = audio;
     }
-    const audio = new Audio(soundItem.levels[clampedLevel]);
-    audio.volume = 0.3 + level * 0.15;
-    audio.play().catch(() => {});
-    activeAudios.current[key] = audio;
     clearTimeout(soundTimers.current[key]);
     soundTimers.current[key] = setTimeout(() => {
       soundClickCounts.current[key] = 0;
@@ -330,6 +548,15 @@ function LiveCard() {
     }, 3000);
     spawnGhostFromButton(soundItem.emoji, buttonEl);
   }, [spawnGhostFromButton]);
+
+  const toggleSong = useCallback(() => {
+    const audio = songRef.current;
+    if (!audio) return;
+    const nextMuted = !audio.muted;
+    audio.muted = nextMuted;
+    setSongMuted(nextMuted);
+    if (audio.paused) audio.play().catch(() => {});
+  }, []);
 
   return (
     <aside ref={cardRef} className="win-live" aria-label={`Live celebration for ${PERSON.name}`}>
@@ -351,7 +578,27 @@ function LiveCard() {
           loop
           playsInline
         />
+        <audio ref={songRef} src={BIRTHDAY_SONG} muted preload="auto" />
         <KaraokeLyrics posRef={posRef} />
+        <button
+          type="button"
+          className="unbutton win-live-mute"
+          aria-label={songMuted ? 'Unmute' : 'Mute'}
+          aria-pressed={!songMuted}
+          onClick={toggleSong}
+        >
+          {songMuted ? (
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M8 3L4.5 5.5H2V10.5H4.5L8 13V3Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+              <path d="M11 6L14 9M14 6L11 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          ) : (
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M8 3L4.5 5.5H2V10.5H4.5L8 13V3Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+              <path d="M11 5.5C11.6 6.2 12 7.05 12 8C12 8.95 11.6 9.8 11 10.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          )}
+        </button>
       </div>
       <div className="win-live-scrub">
         <span>{clock(elapsed)}</span>
@@ -383,7 +630,7 @@ function LiveCard() {
       </div>
       {ghosts.map((ghost) => (
         <div key={ghost.id} className="theater-win-ghost" style={{ left: ghost.left, top: ghost.top }}>
-          <img src={SENDER_AVATAR} alt="" className="theater-win-ghost-avatar" />
+          <img src={ghost.avatar} alt="" className="theater-win-ghost-avatar" />
           <div className="theater-win-ghost-emoji">{ghost.emoji}</div>
         </div>
       ))}
@@ -421,7 +668,13 @@ export function LiveCelebrationVisual() {
   return (
     <div ref={wrapRef} className="fp-map-preview">
       <ShowcaseMap embedded initialFloor="R&D" theme={pageTheme} birthdayEnabled={false} />
-      {host && ReactDOM.createPortal(<LiveCard />, host)}
+      {host && ReactDOM.createPortal(
+        <>
+          <div className="win-live-overlay" aria-hidden="true" />
+          <LiveCard />
+        </>,
+        host,
+      )}
     </div>
   );
 }

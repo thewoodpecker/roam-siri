@@ -170,11 +170,6 @@
   border-bottom: 0.03125rem solid rgba(255, 255, 255, 0.1);
 }
 
-.coinery-name.is-reserved {
-  visibility: hidden;
-  pointer-events: none;
-}
-
 .coinery-name input {
   display: block;
   width: 100%;
@@ -534,8 +529,7 @@
   gap: 32px;
 }
 
-/* Fit the phone viewport. The reserved coin-name row stays
-   visibility:hidden (not removed) so the dialog height does not jump. */
+/* Fit the phone viewport. The name row stays in the layout for every shape. */
 @media (max-width: 768px) {
   .fp-win-peer {
     max-width: 100%;
@@ -549,10 +543,5 @@
 
   .fp-win-peer .coinery-stage {
     height: min(17.5rem, max(9rem, calc(100dvh - 28rem)));
-  }
-
-  .fp-win-peer .coinery-name.is-reserved {
-    visibility: hidden;
-    display: block;
   }
 }

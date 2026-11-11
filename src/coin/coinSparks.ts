@@ -6,8 +6,11 @@ const BURST_COUNT = 168;
 const SPARK_COUNT = BURST_COUNT * 12;
 /** Outer reach of the wide halo, in coin radii. Twice the previous burst. */
 const HALO_MAX_RADIUS = 2.92;
-/** Glitter stays a short hop past the rim instead of filling the stage. */
-const GLITTER_MAX_RADIUS = 1.36;
+/** Click glitter ends this far from the coin center. The old hop was 1.10–1.36. */
+const GLITTER_TRAVEL_MIN = 1.46;
+const GLITTER_TRAVEL_MAX = 2.04;
+/** A hair past the farthest glitter so side slip is not pinned to a ring. */
+const GLITTER_MAX_RADIUS = 2.08;
 
 const easeInCubic = (t: number) => t * t * t;
 const easeOutCubic = (t: number) => 1 - (1 - t) ** 3;
@@ -33,7 +36,7 @@ const sparkGeometry = () => {
   return geometry;
 };
 
-const sparkMaterial = () =>
+const sparkMaterial = (behind: boolean) =>
   new THREE.ShaderMaterial({
     vertexShader: `
       attribute float hot;
@@ -59,13 +62,20 @@ const sparkMaterial = () =>
         gl_FragColor = vec4(col, alpha);
       }
     `,
-    // Normal blending with straight alpha. Additive blending writes color
-    // into a clear canvas and the page composite throws it away.
-    transparent: true,
+    // Straight alpha. Additive blending writes color into a clear canvas
+    // and the page composite throws it away.
+    // Click sparks stay in the opaque list (transparent: false) with a lower
+    // render order, so the coin paints over them. NormalBlending would turn
+    // blending off in that list, so the factors are set by hand.
+    transparent: !behind,
     premultipliedAlpha: false,
     depthWrite: false,
     depthTest: true,
-    blending: THREE.NormalBlending,
+    blending: behind ? THREE.CustomBlending : THREE.NormalBlending,
+    blendSrc: THREE.SrcAlphaFactor,
+    blendDst: THREE.OneMinusSrcAlphaFactor,
+    blendSrcAlpha: THREE.OneFactor,
+    blendDstAlpha: THREE.OneMinusSrcAlphaFactor,
     side: THREE.DoubleSide,
     toneMapped: false,
   });
@@ -80,7 +90,7 @@ export interface CoinSparks {
 export interface CoinSparkOptions {
   /**
    * `halo` is the wide award burst.
-   * `glitter` is the coinery click: small sparks that stay on the coin.
+   * `glitter` is the coinery click: small sparks that fly off the coin.
    */
   spread?: "halo" | "glitter";
 }
@@ -90,7 +100,7 @@ export const createCoinSparks = (options: CoinSparkOptions = {}): CoinSparks => 
   const glitter = options.spread === "glitter";
   const maxRadius = glitter ? GLITTER_MAX_RADIUS : HALO_MAX_RADIUS;
   const geometry = sparkGeometry();
-  const material = sparkMaterial();
+  const material = sparkMaterial(glitter);
   const mesh = new THREE.InstancedMesh(geometry, material, SPARK_COUNT);
   mesh.frustumCulled = false;
   mesh.visible = false;
@@ -135,30 +145,52 @@ export const createCoinSparks = (options: CoinSparkOptions = {}): CoinSparks => 
 
   const burst = (next: string) => {
     color.set(next);
+    // Fresh wedges each click, so glitter clumps instead of ringing the coin.
+    const lobes = glitter
+      ? [Math.random() * Math.PI * 2, Math.random() * Math.PI * 2, Math.random() * Math.PI * 2]
+      : null;
     for (let n = 0; n < BURST_COUNT; n++) {
       const i = takeSlot();
       const glint = Math.random() < 0.18;
       const near = Math.random() < 0.4;
-      angle[i] = Math.random() * Math.PI * 2;
-      drift[i] = (Math.random() - 0.5) * (glitter ? 0.35 : 0.9);
-      if (glitter) {
-        // Born on the rim and hop a short way out, so they read as glitter
-        // on the coin. The halo burst flies several radii and fills the stage.
-        startR[i] = 1.02 + Math.random() * 0.08;
-        endR[i] = (startR[i] ?? 1) + 0.08 + Math.random() * 0.18;
-        side[i] = (Math.random() - 0.5) * 0.16;
-        // Stored scale before the life pulse (×0.55–1.55). Halo body is
-        // 0.30–0.48 and glints are 0.55–0.83 (~36–99px on this stage).
+      if (glitter && lobes) {
+        const lobe = lobes[Math.floor(Math.random() * lobes.length)] ?? 0;
+        const scattered = Math.random() < 0.28;
+        angle[i] = scattered
+          ? Math.random() * Math.PI * 2
+          : lobe + (Math.random() - 0.5) * (0.45 + Math.random() * 1.55);
+        // Some sparks barely curve, a few hook hard.
+        drift[i] = (Math.random() - 0.5) * (0.25 + Math.random() ** 2 * 2.3);
+        const start = 0.96 + Math.random() * 0.18;
+        // Each spark picks its own skew, so distance is not one even shell.
+        const skew = 0.35 + Math.random() * 1.7;
+        const travel =
+          GLITTER_TRAVEL_MIN +
+          Math.random() ** skew * (GLITTER_TRAVEL_MAX - GLITTER_TRAVEL_MIN);
+        const maxSlip = Math.sqrt(Math.max(0, travel * travel - start * start));
+        const slipWant = (Math.random() - 0.5) * 2 * maxSlip * (0.15 + Math.random() * 0.85);
+        const slip = Math.max(-maxSlip, Math.min(maxSlip, slipWant));
+        startR[i] = start;
+        side[i] = slip;
+        endR[i] = Math.sqrt(Math.max(0, travel * travel - slip * slip));
+        // Stored scale before the life pulse (×0.55–1.55). Kept small
+        // (~5–12px). Halo body is 0.30–0.48 and glints are 0.55–0.83.
         size[i] = glint ? 0.07 + Math.random() * 0.03 : 0.042 + Math.random() * 0.025;
+        const delaySkew = 0.4 + Math.random() * 1.3;
+        const lifeSkew = 0.4 + Math.random() * 1.3;
+        startAt[i] = elapsed + Math.random() ** delaySkew * 0.48;
+        lifeDur[i] = 0.28 + Math.random() ** lifeSkew * 0.88;
       } else {
+        angle[i] = Math.random() * Math.PI * 2;
+        drift[i] = (Math.random() - 0.5) * 0.9;
         endR[i] = near ? 1.76 + Math.random() * 0.56 : 2.2 + Math.random() * 0.72;
         startR[i] = 0.55 + Math.random() * 0.4;
         if ((startR[i] ?? 0) > (endR[i] ?? 0)) startR[i] = (endR[i] ?? 1) * 0.75;
         side[i] = (Math.random() - 0.5) * 1.1;
         size[i] = glint ? 0.55 + Math.random() * 0.28 : 0.3 + Math.random() * 0.18;
+        startAt[i] = elapsed + Math.random() * 0.32;
+        lifeDur[i] = 0.7 + Math.random() * 0.8;
       }
-      startAt[i] = elapsed + Math.random() * 0.32;
-      lifeDur[i] = 0.7 + Math.random() * 0.8;
       spin[i] = Math.random() * Math.PI * 2;
       spinSpeed[i] = (Math.random() - 0.5) * 3.2;
       tint[i * 3] = color.r;

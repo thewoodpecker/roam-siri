@@ -4943,21 +4943,18 @@ button.fp-mv-light:focus-visible {
 }
 
 /* Celebrations — birthday card on surface-raised, not the map wallpaper.
-   The token flips with the theme (graphite-800 dark, solid white light). */
+   The token flips with the theme (graphite-800 dark, solid white light).
+   Square frame. The live sing-along card keeps its own 16px radius. */
+#celebrations {
+  padding-top: 0;
+}
+
 #celebrations .fp-section-visual {
   background-image: none;
   background-color: var(--bg-surface-raised);
   /* Clip the hover trail to this frame. The sparkle canvas is larger than
      the card so glitter can leave the card, but not this container. */
   overflow: hidden;
-}
-
-/* Birthday card has no heading of its own. It follows the live celebration
-   frame directly, so the usual section padding would be a blank band. */
-.fp-page[data-slug="win"] #live-celebration:has(+ #celebrations) {
-  padding-bottom: 0;
-}
-#celebrations:not(:has(.fp-section-text)) {
   padding-top: 0;
 }
 

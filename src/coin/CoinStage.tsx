@@ -33,6 +33,11 @@ interface Props {
   onTap: (delay: number) => Promise<void>;
   /** A flick that sends the coin spinning. */
   onFling: () => Promise<void>;
+  /**
+   * Swap scale for the coin mesh only. The preview used to CSS-scale the
+   * whole canvas, which shrank sparks with the coin.
+   */
+  presentationScaleRef?: { current: number };
 }
 
 const isMesh = (
@@ -184,16 +189,43 @@ const coast = (velocity: number, dt: number) => {
 };
 
 /** Extruded coin. Drag spins it, and a flick keeps going. */
-export const CoinStage = ({ shape, color, mark, emoji, name, onTap, onFling }: Props) => {
+export const CoinStage = ({
+  shape,
+  color,
+  mark,
+  emoji,
+  name,
+  onTap,
+  onFling,
+  presentationScaleRef,
+}: Props) => {
   const hostRef = useRef<HTMLDivElement>(null);
-  const propsRef = useRef({ shape, color, mark, emoji, name, onTap, onFling });
+  const propsRef = useRef({
+    shape,
+    color,
+    mark,
+    emoji,
+    name,
+    onTap,
+    onFling,
+    presentationScaleRef,
+  });
   const kickRef = useRef<() => void>(() => {});
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
-    propsRef.current = { shape, color, mark, emoji, name, onTap, onFling };
+    propsRef.current = {
+      shape,
+      color,
+      mark,
+      emoji,
+      name,
+      onTap,
+      onFling,
+      presentationScaleRef,
+    };
     kickRef.current();
-  }, [color, emoji, mark, name, onFling, onTap, shape]);
+  }, [color, emoji, mark, name, onFling, onTap, presentationScaleRef, shape]);
 
   useEffect(() => {
     const host = hostRef.current;
@@ -499,9 +531,11 @@ export const CoinStage = ({ shape, color, mark, emoji, name, onTap, onFling }: P
               sparks.burst(strikeColor(propsRef.current.color));
               motionUntil = performance.now() + 1700;
             }
-            spin.scale.setScalar(COIN_SCALE * bounceScale(bounceT));
             if (bounceT >= BOUNCE_END_S) bounceT = -1;
           }
+          const presentation = propsRef.current.presentationScaleRef?.current ?? 1;
+          const bounce = bounceT >= 0 ? bounceScale(bounceT) : 1;
+          spin.scale.setScalar(COIN_SCALE * bounce * presentation);
           sparks.update(dt);
           plus.update(dt);
           spin.rotation.y = yaw.y;

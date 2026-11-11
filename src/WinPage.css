@@ -737,6 +737,7 @@
 
 .win-gift-shop {
   /* Same frame as the trophy cabinet (.win-case-room): 10 of 12 columns, 3:2. */
+  position: relative;
   width: calc(((100% - 11 * var(--grid-gutter)) / 12) * 10 + 9 * var(--grid-gutter));
   max-width: 100%;
   height: auto;
@@ -997,6 +998,95 @@ button.win-gift-nav {
   padding: 16px;
   color: rgba(255, 255, 255, 0.5);
   font-size: 14px;
+}
+
+/* Gift card dialog: Figma Alert Dialog 84183:20452
+   (Product Design, qr1zW5EUZ1LwFt4ZrrZhtG). 320×322, Dark/Shadow 4. */
+.win-gift-received-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.win-gift-received {
+  position: absolute;
+  z-index: 3;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  box-sizing: border-box;
+  width: min(320px, calc(100% - 32px));
+  max-height: calc(100% - 32px);
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 24px;
+  padding: 24px;
+  border: 0;
+  border-radius: 16px;
+  background: #1d1e20;
+  color: #fff;
+  text-align: center;
+  box-shadow:
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.1),
+    0px 1px 4px rgba(0, 0, 0, 0.3),
+    0px 6px 10px 4px rgba(0, 0, 0, 0.2);
+}
+
+.win-gift-received-copy {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.win-gift-received p {
+  margin: 0;
+  font-family: Inter, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", "Liberation Sans", Arial, sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 24px;
+  letter-spacing: -0.32px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.win-gift-received-copy p:first-child {
+  font-weight: 500;
+  color: #fff;
+}
+
+.win-gift-received-card {
+  width: 100%;
+  height: 142px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 16px;
+}
+
+.win-gift-received-card img {
+  width: 80px;
+  height: 80px;
+}
+
+.win-gift-received-wallet {
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0;
+  padding: 8px 16px;
+  border: 0;
+  border-radius: 8px;
+  background: #fff;
+  color: #000;
+  font-family: Inter, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", "Liberation Sans", Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  letter-spacing: -0.15px;
+  text-align: center;
+  cursor: default;
 }
 
 @media (max-width: 900px) {
@@ -1450,6 +1540,11 @@ button.win-gift-nav {
   }
 
   #gift-shop .fp-section-visual {
+    padding-left: 32px;
+    padding-right: 32px;
+  }
+
+  #peer-to-peer-points .fp-section-visual {
     padding-left: 32px;
     padding-right: 32px;
   }
